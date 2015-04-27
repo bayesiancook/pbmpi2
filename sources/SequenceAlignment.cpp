@@ -311,7 +311,8 @@ int FileSequenceAlignment::ReadNexus(string filespec)	{
 						while (c != ']') c = theStream.get();
 						c = theStream.get();
 					}
-					if ((c != ' ') && (c != '\t') && (c != '\n') && (c != 13))	{
+					if (! isspace(c))	{
+					// if ((c != ' ') && (c != '\t') && (c != '\n') && (c != 13))	{
 						if (c == '(')	{
 							Data[i][k] = unknown;
 							while (c != ')')	{
@@ -332,7 +333,8 @@ int FileSequenceAlignment::ReadNexus(string filespec)	{
 						k++;
 					}
 				}
-				while ((!theStream.eof()) && (c != '\n') && (c != 13));
+				while ((!theStream.eof()) && (c != '\n') && (c != '\r'));
+				// while ((!theStream.eof()) && (c != '\n') && (c != 13));
 				if (theStream.eof())	{
 					if (i < Ntaxa-1)	{
 						cerr << "error : found " << i << " taxa instead of " << Ntaxa << " in datafile\n";
@@ -421,7 +423,8 @@ int FileSequenceAlignment::TestPhylipSequential (string filespec)	{
 			char c = ' ';
 			do	{
 				c = theStream.get();
-				if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c!='\t') && (c != 13))	{
+				if ((!theStream.eof()) && (! isspace(c)))	{
+				// if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c!='\t') && (c != 13))	{
 					if (c == '(')	{
 						while (c != ')')	{
 							theStream >> c;
@@ -544,7 +547,8 @@ void FileSequenceAlignment::ReadPhylipSequential (string filespec)	{
 			char c;
 			do	{
 				c = theStream.get();
-				if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c != '\t') && (c!=13))	{
+				if ((!theStream.eof()) && (! isspace(c)))	{
+				// if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c != '\t') && (c!=13))	{
 					if (c == '(')	{
 						Data[ntaxa][nsite] = unknown;
 						while (c != ')')	{
@@ -637,7 +641,8 @@ int FileSequenceAlignment::TestPhylip (string filespec, int repeattaxa)	{
 				int k = l;
 				do	{
 					c = theStream.get();
-					if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c!='\t') && (c != 13))	{
+					if ((!theStream.eof()) && (! isspace(c)))	{
+					// if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c!='\t') && (c != 13))	{
 						if (c == '(')	{
 							while (c != ')')	{
 								theStream >> c;
@@ -670,7 +675,9 @@ int FileSequenceAlignment::TestPhylip (string filespec, int repeattaxa)	{
 						k++;
 					}
 				}
-				while ((!theStream.eof()) && (c != '\n') && (c != 13) && (c != 10));
+				while ((!theStream.eof()) && (c != '\n') && (c != '\r'));
+				// while ((!theStream.eof()) && (! isspace(c)));
+				// while ((!theStream.eof()) && (c != '\n') && (c != 13) && (c != 10));
 				if (theStream.eof())	{
 					if (i < Ntaxa-1)	{
 						cerr << "error : found " << i << " taxa instead of " << Ntaxa << " in datafile\n";
@@ -678,7 +685,8 @@ int FileSequenceAlignment::TestPhylip (string filespec, int repeattaxa)	{
 					}
 				}
 				c = theStream.peek();
-				while ((!theStream.eof()) && ((c == '\n') || (c == 13)))	{
+				while ((!theStream.eof()) && ((c == '\n') || (c == '\r')))	{
+				// while ((!theStream.eof()) && ((c == '\n') || (c == 13)))	{
 					c = theStream.get();
 					c = theStream.peek();
 				}
@@ -796,7 +804,8 @@ FileSequenceAlignment::ReadPhylip (string filespec, int repeattaxa)	{
 				do	{
 
 					c = theStream.get();
-					if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c != '\t') && (c!=13))	{
+					if ((!theStream.eof()) && (! isspace(c)))	{
+					// if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c != '\t') && (c!=13))	{
 						if (c == '(')	{
 							Data[i][k] = unknown;
 							while (c != ')')	{
@@ -817,7 +826,8 @@ FileSequenceAlignment::ReadPhylip (string filespec, int repeattaxa)	{
 						k++;
 					}
 				}
-				while ((!theStream.eof()) && (c != '\n') && (c != 13));
+				while ((!theStream.eof()) && (c != '\n') && (c != '\r'));
+				// while ((!theStream.eof()) && (c != '\n') && (c != 13));
 				if (theStream.eof())	{
 					if (i < Ntaxa-1)	{
 						cerr << "error : found " << i << " taxa instead of " << Ntaxa << " in datafile\n";
@@ -825,7 +835,8 @@ FileSequenceAlignment::ReadPhylip (string filespec, int repeattaxa)	{
 					}
 				}
 				c = theStream.peek();
-				while ((!theStream.eof()) && ((c == '\n') || (c == 13)))	{
+				while ((!theStream.eof()) && ((c == '\n') || (c == '\r')))	{
+				// while ((!theStream.eof()) && ((c == '\n') || (c == 13)))	{
 					c = theStream.get();
 					c = theStream.peek();
 				}

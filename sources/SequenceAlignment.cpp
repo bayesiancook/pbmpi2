@@ -200,6 +200,10 @@ int FileSequenceAlignment::ReadDataFromFile (string filespec, int forceinterleav
 			ReadNexus(filespec);
 			return 1;
 		}
+		else if (tmp == "#SPECIALALPHABET")	{
+			ReadSpecial(filespec);
+			return 1;
+		}
 		else	{
 			// cerr << "PHYLIP\n";
 			if (! forceinterleaved)	{
@@ -367,6 +371,107 @@ int FileSequenceAlignment::ReadNexus(string filespec)	{
 	return 1;
 }
 
+// ---------------------------------------------------------------------------
+//		 ReadPhylip()
+// ---------------------------------------------------------------------------
+
+
+int FileSequenceAlignment::ReadSpecial(string filespec)	{
+
+	ifstream theStream((Path + filespec).c_str());
+	int returnvalue = 0;
+	try	{
+
+		string tmp;
+		theStream >> tmp;
+		theStream >> Ntaxa;
+		theStream >> Nsite;
+		theStream >> tmp;
+		cerr << tmp << '\n';
+		int Nstate = tmp.length();
+		
+		int NAlphabetSet = Nstate+5;
+		char* Alphabet = new char[Nstate];
+		char* AlphabetSet = new char[NAlphabetSet];
+		cerr << "alphabet size : " << Nstate << '\n';
+		cerr << "alphabet : ";
+		for (int i=0; i<Nstate; i++)	{
+			Alphabet[i] = tmp[i];
+			AlphabetSet[i] = tmp[i];
+			cerr << Alphabet[i] << ' ';
+		}
+		cerr << '\n';
+		returnvalue = 4;
+
+		AlphabetSet[Nstate] = '?';
+		AlphabetSet[Nstate+1] = '-';
+		AlphabetSet[Nstate+2] = '*';
+		AlphabetSet[Nstate+3] = 'X';
+		AlphabetSet[Nstate+4] = 'x';
+
+		statespace = new SimpleStateSpace(Nstate, NAlphabetSet, Alphabet, AlphabetSet);
+
+		Data = new (int *[Ntaxa]);
+		for (int i=0; i<Ntaxa; i++)	{
+			Data[i] = new int[Nsite];
+		}
+
+		SpeciesNames = new string[Ntaxa];
+
+		int ntaxa = 0;
+		string temp;
+		while ((!theStream.eof()) && (ntaxa<Ntaxa))	{
+			theStream >> temp;
+			SpeciesNames[ntaxa] = temp;
+			int nsite = 0;
+
+			char c;
+			do	{
+				c = theStream.get();
+				if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c != '\t') && (c!=13))	{
+					if (c == '(')	{
+						Data[ntaxa][nsite] = unknown;
+						while (c != ')')	{
+							theStream >> c;
+						}
+					}
+					else if (c == '{')	{
+						Data[ntaxa][nsite] = unknown;
+						while (c != '}')	{
+							theStream >> c;
+						}
+					}
+					else	{
+						int p =0;
+						while ((p < NAlphabetSet) && (c != AlphabetSet[p])) p++;
+						if (p == NAlphabetSet)	{
+							cout << "error: does not recognise character. taxon " << ntaxa << '\t' << SpeciesNames[ntaxa] << "  site  " << nsite << '\t' << c << '\n';
+							exit(1);
+						}
+						if (p >= Nstate)	{
+							Data[ntaxa][nsite] = unknown;
+						}
+						else	{
+							for (int l=0; l<Nstate; l++)		{
+								if (c == Alphabet[l])	{
+									Data[ntaxa][nsite] = l;
+								}
+							}
+						}
+					}
+					nsite++;
+				}
+			}
+			while ((!theStream.eof()) && (nsite < Nsite));
+			ntaxa++;
+		}
+	}
+	catch(...)	{
+		cerr << "error while reading data file\n";
+		return 0;
+	}
+	return returnvalue;
+}
 
 // ---------------------------------------------------------------------------
 //		 ReadPhylip()

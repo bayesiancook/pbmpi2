@@ -598,6 +598,7 @@ class FileSequenceAlignment : public SequenceAlignment	{
 	void 			ReadPhylipSequential(string filename);
 	int 			TestPhylip(string filename, int repeattaxa);
 	void 			ReadPhylip(string filename, int repeattaxa);
+	int			ReadSpecial(string filename);
 
 	string* SpeciesNames;
 };

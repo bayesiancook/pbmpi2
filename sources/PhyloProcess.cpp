@@ -1547,6 +1547,9 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 	case SITELOGL:
 		SlaveComputeSiteLogL();
 		break;
+	case SITERATE:
+		SlaveSendMeanSiteRate();
+		break;
 	case SETTESTDATA:
 		SlaveSetTestData();
 		break;
@@ -1919,6 +1922,35 @@ void PhyloProcess::SlaveUpdateSiteRateSuffStat()	{
 	#endif
 }
 
+void PhyloProcess::GlobalGetMeanSiteRate()	{
+
+	if (! meansiterate)	{
+		meansiterate = new double[GetNsite()];
+	}
+
+	assert(myid == 0);
+	int i,width,smin[nprocs-1],smax[nprocs-1],workload[nprocs-1];
+	MPI_Status stat;
+	MESSAGE signal = SITERATE;
+
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	width = GetNsite()/(nprocs-1);
+	for(i=0; i<nprocs-1; ++i) {
+		smin[i] = width*i;
+		smax[i] = width*(1+i);
+		if (i == (nprocs-2)) smax[i] = GetNsite();
+	}
+	for(i=1; i<nprocs; ++i) {
+		MPI_Recv(meansiterate+smin[i-1],smax[i-1]-smin[i-1],MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+	}
+}
+
+void PhyloProcess::SlaveSendMeanSiteRate()	{
+	assert(myid > 0);
+	MPI_Send(meansiterate+sitemin,sitemax-sitemin,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
 void PhyloProcess::GlobalBroadcastTree()	{
 
 	// tree->RegisterWith(tree->GetTaxonSet());
@@ -2113,6 +2145,64 @@ void PhyloProcess::Read(string name, int burnin, int every, int until)	{
 	printCI(alphalist, cerr);
 	cerr << '\n';
 	cerr << '\n';
+}
+
+void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	{
+
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	double* meanrate = new double[GetNsite()];
+	for (int i=0; i<GetNsite(); i++)	{
+		meanrate[i] = 0;
+	}
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		QuickUpdate();
+
+		GlobalGetMeanSiteRate();
+
+		double length = GetTotalLength();
+		for (int i=0; i<GetNsite(); i++)	{
+			meansiterate[i] *= length;
+			meanrate[i] += meansiterate[i];
+		}
+
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+	ofstream os((name + ".meansiterates").c_str());
+	for (int i=0; i<GetNsite(); i++)	{
+		meanrate[i] /= samplesize;
+		os << i << '\t' << meanrate[i] << '\n';
+	}
+	cerr << "posterior mean site rates in " << name << ".meansiterates\n";
+
+	delete[] meanrate;
+
 }
 
 void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, int until)	{

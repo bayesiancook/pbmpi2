@@ -248,6 +248,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void ReadCV(string testdatafile, string name, int burnin, int every, int until, int iscodon = 0, GeneticCodeType codetype = Universal);
 	virtual void PostPred(int ppredtype, string name, int burnin, int every, int until);
 
+	void ReadSiteRates(string name, int burnin, int every, int until);
+
 	// The following methids are here to write the mappings.
 	void ReadMap(string name, int burnin, int every, int until);
 	void ReadPostPredMap(string name, int burnin, int every, int until);
@@ -433,6 +435,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	void SlaveUpdateSiteRateSuffStat();
 	void SlaveUpdateBranchLengthSuffStat();
+
+	void GlobalGetMeanSiteRate();
+	void SlaveSendMeanSiteRate();
 
 	virtual int CountMapping();
 	virtual int CountMapping(int site);

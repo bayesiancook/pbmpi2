@@ -310,7 +310,7 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		ReadCV(testdatafile,name,burnin,every,until);
 	}
 	else if (rates)	{
-		// ReadRates(name,burnin,every,until);
+		ReadSiteRates(name,burnin,every,until);
 	}
 	else if (sitelogl)	{
 		ReadSiteLogL(name,burnin,every,until);

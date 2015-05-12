@@ -61,6 +61,7 @@ void SubstitutionProcess::CreateCondSiteLogL()	{
 	// sitelogL = new double[sitemax - sitemin];
 	// condsitelogL = new double*[sitemax - sitemin];
 	sitelogL = new double[GetNsite()];
+	meansiterate = new double[GetNsite()];
 	condsitelogL = new double*[GetNsite()];
 	for (int i=sitemin; i<sitemax; i++)	{
 	// for (int i=0; i<GetNsite(); i++)	{
@@ -76,6 +77,7 @@ void SubstitutionProcess::DeleteCondSiteLogL()	{
 		}
 		delete[] condsitelogL;
 		delete[] sitelogL;
+		delete[] meansiterate;
 		condsitelogL = 0;
 		sitelogL = 0;
 	}
@@ -251,7 +253,6 @@ void SubstitutionProcess::Offset(double*** t, bool condalloc)	{
 //	(CPU level 2)
 //-------------------------------------------------------------------------
 
-
 double SubstitutionProcess::ComputeLikelihood(double*** aux, bool condalloc)	{
 	for (int i=sitemin; i<sitemax; i++)	{
 	// for (int i=0; i<GetNsite(); i++)	{
@@ -309,10 +310,15 @@ double SubstitutionProcess::ComputeLikelihood(double*** aux, bool condalloc)	{
 				}
 			}
 			double total = 0;
+			double meanrate = 0;
 			for (int j=0; j<GetNrate(i); j++)	{
-				total += GetRateWeight(i,j) * exp(logl[j] - max);
+				double tmp = GetRateWeight(i,j) * exp(logl[j] - max);
+				total += tmp;
+				meanrate += tmp * GetRate(i,j);
 			}
 			sitelogL[i] = log(total) + max;
+			meanrate /= total;
+			meansiterate[i] = meanrate;
 		}
 	}
 

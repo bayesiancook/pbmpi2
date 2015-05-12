@@ -24,7 +24,7 @@ class ExpoConjugateGTRSBDPProfileProcess : public virtual MatrixSBDPProfileProce
 
 	public:
 
-	ExpoConjugateGTRSBDPProfileProcess() {}
+	ExpoConjugateGTRSBDPProfileProcess() : InitIncremental(0) {}
 	virtual ~ExpoConjugateGTRSBDPProfileProcess() {}
 
 	virtual double Move(double tuning = 1, int n = 1, int nrep = 1)	{
@@ -45,6 +45,13 @@ class ExpoConjugateGTRSBDPProfileProcess : public virtual MatrixSBDPProfileProce
 			GlobalUpdateParameters();
 			GlobalUpdateSiteProfileSuffStat();
 			UpdateModeProfileSuffStat();
+
+			if ((!rep) && InitIncremental)	{
+				cerr << "init incremental\n";
+				InitIncremental--;
+				IncrementalSampleAlloc();
+			}
+
 			GlobalMixMove(5,1,0.001,40);
 			// MixMove(5,1,0.001,40);
 			MoveOccupiedCompAlloc(5);
@@ -101,6 +108,11 @@ class ExpoConjugateGTRSBDPProfileProcess : public virtual MatrixSBDPProfileProce
 
 	protected:
 
+	virtual double LogProxy(int site, int cat)	{
+		return PoissonDiffLogSampling(cat,site);
+	}
+
+
 	virtual void SwapComponents(int cat1, int cat2)	{
 		MatrixSBDPProfileProcess::SwapComponents(cat1,cat2);
 	}
@@ -118,6 +130,8 @@ class ExpoConjugateGTRSBDPProfileProcess : public virtual MatrixSBDPProfileProce
 	Chrono totchrono;
 	Chrono profilechrono;
 	Chrono incchrono;
+
+	int InitIncremental;
 };
 
 #endif

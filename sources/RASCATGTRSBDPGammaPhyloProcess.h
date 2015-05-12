@@ -61,9 +61,11 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 	void SlaveUpdateParameters();
 
 
-	RASCATGTRSBDPGammaPhyloProcess(string indatafile, string treefile, int nratecat, int iniscodon, GeneticCodeType incodetype, string inrrtype, int infixtopo, int inNSPR, int inNNNI, int inkappaprior, double inmintotweight, int indc, int me, int np)	{
+	RASCATGTRSBDPGammaPhyloProcess(string indatafile, string treefile, int nratecat, int iniscodon, GeneticCodeType incodetype, string inrrtype, int infixtopo, int inNSPR, int inNNNI, int inkappaprior, double inmintotweight, int indc, int incinit, int me, int np)	{
 		myid = me;
 		nprocs = np;
+
+		InitIncremental = incinit;
 
 		fixtopo = infixtopo;
 		NSPR = inNSPR;

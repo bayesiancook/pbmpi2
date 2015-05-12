@@ -67,6 +67,54 @@ void SBDPProfileProcess::SampleAlloc()	{
 	}
 }
 
+void SBDPProfileProcess::IncrementalSampleAlloc()	{
+
+	for (int i=0; i<GetNsite(); i++)	{
+		RemoveSite(i,alloc[i]);
+	}
+
+	kappa = 0.1;
+	AddSite(0,0);
+	Ncomponent = 1;
+	
+	for (int i=0; i<GetNsite(); i++)	{
+		double* p = new double[Ncomponent+1];
+		double total = 0;
+		double max = 0;
+		for (int k=0; k<Ncomponent; k++)	{
+			double tmp = log(occupancy[k]) * LogProxy(i,k);
+			if ((!k) || (max < tmp))	{
+				max = tmp;
+			}
+			p[k] = tmp;
+		}
+		p[Ncomponent] = log(kappa) + LogProxy(i,Ncomponent);
+		if (max < p[Ncomponent])	{
+			max = p[Ncomponent];
+		}
+		for (int k=0; k<=Ncomponent; k++)	{
+			double tmp = exp(p[k] - max);
+			total += tmp;
+			p[k] = total;
+		}
+		double q = total * rnd::GetRandom().Uniform();
+		int k = 0;
+		while ((k<=Ncomponent) && (q > p[k])) k++;
+		if (k == Ncomponent+1)	{
+			cerr << "error in draw dp mode: overflow\n";
+			exit(1);
+		}
+		if (k==Ncomponent)	{
+			Ncomponent++;
+		}
+		AddSite(i,k);
+		delete[] p;
+	}
+
+	Ncomponent = GetNmodeMax();
+	ResampleWeights();
+}
+
 void SBDPProfileProcess::SampleWeights()	{
 
 	double cumulProduct = 1.0;

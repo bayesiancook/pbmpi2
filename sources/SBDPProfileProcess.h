@@ -96,6 +96,8 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 	// redefined
 	void SampleAlloc();
 
+	void IncrementalSampleAlloc();
+
 	void SampleWeights();
 	void ResampleWeights();
 	// void ResampleLastWeight();

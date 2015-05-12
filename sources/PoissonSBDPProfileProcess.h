@@ -40,6 +40,7 @@ class PoissonSBDPProfileProcess: public virtual PoissonDPProfileProcess, public 
 				cerr << "init incremental\n";
 				InitIncremental--;
 				IncrementalSampleAlloc();
+				UpdateModeProfileSuffStat();
 			}
 			GlobalMixMove(5,1,0.001);
 			MoveOccupiedCompAlloc(5);

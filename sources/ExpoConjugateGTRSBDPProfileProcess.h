@@ -50,6 +50,7 @@ class ExpoConjugateGTRSBDPProfileProcess : public virtual MatrixSBDPProfileProce
 				cerr << "init incremental\n";
 				InitIncremental--;
 				IncrementalSampleAlloc();
+				UpdateModeProfileSuffStat();
 			}
 
 			GlobalMixMove(5,1,0.001,40);

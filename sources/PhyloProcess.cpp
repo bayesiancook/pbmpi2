@@ -2306,18 +2306,22 @@ void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, i
 		cerr << "datasets in " << name << "_ppred<rep>.ali\n";
 	}
 	if (ppredtype == 2)	{
-		cerr << "diversity test\n";
-		cerr << "obs div : " << obs << '\n';
-		cerr << "mean div: " << meanstat << " +/- " << sqrt(varstat) << '\n';
-		cerr << "z-score : " << (meanstat - obs) / sqrt(varstat) << '\n';
-		cerr << "pp      : " << ppstat << '\n';
+		ofstream os((name + ".div").c_str());
+		os << "diversity test\n";
+		os << "obs div : " << obs << '\n';
+		os << "mean div: " << meanstat << " +/- " << sqrt(varstat) << '\n';
+		os << "z-score : " << (meanstat - obs) / sqrt(varstat) << '\n';
+		os << "pp      : " << ppstat << '\n';
+		cerr << "result of diversity test in " << name << ".div\n";
 	}
 	else if (ppredtype == 3)	{
-		cerr << "compositional homogeneity test\n";
-		cerr << "obs comp : " << obs << '\n';
-		cerr << "mean comp: " << meanstat << " +/- " << sqrt(varstat) << '\n';
-		cerr << "z-score : " << (obs - meanstat) / sqrt(varstat) << '\n';
-		cerr << "pp      : " << (1 - ppstat) << '\n';
+		ofstream os((name + ".comp").c_str());
+		os << "compositional homogeneity test\n";
+		os << "obs comp : " << obs << '\n';
+		os << "mean comp: " << meanstat << " +/- " << sqrt(varstat) << '\n';
+		os << "z-score : " << (obs - meanstat) / sqrt(varstat) << '\n';
+		os << "pp      : " << (1 - ppstat) << '\n';
+		cerr << "result of compositional homogeneity test in " << name << ".comp\n";
 	}
 	cerr << '\n';
 }
@@ -2464,7 +2468,6 @@ void PhyloProcess::ReadSiteLogL(string name, int burnin, int every, int until)	{
 		if (maxwidth < (smax[i] - smin[i]))	{
 			maxwidth = smax[i] - smin[i];
 		}
-		cerr << i+1 << '\t' << smin[i] << '\t' << smax[i] << '\n';
 	}
 
 	while (i < until)	{

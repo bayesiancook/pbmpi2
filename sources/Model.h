@@ -17,21 +17,22 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "CodonSequenceAlignment.h"
 #include "RASCATGTRFiniteGammaPhyloProcess.h"
 #include "RASCATGTRSBDPGammaPhyloProcess.h"
-#include "GeneralPathSuffStatRASCATGTRDPGammaPhyloProcess.h"
 #include "GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.h"
+#include "AASubSelRASCATSBDPGammaPhyloProcess.h"
 #include "RASCATGTRDPGammaPhyloProcess.h"
 #include "RASCATGammaPhyloProcess.h"
 #include "RASCATFiniteGammaPhyloProcess.h"
 #include "RASCATSBDPGammaPhyloProcess.h"
 #include "GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.h"
-#include "AAMutSelFinitePhyloProcess.h"
 #include "AACodonMutSelFinitePhyloProcess.h"
-#include "AAMutSelSBDPPhyloProcess.h"
-#include "AAMutSelSiteSpecificPhyloProcess.h"
-#include "AAMutSelDPPhyloProcess.h"
+#include "AACodonMutSelSBDPPhyloProcess.h"
+#include "AACodonMutSelMVNSiteSpecificPhyloProcess.h"
 #include "CodonMutSelFinitePhyloProcess.h"
 #include "CodonMutSelSBDPPhyloProcess.h"
-#include "AACodonMutSelSBDPPhyloProcess.h"
+#include "ZipRASCATGTRSBDPGammaPhyloProcess.h"
+#include "ZipRASCATGTRFiniteGammaPhyloProcess.h"
+#include "ZipGeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.h"
+#include "ZipGeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.h"
 #include "Parallel.h"
 #include <iostream>
 #include <fstream>
@@ -52,15 +53,13 @@ class Model	{
 	int every;
 	int until;
 	int saveall;
-	int incinit;
 
-	Model(string datafile, string treefile, int modeltype, int nratecat, int mixturetype, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int fixtopo, int NSPR, int NNNI, int fixcodonprofile, int fixomega, int fixbl, int omegaprior, int kappaprior, int dirweightprior, double mintotweight, int dc, int inevery, int inuntil, int insaveall, int inincinit, string inname, int myid, int nprocs)	{
+	Model(string datafile, string treefile, int modeltype, int nratecat, int mixturetype, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int fixtopo, int NSPR, int NMHSPR, int NTSPR, double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int sumratealloc, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
 
 		every = inevery;
 		until = inuntil;
 		name = inname;
 		saveall = insaveall;
-		incinit = inincinit;
 
 		// 1 : CAT
 		// 2 : CATGTR
@@ -81,11 +80,15 @@ class Model	{
 			}
 			if (mixturetype == 1)	{
 				type = "CATFINITE";
-				process = new RASCATFiniteGammaPhyloProcess(datafile,treefile,nratecat,ncat,fixncomp,empmix,mixtype,fixtopo,NSPR,NNNI,dc,myid,nprocs); 
+				process = new RASCATFiniteGammaPhyloProcess(nratecat,ncat,fixncomp,empmix,mixtype);
+			}
+			else if (mixturetype == 2)	{
+				type = "CATDP";
+				process = new RASCATGammaPhyloProcess(nratecat,kappaprior);
 			}
 			else	{
 				type = "CATSBDP";
-				process = new RASCATSBDPGammaPhyloProcess(datafile,treefile,nratecat,iscodon,codetype,fixtopo,NSPR,NNNI,kappaprior,mintotweight,dc,incinit,myid,nprocs); 
+				process = new RASCATSBDPGammaPhyloProcess(nratecat,kappaprior);
 			}
 		}
 
@@ -95,9 +98,19 @@ class Model	{
 				// cerr << "catgtr model\n";
 			}
 			if (mixturetype == 1)	{
-				if (suffstat)	{
+				if (zip)	{
+					if (suffstat)	{
+						type = "ZIPCATGTRFINITE";
+						process = new ZipRASCATGTRFiniteGammaPhyloProcess(nratecat,ncat,fixncomp,empmix,mixtype,rrtype);
+					}
+					else	{
+						type = "ZIPGPSSCATGTRFINITE";
+						process = new ZipGeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess(nratecat,ncat,fixncomp,empmix,mixtype,rrtype);
+					}
+				}
+				else if (suffstat)	{
 					type = "CATGTRFINITE";
-					process = new RASCATGTRFiniteGammaPhyloProcess(datafile,treefile,nratecat,ncat,fixncomp,empmix,mixtype,rrtype,fixtopo,NSPR,NNNI,dc,myid,nprocs); 
+					process = new RASCATGTRFiniteGammaPhyloProcess(nratecat,ncat,fixncomp,empmix,mixtype,rrtype);
 				}
 				else	{
 					cerr << "gpss deprecated\n";
@@ -109,13 +122,25 @@ class Model	{
 				exit(1);
 			}
 			else if (mixturetype == 3)	{
-				if (suffstat)	{
-					type = "CATGTRSBDP";
-					process = new RASCATGTRSBDPGammaPhyloProcess(datafile,treefile,nratecat,iscodon,codetype,rrtype,fixtopo,NSPR,NNNI,kappaprior,mintotweight,dc,incinit,myid,nprocs); 
+				if (zip)	{
+					if (suffstat)	{
+						type = "ZIPCATGTRSBDP";
+						process = new ZipRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior);
+					}
+					else	{
+						type = "ZIPGPSSCATGTRSBDP";
+						process = new ZipGeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior);
+					}
 				}
 				else	{
-					cerr << "gpss deprecated\n";
-					exit(1);
+					if (suffstat)	{
+						type = "CATGTRSBDP";
+						process = new RASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior);
+					}
+					else	{
+						cerr << "gpss deprecated\n";
+						exit(1);
+					}
 				}
 			}
 			else	{
@@ -124,38 +149,20 @@ class Model	{
 			}
 		}
 
-		// AAMUTSEL
 		else if (modeltype == 3)	{
 			cerr << "deprecated.\n";
 			exit(1);
-			if (mixturetype == 1)	{
-				type = "AAMUTSELFINITE";
-				process = new AAMutSelFinitePhyloProcess(datafile,treefile,codetype,ncat,fixncomp,empmix,mixtype,fixtopo,fixbl,dc,myid,nprocs);
-			}
-			else if (mixturetype == 2)	{
-				type = "AAMUTSELDP";
-				process = new AAMutSelDPPhyloProcess(datafile,treefile,codetype,fixtopo,fixbl,kappaprior,dc,myid,nprocs);
-			}
-			else if (mixturetype == 3)	{
-				type = "AAMUTSELSBDP";
-				process = new AAMutSelSBDPPhyloProcess(datafile,treefile,codetype,fixtopo,fixbl,kappaprior,dc,myid,nprocs);
-			}
-			else	{
-				cerr << "mixture type " << mixturetype << " not recognized\n";
-				exit(1);
-			}
 		}
-		
 
 		// CodonMutSel
 		else if (modeltype == 4)	{
 			if (mixturetype == 1)	{
 				type = "CODONMUTSELFINITE";
-				process = new CodonMutSelFinitePhyloProcess(datafile,treefile,codetype,ncat,fixncomp,empmix,mixtype,fixtopo,fixbl,NSPR,NNNI,dirweightprior,dc,myid,nprocs);
+				process = new CodonMutSelFinitePhyloProcess(ncat,fixncomp,empmix,mixtype);
 			}
 			else if (mixturetype == 3)	{
 				type = "CODONMUTSELSBDP";
-				process = new CodonMutSelSBDPPhyloProcess(datafile,treefile,codetype,fixtopo,fixbl,NSPR,NNNI,kappaprior,mintotweight,dc,myid,nprocs);
+				process = new CodonMutSelSBDPPhyloProcess(kappaprior);
 			}
 			else	{
 				cerr << "mixture type " << mixturetype << " not recognized or not yet implemented.\n";
@@ -164,14 +171,18 @@ class Model	{
 		}
 
 		// AACodonMutSel
-		else	{
+		else if (modeltype == 5) {
 			if (mixturetype == 1)	{
 				type = "AACODONMUTSELFINITE";
-				process = new AACodonMutSelFinitePhyloProcess(datafile,treefile,codetype,ncat,fixncomp,empmix,mixtype,fixtopo,fixbl,NSPR,NNNI,fixcodonprofile,fixomega,omegaprior,dirweightprior,dc,myid,nprocs);
+				process = new AACodonMutSelFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,fixomega,omegaprior);
 			}
 			else if (mixturetype == 3)	{
 				type = "AACODONMUTSELSBDP";
-				process = new AACodonMutSelSBDPPhyloProcess(datafile,treefile,codetype,fixtopo,fixbl,NSPR,NNNI,fixcodonprofile,fixomega,omegaprior,kappaprior,dirweightprior,mintotweight,dc,myid,nprocs);
+				process = new AACodonMutSelSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
+			}
+			else if (mixturetype == 5)	{
+				type = "AACODONMUTSELMVNSS";
+				process = new AACodonMutSelMVNSiteSpecificPhyloProcess(fixcodonprofile,fixomega,omegaprior);
 			}
 			else	{
 				cerr << "mixture type " << mixturetype << " not recognized or not yet implemented.\n";
@@ -180,6 +191,35 @@ class Model	{
 			
 		}
 
+		// AA SubSel
+		else if (modeltype == 6)	{
+			if (myid == 0) {
+				// cerr << "catgtr model\n";
+			}
+			if (mixturetype == 1)	{
+				cerr << "finite aa sub sel not yet implemented\n";
+				exit(1);
+			}
+			else if (mixturetype == 2)	{
+				cerr << "simple dp deprecated\n";
+				exit(1);
+			}
+			else if (mixturetype == 3)	{
+				type = "AASUBSELSBDP";
+				process = new AASubSelRASCATSBDPGammaPhyloProcess(nratecat,kappaprior);
+			}
+			else	{
+				cerr << "mixture type " << mixturetype << " not recognized\n";
+				exit(1);
+			}
+		}
+
+		process->SetParameters(datafile,treefile,iscodon,codetype,fixtopo,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
+
+		process->SetName(name);
+
+		process->SetMPI(myid,nprocs);
+		process->New();
 	}
 
 	Model(string inname, int myid, int nprocs)	{
@@ -212,6 +252,12 @@ class Model	{
 		else if (type == "CATGTRSBDP")	{
 			process = new RASCATGTRSBDPGammaPhyloProcess(is,myid,nprocs); 
 		}
+		else if (type == "ZIPCATGTRSBDP")	{
+			process = new ZipRASCATGTRSBDPGammaPhyloProcess(is,myid,nprocs); 
+		}
+		else if (type == "ZIPGPSSCATGTRSBDP")	{
+			process = new ZipGeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess(is,myid,nprocs); 
+		}
 		else if (type == "GPSSCATGTRSBDP")	{
 			process = new GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess(is,myid,nprocs); 
 		}
@@ -221,17 +267,17 @@ class Model	{
 		else if (type == "GPSSCATGTRFINITE")	{
 			process = new GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess(is,myid,nprocs); 
 		}
-		else if (type == "AAMUTSELFINITE")	{
-			process = new AAMutSelFinitePhyloProcess(is,myid,nprocs);
+		else if (type == "ZIPCATGTRFINITE")	{
+			process = new ZipGeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess(is,myid,nprocs); 
 		}
 		else if (type == "AACODONMUTSELFINITE")	{
 			process = new AACodonMutSelFinitePhyloProcess(is,myid,nprocs);
 		}
-		else if (type == "AAMUTSELSBDP")	{
-			process = new AAMutSelSBDPPhyloProcess(is,myid,nprocs);
+		else if (type == "AACODONMUTSELSBDP")	{
+			process = new AACodonMutSelSBDPPhyloProcess(is,myid,nprocs);
 		}
-		else if (type == "AAMUTSELDP")	{
-			process = new AAMutSelDPPhyloProcess(is,myid,nprocs);
+		else if (type == "AACODONMUTSELMVNSS")	{
+			process = new AACodonMutSelMVNSiteSpecificPhyloProcess(is,myid,nprocs);
 		}
 		else if (type == "CODONMUTSELFINITE")	{
 			process = new CodonMutSelFinitePhyloProcess(is,myid,nprocs);
@@ -239,17 +285,12 @@ class Model	{
 		else if (type == "CODONMUTSELSBDP")	{
 			process = new CodonMutSelSBDPPhyloProcess(is,myid,nprocs);
 		}
-		else if (type == "AACODONMUTSELSBDP")	{
-			process = new AACodonMutSelSBDPPhyloProcess(is,myid,nprocs);
-		}
 		else	{
 			cerr << "error, does not recognize model type : " << type << '\n';
 			exit(1);
 		}
 
-		// cerr << "RESTORE SETSIZE\n";
 		process->SetSize(size);
-		// cerr << "reset size to " << process->GetSize() << '\n';
 	}
 
 	void ToStream(ostream& os, bool header)	{
@@ -290,27 +331,49 @@ class Model	{
 		return process->GetSize();
 	}
 
-	void Run(int burnin)	{
+	/*
+	void SMC(int shortcycle, int mediumcycle, int longcycle, int mediumsize, int maxsize, int nrep)	{
 
-		if (burnin != 0)	{
-			if (GetSize() < burnin)	{
-				process->SetBurnin(true);
+		if (nrep)	{
+			ofstream tos((name + ".trees").c_str());
+			ofstream os((name + ".logweights").c_str());
+			double logw[nrep];
+			for (int rep=0; rep<nrep; rep++)	{
+				logw[rep] = process->SMC(name,shortcycle,mediumcycle,longcycle,mediumsize,maxsize);
+				os << logw[rep] << '\n';
+				os.flush();
+				process->RenormalizeBranchLengths();
+				GetTree()->ToStream(tos);
+				process->DenormalizeBranchLengths();
+				tos.flush();
 			}
 		}
+		else	{
+			process->SMC(name,shortcycle,mediumcycle,longcycle,mediumsize,maxsize);
+		}
+	}
+	*/
+
+	void Run(int smc, int deltansite, int shortcycle, int longcycle, int cutoffsize, int nrep)	{
+
 		ofstream ros((name + ".run").c_str());
 		ros << 1 << '\n';
 		ros.close();
 	
+		if (smc)	{
+			cerr << "burnin\n";
+			process->SMCBurnin(name,deltansite,shortcycle,longcycle,cutoffsize,nrep);
+			cerr << "burnin done\n";
+		}
+
 		while (RunningStatus() && ((until == -1) || (GetSize() < until)))	{
-			if (GetSize() >= burnin)	{
-				process->SetBurnin(false);
-			}
 
 			Move(1,every);
 			
 			process->IncSize();
 
 			ofstream os((name + ".treelist").c_str(), ios_base::app);
+			process->SetNamesFromLengths();
 			process->RenormalizeBranchLengths();
 			GetTree()->ToStream(os);
 			process->DenormalizeBranchLengths();

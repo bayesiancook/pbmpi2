@@ -38,7 +38,7 @@ class TaxonSet	{
 	int 			GetTaxonIndex(string intaxon) const;
 	int 			GetTaxonIndexWithIncompleteName(string intaxon) const;
 
-	void			ToStream(ostream& os);
+	void			ToStream(ostream& os) const;
 	private:
 
 	void			RecursiveGetSubSet(const Link* from, int& index);

@@ -17,6 +17,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "MatrixSubstitutionProcess.h"
 #include <vector>
 
+
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 //	* Matrix Substitution Processes
@@ -31,32 +32,20 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 
 // root case (trivial)
-BranchSitePath** MatrixSubstitutionProcess::SampleRootPaths(int* state)	{
-	// BranchSitePath** patharray = new BranchSitePath*[sitemax - sitemin];
-	BranchSitePath** patharray = new BranchSitePath*[GetNsite()];
-	for (int i=sitemin; i<sitemax; i++)	{
-	// for (int i=0; i<GetNsite(); i++)	{
-		patharray[i] = new BranchSitePath(state[i]);
-	}
-
-	return patharray;
+BranchSitePath* MatrixSubstitutionProcess::SampleRootSitePath(int site, int state)	{
+	return new BranchSitePath(state);
 }
 
 // general case
-BranchSitePath** MatrixSubstitutionProcess::SamplePaths(int* stateup, int* statedown, double time) 	{
-	// BranchSitePath** patharray = new BranchSitePath*[sitemax - sitemin];
-	BranchSitePath** patharray = new BranchSitePath*[GetNsite()];
-	for (int i=sitemin; i<sitemax; i++)	{
-	// for (int i=0; i<GetNsite(); i++)	{
-		double rate = GetRate(i);
-		SubMatrix* matrix = GetMatrix(i);
-		BranchSitePath* path = ResampleAcceptReject(1000,stateup[i],statedown[i],rate,time,matrix);
-		if (! path)	{
-			path = ResampleUniformized(stateup[i],statedown[i],rate,time,matrix);
-		}
-		patharray[i] = path;
+BranchSitePath* MatrixSubstitutionProcess::SampleSitePath(int site, int stateup, int statedown, double time) 	{
+
+	double rate = GetRate(site);
+	SubMatrix* matrix = GetMatrix(site);
+	BranchSitePath* path = ResampleAcceptReject(1000,stateup,statedown,rate,time,matrix);
+	if (! path)	{
+		path = ResampleUniformized(stateup,statedown,rate,time,matrix);
 	}
-	return patharray;
+	return path;
 }
 
 

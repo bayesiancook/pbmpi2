@@ -16,17 +16,14 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "PoissonSBDPProfileProcess.h"
 #include "Random.h"
-#include <cassert>
 #include "Parallel.h"
 
-double PoissonSBDPProfileProcess::GlobalMixMove(int nrep, int nallocrep, double epsilon)	{
+double PoissonSBDPProfileProcess::GlobalMixMove(int nrep, int nallocrep, double epsilon, int nprofilerep)	{
 
 	if (Ncomponent != GetNmodeMax())	{
 		cerr << "error in sbdp inc dp move: number of components\n";
 		exit(1);
 	}
-
-	int NAccepted = 0;
 
 	// define threshold between GIbbs and MH
 	int K0 = GetNmodeMax();
@@ -48,21 +45,6 @@ double PoissonSBDPProfileProcess::GlobalMixMove(int nrep, int nallocrep, double 
 	itmp[2] = K0;
 	MPI_Bcast(itmp,3,MPI_INT,0,MPI_COMM_WORLD);
 
-	// split Nsite among GetNprocs()-1 slaves
-	int width = GetNsite()/(GetNprocs()-1);
-	int smin[GetNprocs()-1];
-	int smax[GetNprocs()-1];
-	for(int i=0; i<GetNprocs()-1; ++i) {
-		smin[i] = width*i;
-		smax[i] = width*(1+i);
-		if (i == (GetNprocs()-2)) smax[i] = GetNsite();
-	}
-
-	/*
-	ResampleEmptyProfiles();
-	MPI_Bcast(allocprofile,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-	*/
-
 	double* tmp = new double[Ncomponent * GetDim() + 1];
 
 	for (int rep=0; rep<nrep; rep++)	{
@@ -78,11 +60,13 @@ double PoissonSBDPProfileProcess::GlobalMixMove(int nrep, int nallocrep, double 
 		int tmpalloc[GetNsite()+1];
 		for(int i=1; i<GetNprocs(); ++i) {
 			MPI_Recv(tmpalloc,GetNsite(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
-			for(int j=smin[i-1]; j<smax[i-1]; ++j) {
-				alloc[j] = tmpalloc[j];
-				if ((alloc[j] < 0) || (alloc[j] >= Ncomponent))	{
-					cerr << "alloc overflow\n";
-					exit(1);
+			for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); j++) {
+				if (ActiveSite(j))	{
+					alloc[j] = tmpalloc[j];
+					if ((alloc[j] < 0) || (alloc[j] >= Ncomponent))	{
+						cerr << "alloc overflow\n";
+						exit(1);
+					}
 				}
 			}
 		}
@@ -91,6 +75,9 @@ double PoissonSBDPProfileProcess::GlobalMixMove(int nrep, int nallocrep, double 
 
 		// broadcast new allocations
 		MPI_Bcast(alloc,GetNsite(),MPI_INT,0,MPI_COMM_WORLD);
+
+		// broadcast mode profile suffstats
+		GlobalUpdateModeProfileSuffStat();
 
 		// here slaves do profile moves
 
@@ -129,7 +116,7 @@ double PoissonSBDPProfileProcess::GlobalMixMove(int nrep, int nallocrep, double 
 
 	delete[] tmp;
 
-	return ((double) NAccepted) / GetNsite() / nrep;
+	return 1;
 }
 
 void PoissonSBDPProfileProcess::SlaveMixMove()	{
@@ -143,15 +130,6 @@ void PoissonSBDPProfileProcess::SlaveMixMove()	{
 	double* mLogSamplingArray = new double[Ncomponent];
 	double* cumul = new double[Ncomponent];
 	double* tmp = new double[Ncomponent * GetDim() + 1];
-
-	int width = GetNsite()/(GetNprocs()-1);
-	int smin[GetNprocs()-1];
-	int smax[GetNprocs()-1];
-	for(int i=0; i<GetNprocs()-1; ++i) {
-		smin[i] = width*i;
-		smax[i] = width*(1+i);
-		if (i == (GetNprocs()-2)) smax[i] = GetNsite();
-	}
 
 	for (int rep=0; rep<nrep; rep++)	{
 
@@ -174,65 +152,68 @@ void PoissonSBDPProfileProcess::SlaveMixMove()	{
 
 		for (int allocrep=0; allocrep<nallocrep; allocrep++)	{
 
-			for (int site=smin[GetMyid()-1]; site<smax[GetMyid()-1]; site++)	{
-			// for (int site=GetSiteMin(); site<GetSiteMax(); site++)	{
+			for (int site=GetSiteMin(); site<GetSiteMax(); site++)	{
 
-				int bk = alloc[site];
+				if (ActiveSite(site))	{
 
-				double max = 0;
-				// double mean = 0;
-				for (int mode = 0; mode<K0; mode++)	{
-					mLogSamplingArray[mode] = LogStatProb(site,mode);
-					if ((!mode) || (max < mLogSamplingArray[mode]))	{
-						max = mLogSamplingArray[mode];
+					int bk = alloc[site];
+
+					double max = 0;
+					// double mean = 0;
+					for (int mode = 0; mode<K0; mode++)	{
+						mLogSamplingArray[mode] = LogStatProb(site,mode);
+						if ((!mode) || (max < mLogSamplingArray[mode]))	{
+							max = mLogSamplingArray[mode];
+						}
+						// mean += mLogSamplingArray[mode];
 					}
-					// mean += mLogSamplingArray[mode];
-				}
-				// mean /= K0;
+					// mean /= K0;
 
-				double total = 0;
-				for (int mode = 0; mode<K0; mode++)	{
-					double p = weight[mode] * exp(mLogSamplingArray[mode] - max);
-					total += p;
-					cumul[mode] = total;
-				}
-				if (isnan(total))	{
-					cerr << "nan\n";
-				}
-
-				// double M = exp(mean- max);
-				double M = 1;
-				total += M * totq;
-				double q = total * rnd::GetRandom().Uniform();
-				int mode = 0;
-				while ( (mode<K0) && (q > cumul[mode])) mode++;
-				if (mode == K0)	{
-					mode--;
-					double r = (q - cumul[mode]) / M;
-					while (r > 0)	{
-						mode++;
-						r -= weight[mode];
+					double total = 0;
+					for (int mode = 0; mode<K0; mode++)	{
+						double p = weight[mode] * exp(mLogSamplingArray[mode] - max);
+						total += p;
+						cumul[mode] = total;
 					}
-				}
+					if (isnan(total))	{
+						cerr << "nan\n";
+					}
 
-				// MH 
-				double logratio = 0;
-				if (mode >= K0)	{
-					logratio += LogStatProb(site,mode) - max - log(M);
-				}
-				if (bk >= K0)	{
-					logratio -= LogStatProb(site,bk) - max - log(M);
-				}
-				
-				if (log(rnd::GetRandom().Uniform()) > logratio)	{
-					mode = bk;
-				}
+					// double M = exp(mean- max);
+					double M = 1;
+					total += M * totq;
+					double q = total * rnd::GetRandom().Uniform();
+					int mode = 0;
+					while ( (mode<K0) && (q > cumul[mode])) mode++;
+					if (mode == K0)	{
+						mode--;
+						double r = (q - cumul[mode]) / M;
+						while (r > 0)	{
+							mode++;
+							r -= weight[mode];
+						}
+					}
 
-				int Accepted = (mode != bk);
-				if (Accepted)	{
-					NAccepted ++;
+					// MH 
+					double logratio = 0;
+					if (mode >= K0)	{
+						logratio += LogStatProb(site,mode) - max - log(M);
+					}
+					if (bk >= K0)	{
+						logratio -= LogStatProb(site,bk) - max - log(M);
+					}
+					
+					if (log(rnd::GetRandom().Uniform()) > logratio)	{
+						mode = bk;
+					}
+
+					int Accepted = (mode != bk);
+					if (Accepted)	{
+						NAccepted ++;
+					}
+					alloc[site] = mode;
+
 				}
-				alloc[site] = mode;
 			}
 		}
 		MPI_Send(alloc,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
@@ -247,7 +228,9 @@ void PoissonSBDPProfileProcess::SlaveMixMove()	{
 		UpdateOccupancyNumbers();
 
 		// update sufficient statistics
-		UpdateModeProfileSuffStat();
+		MESSAGE signal;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		SlaveUpdateModeProfileSuffStat();
 
 		// split Nmode among GetNprocs()-1 slaves
 		int mwidth = GetNcomponent()/(GetNprocs()-1);
@@ -282,4 +265,138 @@ void PoissonSBDPProfileProcess::SlaveMixMove()	{
 	delete[] cumul;
 	delete[] mLogSamplingArray;
 	delete[] tmp;
+}
+
+double PoissonSBDPProfileProcess::MixMove(int nrep, int nallocrep, double epsilon, int nprofilerep)	{
+
+	if (GetMyid())	{
+		cerr << "error: slave in PoissonSBDPProfileProcess::MixMove\n";
+		exit(1);
+	}
+
+	if (Ncomponent != GetNmodeMax())	{
+		cerr << "error in sbdp inc dp move: number of components\n";
+		exit(1);
+	}
+
+	int NAccepted = 0;
+
+	// define threshold between GIbbs and MH
+	int K0 = GetNmodeMax();
+	if (epsilon)	{
+		double r = kappa / (1 + kappa);
+		K0 = (int) (log(epsilon) / log(r));
+		if (K0 >= GetNmodeMax())	{
+			K0 = GetNmodeMax();
+		}
+	}
+	// K0 = GetNmodeMax();
+
+	double* mLogSamplingArray = new double[Ncomponent];
+	double* cumul = new double[Ncomponent];
+
+	for (int rep=0; rep<nrep; rep++)	{
+
+		ResampleWeights();
+
+		// realloc move
+
+		double totp = 0;
+		for (int mode = 0; mode<K0; mode++)	{
+			totp += weight[mode];
+		}
+
+		double totq = 0;
+		for (int mode=K0; mode<GetNmodeMax(); mode++)	{
+			totq += weight[mode];
+		}
+
+		int NAccepted = 0;
+
+		for (int allocrep=0; allocrep<nallocrep; allocrep++)	{
+
+			for (int site=0; site<GetNsite(); site++)	{
+
+				if (ActiveSite(site))	{
+
+					int bk = alloc[site];
+
+					double max = 0;
+					// double mean = 0;
+					for (int mode = 0; mode<K0; mode++)	{
+						mLogSamplingArray[mode] = LogStatProb(site,mode);
+						if ((!mode) || (max < mLogSamplingArray[mode]))	{
+							max = mLogSamplingArray[mode];
+						}
+						// mean += mLogSamplingArray[mode];
+					}
+					// mean /= K0;
+
+					double total = 0;
+					for (int mode = 0; mode<K0; mode++)	{
+						double p = weight[mode] * exp(mLogSamplingArray[mode] - max);
+						total += p;
+						cumul[mode] = total;
+					}
+					if (isnan(total))	{
+						cerr << "nan\n";
+					}
+
+					// double M = exp(mean- max);
+					double M = 1;
+					total += M * totq;
+					double q = total * rnd::GetRandom().Uniform();
+					int mode = 0;
+					while ( (mode<K0) && (q > cumul[mode])) mode++;
+					if (mode == K0)	{
+						mode--;
+						double r = (q - cumul[mode]) / M;
+						while (r > 0)	{
+							mode++;
+							r -= weight[mode];
+						}
+					}
+
+					// MH 
+					double logratio = 0;
+					if (mode >= K0)	{
+						logratio += LogStatProb(site,mode) - max - log(M);
+					}
+					if (bk >= K0)	{
+						logratio -= LogStatProb(site,bk) - max - log(M);
+					}
+					
+					if (log(rnd::GetRandom().Uniform()) > logratio)	{
+						mode = bk;
+					}
+
+					int Accepted = (mode != bk);
+					if (Accepted)	{
+						NAccepted ++;
+					}
+					alloc[site] = mode;
+
+				}
+			}
+		}
+
+		// update sufficient statistics
+		UpdateModeProfileSuffStat();
+		UpdateOccupancyNumbers();
+
+		for (int i=0; i<GetNcomponent(); i++)	{
+			if (occupancy[i])	{
+				MoveProfile(i);
+			}
+		}
+
+		UpdateComponents();
+		ResampleEmptyProfiles();
+
+	}
+
+	delete[] cumul;
+	delete[] mLogSamplingArray;
+
+	return ((double) NAccepted) / GetNactiveSite() / nrep;
 }

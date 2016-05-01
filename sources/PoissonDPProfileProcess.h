@@ -41,16 +41,12 @@ class PoissonDPProfileProcess: public virtual PoissonMixtureProfileProcess, publ
 			MoveHyper(0.1 * tuning,10);
 		}
 		return 1;
-	/*
-			GlobalUpdateSiteProfileSuffStat();
-			// UpdateSiteProfileSuffStat();
-			// GlobalUpdateParameters();
-			// GlobalUpdateSiteProfileSuffStat();
-			UpdateModeProfileSuffStat();
-			IncrementalDPMove(nrep);
-			MoveProfile();
-			MoveHyper(tuning,nrep);
-	*/
+	}
+
+	// virtual double SMCAddSites();
+
+	virtual double GlobalParametersMove()	{
+		return 1;
 	}
 
 	virtual void ToStream(ostream& os);
@@ -58,20 +54,7 @@ class PoissonDPProfileProcess: public virtual PoissonMixtureProfileProcess, publ
 
 	protected:
 
-	/*
-	virtual void Create(int innsite, int indim)	{
-		DPProfileProcess::Create(innsite,indim);
-		PoissonMixtureProfileProcess::Create(innsite,indim);
-	}
-
-	virtual void Delete()	{
-		DPProfileProcess::Delete();
-		PoissonMixtureProfileProcess::Delete();
-	}
-	*/
-
 	double IncrementalDPMove(int nrep);
-
 };
 
 #endif

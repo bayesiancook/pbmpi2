@@ -61,6 +61,11 @@ class Branch {
 	virtual void SetName(string inname) {name = inname;}
 	int GetIndex() const {return index;}
 	void SetIndex(int i) {index = i;}
+
+	double GetLength() {
+		double l = atof(GetName().c_str());
+		return l;
+	}
 };
 
 class Link	{
@@ -159,8 +164,7 @@ class Link	{
 	}
 
 
-	// Move the next subtree after this link to be the previous of this link.
-	// Should be call with 0;
+	// Swap the two subtrees around link
 	void Knit()	{
 		Link* previous = 0;	
 		for (previous=this; previous->next != this; previous=previous->Next());
@@ -281,6 +285,17 @@ class Tree : public NewickTree {
 	// but does NOT clone the Nodes and Branches
 	// calls RecursiveClone
 
+	// void SetTo(const Tree* from);
+
+	// based on system of indices
+	// each link has a Next(), and Out(), a GetNode() and a GetBranch()
+	// so just store the indices of each of them in backup
+	// and restore them in Restore
+	void Backup();
+	void Swap();
+	void RecursiveBackup(Link* from);
+	void Restore();
+
 	Tree(string filename);
 	// create a tree by reading into a file (netwick format expected)
 	// calls ReadFromStream
@@ -301,6 +316,10 @@ class Tree : public NewickTree {
 	void DeleteNextLeaf(Link* previous);
 	
 	Link* Detach(Link* down, Link* up);
+	void Detach2(Link* down, Link* up, Link*& fromdown, Link*& fromup);
+
+	Link* GetAncestor(const Link* target);
+	Link* RecursiveGetAncestor(Link* from, const Link* target);
 
 	void Attach(Link* down, Link* up, Link* todown, Link* toup);
 
@@ -332,7 +351,7 @@ class Tree : public NewickTree {
 		taxset = new TaxonSet(this);
 	}
 	
-	void RegisterWith(const TaxonSet* taxset,int id = 0);
+	void RegisterWith(const TaxonSet* taxset);
 	// Registers all leaves of the tree with an external TaxonSet
 	// the taxon set defines a map between taxon names and indices (between 0 and P-1)
 	// the tree is recursively traversed
@@ -367,7 +386,10 @@ class Tree : public NewickTree {
 	// they can be useful to override, so as to bypass Branch::GetName() and Node::GetName()
 
 
-
+	void ToStreamStandardForm(ostream& os);
+	void ToStreamStandardForm(ostream& os, const Link* from);
+	int GetMinLeafIndex(const Link* from) const;
+	Link* GetMinLeaf(Link* from);
 
 
 	void EraseInternalNodeName();
@@ -409,10 +431,22 @@ class Tree : public NewickTree {
 		return 0;
 	}
 				
+	/*
 	const Link* GetLCA(string tax1, string tax2)	{
 		bool found1 = false;
 		bool found2 = false;
 		const Link* link= RecursiveGetLCA(GetRoot(),tax1,tax2,found1,found2);
+		// cerr << tax1 << '\t' << tax2 << '\n';
+		// Print(cerr,link);
+		// cerr << '\n' << '\n';
+		return link;
+	}
+	*/
+
+	Link* GetLCA(string tax1, string tax2)	{
+		bool found1 = false;
+		bool found2 = false;
+		Link* link= RecursiveGetLCA(GetRoot(),tax1,tax2,found1,found2);
 		// cerr << tax1 << '\t' << tax2 << '\n';
 		// Print(cerr,link);
 		// cerr << '\n' << '\n';
@@ -507,6 +541,10 @@ class Tree : public NewickTree {
 		nodemap.clear();
 		branchmap.clear();
 		SetIndices(GetRoot(),Nlink,Nnode,Nbranch);
+		/*
+		cerr << GetSize() << '\t' << Nnode << '\t' << Nbranch << '\t' << Nlink << '\n';
+		exit(1);
+		*/
 	}
 
 	int GetNlink()	{
@@ -520,8 +558,6 @@ class Tree : public NewickTree {
 	int GetNnode()	{
 		return Nnode;
 	}
-
-	// maybe
 
 	const Node* GetNode(int index)	{
 		return nodemap[index];
@@ -539,6 +575,11 @@ class Tree : public NewickTree {
 	map<int,const Node*> nodemap;
 	map<int,const Branch*> branchmap;
 	map<int,Link*> linkmap;
+
+	map<Link*, Link*> bknext;
+	map<Link*, Link*> bkout;
+	map<Link*, Node*> bknode;
+	map<Link*, Branch*> bkbranch;
 
 	void CheckIndices(Link* from)	{
 
@@ -608,6 +649,7 @@ class Tree : public NewickTree {
 
 	// returns 0 if not found
 	// returns link if found (then found1 and found2 must 
+	/*
 	const Link* RecursiveGetLCA(const Link* from, string tax1, string tax2, bool& found1, bool& found2)	{
 		const Link* ret= 0;
 		if (from->isLeaf())	{
@@ -624,6 +666,47 @@ class Tree : public NewickTree {
 				bool tmp1 = false;
 				bool tmp2 = false;
 				const Link* ret2 = RecursiveGetLCA(link->Out(),tax1,tax2,tmp1,tmp2);
+				found1 |= tmp1;
+				found2 |= tmp2;
+				if (ret2)	{
+					if (ret)	{
+						cerr << "error : found node twice\n";
+						cerr << tax1 << '\t' << tax2 << '\n';
+						ToStream(cerr,ret2->Out());
+						cerr << '\n';
+						ToStream(cerr,ret->Out());
+						cerr << '\n';
+						exit(1);
+					}
+					ret = ret2;
+				}
+			}
+			if (! ret)	{
+				if (found1 && found2)	{
+					ret = from;
+				}
+			}
+		}
+		return ret;
+	}
+	*/
+
+	Link* RecursiveGetLCA(Link* from, string tax1, string tax2, bool& found1, bool& found2)	{
+		Link* ret= 0;
+		if (from->isLeaf())	{
+			found1 |= (from->GetNode()->GetName() == tax1);
+			found2 |= (from->GetNode()->GetName() == tax2);
+			if (! ret)	{
+				if (found1 && found2)	{
+					ret = from;
+				}
+			}
+		}
+		else	{
+			for (Link* link=from->Next(); link!=from; link=link->Next())	{
+				bool tmp1 = false;
+				bool tmp2 = false;
+				Link* ret2 = RecursiveGetLCA(link->Out(),tax1,tax2,tmp1,tmp2);
 				found1 |= tmp1;
 				found2 |= tmp2;
 				if (ret2)	{

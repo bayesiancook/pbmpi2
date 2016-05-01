@@ -22,9 +22,11 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 class GammaBranchProcess : public virtual BranchProcess	{
 
+	using BranchProcess::SampleLength;
+
 	public:
 
-	GammaBranchProcess() : betaprior(0) {}
+	GammaBranchProcess() : betaprior(0), branchalpha(1.0), branchbeta(10.0) {}
 	virtual ~GammaBranchProcess() {}
 
 	double LogBranchLengthPrior(const Branch* branch);
@@ -34,13 +36,16 @@ class GammaBranchProcess : public virtual BranchProcess	{
 	double GetBranchAlpha() {return branchalpha;}
 	double GetBranchBeta() {return branchbeta;}
 
-	void SampleLength();
+	void PriorSampleLength();
 	void SampleLength(const Branch* branch);
 
 	void ToStreamWithLengths(ostream& os, const Link* from);
 
 	// conjugate sampling
-	double Move(double tuning = 1, int nrep=1);
+	virtual double BranchProcessMove(double tuning = 1, int nrep=1)	{
+		return Move(tuning,nrep);
+	}
+	virtual double Move(double tuning = 1, int nrep=1);
 	double MoveBranchBeta(double tuning, int nrep);
 	double MoveLength();
 
@@ -52,11 +57,9 @@ class GammaBranchProcess : public virtual BranchProcess	{
 
 	protected:
 
-	virtual void Create(Tree* intree, double inalpha = 1, double inbeta = 10)	{
-		BranchProcess::Create(intree);
+	void SetHyperParameters(double inalpha, double inbeta)	{
 		branchalpha = inalpha;
 		branchbeta = inbeta;
-		// RecursiveSampleLength(GetRoot());
 	}
 
 	virtual void Delete() {}

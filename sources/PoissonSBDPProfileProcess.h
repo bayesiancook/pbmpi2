@@ -27,42 +27,19 @@ class PoissonSBDPProfileProcess: public virtual PoissonDPProfileProcess, public 
 	PoissonSBDPProfileProcess() : InitIncremental(0) {}
 	virtual ~PoissonSBDPProfileProcess() {}
 
-	virtual double Move(double tuning = 1, int n = 1, int nrep = 1)	{
-
-		// totchrono.Start();
-		for (int rep=0; rep<nrep; rep++)	{
-
-			// incchrono.Start();
-			GlobalUpdateParameters();
-			GlobalUpdateSiteProfileSuffStat();
-			UpdateModeProfileSuffStat();
-			if ((!rep) && InitIncremental)	{
-				cerr << "init incremental\n";
-				InitIncremental--;
-				IncrementalSampleAlloc();
-				UpdateModeProfileSuffStat();
-			}
-			GlobalMixMove(5,1,0.001);
-			MoveOccupiedCompAlloc(5);
-			MoveAdjacentCompAlloc(5);
-			// incchrono.Stop();
-			GlobalUpdateParameters();
-			GlobalUpdateSiteProfileSuffStat();
-			MoveHyper(tuning,10);
-		}
-		// totchrono.Stop();
-		return 1;
-	}
-
 	virtual double LogProxy(int site, int cat)	{
 		return DiffLogSampling(cat,site);
 	}
 
+	virtual double Move(double tuning = 1, int n = 1, int nrep = 1)	{
+		return SBDPProfileProcess::Move(tuning,n,nrep);
+	}
+
 	protected:
 
-	virtual void Create(int innsite, int indim)	{
-		PoissonDPProfileProcess::Create(innsite,indim);
-		SBDPProfileProcess::Create(innsite,indim);
+	virtual void Create()	{
+		PoissonDPProfileProcess::Create();
+		SBDPProfileProcess::Create();
 	}
 
 	virtual void Delete()	{
@@ -70,8 +47,9 @@ class PoissonSBDPProfileProcess: public virtual PoissonDPProfileProcess, public 
 		PoissonDPProfileProcess::Delete();
 	}
 
-	double GlobalMixMove(int nrep, int nallocrep, double epsilon);
+	double GlobalMixMove(int nrep, int nallocrep, double epsilon, int nprofilerep);
 	void SlaveMixMove();
+	double MixMove(int nrep, int nallocrep, double epsilon, int nprofilerep);
 
 	double IncrementalDPMove(int nrep, double c)	{
 		cerr << "error : in poisson sbdp incremental\n";

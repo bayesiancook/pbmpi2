@@ -171,17 +171,11 @@ void SequenceAlignment::ToStream(ostream& os)	{
 	os << '\n';
 }
 
-FileSequenceAlignment::FileSequenceAlignment(string filename,int fullline,int myid)	{
+FileSequenceAlignment::FileSequenceAlignment(string filename)	{
 
 	SpeciesNames = 0;
-	if (myid == 0) cerr << "read data from file : " << filename << "\n";
 	ReadDataFromFile(filename,0);
 	taxset = new TaxonSet(SpeciesNames,Ntaxa);
-	if (myid == 0) {
-		cerr << "number of taxa  : " << GetNtaxa() << '\n';
-		cerr << "number of sites : " << GetNsite() << '\n';
-		cerr << "number of states: " << GetNstate() << '\n';
-	}
 	delete[] SpeciesNames;
 }
 
@@ -875,7 +869,6 @@ FileSequenceAlignment::ReadPhylip (string filespec, int repeattaxa)	{
 			exit(1);
 		}
 		Nsite = Int(temp);
-		cerr << Ntaxa << '\t' << Nsite << '\n';
 
 		Data = new (int *[Ntaxa]);
 		for (int i=0; i<Ntaxa; i++)	{

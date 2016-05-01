@@ -24,11 +24,16 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 double RateProcess::GetMeanRate()	{
 	double total = 0;
+	int count = 0;
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-	// for (int i=0; i<GetNsite(); i++)	{
-		total += GetRate(i);
+		if (ActiveSite(i))	{
+			total += GetRate(i);
+			count++;
+		}
 	}
-	return total / (GetSiteMax() - GetSiteMin());
-	// return total / GetNsite();
+	if (count)	{
+		return total / (GetSiteMax() - GetSiteMin());
+	}
+	return 1;
 }
 

@@ -27,15 +27,11 @@ class GeneralPathSuffStatMatrixPhyloProcess : public virtual MatrixPhyloProcess,
 	GeneralPathSuffStatMatrixPhyloProcess() : siterootstate(0), sitepaircount(0), sitewaitingtime(0) {}
 	virtual ~GeneralPathSuffStatMatrixPhyloProcess() {}
 
-	// this is the log of the site likelihood?
-	double logSiteProbPath(int site, SubMatrix* mat);
-
 	protected:
 
-	virtual void Create(Tree* intree, SequenceAlignment* indata, int indim,int insitemin,int insitemax)	{
-
-		GeneralPathSuffStatMatrixSubstitutionProcess::Create(indata->GetNsite(),indim,insitemin,insitemax);
-		MatrixPhyloProcess::Create(intree,indata,indim);
+	virtual void Create()	{
+		GeneralPathSuffStatMatrixSubstitutionProcess::Create();
+		MatrixPhyloProcess::Create();
 	}
 
 	virtual void Delete()	{
@@ -54,11 +50,11 @@ class GeneralPathSuffStatMatrixPhyloProcess : public virtual MatrixPhyloProcess,
 	void GlobalUnfold();
 	// void GlobalCollapse();
 
-	void CreateSuffStat();
-	void DeleteSuffStat();
+	virtual void CreateSuffStat();
+	virtual void DeleteSuffStat();
 
-	void GlobalUpdateSiteProfileSuffStat();
-	void SlaveUpdateSiteProfileSuffStat();
+	virtual void GlobalUpdateSiteProfileSuffStat();
+	virtual void SlaveUpdateSiteProfileSuffStat();
 
 	void UpdateSiteRateSuffStat();
 	void UpdateBranchLengthSuffStat();

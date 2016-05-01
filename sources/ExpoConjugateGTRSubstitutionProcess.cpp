@@ -34,39 +34,44 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 
 void ExpoConjugateGTRSubstitutionProcess::AddRRSuffStat(int* rrsuffstatcount, double* rrsuffstatbeta, BranchSitePath** patharray, double branchlength)	{
-	for (int i=sitemin; i<sitemax; i++)	{
-	// for (int i=0; i<GetNsite(); i++)	{
-		patharray[i]->AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,GetRate(i)*branchlength,GetProfile(i),GetNstate(i));
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			patharray[i]->AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,GetRate(i)*branchlength,GetProfile(i),GetNstate(i));
+		}
 	}
 }
 
 void ExpoConjugateGTRSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength)	{
-	for (int i=sitemin; i<sitemax; i++)	{
-	// for (int i=0; i<GetNsite(); i++)	{
-		patharray[i]->AddRateSuffStat(siteratesuffstatcount[i],siteratesuffstatbeta[i],branchlength,GetRR(),GetProfile(i),GetNstate(i));
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			patharray[i]->AddRateSuffStat(siteratesuffstatcount[i],siteratesuffstatbeta[i],branchlength,GetRR(),GetProfile(i),GetNstate(i));
+		}
 	}
 }
 
 void ExpoConjugateGTRSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray)	{
-	for (int i=sitemin; i<sitemax; i++)	{
-	// for (int i=0; i<GetNsite(); i++)	{
-		patharray[i]->AddRateSuffStat(count,beta,GetRate(i),GetRR(),GetProfile(i),GetNstate(i));
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			patharray[i]->AddRateSuffStat(count,beta,GetRate(i),GetRR(),GetProfile(i),GetNstate(i));
+		}
 	}
 }
 
 void ExpoConjugateGTRSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofilesuffstatcount, double** siteprofilesuffstatbeta, BranchSitePath** patharray, double branchlength, bool isroot)	{
 	if (!isroot)	{
 		// non root case
-		for (int i=sitemin; i<sitemax; i++)	{
-		// for (int i=0; i<GetNsite(); i++)	{
-			patharray[i]->AddProfileSuffStat(siteprofilesuffstatcount[i],siteprofilesuffstatbeta[i],GetRate(i)*branchlength,GetRR(),GetNstate(i));
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+				patharray[i]->AddProfileSuffStat(siteprofilesuffstatcount[i],siteprofilesuffstatbeta[i],GetRate(i)*branchlength,GetRR(),GetNstate(i));
+			}
 		}
 	}
 	else	{
 		// root case
-		for (int i=sitemin; i<sitemax; i++)	{
-		// for (int i=0; i<GetNsite(); i++)	{
-			siteprofilesuffstatcount[i][patharray[i]->GetInitState()]++;
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+				siteprofilesuffstatcount[i][patharray[i]->GetInitState()]++;
+			}
 		}
 	}
 }

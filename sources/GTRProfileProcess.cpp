@@ -25,12 +25,17 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 
 
-void GTRProfileProcess::Create(int innsite, int indim)	{
+void GTRProfileProcess::Create()	{
 	if (! rr)	{
-		ProfileProcess::Create(innsite,indim);
+		ProfileProcess::Create();
 		Nrr = GetDim() * (GetDim()-1) / 2;
 		rr = new double[Nrr];
-		SampleRR();
+		if (rrtype != "None")	{
+			SetRR(rrtype);
+		}
+		else	{
+			SampleRR();
+		}
 	}
 }
 
@@ -56,6 +61,50 @@ void GTRProfileProcess::SampleRR()	{
 		// rr[i] = LG_RR[i];
 		rr[i] = rnd::GetRandom().sExpo();
 	}
+}
+	
+double  GTRProfileProcess::MoveRR(double tuning, int n, int nrep)	{
+	GlobalUpdateRRSuffStat();
+	int naccepted = 0;
+
+	int* choose = new int[n];
+	double* bk = new double[n];
+
+	for (int i=0; i<nrep; i++)	{
+
+		rnd::GetRandom().DrawFromUrn(choose,n,Nrr);
+		for (int j=0; j<n; j++)	{
+			bk[j] = rr[choose[j]];
+		}
+		
+		double deltalogratio = - LogRRPrior() - ProfileSuffStatLogProb();
+
+		for (int j=0; j<n; j++)	{
+			double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
+			double e = exp(m);
+			rr[choose[j]] *= e;
+			deltalogratio += m;
+		}
+
+		UpdateMatrices();
+
+		deltalogratio += LogRRPrior() + ProfileSuffStatLogProb();
+		int accepted = (log(rnd::GetRandom().Uniform()) < deltalogratio);
+		if (accepted)	{
+			naccepted++;
+		}
+		else	{
+			for (int j=0; j<n; j++)	{
+				rr[choose[j]] = bk[j];
+			}
+			UpdateMatrices();
+		}
+	}
+
+	delete[] bk;
+	delete[] choose;
+
+	return ((double) naccepted) / nrep;
 }
 
 void GTRProfileProcess::SetRR(string type)	{

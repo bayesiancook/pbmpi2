@@ -60,8 +60,16 @@ int main(int argc, char* argv[])	{
 	int fixcodonprofile = 1;
 	int fixomega = 1;
 	int NSPR = 10;
+	int NMHSPR = 0;
+	int NTSPR = 0;
+	double topolambda = 1.0;
+	double topomu = 0;
+	int toponstep = 10;
 	int NNNI = 0;
+	int nspec = 0;
+	int ntspec = 0;
 	int fixbl = 0;
+	int sumovercomponents = 0;
 	int fixncomp = 0;
 	int force = 0;
 	int empmix = 0;
@@ -69,19 +77,40 @@ int main(int argc, char* argv[])	{
 	string rrtype = "None";
 
 	int kappaprior = 0;
-	int dirweightprior=0;
-	// int betaprior = 0;
+	int profilepriortype =0;
 
 	int suffstat = 1;
 
 	int saveall = 1;
-	int incinit = 0;
-
-	int burnin = 0;
 
 	int randfix = -1;
 
-	double mintotweight = 0;
+	int zip = 0;
+
+	int smc = 0;
+	int deltansite = 10;
+	int shortcycle = 1;
+	int longcycle = 10;
+	int cutoffsize = 0;
+	int nrep = 1;
+
+	int bpp = 0;
+	int nbpp = 0;
+	int ntbpp = 0;
+	int bppnstep = 0;
+	string bppname = "";
+	double bppcutoff = 0.1;
+	double bppbeta = 1.0;
+
+	int proposemode = 0;
+	int allocmode = 0;
+	int sumratealloc = 1;
+
+	int fasttopo = 0;
+	double fasttopofracmin = 0.1;
+	int fasttoponstep = 10;
+
+	int fastcondrate = 0;
 
 	try	{
 
@@ -125,19 +154,113 @@ int main(int argc, char* argv[])	{
 					fixtopo = 1;
 				}
 			}
+			else if (s == "-smc")	{
+				smc = 1;
+				i++;
+				deltansite = atoi(argv[i]);
+				i++;
+				cutoffsize = atoi(argv[i]);
+			}
 			else if (s == "-Tbl")	{
 				i++;
 				treefile = argv[i];
 				fixtopo = 1;
 				fixbl = 1;
 			}
+			else if (s == "-fasttopo")	{
+				fasttopo = 1;
+				i++;
+				fasttopofracmin = atof(argv[i]);
+				i++;
+				fasttoponstep = atoi(argv[i]);
+				i++;
+				topomu = atof(argv[i]);
+			}
+			else if (s == "-fastcondrate")	{
+				fastcondrate = 1;
+			}
+			else if (s == "-sumcomp")	{
+				sumovercomponents = 1;
+			}
+			else if (s == "-bpp")	{
+				bpp = 1;
+				i++;
+				nbpp = atoi(argv[i]);
+				i++;
+				ntbpp = atoi(argv[i]);
+				i++;
+				bppnstep = atoi(argv[i]);
+				i++;
+				bppname = argv[i];
+				i++;
+				bppcutoff = atof(argv[i]);
+				i++;
+				bppbeta = atof(argv[i]);
+			}
+			else if (s == "-ccp")	{
+				bpp = 2;
+				i++;
+				nbpp = atoi(argv[i]);
+				i++;
+				ntbpp = atoi(argv[i]);
+				i++;
+				bppnstep = atoi(argv[i]);
+				i++;
+				bppname = argv[i];
+				i++;
+				bppcutoff = atof(argv[i]);
+				i++;
+				bppbeta = atof(argv[i]);
+			}
+			else if (s == "-ftp")	{
+				bpp = 3;
+				i++;
+				nbpp = atoi(argv[i]);
+				i++;
+				ntbpp = atoi(argv[i]);
+				i++;
+				bppnstep = atoi(argv[i]);
+				i++;
+				bppname = argv[i];
+				i++;
+				bppcutoff = atof(argv[i]);
+				i++;
+				bppbeta = atof(argv[i]);
+			}
 			else if (s == "-spr")	{
 				i++;
 				NSPR = atoi(argv[i]);
 			}
+			else if ((s == "-sprmh") || (s == "-mhspr"))	{
+				i++;
+				NMHSPR = atoi(argv[i]);
+				i++;
+				topolambda = atof(argv[i]);
+			}
+
+			else if (s == "-tspr")	{
+				i++;
+				NTSPR = atoi(argv[i]);
+				i++;
+				topolambda = atof(argv[i]);
+				i++;
+				topomu = atof(argv[i]);
+				i++;
+				toponstep = atoi(argv[i]);
+			}
 			else if (s == "-nni")	{
 				i++;
 				NNNI = atoi(argv[i]);
+			}
+			else if (s == "-specspr")	{
+				i++;
+				nspec = atoi(argv[i]);
+			}
+			else if (s == "-tspecspr")	{
+				i++;
+				ntspec = atoi(argv[i]);
+				i++;
+				toponstep = atoi(argv[i]);
 			}
 			else if (s == "-fixcodonprofile")	{
 				fixcodonprofile = 1;
@@ -160,13 +283,8 @@ int main(int argc, char* argv[])	{
 			else if (s == "-S")	{
 				saveall = 0;
 			}
-			else if (s == "-priorinit")	{
-				incinit = 0;
-			}
-			else if (s == "-incinit")	{
-				i++;
-				incinit = atoi(argv[i]);
-				// incinit = 0;
+			else if (s == "-zip")	{
+				zip = 1;
 			}
 			else if ((s == "-poisson") || (s == "-f81"))	{
 				modeltype = 1;
@@ -175,23 +293,26 @@ int main(int argc, char* argv[])	{
 				modeltype = 2;
 			}
 			else if (s == "-mutselc")	{
+				iscodon = 1;
 				modeltype = 4;
 			}
 			else if ((s == "-mutsel") || (s == "-mutselaa") || (s == "-mutselaac"))	{
+				iscodon = 1;
 				modeltype = 5;
+			}
+			else if (s == "-aasubsel")	{
+				modeltype = 6;
 			}
 			else if (s == "-dgam")	{
 				i++;
 				dgam = atoi(argv[i]);
 			}
-			/*
 			else if (s == "-genpath")	{
 				suffstat = 0;
 			}
 			else if (s == "-olddp")	{
 				mixturetype = 2;
 			}
-			*/
 			else if ((s == "-finite") || (s == "-ncat"))	{
 				mixturetype = 1;
 				i++;
@@ -204,9 +325,23 @@ int main(int argc, char* argv[])	{
 			else if (s == "-freencomp")	{
 				fixncomp = 0;
 			}
+			else if (s == "-conscatfix")	{
+				mixturetype = 1;
+				empmix = 3;
+				fixncomp = 1;
+				i++;
+				mixtype = argv[i];
+			}
 			else if (s == "-catfix")	{
 				mixturetype = 1;
 				empmix = 1;
+				fixncomp = 1;
+				i++;
+				mixtype = argv[i];
+			}
+			else if (s == "-priorcatfix")	{
+				mixturetype = 1;
+				empmix = 2;
 				fixncomp = 1;
 				i++;
 				mixtype = argv[i];
@@ -369,26 +504,29 @@ int main(int argc, char* argv[])	{
 				kappaprior = 0;
 			}
 			else if (s == "-rigidbaseprior")	{
-				dirweightprior = 1;
+				profilepriortype = 1;
 			}
-			else if (s == "-mintotweight")	{
-				i++;
-				mintotweight = atof(argv[i]);
+			else if (s == "-mvn")	{
+				profilepriortype = 2;
 			}
-			/*
-			else if (s == "-jeffbeta")	{
-				betaprior = 1;
+			else if (s == "-dirprofile")	{
+				proposemode = 1;
 			}
-			else if (s == "-expbeta")	{
-				betaprior = 0;
+			else if (s == "-suballoc")	{
+				allocmode = 1;
 			}
-			*/
+			else if (s == "-condrate")	{
+				sumratealloc = 0;
+			}
+			else if (s == "-sumrate")	{
+				sumratealloc = 1;
+			}
 			else if (s == "-jeffomega")	{
 				omegaprior = 1;
 			}
-			else if (s == "-b")	{
+			else if (s == "-nrep")	{
 				i++;
-				burnin = atoi(argv[i]);
+				nrep = atoi(argv[i]);
 			}
 			else if ( (s == "-x") || (s == "-extract") )	{
 				i++;
@@ -411,6 +549,7 @@ int main(int argc, char* argv[])	{
 			throw(0);
 		}
 		*/
+		/*
 		if (nprocs <= 1)	{
 			if (! myid)	{
 				cerr << "error : pb_mpi requires at least 2 processes running in parallel (one master and at least one slave)\n";
@@ -418,6 +557,7 @@ int main(int argc, char* argv[])	{
 			MPI_Finalize();
 			exit(1);
 		}
+		*/
 	}
 	catch(...)	{
 		if (! myid)	{
@@ -519,7 +659,11 @@ int main(int argc, char* argv[])	{
 			else if (mixturetype == 3)	{
 				cerr << "stick-breaking Dirichlet process mixture (cat)\n";
 			}
-			if (modeltype == 3)	{
+			else if (mixturetype == 5)	{
+				cerr << "site-specific profiles\n";
+			}
+
+			if (modeltype == 5)	{
 				cerr << "codon mutation selection model\n";
 			}
 			else if (modeltype == 1)	{
@@ -553,14 +697,18 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,modeltype,dgam,mixturetype,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,fixtopo,NSPR,NNNI,fixcodonprofile,fixomega,fixbl,omegaprior,kappaprior,dirweightprior,mintotweight,dc,every,until,saveall,incinit,name,myid,nprocs);
+		model = new Model(datafile,treefile,modeltype,dgam,mixturetype,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,fixtopo,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs);
+
 		if (! myid)	{
-			// cerr << "create files\n";
 			cerr << '\n';
 			cerr << "chain name : " << name << '\n';
 			// MPI master only
 			ofstream os((name + ".treelist").c_str());
 			ofstream tos((name + ".trace").c_str());
+			if (NTSPR || fasttopo)	{
+				ofstream tspros((name + ".temperedmove").c_str());
+			}
+			ofstream topos((name + ".topo").c_str());
 			model->TraceHeader(tos);
 			tos.close();
 			ofstream pos((name + ".param").c_str());
@@ -569,7 +717,6 @@ int main(int argc, char* argv[])	{
 			if (saveall)	{
 				ofstream cos((name + ".chain").c_str());
 			}
-			// cerr << "create files ok\n";
 		}
 	}
 	else	{
@@ -580,12 +727,14 @@ int main(int argc, char* argv[])	{
 	}
 
 	if (myid == 0) {
+
 		cerr << "run started\n";
 		cerr << '\n';
-		// model->Trace(cerr);
-		model->Run(burnin);
-		MESSAGE signal = KILL;
-		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		model->Run(smc,deltansite,shortcycle,longcycle,cutoffsize,nrep);
+		if (nprocs > 1)	{
+			MESSAGE signal = KILL;
+			MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		}
 	}
 	else {
 		// MPI slave

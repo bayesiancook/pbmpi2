@@ -337,9 +337,7 @@ double SubMatrix::GetRate()	{
 
 	if (! ArrayUpdated())	{
 		UpdateStationary();
-		for (int k=0; k<Nstate; k++)	{
-			ComputeArray(k);
-		}
+		ComputeFullArray();
 	}
 	for (int k=0; k<Nstate; k++)	{
 		flagarray[k] = true;
@@ -379,9 +377,7 @@ double** SubMatrix::GetInvEigenVect() {
 
 void SubMatrix::UpdateMatrix()	{
 	UpdateStationary();
-	for (int k=0; k<Nstate; k++)	{
-		ComputeArray(k);
-	}
+	ComputeFullArray();
 	for (int k=0; k<Nstate; k++)	{
 		flagarray[k] = true;
 	}

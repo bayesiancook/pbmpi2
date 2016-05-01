@@ -14,7 +14,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 #include "StringStreamUtils.h"
-#include <cassert>
 #include "CodonMutSelFinitePhyloProcess.h"
 #include "Parallel.h"
 #include <string.h>
@@ -28,7 +27,7 @@ void CodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nnucrr = GetNnucrr(),nnucstat = 4;
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	int nstate = data->GetNstate();
+	int nstate = GetData()->GetNstate();
 	nd = 2+ nbranch + nnucrr + nnucstat + L2 + L1*(L2+1); // check if these last terms are correct in this context...
 	ni = 1 + ProfileProcess::GetNsite();
 	int* ivector = new int[ni];
@@ -84,27 +83,22 @@ void CodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 
 void CodonMutSelFinitePhyloProcess::SlaveExecute(MESSAGE signal)	{
 
-	assert(myid > 0);
-
 	switch(signal) {
 
-	/*
-	case PRINT_TREE:
-		SlavePrintTree();
-		break;
-	*/
-	case REALLOC_MOVE:
-		SlaveIncrementalFiniteMove();
-		break;
-	case PROFILE_MOVE:
-		SlaveMoveProfile();
-		break;
-	default:
-		PhyloProcess::SlaveExecute(signal);
+		case REALLOC_MOVE:
+			SlaveIncrementalFiniteMove();
+			break;
+		case PROFILE_MOVE:
+			SlaveMoveProfile();
+			break;
+		default:
+			PhyloProcess::SlaveExecute(signal);
 	}
 }
 
 void CodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
+
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
 	// about model parameters
@@ -116,13 +110,12 @@ void CodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	// store it in the local copies of the variables
 	// and then call
 	// SetBranchLengthsFromArray()
-	assert(myid == 0);
 	int i,j,nnucrr,nnucstat,nbranch = GetNbranch(),ni,nd,L1,L2;
 	nnucrr = GetNnucrr();
 	nnucstat = 4;	
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	int nstate = data->GetNstate();
+	int nstate = GetData()->GetNstate();
 	nd = 2 + nbranch + nnucrr + nnucstat + L2 + L1*(L2+1);  // check if these last terms are correct in this context...
 	ni = 1 + ProfileProcess::GetNsite(); // 1 for the number of componenets, and the rest for allocations
 	int ivector[ni];
@@ -172,6 +165,7 @@ void CodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	// Now send out the doubles and ints over the wire...
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
 }
 
 void CodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[])	{
@@ -248,13 +242,5 @@ void CodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[])	{
 		until = GetSize();
 	}
 
-	//if (sel)	{
-	//	ReadSDistributions(name,burnin,every,until);
-	//}
-	//else if (ppred)	{
-	//	PostPred(ppred,name,burnin,every,until);
-	//}
-	//else	{
-		Read(name,burnin,every,until);
-	//}
+	Read(name,burnin,every,until);
 }

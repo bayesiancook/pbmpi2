@@ -49,30 +49,6 @@ class CodonSubMatrix : public SubMatrix	{
 	bool normalise;		
 };
 
-
-class AAMutSelProfileSubMatrix : public CodonSubMatrix	{
-
-	public:
-
-	AAMutSelProfileSubMatrix(CodonStateSpace* instatespace, double* innucrr, double* innucstat, double* inaaprofile, bool innormalise) :
-		CodonSubMatrix(instatespace,innucrr,innucstat,innormalise),
-		aaprofile(inaaprofile) {}
-
-	double* GetAAProfile() {return aaprofile;}
-
-	protected:
-
-	void ComputeArray(int state);
-	void ComputeStationary();
-	double GetRate();
-	double* aaprofile;
-
-	static const double TOOSMALL = 1e-30;
-	static const double TOOLARGE = 500;
-	static const double TOOLARGENEGATIVE = -500;
-
-};
-
 class AACodonMutSelProfileSubMatrix : public CodonSubMatrix	{
 
 	public:

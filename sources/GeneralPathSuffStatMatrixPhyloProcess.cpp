@@ -14,7 +14,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#include <cassert>
 #include "GeneralPathSuffStatMatrixPhyloProcess.h"
 #include "Parallel.h"
 #include <string.h>
@@ -28,54 +27,51 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 void GeneralPathSuffStatMatrixPhyloProcess::Unfold()	{
 
-	if (condflag)	{
-		cerr << "error in PhyloProcess::Unfold\n";
-		exit(1);
-	}
-	DeleteSuffStat();
 	DeleteMappings();
 	ActivateSumOverRateAllocations();
-
+	if (!sumratealloc)	{
+		DrawAllocations(0);
+		InactivateSumOverRateAllocations(ratealloc);
+	}
 	// this will in fact create only the matrices that did not already exist
 	CreateMatrices();
-
 	// this one is important
 	UpdateMatrices();
-
-	CreateCondSiteLogL();
-	CreateConditionalLikelihoods();
-
+	// CreateConditionalLikelihoods();
 	UpdateConditionalLikelihoods();
+	activesuffstat = false;
 }
 
 void GeneralPathSuffStatMatrixPhyloProcess::Collapse()	{
 
-	if (! condflag)	{
-		cerr << "error in PhyloProcess::Collapse\n";
-		exit(1);
+	if (sumratealloc)	{
+		DrawAllocations(0);
+		InactivateSumOverRateAllocations(ratealloc);
 	}
-	DrawAllocations();
 	SampleNodeStates();
-	DeleteCondSiteLogL();
-	DeleteConditionalLikelihoods();
-	InactivateSumOverRateAllocations(ratealloc);
+	// DeleteConditionalLikelihoods();
 	SampleSubstitutionMappings(GetRoot());
 	// DeleteMatrices();
-	CreateSuffStat();
+	activesuffstat = true;
 }
 
 void GeneralPathSuffStatMatrixPhyloProcess::GlobalUnfold()	{
 
-	assert(myid == 0);
-	DeleteSuffStat();
-	GlobalUpdateParameters();
+	if (GetNprocs() > 1)	{
+		GlobalUpdateParameters();
 
-	CreateMatrices();
+		CreateMatrices();
 
-	MESSAGE signal = UNFOLD;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MESSAGE signal = UNFOLD;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	GlobalUpdateConditionalLikelihoods();
+		GlobalUpdateConditionalLikelihoods();
+	}
+	else	{
+		CreateMatrices();
+		Unfold();
+		UpdateConditionalLikelihoods();
+	}
 }
 
 
@@ -93,12 +89,6 @@ void GeneralPathSuffStatMatrixPhyloProcess::CreateSuffStat()	{
 
 void GeneralPathSuffStatMatrixPhyloProcess::DeleteSuffStat()	{
 
-	/*
-	if (!sitepaircount)	{
-		cerr << "error in PhyloProcess::DeleteSuffStat\n";
-		// exit(1);
-	}
-	*/
 	delete[] siterootstate;
 	delete[] sitepaircount;
 	delete[] sitewaitingtime;
@@ -110,9 +100,11 @@ void GeneralPathSuffStatMatrixPhyloProcess::DeleteSuffStat()	{
 
 void GeneralPathSuffStatMatrixPhyloProcess::UpdateSiteProfileSuffStat()	{
 
-	for (int i=sitemin; i<sitemax; i++)	{
-		sitepaircount[i].clear();
-		sitewaitingtime[i].clear();
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			sitepaircount[i].clear();
+			sitewaitingtime[i].clear();
+		}
 	}
 
 	for (int j=0; j<GetNbranch(); j++)	{
@@ -122,10 +114,11 @@ void GeneralPathSuffStatMatrixPhyloProcess::UpdateSiteProfileSuffStat()	{
 
 void GeneralPathSuffStatMatrixPhyloProcess::UpdateSiteRateSuffStat()	{
 
-	for (int i=sitemin; i<sitemax; i++)	{
-	// for (int i=0; i<GetNsite(); i++)	{
-		siteratesuffstatcount[i] = 0;
-		siteratesuffstatbeta[i] = 0;
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			siteratesuffstatcount[i] = 0;
+			siteratesuffstatbeta[i] = 0;
+		}
 	}
 
 	for (int j=1; j<GetNbranch(); j++)	{
@@ -155,199 +148,101 @@ void GeneralPathSuffStatMatrixPhyloProcess::UpdateBranchLengthSuffStat()	{
 
 void GeneralPathSuffStatMatrixPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 
-	for (int i=0; i<GetNsite(); i++)	{
-		sitepaircount[i].clear();
-		sitewaitingtime[i].clear();
-	}
+	if (GetNprocs() > 1)	{
+		for (int i=0; i<GetNsite(); i++)	{
+			sitepaircount[i].clear();
+			sitewaitingtime[i].clear();
+		}
 
-	// MPI2
-	// ask slaves to update siteprofilesuffstats
-	// slaves should call : UpdateSiteProfileSuffStat
-	// then collect all suff stats
-	assert(myid == 0);
-	int width,inalloc,dnalloc,smin[nprocs-1],smax[nprocs-1],iworkload[nprocs-1],dworkload[nprocs-1];
-	MPI_Status stat;
-	MESSAGE signal = UPDATE_SPROFILE;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Status stat;
+		MESSAGE signal = UPDATE_SPROFILE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	// suff stats are contained in 2 arrays
-	// int** siteprofilesuffstatcount
-	// double** siteprofilesuffstatbeta
-	// [site][state]
+		int inalloc = GetMaxSiteNumber() * (GetNstate()*GetNstate() + 1);
+		int dnalloc = GetMaxSiteNumber() * GetNstate();
+		int* ivector = new int[inalloc];
+		double* dvector = new double[dnalloc];
 
-	// each slave computes its array for sitemin <= site < sitemax
-	// thus, one just needs to gather all arrays into the big master array 0 <= site < Nsite
-	// (gather)
-	width = GetNsite()/(nprocs-1);
-	inalloc = 0;
-	dnalloc = 0;
-	for(int i=0; i<nprocs-1; ++i) {
-		smin[i] = width*i;
-		smax[i] = width*(1+i);
-		if (i == (nprocs-2)) smax[i] = GetNsite();
-		// workload[i] = (smax[i] - smin[i])*(GetNstate()*GetNstate()*sizeof(int) + GetNstate()*sizeof(double));
-		iworkload[i] = (smax[i] - smin[i])*(GetNstate()*GetNstate() + 1);
-		if (iworkload[i] > inalloc) inalloc = iworkload[i];
-		dworkload[i] = (smax[i] - smin[i])*GetNstate();
-		if (dworkload[i] > dnalloc) dnalloc = dworkload[i];
-	}
-
-	int* ivector = new int[inalloc];
-	double* dvector = new double[dnalloc];
-
-	int iload = GetNsite() * (GetNstate()*GetNstate() + 1);
-	int dload = GetNsite() * GetNstate();
-	int* iivector = new int[iload];
-	double* ddvector = new double[dload];
-
-	int im = 0;
-	for(int i=1; i<nprocs; ++i) {
-		MPI_Recv(ivector,iworkload[i-1],MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
-		int m = 0;
-		for(int j=smin[i-1]; j<smax[i-1]; ++j) {
-			siterootstate[j] = ivector[m];
-			iivector[im] = ivector[m];
-			im++;
-			m++;
-			for(int k=0; k<GetNstate(); ++k) {
-				for(int l=0; l<GetNstate(); ++l) {
-					if (ivector[m])	{
-						sitepaircount[j][pair<int,int>(k,l)] = ivector[m];
-					}
-					iivector[im] = ivector[m];
+		for(int i=1; i<GetNprocs(); i++) {
+			MPI_Recv(ivector,GetProcSiteNumber(i) * (GetNstate()*GetNstate() + 1),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+			int m = 0;
+			for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); j++) {
+				if (ActiveSite(j))	{
+					siterootstate[j] = ivector[m];
 					m++;
-					im++;
+					for(int k=0; k<GetNstate(); k++) {
+						for(int l=0; l<GetNstate(); l++) {
+							if (ivector[m])	{
+								sitepaircount[j][pair<int,int>(k,l)] = ivector[m];
+							}
+							m++;
+						}
+					}
 				}
 			}
 		}
-	}
 
-	int dm = 0;
-	for(int i=1; i<nprocs; ++i) {
-		MPI_Recv(dvector,dworkload[i-1],MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
-		int m = 0;
-		for(int j=smin[i-1]; j<smax[i-1]; ++j) {
-			for(int k=0; k<GetNstate(); ++k) {
-				if (dvector[m])	{
-					sitewaitingtime[j][k] = dvector[m];
+		for(int i=1; i<GetNprocs(); i++) {
+			MPI_Recv(dvector,GetProcSiteNumber(i)*GetNstate(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+			int m = 0;
+			for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); j++) {
+				if (ActiveSite(j))	{
+					for(int k=0; k<GetNstate(); k++) {
+						if (dvector[m])	{
+							sitewaitingtime[j][k] = dvector[m];
+						}
+						m++;
+					}
 				}
-				ddvector[dm] = dvector[m];
-				m++;
-				dm++;
 			}
 		}
-	}
 
-	// checksum
-	if (im != iload)	{
-		cerr << "count error for gen path suff stat counts\n";
-		cerr << im << '\t' << iload << '\n';
-		exit(1);
+		delete[] ivector;
+		delete[] dvector;
 	}
-	if (dm != dload)	{
-		cerr << "count error for gen path suff stat waiting times\n";
-		cerr << dm << '\t' << dload << '\n';
-		exit(1);
+	else	{
+		UpdateSiteProfileSuffStat();
 	}
-
-	MPI_Bcast(iivector,iload,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(ddvector,dload,MPI_DOUBLE,0,MPI_COMM_WORLD);
-
-	delete[] ivector;
-	delete[] dvector;
-	delete[] iivector;
-	delete[] ddvector;
 }
 
 void GeneralPathSuffStatMatrixPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 
 	UpdateSiteProfileSuffStat();
-	int iworkload = (sitemax- sitemin)*(GetNstate()*GetNstate()+1), dworkload = (sitemax - sitemin)*GetNstate();
+	int nn = GetNstate()*GetNstate()+1;
+	int iworkload = (GetSiteMax() - GetSiteMin())*(GetNstate()*GetNstate()+1);
 	int* ivector = new int[iworkload];
-	int m = 0;
-	for(int j=sitemin; j<sitemax; ++j) {
-		ivector[m] = siterootstate[j];
-		m++;
-		for(int k=0; k<GetNstate(); ++k) {
-			for(int l=0; l<GetNstate(); ++l) {
-				ivector[m] = sitepaircount[j][pair<int,int>(k,l)];
-				m++;
+	for (int i=0; i<iworkload; i++)	{
+		ivector[i] = 0;
+	}
+
+	for(int j=GetSiteMin(); j<GetSiteMax(); j++) {
+		if (ActiveSite(j))	{
+			ivector[(j-GetSiteMin())*nn] = siterootstate[j];
+			map<pair<int,int>, int>& paircount = GetSitePairCount(j);
+			for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
+				ivector[(j-GetSiteMin())*nn + 1 + i->first.first*GetNstate() + i->first.second] = i->second;
 			}
 		}
 	}
-	if (m != iworkload)	{
-		cerr << "count error\n";
-		exit(1);
-	}
 	MPI_Send(ivector,iworkload,MPI_INT,0,TAG1,MPI_COMM_WORLD);
-	// MPI_Barrier(MPI_COMM_WORLD);
+
+	int dworkload = (GetSiteMax() - GetSiteMin())*GetNstate();
 	double* dvector = new double[dworkload];
-	m = 0;
-	for(int j=sitemin; j<sitemax; ++j) {
-		for(int k=0; k<GetNstate(); ++k) {
-			dvector[m] = sitewaitingtime[j][k];
-			m++;
-		}
+	for (int i=0; i<dworkload; i++)	{
+		dvector[i] = 0;
 	}
-	if (m != dworkload)	{
-		cerr << "count error\n";
-		exit(1);
+	for(int j=GetSiteMin(); j<GetSiteMax(); ++j) {
+		if (ActiveSite(j))	{
+			map<int,double>& waitingtime = GetSiteWaitingTime(j);
+			for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
+				dvector[(j-GetSiteMin())*GetNstate() + i->first] = i->second;
+			}
+		}
 	}
 	MPI_Send(dvector,dworkload,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 
-	for (int i=0; i<GetNsite(); i++)	{
-		sitepaircount[i].clear();
-		sitewaitingtime[i].clear();
-	}
-
-	int iload = GetNsite() * (GetNstate()*GetNstate() + 1);
-	int dload = GetNsite() * GetNstate();
-	int* iivector = new int[iload];
-	double* ddvector = new double[dload];
-
-	MPI_Bcast(iivector,iload,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(ddvector,dload,MPI_DOUBLE,0,MPI_COMM_WORLD);
-
-	int im = 0;
-	for(int j=0; j<GetNsite(); j++)	{
-		siterootstate[j] = iivector[im];
-		im++;
-		for(int k=0; k<GetNstate(); ++k) {
-			for(int l=0; l<GetNstate(); ++l) {
-				if (iivector[im])	{
-					sitepaircount[j][pair<int,int>(k,l)] = iivector[im];
-				}
-				im++;
-			}
-		}
-	}
-
-	int dm = 0;
-	for(int j=0; j<GetNsite(); j++)	{
-		for(int k=0; k<GetNstate(); ++k) {
-			if (ddvector[dm])	{
-				sitewaitingtime[j][k] = ddvector[dm];
-			}
-			dm++;
-		}
-	}
-
-	// checksum
-	if (im != iload)	{
-		cerr << "count error for gen path suff stat counts\n";
-		cerr << im << '\t' << iload << '\n';
-		exit(1);
-	}
-	if (dm != dload)	{
-		cerr << "count error for gen path suff stat waiting times\n";
-		cerr << dm << '\t' << dload << '\n';
-		exit(1);
-	}
-
 	delete[] ivector;
 	delete[] dvector;
-	delete[] iivector;
-	delete[] ddvector;
 }
 
 

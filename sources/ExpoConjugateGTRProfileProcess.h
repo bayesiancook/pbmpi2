@@ -29,7 +29,7 @@ class ExpoConjugateGTRProfileProcess : public virtual GTRProfileProcess {
 
 	// protected:
 
-	virtual void Create(int innsite, int indim);
+	virtual void Create();
 	virtual void Delete();
 
 	// profiles
@@ -38,7 +38,10 @@ class ExpoConjugateGTRProfileProcess : public virtual GTRProfileProcess {
 
 	// update of relative rates
 	// conjugate Gibbs resampling
-	void MoveRR();
+	virtual double MoveRR();
+
+	virtual void GlobalUpdateRRSuffStat();
+	virtual void SlaveUpdateRRSuffStat();
 
 	int* rrsuffstatcount;
 	double* rrsuffstatbeta;

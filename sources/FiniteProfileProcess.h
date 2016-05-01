@@ -18,17 +18,19 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define FinitePROFILE_H
 
 #include <cmath>
-#include "MixtureProfileProcess.h"
+#include "DirichletMixtureProfileProcess.h"
 
 // general superclass for all finite process mixtures on site-specific profiles
-class FiniteProfileProcess: public virtual MixtureProfileProcess	{
+class FiniteProfileProcess: public virtual DirichletMixtureProfileProcess	{
 
 	public:
 
-	FiniteProfileProcess(int K = 1) : weight(0), fixncomp(false), empmix(false), Ncat(0), statfix(0), empweight(0)  {
-		Ncomponent = K;
+	FiniteProfileProcess() : weight(0), fixncomp(false), empmix(0), Nfixcomp(0), statfix(0), empweight(0), statcons(0), Ncons(0), conscutoff(0)  {
 		weightalpha = 1;
+		mixtype = "None";
+		Ncomponent = -1;
 	}
+
 	virtual ~FiniteProfileProcess(){}
 
 	// uniform prior on component number
@@ -40,52 +42,84 @@ class FiniteProfileProcess: public virtual MixtureProfileProcess	{
 
 	protected:
 
+	virtual double GlobalSMCAddSites();
+	virtual double SMCAddSites();
+
 	void ReadStatFix(string name);
 	void SetStatFix();
+	void BroadcastStatFix();
+	void SlaveGetStatFix();
 
-	virtual double IncrementalFiniteMove(int nrep) = 0;
+	virtual double Move(double tuning = 1, int n = 1, int nrep = 1);
+	virtual double MPIMove(double tuning = 1, int n = 1, int nrep = 1);
+	virtual double NonMPIMove(double tuning = 1, int n = 1, int nrep = 1);
+
 	virtual double MoveHyper(double tuning, int nrep); // added virtual
 	virtual double MoveWeightAlpha(double tuning, int nrep); // added virtual
+	virtual double MoveStatFixAlpha(double tuning, int nrep); // added virtual
 	double MoveNcomponent(int nrep);
 	virtual void ResampleWeights(); // added virtual
 
-	// static allocation of many component-specific variables
-	// such as: profiles, occupancy number
-	// basically everything except substitution matrices
-
+	// the following MPI move
+	// assumes that master and all slaves are in sync concerning siteprofilesuffstats
+	// (which will be the case upon calling GlobalUpdateSiteProfileSuffStat)
+	double GlobalIncrementalFiniteMove(int nrep);
+	double SlaveIncrementalFiniteMove();
+	double IncrementalFiniteMove(int nrep);
 
 	// called at the beginning and end of the run (see PhyloProcess)
-	virtual void Create(int innsite, int indim)	{
-		cerr << "in create 2 arguments\n";
-		exit(1);
+
+	void SetNcomponent(int inncomp)	{
+		Ncomponent = inncomp;
 	}
 
-	virtual void Create(int innsite, int indim, int ncat, int infixncomp = 0, int inempmix = 0, string inmixtype = "None");
+	virtual void Create();
 	virtual void Delete();
 
 	// multinomial 
 	void SampleAlloc();
 	void SampleStat();
+	virtual void SampleStat(int cat);
 	virtual void SampleHyper(); // added virtual
 	virtual void SampleWeights(); // added virtual
 
+	virtual void PriorSampleProfile();
+	virtual void PriorSampleHyper();
+	virtual void PriorSampleWeights();
+
 	virtual double LogHyperPrior();
 
+	virtual double LogStatPrior(int cat);
+	virtual double LogStatPriorConstrained(int cat);
+	// void ReadConstraints(string filename);
+	void SetStatCons();
+
 	double LogWeightPrior();
+	double LogStatAlphaPrior();
+
+	double GetWeightedStationaryEntropy()	{
+		double total = 0;
+		for (int k=0; k<Ncomponent; k++)	{
+			total += weight[k] * GetStatEnt(k);
+		}
+		return total;
+	}
 
 	double* weight;
 	double weightalpha;
 
-	bool fixncomp;
-	bool empmix;
-	
-	int dirweightprior;
-	// 0 : flexible
-	// 1 : rigid
+	double statfixalpha;
 
-	int Ncat;
+	bool fixncomp;
+	int empmix;
+	
+	int Nfixcomp;
 	double** statfix;
 	double* empweight;
+
+	int** statcons;
+	int Ncons;
+	double* conscutoff;
 
 	string mixtype;
 };

@@ -55,14 +55,6 @@ double NewickTree::ToStreamSimplified(ostream& os, const Link* from) const {
 	else	{
 	}
 	os << GetNodeName(from);
-	/*
-	if (!from->isRoot())	{
-		string brval = GetBranchName(from);
-		if (brval != "")	{
-			os << ':' << brval;
-		}
-	}
-	*/
 	if (from->isRoot())	{
 		return 0;
 	}
@@ -103,6 +95,76 @@ Tree::Tree(const TaxonSet* intaxset)	{
 	Node* node = new Node();
 	root->SetNode(node);
 
+}
+
+void Tree::ToStreamStandardForm(ostream& os) {
+
+	Link* oldroot = GetRoot()->Next();
+	RootAt(GetMinLeaf(GetRoot()));
+	ToStreamStandardForm(os,GetRoot());
+	os << ";";
+	RootAt(oldroot);
+}
+
+void Tree::ToStreamStandardForm(ostream& os, const Link* from) {
+
+	if (from->isLeaf())	{
+		os << from->GetNode()->GetName();
+	}
+	else	{
+		os << "(";
+		map<int,const Link*> linktable;
+		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+			int tmp = GetMinLeafIndex(link->Out());
+			linktable[tmp] = link->Out();
+		}
+		for (map<int,const Link*>::iterator i=linktable.begin(); i!=linktable.end(); i++)	{
+		}
+		for (map<int,const Link*>::iterator i=linktable.begin(); i!=linktable.end(); i++)	{
+			if (i != linktable.begin())	{
+				os << ",";
+			}
+			ToStreamStandardForm(os,i->second);
+		}
+		os << ")";
+	}
+}
+
+int Tree::GetMinLeafIndex(const Link* from) const {
+
+	if (from->isLeaf())	{
+		return from->GetNode()->GetIndex();
+	}
+	int min = -1;
+	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+		int tmp = GetMinLeafIndex(link->Out());
+		if ((min == -1) || (min > tmp))	{
+			min = tmp;
+		}
+	}
+	return min;
+}
+
+Link* Tree::GetMinLeaf(Link* from) {
+
+	if (from->isLeaf())	{
+		if (!from->GetNode()->GetIndex())	{
+			return from->Out();
+		}
+		return 0;
+	}
+	Link* ret = 0;
+	for (Link* link=from->Next(); link!=from; link=link->Next())	{
+		Link* tmp = GetMinLeaf(link->Out());
+		if (tmp)	{
+			if (ret)	{
+				cerr << "error in GetMinLeaf\n";
+				exit(1);
+			}
+			ret = tmp;
+		}
+	}
+	return ret;
 }
 
 void Tree::MakeRandomTree()	{
@@ -149,9 +211,9 @@ void Tree::MakeRandomTree()	{
 	link2->SetNode(root->GetNode());
 	link3->SetNode(root->GetNode());
 
-	Branch* b1 = new Branch();
-	Branch* b2 = new Branch();
-	Branch* b3 = new Branch();
+	Branch* b1 = new Branch("1.0");
+	Branch* b2 = new Branch("1.0");
+	Branch* b3 = new Branch("1.0");
 
 	link1->SetBranch(b1);
 	link2->SetBranch(b2);
@@ -170,7 +232,6 @@ void Tree::MakeRandomTree()	{
 	linko3->SetNode(n3);
 
 	for (int i=3; i<Ntaxa; i++)	{
-		// ToStream(cerr);
 
 		int choose = ((int) ((Ntaxa - i) * rnd::GetRandom().Uniform()));
 
@@ -192,8 +253,8 @@ void Tree::MakeRandomTree()	{
 		Link* linkdowno = new Link();
 		linkdowno->SetNext(linkup);
 
-		Branch* bdown = new Branch();
-		Branch* bup = new Branch();
+		Branch* bdown = new Branch("1.0");
+		Branch* bup = new Branch("1.0");
 		Node* ndown = new Node(taxset->GetTaxon(choose));
 		Node* nup = new Node();
 
@@ -232,6 +293,66 @@ Tree::Tree(const Tree* from)	{
 	root = new Link(from->root);
 	root->InsertOut(root);
 	RecursiveClone(from->root,root);
+}
+
+void Tree::Backup() {
+
+	bknext.clear();
+	bkout.clear();
+	bknode.clear();
+	bkbranch.clear();
+	RecursiveBackup(GetRoot());
+}
+
+void Tree::RecursiveBackup(Link* from)	{
+
+	bknext[from] = from->Next();
+	bkout[from] = from->Out();
+	bknode[from] = from->GetNode();
+	bkbranch[from] = from->GetBranch();
+	for (Link* link=from->Next(); link!=from; link=link->Next())	{
+		bknext[link] = link->Next();
+		bkout[link] = link->Out();
+		bknode[link] = link->GetNode();
+		bkbranch[link] = link->GetBranch();
+		RecursiveBackup(link->Out());
+	}
+
+}
+
+void Tree::Swap()	{
+
+	for (map<Link*,Link*>::iterator i=bknext.begin(); i!=bknext.end(); i++)	{
+		Link* link = i->first;
+
+		Link* tmplink = link->Next();
+		link->SetNext(bknext[link]);
+		bknext[link] = tmplink;
+
+		tmplink = link->Out();
+		link->SetOut(bkout[link]);
+		bkout[link] = tmplink;
+
+		Node* tmpnode = link->GetNode();
+		link->SetNode(bknode[link]);
+		bknode[link] = tmpnode;
+
+		Branch* tmpbranch = link->GetBranch();
+		link->SetBranch(bkbranch[link]);
+		bkbranch[link] = tmpbranch;
+	}
+
+}
+
+void Tree::Restore() {
+
+	for (map<Link*,Link*>::iterator i=bknext.begin(); i!=bknext.end(); i++)	{
+		Link* link = i->first;
+		link->SetNext(bknext[link]);
+		link->SetOut(bkout[link]);
+		link->SetNode(bknode[link]);
+		link->SetBranch(bkbranch[link]);
+	}
 }
 
 void Tree::RecursiveClone(const Link* from, Link* to)	{
@@ -333,21 +454,18 @@ void Tree::EraseInternalNodeName(Link * from)	{
 	}
 }
 
-void Tree::RegisterWith(const TaxonSet* intaxset,int myid)	{
+void Tree::RegisterWith(const TaxonSet* intaxset)	{
 	taxset = intaxset;
 	int tot = 0;
 	if(!RegisterWith(taxset,GetRoot(),tot)){
-		// if (myid == 0)
 		cout << "There is no match between the tree and the sequences.\n";
 		cerr << "problem with : " << taxset->GetNtaxa () << '\n';
 		ToStream(cerr);
 		exit(1);
 	}
 	if (tot != taxset->GetNtaxa())	{
-		// if (myid == 0) {
-			cerr << "error : non matching number of taxa : " << tot << '\t' << taxset->GetNtaxa() << '\n';
-			cerr << "some taxa in the dataset are not present in the tree\n";
-		// }
+		cerr << "error : non matching number of taxa : " << tot << '\t' << taxset->GetNtaxa() << '\n';
+		cerr << "some taxa in the dataset are not present in the tree\n";
 		exit(1);
 	}
 	SetIndices();
@@ -370,64 +488,15 @@ bool Tree::RegisterWith(const TaxonSet* taxset, Link* from, int& tot)	{
 				previous = previous->Next();
 			}
 			else{
-				// cout << "delete !!\n";
 				DeleteNextLeaf(previous);
 			}
 		}
 		if(from->isUnary()){
-			// cerr << "DELETE UNARY NODE\n";
 			DeleteUnaryNode(from);
 		}
 		return !(from->isLeaf());
 	}
 }
-
-
-/*
-void Tree::ToStreamWithIndices(ostream& os, const Link* from) {
-
-	if (!from->isLeaf())	{
-		os << '(';
-		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
-			ToStreamwithIndices(os,link->Out());
-			if (link->Next() != from)	{
-				os << ',';
-			}
-		}
-		os << ')';
-	}
-	os << from->GetNode()->GetIndex();
-	if (!from->isRoot())	{
-		os << from->GetIndex() << ':' << from->GetBranch()->GetIndex() << from->Out()->GetIndex();
-	}
-}
-		
-void Tree::RegisterWithIndicesFromNames(const Link* from)	{
-
-	string tmp = from->GetNode()->GetName();
-	if (! IsInt(tmp))	{
-		cerr << "error in register with indices from names\n";
-		exit(1);
-	}
-	int temp = atoi(tmp.c_str());
-	from->GetNode()->SetIndex(temp);
-
-	if (!from->isRoot())	{
-		os << from->GetIndex() << ':' << from->GetBranch()->GetIndex() << from->Out()->GetIndex();
-	}
-	if (!from->isLeaf())	{
-		os << '(';
-		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
-			ToStreamwithIndices(os,link->Out());
-			if (link->Next() != from)	{
-				os << ',';
-			}
-		}
-		os << ')';
-	}
-	os << from->GetNode()->GetIndex();
-}
-*/
 
 typedef list<string>::const_iterator csit;
 
@@ -491,6 +560,9 @@ void Tree::ReadFromStream(istream& is)	{
 	SetRoot(ParseGroup(expr,0));
 	if (taxset)	{
 		RegisterWith(taxset);
+	}
+	else	{
+		MakeTaxonSet();
 	}
 }
 
@@ -656,34 +728,6 @@ void Tree::Subdivide(Link* from, int Ninterpol)	{
 	}
 }
 
-/*
-void Tree::Print(ostream& os, const Link* from)	const {
-
-	if (!from->isLeaf())	{
-		os << '(';
-		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
-			Print(os,link->Out());
-			if (link->Next() != from)	{
-				os << ',';
-			}
-		}
-		os << ')';
-	}
-	os << GetNodeName(from);
-	if (!from->isRoot())	{
-		string brval = GetBranchName(from);
-		if (brval != "")	{
-			os << ':' << brval;
-		}
-	}
-}
-		
-void Tree::Print(ostream& os)	const {
-	Print(os,GetRoot());
-	os << ";\n";
-}
-*/
-
 bool Tree::CheckRootDegree(int testdegree)	{
 	bool ret = true;
 	int degree = 0;
@@ -720,26 +764,110 @@ bool Tree::RecursiveCheckDegree(const Link* from, int testdegree)	{
 
 Link* Tree::Detach(Link* down, Link* up)	{
 
+	// two cases:
+	// up->Next()->Out() == fromdown
+	// up->Next()->Out() == down
+	// find fromdown: sister of down
 	bool foundup = false;
 	Link* fromdown = 0;
 	Link* downout = down->Out();
 	int degree = 0;
 	for (Link* link=downout->Next(); link!=downout; link=link->Next())	{
+		if (link->isRoot())	{
+			cerr << "link is root!\n";
+			exit(1);
+		}
 		degree++;
 		if (link == up)	{
 			foundup = true;
 		}
-		else if (! link->isRoot())	{
+		else 	{
 			fromdown = link->Out();
-		}
-		if (link->isRoot())	{
-			cerr << "link is root!\n";
 		}
 	}
 	if (degree != 2)	{
 		cerr << "error in detach: node not of degree 2\n";
 		cerr << degree << '\n';
-		// cerr << down->GetIndex() << '\t' << up->GetIndex() << '\n';
+		exit(1);
+	}
+	if (! fromdown)	{
+		cerr << "error in Detach: fromdown not found\n";
+		exit(1);
+	}
+	if (!foundup)	{
+		cerr << "error in Detach: dit not find up\n";
+		exit(1);
+	}
+
+	Link* fromout = fromdown->Out();
+	Link* upout = up->Out();
+
+	// find prev of up->Out()
+	// this will be fromup
+	Link* fromup = 0;
+	for (Link* link=upout->Next(); link!= upout; link=link->Next())	{
+		if (link->Next() == upout)	{
+			fromup = link;
+		}
+	}
+
+	// enforce relation:
+	// fromup->Next()->Out() == fromdown
+	fromup->SetNext(fromout);
+	fromout->SetNext(upout->Next());
+	fromout->SetNode(upout->Next()->GetNode());
+	upout->SetNext(upout);
+	upout->SetNode(0);
+	up->SetNext(downout);
+	downout->SetNext(up);
+	return fromdown;
+}
+
+Link* Tree::GetAncestor(const Link* target)	{
+	Link* ret = RecursiveGetAncestor(GetRoot(),target);
+	if (! ret)	{
+		cerr << "in Tree::GetAncestor: did not find ancestor\n";
+		exit(1);
+	}
+	return ret;
+}
+
+Link* Tree::RecursiveGetAncestor(Link* from, const Link* target)	{
+
+	for (Link* link=from->Next(); link!=from; link=link->Next())	{
+		if (link->Out() == target)	{
+			return from;
+		}
+		Link* tmp = RecursiveGetAncestor(link->Out(),target);
+		if (tmp)	{
+			return tmp;
+		}
+	}
+	return 0;
+}
+
+void Tree::Detach2(Link* down, Link* up, Link*& fromdown, Link*& fromup)	{
+
+	bool foundup = false;
+	fromdown = 0;
+	Link* downout = down->Out();
+	int degree = 0;
+	for (Link* link=downout->Next(); link!=downout; link=link->Next())	{
+		if (link->isRoot())	{
+			cerr << "link is root!\n";
+			exit(1);
+		}
+		degree++;
+		if (link == up)	{
+			foundup = true;
+		}
+		else 	{
+			fromdown = link->Out();
+		}
+	}
+	if (degree != 2)	{
+		cerr << "error in detach: node not of degree 2\n";
+		cerr << degree << '\n';
 		exit(1);
 	}
 	if (! fromdown)	{
@@ -766,11 +894,23 @@ Link* Tree::Detach(Link* down, Link* up)	{
 	upout->SetNode(0);
 	up->SetNext(downout);
 	downout->SetNext(up);
-	return fromdown;
+
+	fromup = linkprev;
+	/*
+	fromout->Next();
+	while (fromup->Next() != fromout)	{
+		fromup = fromup->Next();
+		if (fromup == fromout)	{
+			cerr << "error in Tree::Detach2\n";
+			exit(1);
+		}
+	}
+	*/
 }
 
 void Tree::Attach(Link* down, Link* up, Link* todown, Link* toup)	{
 
+	// search for the prev of todown->Out()
 	bool found = false;
 	Link* linkprev = toup;
 	Link* upout = up->Out();
@@ -964,38 +1104,10 @@ void Tree::GrepNode(Link* from, Link*& down, Link*& up, int choose)	{
 				up = from;
 				down = link->Out();
 			}
-			GrepNode(link->Out(),down,up,choose);
+			if (! up)	{
+				GrepNode(link->Out(),down,up,choose);
+			}
 		}
 	}
 }
 
-/*
-int Tree::DrawSubTree(Link*& down, Link*& up)	{
-
-	int n = 0;
-	for (const Link* link= root->Next(); link!=root; link=link->Next())	{
-		n += CountNodes(link->Out());
-		n-=4;
-	}
-	int choose = (int) (n * rnd::GetRandom().Uniform());
-	down = 0;
-	up = 0;
-	for (const Link* link= root->Next(); link!=root; link=link->Next())	{
-		if (! down)	{
-			choose++;
-			down = ChooseNode(link->Out(),up,choose);
-		}
-	}
-	if ((! down) || (down->isRoot()))	{
-		cerr << "error in tree::drawsubtree: down\n";
-		cerr << down << '\n';
-		exit(1);
-	}
-	if ((! up) || (up->isLeaf()))	{
-		cerr << "error in tree::drawsubtree: up\n";
-		cerr << up << '\n';
-		 exit(1);
-	}
-	return 0;
-}
-*/

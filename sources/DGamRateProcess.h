@@ -29,11 +29,16 @@ class DGamRateProcess : public virtual RateProcess {
 	double GetAlpha() {return alpha;}
 
 	int GetNrate(int site)	{
+		return Ncat;
+		/*
 		if (SumOverRateAllocations())	{
 			return Ncat;
 		}
 		return 1;
+		*/
 	}
+
+	virtual int GetNrate() {return GetNcat();}
 
 	int GetNcat() {return Ncat;}
 
@@ -53,14 +58,25 @@ class DGamRateProcess : public virtual RateProcess {
 	}
 
 	void ActivateSumOverRateAllocations() {
-		sumflag = true;
+		condflag = false;
 	}
 
 	void InactivateSumOverRateAllocations(int* ratealloc) {
 		for (int i=0; i<GetNsite(); i++)	{
-			alloc[i] = ratealloc[i];
+			if (ActiveSite(i))	{
+				alloc[i] = ratealloc[i];
+			}
 		}
-		sumflag = false;
+		condflag = true;
+	}
+
+	void SiteActivateSumOverRateAllocation(int site) {
+		condflag = false;
+	}
+
+	void SiteInactivateSumOverRateAllocation(int site, int ratealloc) {
+		alloc[site] = ratealloc;
+		condflag = true;
 	}
 
 	double GetPriorMeanRate()	{
@@ -98,26 +114,32 @@ class DGamRateProcess : public virtual RateProcess {
 
 	protected:
 
-	void Create(int innsite, int ncat);
+	void SetNcat(int inncat)	{
+		Ncat = inncat;
+	}
+
+	void Create();
 	void Delete();
 
 	void SampleRate();
+	void PriorSampleRate();
 	double LogRatePrior();
 
 
 	void GlobalUpdateRateSuffStat();
-	void SlaveUpdateRateSuffStat();
+	virtual void SlaveUpdateRateSuffStat();
 	void UpdateRateSuffStat();
 	double RateSuffStatLogProb();
 
 	void UpdateDiscreteCategories();
 	
-	int Ncat;
 	double* rate;
 	double alpha;
 	int* alloc;
 	int* ratesuffstatcount;
 	double* ratesuffstatbeta;
+
+	int Ncat;
 };
 
 #endif

@@ -16,7 +16,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "PoissonFiniteProfileProcess.h"
 #include "Random.h"
-#include <cassert>
 #include "Parallel.h"
 
 
@@ -25,6 +24,65 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //	* PoissonFiniteProfileProcess
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
+
+
+double PoissonFiniteProfileProcess::Move(double tuning, int n, int nrep)	{
+
+	double ret = 0;
+	if (GetNprocs() > 1)	{
+		ret = MPIMove(tuning,n,nrep);
+	}
+	else	{
+		ret = NonMPIMove(tuning,n,nrep);
+	}
+	return ret;
+}
+
+double PoissonFiniteProfileProcess::MPIMove(double tuning, int n, int nrep)	{
+
+	for (int rep=0; rep<nrep; rep++)	{
+		if (Ncomponent > 1)	{
+			GlobalUpdateParameters();
+			GlobalUpdateSiteProfileSuffStat();
+			UpdateModeProfileSuffStat();
+			GlobalIncrementalFiniteMove(1);
+		}
+
+		if (! empmix)	{
+			GlobalUpdateParameters();
+			GlobalUpdateSiteProfileSuffStat();
+			UpdateModeProfileSuffStat();
+			MoveProfile();
+			GlobalUpdateParameters();
+			GlobalUpdateSiteProfileSuffStat();
+			MoveHyper(tuning,10);
+		}
+	}
+	return 1;
+}
+
+double PoissonFiniteProfileProcess::NonMPIMove(double tuning, int n, int nrep)	{
+
+	for (int rep=0; rep<nrep; rep++)	{
+
+		if (Ncomponent > 1)	{
+			UpdateSiteProfileSuffStat();
+			UpdateModeProfileSuffStat();
+			IncrementalFiniteMove(1);
+		}
+
+		if (! empmix)	{
+			UpdateSiteProfileSuffStat();
+			UpdateModeProfileSuffStat();
+			MoveProfile();
+			UpdateComponents();
+			UpdateSiteProfileSuffStat();
+			MoveHyper(tuning,10);
+		}
+	}
+	return 1;
+}
+
 
 void PoissonFiniteProfileProcess::ToStream(ostream& os)	{
 
@@ -42,7 +100,12 @@ void PoissonFiniteProfileProcess::ToStream(ostream& os)	{
 	}
 
 	for (int i=0; i<GetNsite(); i++)	{
-		os << alloc[i] << '\t';
+		if (ActiveSite(i))	{
+			os << alloc[i] << '\t';
+		}
+		else	{
+			os << -1 << '\t';
+		}
 	}
 	os << '\n';
 }
@@ -72,24 +135,11 @@ void PoissonFiniteProfileProcess::FromStream(istream& is)	{
 
 double PoissonFiniteProfileProcess::GlobalIncrementalFiniteMove(int nrep)	{
 
-	assert(GetMyid() == 0);
-
 	// send command and arguments
 	MESSAGE signal = REALLOC_MOVE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(&nrep,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	// split Nsite among GetNprocs()-1 slaves
-	int width = GetNsite()/(GetNprocs()-1);
-	int smin[GetNprocs()-1];
-	int smax[GetNprocs()-1];
-	for(int i=0; i<GetNprocs()-1; ++i) {
-		smin[i] = width*i;
-		smax[i] = width*(1+i);
-		if (i == (GetNprocs()-2)) smax[i] = GetNsite();
-	}
-
-	int NAccepted = 0;
 	for (int rep=0; rep<nrep; rep++)	{
 
 		// resample component weights based on current site allocations
@@ -103,11 +153,13 @@ double PoissonFiniteProfileProcess::GlobalIncrementalFiniteMove(int nrep)	{
 		int tmpalloc[GetNsite()];
 		for(int i=1; i<GetNprocs(); ++i) {
 			MPI_Recv(tmpalloc,GetNsite(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
-			for(int j=smin[i-1]; j<smax[i-1]; ++j) {
-				alloc[j] = tmpalloc[j];
-				if ((alloc[j] < 0) || (alloc[j] >= Ncomponent))	{
-					cerr << "alloc overflow\n";
-					exit(1);
+			for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); j++) {
+				if (ActiveSite(j))	{
+					alloc[j] = tmpalloc[j];
+					if ((alloc[j] < 0) || (alloc[j] >= Ncomponent))	{
+						cerr << "alloc overflow\n";
+						exit(1);
+					}
 				}
 			}
 		}
@@ -117,11 +169,7 @@ double PoissonFiniteProfileProcess::GlobalIncrementalFiniteMove(int nrep)	{
 	UpdateOccupancyNumbers();
 	UpdateModeProfileSuffStat();
 
-	// CHECK that: might be useful depending on the exact submodel
-	// ResampleWeights();
-	// UpdateMatrices();
-
-	return ((double) NAccepted) / GetNsite() / nrep;
+	return 1;
 }
 
 double PoissonFiniteProfileProcess::SlaveIncrementalFiniteMove()	{
@@ -131,6 +179,7 @@ double PoissonFiniteProfileProcess::SlaveIncrementalFiniteMove()	{
 	MPI_Bcast(&nrep,1,MPI_INT,0,MPI_COMM_WORLD);
 
 	int NAccepted = 0;
+	int Ntried = 0;
 
 	double* bigarray = new double[Ncomponent * GetNsite()];
 	double* bigcumul = new double[Ncomponent * GetNsite()];
@@ -143,44 +192,112 @@ double PoissonFiniteProfileProcess::SlaveIncrementalFiniteMove()	{
 		// do the incremental reallocation move on my site range
 		for (int site=GetSiteMin(); site<GetSiteMax(); site++)	{
 
-			double* mLogSamplingArray = bigarray + site * Ncomponent;
-			double* cumul = bigcumul + site * Ncomponent;
+			if (ActiveSite(site))	{
 
-			int bk = alloc[site];
+				double* mLogSamplingArray = bigarray + site * Ncomponent;
+				double* cumul = bigcumul + site * Ncomponent;
 
-			double max = 0;
-			for (int mode = 0; mode < Ncomponent; mode++)	{
-				mLogSamplingArray[mode] =  LogStatProb(site,mode);
-				if ((!mode) || (max < mLogSamplingArray[mode]))	{
-					max = mLogSamplingArray[mode];
+				int bk = alloc[site];
+
+				double max = 0;
+				for (int mode = 0; mode < Ncomponent; mode++)	{
+					mLogSamplingArray[mode] =  LogStatProb(site,mode);
+					if ((!mode) || (max < mLogSamplingArray[mode]))	{
+						max = mLogSamplingArray[mode];
+					}
 				}
-			}
 
-			double total = 0;
+				double total = 0;
 
-			for (int mode = 0; mode < Ncomponent; mode++)	{
-				double p = weight[mode] * exp(mLogSamplingArray[mode] - max);
-				total += p;
-				cumul[mode] = total;
-			}
+				for (int mode = 0; mode < Ncomponent; mode++)	{
+					double p = weight[mode] * exp(mLogSamplingArray[mode] - max);
+					total += p;
+					cumul[mode] = total;
+				}
 
-			double q = total * rnd::GetRandom().Uniform();
-			int mode = 0;
-			while ( (mode<Ncomponent) && (q > cumul[mode])) mode++;
-			if (mode == Ncomponent)	{
-				cerr << "error in switch mode: gibbs overflow\n";
-				exit(1);
-			}
+				double q = total * rnd::GetRandom().Uniform();
+				int mode = 0;
+				while ( (mode<Ncomponent) && (q > cumul[mode])) mode++;
+				if (mode == Ncomponent)	{
+					cerr << "error in switch mode: gibbs overflow\n";
+					exit(1);
+				}
 
-			int Accepted = (mode != bk);
-			if (Accepted)	{
-				NAccepted ++;
+				int Accepted = (mode != bk);
+				if (Accepted)	{
+					NAccepted ++;
+				}
+				Ntried++;
+				alloc[site] = mode;
+
 			}
-			alloc[site] = mode;
 		}
 
 		// send new allocations to master
 		MPI_Send(alloc,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	}
+	
+	delete[] bigarray;
+	delete[] bigcumul;
+	return ((double) NAccepted) / Ntried;
+}
+
+double PoissonFiniteProfileProcess::IncrementalFiniteMove(int nrep)	{
+
+	if (GetMyid())	{
+		cerr << "error: slave in PoissonFiniteProfileProcess::IncrementalFiniteMove\n";
+		exit(1);
+	}
+
+	int NAccepted = 0;
+
+	double* bigarray = new double[Ncomponent * GetNsite()];
+	double* bigcumul = new double[Ncomponent * GetNsite()];
+
+	for (int rep=0; rep<nrep; rep++)	{
+
+		// do the incremental reallocation move on my site range
+		for (int site=GetSiteMin(); site<GetSiteMax(); site++)	{
+
+			if (ActiveSite(site))	{
+
+				double* mLogSamplingArray = bigarray + site * Ncomponent;
+				double* cumul = bigcumul + site * Ncomponent;
+
+				int bk = alloc[site];
+
+				double max = 0;
+				for (int mode = 0; mode < Ncomponent; mode++)	{
+					mLogSamplingArray[mode] =  LogStatProb(site,mode);
+					if ((!mode) || (max < mLogSamplingArray[mode]))	{
+						max = mLogSamplingArray[mode];
+					}
+				}
+
+				double total = 0;
+
+				for (int mode = 0; mode < Ncomponent; mode++)	{
+					double p = weight[mode] * exp(mLogSamplingArray[mode] - max);
+					total += p;
+					cumul[mode] = total;
+				}
+
+				double q = total * rnd::GetRandom().Uniform();
+				int mode = 0;
+				while ( (mode<Ncomponent) && (q > cumul[mode])) mode++;
+				if (mode == Ncomponent)	{
+					cerr << "error in switch mode: gibbs overflow\n";
+					exit(1);
+				}
+
+				int Accepted = (mode != bk);
+				if (Accepted)	{
+					NAccepted ++;
+				}
+				alloc[site] = mode;
+
+			}
+		}
 	}
 	
 	delete[] bigarray;

@@ -20,14 +20,14 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include "DPProfileProcess.h"
 
-const int refnmodemax = 5000;
-
 // general superclass for all finite process mixtures on site-specific profiles
 class SBDPProfileProcess: public virtual DPProfileProcess	{
 
+	using MixtureProfileProcess::LogStatPrior;
+
 	public:
 
-	SBDPProfileProcess() : DPProfileProcess(), nmodemax(refnmodemax), V(0), maxweighterror(0) {}
+	SBDPProfileProcess() : DPProfileProcess(), V(0), maxweighterror(0), InitIncremental(0) {}
 	virtual ~SBDPProfileProcess(){}
 
 	protected:
@@ -35,18 +35,15 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 	double GetMaxWeightError() {return maxweighterror;}
 	void ResetMaxWeightError() {maxweighterror = 0;}
 
-	virtual void Create(int innsite, int indim);
+	virtual void Create();
 	virtual void Delete();
 
-	virtual int GetNmodeMax() {return GetNsite() > nmodemax ? nmodemax : GetNsite();}
-	virtual void SetNmodeMax(int n) {nmodemax = n;}
+	virtual double Move(double tuning = 1, int n = 1, int nrep = 1, int nalloc = 1);
+	virtual double MPIMove(double tuning = 1, int n = 1, int nrep = 1, int nalloc = 1);
+	virtual double NonMPIMove(double tuning = 1, int n = 1, int nrep = 1, int nalloc = 1);
 
-	virtual double IncrementalDPMove(int nrep, double epsilon) = 0;
-
-	double IncrementalDPMove(int nrep)	{
-		cerr << "inc move deactivated\n";
-		exit(1);
-	}
+	virtual double GlobalSMCAddSites();
+	virtual double SMCAddSites();
 
 	double GetWeightEnt()	{
 		double tot = 0;
@@ -65,8 +62,10 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 	int GetLastOccupiedComponent()	{
 		int kmax = 0;
 		for (int i=0; i<GetNsite(); i++)	{
-			if (kmax < alloc[i])	{
-				kmax = alloc[i];
+			if (ActiveSite(i))	{
+				if (kmax < alloc[i])	{
+					kmax = alloc[i];
+				}
 			}
 		}
 		return kmax;
@@ -91,9 +90,9 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 	double LogIntegratedAllocProb();
 	double MoveKappa(double tuning, int nrep);
 
-	// void ShedTail();
-
 	// redefined
+	virtual void PriorSampleProfile();
+
 	void SampleAlloc();
 
 	void IncrementalSampleAlloc();
@@ -106,16 +105,18 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 
 	double LogStatPrior();
 
-	/*
-	double totweight;
-	double cumulProduct;
-	*/
+	virtual double MixMove(int nrep, int nallocrep, double epsilon, int nprofilerep);
+	virtual double GlobalMixMove(int nrep, int nallocrep, double epsilon, int nprofilerep);
+	virtual void SlaveMixMove();
 
-	int nmodemax;
+	double IncrementalDPMove(int nrep, double epsilon);
+
 	double* V;
 	double* weight;
 
 	double maxweighterror;
+
+	int InitIncremental;
 };
 
 #endif

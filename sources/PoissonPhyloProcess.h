@@ -32,10 +32,14 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 		PhyloProcess::Unfold();
 	}
 
+	virtual void PrepareSiteLogLikelihood(int site) {
+		UpdateZip(site);
+	}
+
 	// protected:
 
 	// true data here !
-	virtual void Create(Tree* intree, SequenceAlignment* indata);
+	virtual void Create();
 	virtual void Delete();
 
 	// in fact, same object as GetData, but now with its true type

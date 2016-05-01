@@ -14,16 +14,20 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#include <cassert>
 #include "RASCATSBDPGammaPhyloProcess.h"
 #include "Parallel.h"
 #include <string>
 
 void RASCATSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 
-	RASCATGammaPhyloProcess::GlobalUpdateParameters();
-	MPI_Bcast(V,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+	if (GetNprocs() > 1)	{
+		RASCATGammaPhyloProcess::GlobalUpdateParameters();
+		MPI_Bcast(V,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
+	else	{
+		UpdateZip();
+	}
 }
 
 void RASCATSBDPGammaPhyloProcess::SlaveUpdateParameters()	{
@@ -34,8 +38,6 @@ void RASCATSBDPGammaPhyloProcess::SlaveUpdateParameters()	{
 }
 
 void RASCATSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
-
-	assert(myid > 0);
 
 	switch(signal) {
 
@@ -52,7 +54,8 @@ void RASCATSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 void RASCATSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 
-	sitemax = sitemin + testsitemax - testsitemin;
+	int sitemin = GetSiteMin();
+	int sitemax = GetSiteMin() + testsitemax - testsitemin;
 	double** sitelogl = new double*[GetNsite()];
 	for (int i=sitemin; i<sitemax; i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
@@ -94,9 +97,6 @@ void RASCATSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;
-
-	sitemax = bksitemax;
-
 }
 
 void RASCATSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
@@ -107,18 +107,18 @@ void RASCATSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
 	}
 
 	double** sitelogl = new double*[GetNsite()];
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
 	}
 	
 	// UpdateMatrices();
 
 	for (int k=0; k<GetNcomponent(); k++)	{
-		for (int i=sitemin; i<sitemax; i++)	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			PoissonSBDPProfileProcess::alloc[i] = k;
 		}
 		UpdateConditionalLikelihoods();
-		for (int i=sitemin; i<sitemax; i++)	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			sitelogl[i][k] = sitelogL[i];
 		}
 	}
@@ -128,7 +128,7 @@ void RASCATSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
 		meansitelogl[i] = 0;
 	}
 	double total = 0;
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		double max = 0;
 		for (int k=0; k<GetNcomponent(); k++)	{
 			if ((!k) || (max < sitelogl[i][k]))	{
@@ -147,7 +147,7 @@ void RASCATSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
 
 	MPI_Send(meansitelogl,GetNsite(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;

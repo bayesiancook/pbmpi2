@@ -22,13 +22,14 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 class MatrixSubstitutionProcess : public virtual SubstitutionProcess, public virtual MatrixProfileProcess	{
 
+	using SubstitutionProcess::GetNstate;
+
 	public:
 
 	MatrixSubstitutionProcess() {}
 	virtual ~MatrixSubstitutionProcess() {}
 
-	virtual int GetNstate(int site) {return GetMatrix(site)->GetNstate();}
-	virtual int GetNstate() {return GetMatrix(0)->GetNstate();}
+	// virtual int GetNstate(int site)	{return GetMatrix(site)->GetNstate();}
 
 	virtual const double* GetStationary(int site)	{
 		return GetMatrix(site)->GetStationary();
@@ -37,9 +38,10 @@ class MatrixSubstitutionProcess : public virtual SubstitutionProcess, public vir
 	protected:
 
 	// CPU Level 3: implementations of likelihood propagation and substitution mapping methods
-	void Propagate(double*** from, double*** to, double time, bool condalloc = false);
-	BranchSitePath** SamplePaths(int* stateup, int* statedown, double time);
-	BranchSitePath** SampleRootPaths(int* rootstate);
+	void SitePropagate(int site, double** from, double** to, double time, bool condalloc = false);
+	void Propagate(double*** from, double*** to, double time, bool condalloc);
+	BranchSitePath* SampleSitePath(int site, int stateup, int statedown, double time);
+	BranchSitePath* SampleRootSitePath(int site, int rootstate);
 	BranchSitePath* ResampleAcceptReject(int maxtrial, int stateup, int statedown, double rate, double totaltime, SubMatrix* matrix);
 	BranchSitePath* ResampleUniformized(int stateup, int statedown, double rate, double totaltime, SubMatrix* matrix);
 

@@ -74,7 +74,7 @@ void TaxonSet::RecursiveGetSubSet(const Link* from, int& i)	{
 	}
 }
 
-void TaxonSet::ToStream(ostream& os)	{
+void TaxonSet::ToStream(ostream& os) const	{
 	os << Ntaxa << '\n';
 	for (int i=0; i<Ntaxa; i++)	{
 		os << taxlist[i] << '\n';

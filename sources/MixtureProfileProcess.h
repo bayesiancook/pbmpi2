@@ -25,17 +25,20 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 
 	public:
 
-	MixtureProfileProcess() : profile(0) {}
+	MixtureProfileProcess() : profile(0), nmodemax(5000) {}
 	virtual ~MixtureProfileProcess(){}
 
 	double* GetProfile(int site)	{
 		return profile[alloc[site]];
 	}
 
+	// number of components of the mixture
 	int GetNcomponent() { return Ncomponent;}
+
 	virtual int GetNDisplayedComponent()	{
 		return Ncomponent;
 	}
+
 	int GetNOccupiedComponent() {
 		int n = 0;
 		for (int k=0; k<Ncomponent; k++)	{
@@ -46,66 +49,75 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 		return n;
 	}
 
-	virtual int GetNmodeMax() {return GetNsite();}
-	// virtual int GetNmodeMax() {return 100;}
-
-	double GetMeanStationaryEntropy() {return GetStatEnt();}
-	double GetSiteStationaryEntropy(int site) {return GetStatEnt(alloc[site]);}
-
-	// summary statistic: mean entropy over all profiles
-	double GetStatEnt();
-	double GetStatEnt(int k);
-	double GetCenterStatEnt();
-
-	double GetMeanDirWeight();
-
-	void RenormalizeProfiles();
-
-	// generic Move function
-	virtual double Move(double tuning = 1, int n = 1, int nrep = 1) = 0;
-	double MoveDirWeights(double tuning, int nrep);
+	// for allocation purpose
+	virtual int GetNmodeMax() {return GetNsite() > nmodemax ? nmodemax : GetNsite();}
+	virtual void SetNmodeMax(int n) {nmodemax = n;}
 
 	protected:
 
-	virtual void UpdateModeProfileSuffStat() = 0;
+	//------
+	// priors
+	//------
 
-	// implements a pure virtual defined in ProfileProcess
+	double LogProfilePrior();
+	virtual double LogStatPrior();
+	virtual double LogStatPrior(int cat);
+
+	virtual double LogAllocPrior()	{
+		return 0;
+	}
+
+	//------
+	// sampling from prior
+	//------
+
+	void SampleProfile();
+	virtual void SampleStat();
+	virtual void SampleStat(int cat);
+
+	virtual void SampleAlloc() = 0;
+
+	double ResampleEmptyProfiles();
+
+	//------
+	// log likelihoods based on sufficient statistics (substitution mappings)
+	//------
+
 	double ProfileSuffStatLogProb();
+	// the component suff stat log prob is yet to be implemented in subclasses
+	virtual double ProfileSuffStatLogProb(int cat) = 0;
 
 	// suffstat lnL of site <site> when allocated to component <cat>
 	virtual double LogStatProb(int site, int cat) = 0;
 
-	// the component suff stat log prob is yet to be implemented in subclasses
-	virtual double ProfileSuffStatLogProb(int cat) = 0;
+	//------
+	// moves
+	//------
 
-	// called at the beginning and end of the run (see PhyloProcess)
-	virtual void Create(int innsite, int indim);
+	// the following MPI move
+	// assumes that master and all slaves are in sync concerning siteprofilesuffstats
+	// (which will be the case upon calling GlobalUpdateSiteProfileSuffStat)
+	virtual double GlobalMoveProfile(double tuning = 1, int n = 1, int nrep = 1);
+	virtual void SlaveMoveProfile();
+	double MoveProfile(double tuning = 1, int n = 1, int nrep = 1);
+	double MoveProfile(int cat, double tuning, int n, int nrep);
+	virtual double GlobalSMCAddSites();
+
+	//------
+	// create and delete
+	//------
+
+	virtual void Create();
 	virtual void Delete();
 
-	// in certain models,
-	// the matrix associated to each component should be created on the fly
-	// all other component-specific variables are static (see above, NmodeMax)
 	virtual void CreateComponent(int k) = 0;
-	// virtual void CreateComponent(int k, double* instat) = 0;
 	virtual void DeleteComponent(int k) = 0;
 	virtual void UpdateComponent(int k) = 0;
 
-	void UpdateComponents()	{
+	virtual void UpdateComponents()	{
 		for (int k=0; k<GetNcomponent(); k++)	{
 			UpdateComponent(k);
 		}
-	}
-
-	virtual double GetAllocEntropy()	{
-		double total = 0;
-		UpdateOccupancyNumbers();
-		for (int k=0; k<GetNcomponent(); k++)	{
-			double tmp = ((double) occupancy[k]) / GetNsite();
-			if (tmp)	{
-				total -= tmp * log(tmp);
-			}
-		}
-		return total;
 	}
 
 	virtual void AddSite(int site, int cat)	{
@@ -116,40 +128,51 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 		occupancy[cat]--;
 	}
 
-	// sample all aspects of the mixture (number of components, composition) from the prior
-	void SampleProfile();
-
-	virtual void SampleHyper() = 0;
-	virtual void SampleAlloc() = 0;
-	virtual void SampleStat();
-	void SampleStat(int cat);
-	void SampleStat(double* stat, double statmin = 0);
+	virtual void SwapComponents(int cat1, int cat2);
 
 	void UpdateOccupancyNumbers();
-	double ResampleEmptyProfiles();
 
-	double LogProfilePrior();
+	double GetMeanStationaryEntropy() {return GetStatEnt();}
+	double GetSiteStationaryEntropy(int site) {return GetStatEnt(alloc[site]);}
 
-	virtual double LogHyperPrior() = 0;
-	virtual double LogAllocPrior()	{
-		return 0;
+	// summary statistic: mean entropy over all profiles
+	double GetStatEnt();
+	double GetStatEnt(int k);
+
+	void RenormalizeProfiles();
+
+	virtual double GetAllocEntropy()	{
+		double total = 0;
+		UpdateOccupancyNumbers();
+		double totnsite = 0;
+		for (int k=0; k<GetNcomponent(); k++)	{
+			totnsite += occupancy[k];
+		}
+		for (int k=0; k<GetNcomponent(); k++)	{
+			double tmp = ((double) occupancy[k]) / totnsite;
+			if (tmp)	{
+				total -= tmp * log(tmp);
+			}
+		}
+		return total;
 	}
-
-	// dirichlet prior ~ Dirichlet (dirweight[0]... dirweight[GetDim()-1])
-	virtual double LogStatPrior();
-
-	virtual double LogStatPrior(int cat);
-
-	virtual void SwapComponents(int cat1, int cat2);
 
 	double** profile;
 	double* allocprofile;
-	double* dirweight;
 	int* alloc;
 	int* occupancy;
 	int Ncomponent;
 	double* logstatprior;
 	double* profilesuffstatlogprob;
+
+	int nmodemax;
+
+	// 0 : flexible
+	// 1 : rigid
+
+	Chrono totchrono;
+	Chrono profilechrono;
+	Chrono incchrono;
 };
 
 #endif

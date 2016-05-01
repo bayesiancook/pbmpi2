@@ -15,12 +15,12 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "StringStreamUtils.h"
-#include <cassert>
 #include "RASCATFiniteGammaPhyloProcess.h"
 #include "Parallel.h"
 #include <string>
 
 void RASCATFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
 	// about model parameters
@@ -40,8 +40,6 @@ void RASCATFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	// and then call
 	// SetBranchLengthsFromArray()
 	// SetAlpha(inalpha)
-
-	assert(myid == 0);
 
 	// ResampleWeights();
 	RenormalizeProfiles();
@@ -90,24 +88,144 @@ void RASCATFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
+	else	{
+		UpdateZip();
+	}
+}
+
+
+double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
+
+	double** modesitelogL = new double*[GetNsite()];
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			modesitelogL[i] = new double[GetNcomponent()];
+		}
+	}
+
+	double totlogL = 0;
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			RemoveSite(i,FiniteProfileProcess::alloc[i]);
+		}
+	}
+
+	for (int k=0; k<GetNcomponent(); k++)	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+				AddSite(i,k);
+				UpdateZip(i);
+			}
+		}
+		UpdateConditionalLikelihoods();
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+				modesitelogL[i][k] = sitelogL[i];
+			}
+		}
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+				RemoveSite(i,k);
+			}
+		}
+	}
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			double max = modesitelogL[i][0];
+			for (int k=1; k<GetNcomponent(); k++)	{
+				if (max < modesitelogL[i][k])	{
+					max = modesitelogL[i][k];
+				}
+			}
+			double total = 0;
+			double cumul[GetNcomponent()];
+			for (int k=0; k<GetNcomponent(); k++)	{
+				double tmp = weight[k] * exp(modesitelogL[i][k] - max);
+				total += tmp;
+				cumul[k] = total;
+			}
+
+			double u = total * rnd::GetRandom().Uniform();
+			int k = 0;
+			while ((k<GetNcomponent()) && (u>cumul[k]))	{
+				k++;
+			}
+
+			AddSite(i,k);
+			UpdateZip(i);
+
+			double sitetotlogL = log(total) + max;
+			totlogL += sitetotlogL;
+		}
+	}
+
+	// one last update so that cond likelihoods are in sync with new site allocations
+	// this will also update logL
+	UpdateConditionalLikelihoods();
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			delete[] modesitelogL[i];
+		}
+	}
+	delete[] modesitelogL;
+
+	return totlogL;
+}
+
+double RASCATFiniteGammaPhyloProcess::GlobalGetFullLogLikelihood()	{
+
+	double totlogL = PhyloProcess::GlobalGetFullLogLikelihood();
+	if (sumovercomponents && (Ncomponent > 1))	{
+		// receive allocs from slaves
+		MPI_Status stat;
+		int tmpalloc[GetNsite()];
+		for(int i=1; i<GetNprocs(); ++i) {
+			MPI_Recv(tmpalloc,GetNsite(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+			for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); ++j) {
+				if (ActiveSite(j))	{
+					FiniteProfileProcess::alloc[j] = tmpalloc[j];
+					if ((tmpalloc[j] < 0) || (tmpalloc[j] >= Ncomponent))	{
+						cerr << "in SMC add\n";
+						cerr << "alloc overflow\n";
+						cerr << tmpalloc[j] << '\n';
+						exit(1);
+					}
+				}
+			}
+		}
+		UpdateOccupancyNumbers();
+		/*
+		ResampleWeights();
+		*/
+	}
+	GlobalUpdateParameters();
+	return totlogL;
+}
+
+void RASCATFiniteGammaPhyloProcess::SlaveGetFullLogLikelihood()	{
+
+	PhyloProcess::SlaveGetFullLogLikelihood();
+	if (sumovercomponents && (Ncomponent > 1))	{
+		MPI_Send(FiniteProfileProcess::alloc,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	}
 }
 
 void RASCATFiniteGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
-	assert(myid > 0);
-
 	switch(signal) {
 
-	/*
-	case PRINT_TREE:
-		SlavePrintTree();
-		break;
-	*/
 	case UPDATE_RATE:
 		SlaveUpdateRateSuffStat();
 		break;
 	case REALLOC_MOVE:
 		SlaveIncrementalFiniteMove();
+		break;
+	case STATFIX:
+		SlaveGetStatFix();
 		break;
 	default:
 		PhyloProcess::SlaveExecute(signal);
@@ -287,7 +405,8 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 
 void RASCATFiniteGammaPhyloProcess::SlaveComputeCVScore()	{
 
-	sitemax = sitemin + testsitemax - testsitemin;
+	int sitemin = GetSiteMin();
+	int sitemax = GetSiteMin() + testsitemax - testsitemin;
 	double** sitelogl = new double*[GetNsite()];
 	for (int i=sitemin; i<sitemax; i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
@@ -329,9 +448,6 @@ void RASCATFiniteGammaPhyloProcess::SlaveComputeCVScore()	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;
-
-	sitemax = bksitemax;
-
 }
 
 void RASCATFiniteGammaPhyloProcess::SlaveComputeSiteLogL()	{
@@ -342,18 +458,18 @@ void RASCATFiniteGammaPhyloProcess::SlaveComputeSiteLogL()	{
 	}
 
 	double** sitelogl = new double*[GetNsite()];
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
 	}
 	
 	// UpdateMatrices();
 
 	for (int k=0; k<GetNcomponent(); k++)	{
-		for (int i=sitemin; i<sitemax; i++)	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			PoissonFiniteProfileProcess::alloc[i] = k;
 		}
 		UpdateConditionalLikelihoods();
-		for (int i=sitemin; i<sitemax; i++)	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			sitelogl[i][k] = sitelogL[i];
 		}
 	}
@@ -362,7 +478,7 @@ void RASCATFiniteGammaPhyloProcess::SlaveComputeSiteLogL()	{
 	for (int i=0; i<GetNsite(); i++)	{
 		meansitelogl[i] = 0;
 	}
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		double max = 0;
 		for (int k=0; k<GetNcomponent(); k++)	{
 			if ((!k) || (max < sitelogl[i][k]))	{
@@ -380,7 +496,7 @@ void RASCATFiniteGammaPhyloProcess::SlaveComputeSiteLogL()	{
 
 	MPI_Send(meansitelogl,GetNsite(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;

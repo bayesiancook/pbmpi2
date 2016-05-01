@@ -15,7 +15,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "StringStreamUtils.h"
-#include <cassert>
 #include "AACodonMutSelSBDPPhyloProcess.h"
 #include "Parallel.h"
 #include <string.h>
@@ -31,7 +30,7 @@ void AACodonMutSelSBDPPhyloProcess::SlaveUpdateParameters()	{
 	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nnucrr = GetNnucrr(),nnucstat = 4;
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	int nstate = data->GetNstate();
+	int nstate = GetData()->GetNstate();
 	//nd = 2 + nbranch + nnucrr + nnucstat + L1*L2 + GetDim() + 1;
 
 	// 2 for branchalpha branchbeta
@@ -100,88 +99,30 @@ void AACodonMutSelSBDPPhyloProcess::SlaveUpdateParameters()	{
 	// and also deletes those that are now obsolete
 	CreateMatrices();
 	UpdateMatrices();
-
-	/*
-	SlaveBroadcastTree();
-
-	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nnucrr = GetNnucrr(),nnucstat = 4,k = 0;
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1); // check if these last terms are correct in this context...
-	ni = 1 + ProfileProcess::GetNsite();
-	int* ivector = new int[ni];
-	double* dvector = new double[nd];
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	for(i=0; i<nbranch; ++i) {
-		blarray[i] = dvector[i];
-	}
-	for(i=0; i<nnucrr; ++i) {
-		nucrr[i] = dvector[nbranch+i];
-	}
-	for(i=0; i<nnucstat; ++i) {
-		nucstat[i] = dvector[nbranch+nnucrr+i];
-	}
-	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[1+nbranch+nnucrr+nnucstat+i];
-	}
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			profile[i][j] = dvector[nbranch+nnucrr+nnucstat+L2+k];
-			k++;
-		}
-		weight[i] = dvector[nbranch+nnucrr+nnucstat+L2+k];
-		k++;
-	}
-	Ncomponent = ivector[0];
-	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
-		SBDPProfileProcess::alloc[i] = ivector[1+i];
-	}
-	//GetBranchLengthsFromArray();
-	delete[] dvector;
-	delete[] ivector;
-	// this one is really important
-	// in those cases where new components have appeared, or some old ones have disappeared
-	// during allocation move on the master node.
-	// 
-	// note that CreateMatrices() in fact creates only those that are not yet allocated
-	// and also deletes those that are now obsolete
-	CreateMatrices();
-	UpdateMatrices();
-	*/
-
 }
 
 
 void AACodonMutSelSBDPPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
-	assert(myid > 0);
-
 	switch(signal) {
 
-	/*
-	case PRINT_TREE:
-		SlavePrintTree();
-		break;
-	*/
-	case REALLOC_MOVE:
-		SlaveIncrementalDPMove();
-		break;
-	case PROFILE_MOVE:
-		SlaveMoveProfile();
-		break;
-	case MIX_MOVE:
-		SlaveMixMove();
-		break;
-	case NONSYNMAPPING:
-		SlaveNonSynMapping();
-		break;
-	default:
-		PhyloProcess::SlaveExecute(signal);
+		case PROFILE_MOVE:
+			SlaveMoveProfile();
+			break;
+		case MIX_MOVE:
+			SlaveMixMove();
+			break;
+		case NONSYNMAPPING:
+			SlaveNonSynMapping();
+			break;
+		default:
+			PhyloProcess::SlaveExecute(signal);
 	}
 }
 
 void AACodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
+
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
 	// about model parameters
@@ -193,13 +134,12 @@ void AACodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
 	// store it in the local copies of the variables
 	// and then call
 	// SetBranchLengthsFromArray()
-	assert(myid == 0);
 	int i,j,nnucrr,nnucstat,nbranch = GetNbranch(),ni,nd,L1,L2;
 	nnucrr = GetNnucrr();
 	nnucstat = 4;	
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	int nstate = data->GetNstate();
+	int nstate = GetData()->GetNstate();
 	//nd = 2 + nbranch + nnucrr + + nnucstat + L1*L2 + GetDim() + 1;
 	nd = 2 + nbranch + nnucrr + + nnucstat + L1*L2 + GetDim() + 1 + nstate + 1;
 	ni = 1 + ProfileProcess::GetNsite(); // 1 for the number of componenets, and the rest for allocations
@@ -258,77 +198,13 @@ void AACodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
 	// Now send out the doubles and ints over the wire...
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	/*
-	// MPI2
-	// should send the slaves the relevant information
-	// about model parameters
-	// for this model, should broadcast
-	// (but should first call PutBranchLengthsIntoArray())
-	// 
-	// upon receiving this information
-	// slave should 
-	// store it in the local copies of the variables
-	// and then call
-	// SetBranchLengthsFromArray()
-	assert(myid == 0);
-	int i,j,nnucrr,nnucstat,nbranch = GetNbranch(),ni,nd,L1,L2,k = 0;
-	nnucrr = GetNnucrr();
-	nnucstat = 4;	
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1);  // check if these last terms are correct in this context...
-	ni = 1 + ProfileProcess::GetNsite(); // 1 for the number of componenets, and the rest for allocations
-	int ivector[ni];
-	double dvector[nd]; 
-	MESSAGE signal = PARAMETER_DIFFUSION;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-	
-	GlobalBroadcastTree();
-	// First we assemble the vector of doubles for distribution
-	for(i=0; i<nbranch; ++i) {
-		dvector[i] = blarray[i];
 	}
-
-	for(i=0; i<nnucrr; ++i) {
-		dvector[nbranch+i] = nucrr[i];
-	}
-	for(i=0; i<nnucstat; ++i) {
-		dvector[nbranch+nnucrr+i] = nucstat[i];
-	}
-
-	for (int i=0; i<GetDim(); i++)	{
-		dvector[nbranch+nnucrr+nnucstat+i] = dirweight[i];
-	}
-
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			dvector[nbranch+nnucrr+nnucstat+L2+k] = profile[i][j];
-			k++;
-		}
-		dvector[nbranch+nnucrr+nnucstat+L2+k] = weight[i];
-		k++;
-	}
-
-	// Now the vector of ints
-	ivector[0] = GetNcomponent();
-	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
-		ivector[1+i] = SBDPProfileProcess::alloc[i];
-	}
-
-	// Now send out the doubles and ints over the wire...
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	*/
 }
 
 void AACodonMutSelSBDPPhyloProcess::SlaveComputeCVScore()	{
 
-	//if (! SumOverRateAllocations())	{
-	//	cerr << "rate error\n";
-	//	exit(1);
-	//}
-
-	sitemax = sitemin + testsitemax - testsitemin;
+	int sitemin = GetSiteMin();
+	int sitemax = GetSiteMin() + testsitemax - testsitemin;
 	double** sitelogl = new double*[ProfileProcess::GetNsite()];
 	for (int i=sitemin; i<sitemax; i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
@@ -339,14 +215,8 @@ void AACodonMutSelSBDPPhyloProcess::SlaveComputeCVScore()	{
 			AACodonMutSelSBDPProfileProcess::alloc[i] = k;
 			//UpdateMatrix(i);
 		}
-		//cerr << "before UpdateMatrix\n";
-		//cerr.flush();
 		UpdateMatrix(k);
-		//cerr << "after UpdateMatrix, before UpdateConditionalLikelihoods\n";
-		//cerr.flush();
 		UpdateConditionalLikelihoods();
-		//cerr << "after UpdateCondtionalLikelihoods\n";
-		//cerr.flush();
 		for (int i=sitemin; i<sitemax; i++)	{
 			sitelogl[i][k] = sitelogL[i];
 		}
@@ -375,9 +245,6 @@ void AACodonMutSelSBDPPhyloProcess::SlaveComputeCVScore()	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;
-
-	sitemax = bksitemax;
-
 }
 
 void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
@@ -741,11 +608,11 @@ void AACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, int every, int
 			}
 			Z = 0;
 			for (int s=0; s<Nstate; s++)	{
-				stat[s] = 	GetNucStat(AACodonMutSelProfileProcess::statespace->GetCodonPosition(0, s)) *
-						GetNucStat(AACodonMutSelProfileProcess::statespace->GetCodonPosition(1, s)) *
-						GetNucStat(AACodonMutSelProfileProcess::statespace->GetCodonPosition(2, s)) *
+				stat[s] = 	GetNucStat(GetCodonStateSpace()->GetCodonPosition(0, s)) *
+						GetNucStat(GetCodonStateSpace()->GetCodonPosition(1, s)) *
+						GetNucStat(GetCodonStateSpace()->GetCodonPosition(2, s)) *
 						codonprofile[s] *
-						profile[alloc[site]][AACodonMutSelProfileProcess::statespace->Translation(s)];
+						profile[alloc[site]][GetCodonStateSpace()->Translation(s)];
 				Z += stat[s];
 			}
 			for (int s=0; s<Nstate; s++)	{
@@ -757,10 +624,10 @@ void AACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, int every, int
 			int syncount = 0;
 			for (int codonFrom = 0; codonFrom<Nstate; codonFrom++)	{
 				for (int codonTo = 0; codonTo<Nstate; codonTo++)	{
-					pos = AACodonMutSelProfileProcess::statespace->GetDifferingPosition(codonFrom, codonTo);				
+					pos = GetCodonStateSpace()->GetDifferingPosition(codonFrom, codonTo);				
 					if ((pos != -1) && (pos != 3))  {
-						nucFrom = AACodonMutSelProfileProcess::statespace->GetCodonPosition(pos, codonFrom);
-						nucTo = AACodonMutSelProfileProcess::statespace->GetCodonPosition(pos, codonTo);
+						nucFrom = GetCodonStateSpace()->GetCodonPosition(pos, codonFrom);
+						nucTo = GetCodonStateSpace()->GetCodonPosition(pos, codonTo);
 						if (nucFrom<nucTo)	{
 							nucRRIndex = (2 * Nnuc - nucFrom - 1) * nucFrom / 2 + nucTo - nucFrom - 1;
 						}
@@ -768,9 +635,9 @@ void AACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, int every, int
 							nucRRIndex = (2 * Nnuc - nucTo - 1) * nucTo / 2 + nucFrom - nucTo - 1;
 						}
 						statMutRate = GetNucRR(nucRRIndex) * GetNucStat(nucTo) * stat[codonFrom];
-						if (!AACodonMutSelProfileProcess::statespace->Synonymous(codonFrom, codonTo))	{
-							int aaFrom = AACodonMutSelProfileProcess::statespace->Translation(codonFrom);
-							int aaTo = AACodonMutSelProfileProcess::statespace->Translation(codonTo);
+						if (!GetCodonStateSpace()->Synonymous(codonFrom, codonTo))	{
+							int aaFrom = GetCodonStateSpace()->Translation(codonFrom);
+							int aaTo = GetCodonStateSpace()->Translation(codonTo);
 							S = log(profile[alloc[site]][aaTo]/profile[alloc[site]][aaFrom]) + log(codonprofile[codonTo]/codonprofile[codonFrom]);
 						}
 						else	{
@@ -784,7 +651,7 @@ void AACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, int every, int
 							statSubRate = statMutRate * (S/(1-exp(-S)));
 						}
 
-						if (!AACodonMutSelProfileProcess::statespace->Synonymous(codonFrom, codonTo))	{
+						if (!GetCodonStateSpace()->Synonymous(codonFrom, codonTo))	{
 							statSubRate *= *omega;
 							//ssStatNonsynSubRate[site] += statSubRate;
 							//ssStatNonsynMutRate[site] += statMutRate;
@@ -820,7 +687,7 @@ void AACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, int every, int
 						shistoSub[c] += statSubRate;
 						tsshistoMut[c] += statMutRate;
 						tsshistoSub[c] += statSubRate;
-						if (!AACodonMutSelProfileProcess::statespace->Synonymous(codonFrom, codonTo))	{
+						if (!GetCodonStateSpace()->Synonymous(codonFrom, codonTo))	{
 							shistoNonsynMut[c] += statMutRate;
 							shistoNonsynSub[c] += statSubRate;
 							totalNonsynMut += statMutRate;
@@ -847,17 +714,8 @@ void AACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, int every, int
 						totalSub += statSubRate;
 						siteTotalMut += statMutRate;
 						siteTotalSub += statSubRate;
-						//cerr << "nucFrom is: " << nucFrom << "\n";
-						//cerr << "mutRate is: " << statMutRate << "\n";
-						//cerr << "subRate is: " << statSubRate << "\n";
 					}
 				}
-				//cerr << "codonStat[" << codonFrom << "]: " << stat[codonFrom];
-				//cerr << ", amino acid " << AAMutSelProfileProcess::statespace->Translation(codonFrom);
-				//cerr << ", nuc pos 1: " << AAMutSelProfileProcess::statespace->GetCodonPosition(0, codonFrom);
-				//cerr << ", nuc pos 2: " << AAMutSelProfileProcess::statespace->GetCodonPosition(1, codonFrom);
-				//cerr << ", nuc pos 3: " << AAMutSelProfileProcess::statespace->GetCodonPosition(2, codonFrom);
-				//cerr << "\n";
 			}
 
 			for (c=0; c<Ncat; c++)	{
@@ -939,69 +797,6 @@ void AACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, int every, int
 			aap_os << PosteriorMeanSiteAAP[site][a] / samplesize << "\t";
 		}
 		aap_os << "\n";
-		/*
-		Z = 0;
-		for (int s=0; s<Nstate; s++)	{
-			stat[s] = 	(meanNucStat[AACodonMutSelProfileProcess::statespace->GetCodonPosition(0, s)] *
-					meanNucStat[AACodonMutSelProfileProcess::statespace->GetCodonPosition(1, s)] *
-					meanNucStat[AACodonMutSelProfileProcess::statespace->GetCodonPosition(2, s)] *
-					meanCodonProfile[s] *
-					PosteriorMeanSiteAAP[site][s]) / samplesize;
-			Z += stat[s];
-		}
-		for (int s=0; s<Nstate; s++)	{
-			stat[s] /= Z;
-		}
-		for (int codonFrom = 0; codonFrom<Nstate; codonFrom++)	{
-			for (int codonTo = 0; codonTo<Nstate; codonTo++)	{
-				pos = AACodonMutSelProfileProcess::statespace->GetDifferingPosition(codonFrom, codonTo);				
-				if ((pos != -1) && (pos != 3))  {
-					nucFrom = AACodonMutSelProfileProcess::statespace->GetCodonPosition(pos, codonFrom);
-					nucTo = AACodonMutSelProfileProcess::statespace->GetCodonPosition(pos, codonTo);
-					if (nucFrom<nucTo)	{
-						nucRRIndex = (2 * Nnuc - nucFrom - 1) * nucFrom / 2 + nucTo - nucFrom - 1;
-					}
-					else {
-						nucRRIndex = (2 * Nnuc - nucTo - 1) * nucTo / 2 + nucFrom - nucTo - 1;
-					}
-					statMutRate = meanNucRR[nucRRIndex] * meanNucStat[nucTo] * stat[codonFrom];
-					double expSaa = (PosteriorMeanSiteAAP[site][codonTo]/samplesize)/(PosteriorMeanSiteAAP[site][codonFrom]/samplesize);
-					double expSc = (meanCodonProfile[codonTo]/samplesize)/(meanCodonProfile[codonFrom]/samplesize);
-					S = log(expSaa) + log(expSc);
-					statSubRate = statMutRate * (S/(1-(-S)));
-					if (S < min)	{
-						c = 0;
-					}
-					else if (S > max)	{
-						c = Ncat-1;
-					}
-					else {
-						c = 0;
-						double tmp = min + ((double)c * step) - step/2 + step;
-						do	{
-							c++;
-							tmp = min + ((double)(c) * step) - step/2 + step;
-						} while (tmp < S );
-					}
-					if (c == Ncat)	{
-						cout << "error, c==Ncat.\n";
-						cout.flush();
-					}
-
-					ppvhistoMut[c] += statMutRate;
-					ppvhistoSub[c] += statSubRate;
-					if (!AACodonMutSelProfileProcess::statespace->Synonymous(codonFrom, codonTo))	{
-						ppvhistoNonsynMut[c] += statMutRate;
-						ppvhistoNonsynSub[c] += statSubRate;
-						totalNonsynMut += statMutRate;
-						totalNonsynSub += statSubRate;
-					}
-					totalMut += statMutRate;
-					totalSub += statSubRate;
-				}
-			}
-		}
-		*/
 	}	
 
 	
@@ -1131,42 +926,17 @@ void AACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, int every, int
 int AACodonMutSelSBDPPhyloProcess::CountNonSynMapping()	{
 
 	int total = 0;	
-	for(int i = sitemin; i < sitemax; i++){
-		//total += CountNonSynMapping(GetRoot(), i);
+	for(int i =GetSiteMin(); i <GetSiteMax(); i++){
 		total += CountNonSynMapping(i);
 	}
 	return total;
 }
 
-/*
-int AACodonMutSelSBDPPhyloProcess::CountNonSynMapping(const Link* from, int i)	{
-	int count = 0;
-	if(!from->isLeaf()){
-		for (const Link* link=from->Next(); link!=from; link=link->Next()){
-			count += CountNonSynMapping(link->Out(), i);
-		}
-	}
-	if(!from->isRoot()){
-		BranchSitePath* mybsp = PhyloProcess::submap[GetBranchIndex(from->GetBranch())][i];
-		Plink* plink = mybsp->Init();
-		while (plink != mybsp->Last())	{
-			if (! AACodonMutSelProfileProcess::statespace->Synonymous(plink->GetState(), plink->Next()->GetState()) )	{
-				count++;
-			}
-			plink = plink->Next();
-		}
-	}
-	return count;
-}
-*/
-
 int AACodonMutSelSBDPPhyloProcess::CountNonSynMapping(int i)	{
 	int count = 0;
 	for(int k=0; k<GetNstate(); ++k) {
 		for(int l=0; l<GetNstate(); ++l) {
-		// 	if (!AACodonMutSelProfileProcess::statespace->Synonymous(k, l)) {
-				count+=sitepaircount[i][pair<int,int>(k,l)];
-		//	}
+			count+=sitepaircount[i][pair<int,int>(k,l)];
 		}
 	}
 	return count;
@@ -1174,13 +944,13 @@ int AACodonMutSelSBDPPhyloProcess::CountNonSynMapping(int i)	{
 
 int AACodonMutSelSBDPPhyloProcess::GlobalNonSynMapping()	{
 
-	assert(myid==0);
 	MESSAGE signal = NONSYNMAPPING;
 	MPI_Status stat;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	int i, count, totalcount=0;
-	for (i=1; i<nprocs; ++i)	{
+	int totalcount=0;
+	for (int i=1; i<GetNprocs(); i++)	{
+		int count;
 		MPI_Recv(&count,1,MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD, &stat);
 		totalcount += count;
 	}

@@ -25,6 +25,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 class RASCATSubstitutionProcess : public virtual PoissonSubstitutionProcess, public virtual DGamRateProcess, public virtual PoissonDPProfileProcess {
 
+	using PoissonSubstitutionProcess::UpdateZip;
+
 	public:
 
 	RASCATSubstitutionProcess() {}
@@ -32,15 +34,14 @@ class RASCATSubstitutionProcess : public virtual PoissonSubstitutionProcess, pub
 
 	protected:
 
-	virtual void Create(int, int)	{
-		cerr << "error : in RASCATSubProcess::Create(int,int)\n";
-		exit(1);
+	virtual void UpdateZip(int site)	{
+		PoissonSubstitutionProcess::UpdateZip(site);
 	}
 
-	virtual void Create(int nsite, int ncat, int nstate,int insitemin,int insitemax)	{
-		PoissonSubstitutionProcess::Create(nsite,nstate,insitemin,insitemax);
-		DGamRateProcess::Create(nsite,ncat);
-		PoissonDPProfileProcess::Create(nsite,nstate);
+	virtual void Create()	{
+		PoissonSubstitutionProcess::Create();
+		DGamRateProcess::Create();
+		PoissonDPProfileProcess::Create();
 	}
 
 	virtual void Delete()	{
@@ -61,142 +62,38 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 
 	RASCATGammaPhyloProcess() {}
 
-	RASCATGammaPhyloProcess(string indatafile, string treefile, int nratecat, int iniscodon, GeneticCodeType incodetype, int infixtopo, int inkappaprior, double inmintotweight, int indc, int me, int np)	{
-		myid = me;
-		nprocs = np;
+	RASCATGammaPhyloProcess(int nratecat, int inkappaprior)	{
 
-		fixtopo = infixtopo;
-		dc = indc;
+		Ncat = nratecat;
 		kappaprior = inkappaprior;
-		SetMinTotWeight(inmintotweight);
-
-		datafile = indatafile;
-		SequenceAlignment* plaindata = new FileSequenceAlignment(datafile,0,myid);
-		if (dc)	{
-			plaindata->DeleteConstantSites();
-		}
-		const TaxonSet* taxonset = plaindata->GetTaxonSet();
-		if (treefile == "None")	{
-			tree = new Tree(taxonset);
-			if (myid == 0)	{
-				tree->MakeRandomTree();
-				GlobalBroadcastTree();
-			}
-			else	{
-				SlaveBroadcastTree();
-			}
-		}
-		else	{
-			tree = new Tree(treefile);
-		}
-		tree->RegisterWith(taxonset,myid);
-		
-		int insitemin = -1,insitemax = -1;
-		if (myid > 0) {
-			int width = plaindata->GetNsite()/(nprocs-1);
-			insitemin = (myid-1)*width;
-			if (myid == (nprocs-1)) {
-				insitemax = plaindata->GetNsite();
-			}
-			else {
-				insitemax = myid*width;
-			}
-		}
-
-		Create(tree,plaindata,nratecat,insitemin,insitemax);
-
-		if (myid == 0)	{
-			Sample();
-			GlobalUnfold();
-		}
 	}
 
-	RASCATGammaPhyloProcess(istream& is, int me, int np)	{
-		myid = me;
-		nprocs = np;
+	RASCATGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
 
+		// generic
 		FromStreamHeader(is);
-		is >> datafile;
-		int nratecat;
-		is >> nratecat;
-		if (atof(version.substr(0,3).c_str()) > 1.3)	{
-			is >> iscodon;
-			is >> codetype;
-			is >> kappaprior;
-			is >> mintotweight;
-		}
-		else	{
-			iscodon = 0;
-			codetype = Universal;
-			kappaprior = 0;
-			mintotweight = -1;
-		}
-		is >> fixtopo;
-		if (atof(version.substr(0,3).c_str()) > 1.4)	{
-			is >> NSPR;
-			is >> NNNI;
-		}
-		else	{
-			NSPR = 10;
-			NNNI = 0;
-		}
-		is >> dc;
-		SequenceAlignment* plaindata = new FileSequenceAlignment(datafile,0,myid);
-		if (dc)	{
-			plaindata->DeleteConstantSites();
-		}
-		const TaxonSet* taxonset = plaindata->GetTaxonSet();
+		SetMPI(inmyid,innprocs);
 
-		int insitemin = -1,insitemax = -1;
-		if (myid > 0) {
-			int width = plaindata->GetNsite()/(nprocs-1);
-			insitemin = (myid-1)*width;
-			if (myid == (nprocs-1)) {
-				insitemax = plaindata->GetNsite();
-			}
-			else {
-				insitemax = myid*width;
-			}
-		}
+		// specific
+		is >> Ncat;
+		is >> kappaprior;
 
-		tree = new Tree(taxonset);
-		if (myid == 0)	{
-			tree->ReadFromStream(is);
-			GlobalBroadcastTree();
-		}
-		else	{
-			SlaveBroadcastTree();
-		}
-		tree->RegisterWith(taxonset,0);
+		Open(is);
+	}
 
-		Create(tree,plaindata,nratecat,insitemin,insitemax);
-
-		if (myid == 0)	{
-			FromStream(is);
-			GlobalUnfold();
-		}
+	void ToStreamHeader(ostream& os)	{
+		PhyloProcess::ToStreamHeader(os);
+		os << Ncat << '\n';
+		os << kappaprior << '\n';
 	}
 
 	~RASCATGammaPhyloProcess() {
 		Delete();
 	}
 
-	double GetLogProb()	{
-		return GetLogPrior() + GetLogLikelihood();
-	}
-
-	double GetLogPrior()	{
-		// yet to be implemented
-		return 0;
-	}
-
-	double GetLogLikelihood()	{
-		return logL;
-	}
-
 	void TraceHeader(ostream& os)	{
 		os << "#iter\ttime\ttopo\tloglik\tlength\talpha\tNmode\tstatent\tstatalpha";
-		// os << "\tkappa\tallocent";
+		os << "\tkappa";
 		os << '\n'; 
 	}
 
@@ -217,8 +114,7 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 		os << '\t' << GetLogLikelihood() << '\t' << GetRenormTotalLength() << '\t' << GetAlpha();
 		os << '\t' << GetNOccupiedComponent() << '\t' << GetStatEnt();
 		os << '\t' << GetMeanDirWeight();
-		// os << '\t' << kappa << '\t' << GetAllocEntropy();
-
+		os << '\t' << kappa;
 		os << '\n';
 	}
 
@@ -229,7 +125,7 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 		BranchLengthMove(tuning);
 		BranchLengthMove(0.1 * tuning);
 		if (! fixtopo)	{
-			MoveTopo(10,0);
+			MoveTopo();
 		}
 		propchrono.Stop();
 
@@ -237,24 +133,14 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 
 		GammaBranchProcess::Move(tuning,10);
 
-		// this one is important 
 		GlobalUpdateParameters();
 		DGamRateProcess::Move(0.3*tuning,10);
 		DGamRateProcess::Move(0.03*tuning,10);
-		// RASCATSubstitutionProcess::MoveRate(tuning);
-
-		// this one is not useful
-		// because uniformized process:
-		// conditional on discrete substitution mapping
-		// profiles do not depend on branch lengths and site rates
-		// GlobalUpdateParameters();
 
 		PoissonDPProfileProcess::Move(1,1,5);
 
 		GlobalUnfold();
 		chronototal.Stop();
-
-		// Trace(cerr);
 
 		return 1;
 	
@@ -262,21 +148,6 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 
 	virtual void ReadPB(int argc, char* argv[]);
 	void ReadSiteProfiles(string name, int burnin, int every, int until);
-
-	void ToStreamHeader(ostream& os)	{
-		PhyloProcess::ToStreamHeader(os);
-		os << datafile << '\n';
-		os << GetNcat() << '\n';
-		os << iscodon << '\n';
-		os << codetype << '\n';
-		os << kappaprior << '\n';
-		os << mintotweight << '\n';
-		os << fixtopo << '\n';
-		os << NSPR << '\t' << NNNI << '\n';
-		os << dc << '\n';
-		SetNamesFromLengths();
-		GetTree()->ToStream(os);
-	}
 
 	void ToStream(ostream& os)	{
 		GammaBranchProcess::ToStream(os);
@@ -292,11 +163,10 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 	}
 
 
-	virtual void Create(Tree* intree, SequenceAlignment* indata, int ncat,int insitemin,int insitemax)	{
-		PoissonPhyloProcess::Create(intree,indata);
-		// PoissonPhyloProcess::Create(intree,indata,indata->GetNstate(),insitemin,insitemax);
-		RASCATSubstitutionProcess::Create(indata->GetNsite(),ncat,indata->GetNstate(),insitemin,insitemax);
-		GammaBranchProcess::Create(intree);
+	virtual void Create()	{
+		PoissonPhyloProcess::Create();
+		RASCATSubstitutionProcess::Create();
+		GammaBranchProcess::Create();
 	}
 		
 	virtual void Delete()	{
@@ -304,13 +174,6 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 		RASCATSubstitutionProcess::Delete();
 		PoissonPhyloProcess::Delete();
 	}
-
-	int iscodon;
-	GeneticCodeType codetype;
-	int fixtopo;
-	int NSPR;
-	int NNNI;
-	int dc;
 };
 
 #endif

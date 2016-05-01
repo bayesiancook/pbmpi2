@@ -230,7 +230,8 @@ double BPCompare(string* ChainName, int P, int burnin, int every, int until, int
 					}
 					osp << '\t';
 					for (int p=0; p<P; p++)	{
-						osp << '\t' << length[p][k];
+						osp << '\t' << mergedbplist->GetBipartition(k).GetPriorProb();
+						// osp << '\t' << length[p][k];
 					}
 					osp << '\n';
 				}

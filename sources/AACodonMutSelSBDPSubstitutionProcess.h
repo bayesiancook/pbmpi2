@@ -32,17 +32,16 @@ class AACodonMutSelSBDPSubstitutionProcess : public virtual AACodonMutSelSBDPPro
 	AACodonMutSelSBDPSubstitutionProcess() {}
 	virtual ~AACodonMutSelSBDPSubstitutionProcess() {}
 
+	int GetNstate() {return GetNcodon();}
+
+	int GetNstate(int i) {return GetNcodon();}
+
 	protected:
 
-	void Create(int insite, int indim, int sitemin, int sitemax)	{
-		cerr << "In four-argument Create of AACodonMutSelSBDPSubstitutionProcess. Should not be here.\n";
-		exit(1);
-	}
-
-	void Create(int innsite, int indim, int sitemin, int sitemax, CodonStateSpace* instatespace, int infixcodonprofile, int infixomega)	{
-		AACodonMutSelSBDPProfileProcess::Create(innsite,indim,instatespace,infixcodonprofile,infixomega);
-		UniformRateProcess::Create(innsite);
-		GeneralPathSuffStatMatrixSubstitutionProcess::Create(innsite,indim,sitemin,sitemax);
+	void Create()	{
+		AACodonMutSelSBDPProfileProcess::Create();
+		UniformRateProcess::Create();
+		GeneralPathSuffStatMatrixSubstitutionProcess::Create();
 	}
 
 	void Delete()	{

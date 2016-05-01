@@ -29,7 +29,7 @@ class GeneralPathSuffStatMatrixMixtureProfileProcess : public virtual MatrixMixt
 
 	protected:
 
-	virtual void Create(int innsite, int indim);
+	virtual void Create();
 	virtual void Delete();
 
 	virtual void CreateComponent(int k)	{
@@ -49,27 +49,19 @@ class GeneralPathSuffStatMatrixMixtureProfileProcess : public virtual MatrixMixt
 		DeleteMatrix(k);
 	}
 
-	// update component k (in particular, will be used for updating the matrix
-	// typically, after the profile has changed)
-	virtual void UpdateComponent(int k)	{
-		UpdateMatrix(k);
-	}
-
 	// necessary to keep track of componentwise sufficient statistics 
 	// when updating the structure of the mixture
 	void AddSite(int site, int cat);
 	void RemoveSite(int site, int cat);
 
 	// collects site-specific suffstats and pools them componentwise
-	void UpdateModeProfileSuffStat();
+	virtual void UpdateModeProfileSuffStat();
+	virtual void GlobalUpdateModeProfileSuffStat();
+	virtual void SlaveUpdateModeProfileSuffStat();
 
-	double ProfileSuffStatLogProb(int cat);
-	void SwapComponents(int cat1, int cat2);
+	virtual double ProfileSuffStatLogProb(int cat);
 
 	virtual double LogStatProb(int site, int cat);
-
-	// implemented in phyloprocess
-	// virtual double logSiteProbPath(int site, SubMatrix* mat) = 0;
 
 	// componentwise
 	map<int,int>* profilerootcount;

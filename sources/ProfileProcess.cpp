@@ -16,6 +16,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ProfileProcess.h"
 #include "Random.h"
+#include "Parallel.h"
 
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
@@ -23,21 +24,90 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 
-void ProfileProcess::Create(int innsite, int indim)	{
-	if (nsite || dim)	{
-		if (nsite != innsite)	{
-			cerr << "error in phyloprocess creation: non matching number of sites\n";
-			exit(1);
+double ProfileProcess::ProfileProposeMove(double* profile, double tuning, int n, int K, int cat, double statmin)	{ // n==0dirichlet resampling, otherwise, vase communiquants
+	if (! statmin)	{
+		statmin = stateps;
+	}
+	if (! K)	{
+		K = dim;
+	}
+	double ret = 0;
+	if (!n)	{ // dirichlet
+		cerr << "dirichlet move\n";
+		exit(1);
+		double* oldprofile = new double[K];
+		for (int i=0; i<K; i++)	{
+			oldprofile[i] = profile[i];
 		}
-		if (dim != indim)	{
-			cerr << "error in phyloprocess creation: non matching number of states\n";
-			cerr << dim << '\t' << indim << '\n';
-			exit(1);
+		double total = 0;
+		for (int i=0; i<K; i++)	{
+			profile[i] = rnd::GetRandom().sGamma(tuning*oldprofile[i]);
+			if (profile[i] == 0)	{
+				cerr << "error in dirichlet resampling : 0 \n";
+				exit(1);
+			}
+			total += profile[i];
 		}
+
+		double logHastings = 0;
+		for (int i=0; i<K; i++)	{
+			profile[i] /= total;
+
+			logHastings += - rnd::GetRandom().logGamma(tuning*oldprofile[i]) + rnd::GetRandom().logGamma(tuning*profile[i])
+						-  (tuning*profile[i] -1.0) * log(oldprofile[i]) + (tuning * oldprofile[i] -1.0) * log(profile[i]);
+		}
+
+		delete[] oldprofile;
+		return logHastings;
 	}
 	else	{
-		nsite = innsite;
-		dim = indim;
+		if (2*n > K)	{
+			n = K / 2;
+		}
+		int* indices = new int[2*n];
+		rnd::GetRandom().DrawFromUrn(indices,2*n,K);
+		for (int i=0; i<n; i++)	{
+			int i1 = indices[2*i];
+			int i2 = indices[2*i+1];
+			double tot = profile[i1] + profile[i2];
+			double x = profile[i1];
+			
+			// double h = tuning * (rnd::GetRandom().Uniform() - 0.5);
+			double h = tot * tuning * (rnd::GetRandom().Uniform() - 0.5);
+			/*
+			int c = (int) (h / (2 * tot));
+			h -= c*2*tot;
+			*/
+			x += h;
+			while ((x<0) || (x>tot))	{
+				if (x<0)	{
+					x = -x;
+				}
+				if (x>tot)	{
+					x = 2*tot - x;
+				}
+			}
+			profile[i1] = x;
+			profile[i2] = tot - x;
+		}
+		delete[] indices;
 	}
+	return ret;
+}
+
+
+double ProfileProcess::GlobalSMCAddSites()	{
+
+	MESSAGE signal = SMCADDSITES;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	MPI_Status stat;
+	double total = 0;
+	for (int i=1; i<GetNprocs(); i++)	{
+		double tmp;
+		MPI_Recv(&tmp,1,MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		total += tmp;
+	}
+	return total;
 }
 

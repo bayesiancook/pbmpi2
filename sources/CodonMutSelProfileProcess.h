@@ -29,12 +29,16 @@ class CodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProfil
 
 	public:
 
-	CodonMutSelProfileProcess() : nucrr(0), nucstat(0), statespace(0) {}
+	CodonMutSelProfileProcess() : nucrr(0), nucstat(0) {}
 	virtual ~CodonMutSelProfileProcess() {}
 
 	int GetNnucrr()	{
 		return Nnucrr;
 	}	
+
+	int GetNcodon()	{
+		return GetCodonStateSpace()->GetNstate();
+	}
 
 	const double* GetNucRR()	{
 		if (! nucrr)	{
@@ -71,7 +75,23 @@ class CodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProfil
 
 	protected:
 
-	virtual void Create(int innsite, int indim, CodonStateSpace* instatespace);
+	CodonSequenceAlignment* GetCodonData()	{
+
+		CodonSequenceAlignment* tmp = dynamic_cast<CodonSequenceAlignment*>(GetData());
+		if (!tmp)	{
+			if (GetData())	{
+				cerr << "in AACodonMutSelProfileProcess: cast error on sequence alignment\n";
+				exit(1);
+			}
+		}
+		return tmp;
+	}
+
+	CodonStateSpace* GetCodonStateSpace()	{
+		return GetCodonData()->GetCodonStateSpace();
+	}
+
+	virtual void Create();
 	virtual void Delete();
 	virtual double GetNormalizationFactor()	{return 1.0;}
 
@@ -83,6 +103,8 @@ class CodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProfil
 	virtual double LogNucStatPrior();
 	virtual void SampleNucStat();
 
+	virtual double GlobalParametersMove();
+
 	double MoveNucRR(double tuning); 
 	double MoveNucRR(double tuning, int n); 
 	double MoveNucStat(double tuning, int n);
@@ -90,7 +112,6 @@ class CodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProfil
 	int Nnucrr;
 	double* nucrr;
 	double* nucstat;
-	CodonStateSpace* statespace;
 };
 
 #endif

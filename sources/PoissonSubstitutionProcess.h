@@ -35,9 +35,10 @@ class PoissonSubstitutionProcess : public virtual SubstitutionProcess, public vi
 	protected:
 
 	// CPU Level 3: implementations of likelihood propagation and substitution mapping methods
-	void Propagate(double*** from, double*** to, double time, bool condalloc = false);
-	BranchSitePath** SamplePaths(int* stateup, int* statedown, double time);
-	BranchSitePath** SampleRootPaths(int* rootstate);
+	void SitePropagate(int site, double** from, double** to, double time, bool condalloc = false);
+	void Propagate(double*** from, double*** to, double time, bool condalloc);
+	BranchSitePath* SampleSitePath(int site, int stateup, int statedown, double time);
+	BranchSitePath* SampleRootSitePath(int site, int rootstate);
 
 	// CPU Level 1: gathering sufficient statistics from substitution mappings
 	void AddSiteRateSuffStat(int* siteratesuffstatcount, BranchSitePath** patharray);

@@ -34,19 +34,10 @@ class CodonMutSelFiniteSubstitutionProcess : public virtual CodonMutSelFinitePro
 
 	protected:
 
-	void Create(int insite, int indim, int sitemin, int sitemax)	{
-		cerr << "In four-argument Create of CodonMutSelFiniteSubstitutionProcess. Should not be here.\n";
-		exit(1);
-	}
-
-	void Create(int innsite, int indim, int ncat, int infixncomp, int inempmix, string inmixtype, int sitemin, int sitemax, CodonStateSpace* instatespace)	{
-		if (ncat == -1)	{
-			ncat = innsite;
-		}
-	
-		CodonMutSelFiniteProfileProcess::Create(innsite,indim,ncat,infixncomp,inempmix,inmixtype,instatespace);
-		UniformRateProcess::Create(innsite);
-		GeneralPathSuffStatMatrixSubstitutionProcess::Create(innsite,indim,sitemin,sitemax);
+	void Create()	{
+		CodonMutSelFiniteProfileProcess::Create();
+		UniformRateProcess::Create();
+		GeneralPathSuffStatMatrixSubstitutionProcess::Create();
 	}
 
 	void Delete()	{

@@ -28,8 +28,8 @@ using namespace std;
 
 	const char AAset[] = {'A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y','a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y','-','?','$','.','B','Z','*','X','x'};
 	const int AAN = 49;
-	const int DNAN = 38;
-	const int RNAN = 38;
+	const int DNAN = 37;
+	const int RNAN = 37;
 	const char DNAset[] = {'A','C','G','T','a','c','g','t','B','D','H','K','M','N','R','S','V','W','Y','b','d','h','k','m','n','r','s','v','w','y','-','?','$','.','*','X','x'};
 	const char RNAset[] = {'A','C','G','U','a','c','g','u','B','D','H','K','M','N','R','S','V','W','Y','b','d','h','k','m','n','r','s','v','w','y','-','?','$','.','*','X','x'};
 
@@ -46,7 +46,7 @@ using namespace std;
 	const char rnaletters[] = {'a','c','g','u'};
 	
 	const int Dayhoff6Table[] = {3,5,2,2,4,3,1,0,1,0,0,2,3,2,1,3,3,0,4,4};
-	const int Dayhoff4Table[] = {3,-1,2,2,0,3,1,0,1,0,0,2,3,2,1,3,3,0,2,2};
+	const int Dayhoff4Table[] = {3,-1,2,2,0,3,1,0,1,0,0,2,3,2,1,3,3,0,0,0};
 	const int unknown = -1;
 
 

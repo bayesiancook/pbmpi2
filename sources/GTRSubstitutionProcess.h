@@ -1,4 +1,5 @@
 
+
 /********************
 
 PhyloBayes MPI. Copyright 2010-2013 Nicolas Lartillot, Nicolas Rodrigue, Daniel Stubbs, Jacques Richer.
@@ -30,24 +31,15 @@ class GTRSubstitutionProcess : public virtual MatrixSubstitutionProcess, public 
 
 	protected:
 
-	void Create(int innsite, int indim,int insitemin,int insitemax)	{
-		GTRProfileProcess::Create(innsite,indim);
-		SubstitutionProcess::Create(innsite,indim,insitemin,insitemax);
+	void Create()	{
+		GTRProfileProcess::Create();
+		SubstitutionProcess::Create();
 	}
 
 	void Delete() {
 		SubstitutionProcess::Delete();
 		GTRProfileProcess::Delete();
 	}
-
-	int GetNstate(int site) {return GetDim();}
-	int GetNstate() {return GetDim();}
-
-	/*
-	double* GetStationary(int site)	{
-		return GetProfile(site);
-	}
-	*/
 };
 
 #endif

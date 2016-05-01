@@ -45,6 +45,36 @@ class SequenceAlignment	{
 		BKData = 0;
 	}
 	
+	SequenceAlignment(SequenceAlignment* from, bool* mask)	{
+
+		Ntaxa = from->Ntaxa;
+		Nsite = 0;
+		for (int i=0; i<from->GetNsite(); i++)	{
+			if (mask[i])	{
+				Nsite++;
+			}
+		}
+		taxset = from->taxset;
+		statespace = from->statespace;
+
+		Data = new int*[Ntaxa];
+		for (int i=0; i<Ntaxa; i++)	{
+			Data[i] = new int[Nsite];
+			int k = 0;
+			for (int j=0; j<from->GetNsite(); j++)	{
+				if (mask[j])	{
+					if (k >= Nsite)	{
+						cerr << "error in SequenceAlignment(from,mask)\n";
+						exit(1);
+					}
+					Data[i][k] = from->Data[i][j];
+					k++;
+				}
+			}
+		}
+		BKData = 0;
+	}
+	
 	SequenceAlignment(SequenceAlignment* from, int start, int length)	{
 
 		Ntaxa = from->Ntaxa;
@@ -225,6 +255,30 @@ class SequenceAlignment	{
 				Data[mapi][j] = inData[i][j];
 			}
 		}
+	}
+
+	void Randomize()	{
+
+		int** bkdata = new int*[Ntaxa];
+		for (int i=0; i<Ntaxa; i++)	{
+			bkdata[i] = new int[Nsite];
+			for (int j=0; j<Nsite; j++)	{
+				bkdata[i][j] = Data[i][j];
+			}
+		}
+		int* permut = new int[GetNsite()];
+		rnd::GetRandom().DrawFromUrn(permut,GetNsite(),GetNsite());
+		for (int j=0; j<GetNsite(); j++)	{
+			int k = permut[j];
+			for (int i=0; i<Ntaxa; i++)	{
+				Data[i][k] = bkdata[i][j];
+			}
+		}
+		delete[] permut;
+		for (int i=0; i<Ntaxa; i++)	{
+			delete[] bkdata[i];
+		}
+		delete[] bkdata;
 	}
 
 	void MissingFractionPerGene(int Ngene, int* genesize, int* exclude, double* frac)	{
@@ -588,7 +642,7 @@ class FileSequenceAlignment : public SequenceAlignment	{
 
 	public:
 		FileSequenceAlignment(istream& is);
-		FileSequenceAlignment(string filename,int fullline,int myid);
+		FileSequenceAlignment(string filename);
 
 	private:
 

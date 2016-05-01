@@ -17,10 +17,10 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define POISSONMIXTUREPROFILE_H
 
 #include "PoissonProfileProcess.h"
-#include "MixtureProfileProcess.h"
+#include "DirichletMixtureProfileProcess.h"
 
 // superclass for Poisson (F81) implementations
-class PoissonMixtureProfileProcess: public virtual PoissonProfileProcess, public virtual MixtureProfileProcess	{
+class PoissonMixtureProfileProcess: public virtual PoissonProfileProcess, public virtual DirichletMixtureProfileProcess	{
 
 	public:
 
@@ -29,26 +29,33 @@ class PoissonMixtureProfileProcess: public virtual PoissonProfileProcess, public
 
 	protected:
 
-	virtual void Create(int innsite, int indim);
+	virtual void Create();
 	virtual void Delete();
 
 	virtual void CreateComponent(int k) {
 		occupancy[k] = 0;
-		/*
-		int* catnsub = profilesuffstatcount[k];
-		for (int i=0; i<GetDim(); i++)	{
-			catnsub[i] = 0;
-		}
-		*/
 		SampleStat(k);
 	}
+
+	virtual void UpdateZip(int site) = 0;
+
 	virtual void DeleteComponent(int k) {
 	}
-	virtual void UpdateComponent(int k) {}
+	virtual void UpdateComponent(int k) {
+		for (int i=0; i<GetNsite(); i++)	{
+			if (ActiveSite(i))	{
+				if (alloc[i] == k)	{
+					UpdateZip(i);
+				}
+			}
+		}
+	}
 
 	// posterior
 	// collects sufficient statistics across sites, pools them componentwise
 	void UpdateModeProfileSuffStat();
+	void GlobalUpdateModeProfileSuffStat();
+	void SlaveUpdateModeProfileSuffStat();
 
 	// virtual void CreateComponent(int k)	{}
 
@@ -93,19 +100,13 @@ class PoissonMixtureProfileProcess: public virtual PoissonProfileProcess, public
 				tot += occupancy[k] + 1;
 			}
 		}
-		/*
-		if (tot != GetNsite() + GetNcomponent())	{
-			cerr << "error in norm factor\n";
-			cerr << tot << '\t' << GetNsite() << '\t' << GetNcomponent() << '\n';
-			exit(1);
-		}
-		*/
 		norm /= tot;
 		return norm;
 	}
 
 	// private:
 	int** profilesuffstatcount;
+	int* allocprofilesuffstatcount;
 };
 
 #endif

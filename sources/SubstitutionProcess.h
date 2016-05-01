@@ -17,7 +17,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef SUBS_H
 #define SUBS_H
 
-#include "RateProcess.h"
+#include "DGamRateProcess.h"
 #include "ProfileProcess.h"
 #include "BranchSitePath.h"
 #include "Chrono.h"
@@ -30,7 +30,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //
 // most important accessors:
 //
-// int GetNsite() : number of aligned positions
 // int GetNstate(int i) : number of states for the substitution process at site i
 //
 // int GetNrate(int i) : number of rate categories at site i
@@ -70,25 +69,19 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 	SubstitutionProcess() : condsitelogL(0), sitelogL(0), meansiterate(0), ratealloc(0), infprobcount(0), suboverflowcount(0) {}
 	virtual ~SubstitutionProcess() {}
 
-	// basic accessors, needed to perform elementary likelihood computations and substitution mappings
-	// are provided by RateProcess and ProfileProcess
-
-	// only this one needs to be overriden
-	int GetNsite() {return RateProcess::GetNsite();}
-	int GetDim() {return ProfileProcess::GetDim();}
 	// those two accessors are abstract: what they return depends on whether we use recoded Poisson or GTR substitution processes
-	virtual int GetNstate(int site) = 0;
-	//virtual int GetNstate() = 0;
+	virtual int GetNstate(int site) {return GetNstate();}
+	virtual int GetNstate() {return GetDim();}
 	virtual const double* GetStationary(int site) = 0;
-
-	int GetSiteMin() { return sitemin;}
-	int GetSiteMax() { return sitemax;}
 
 	int GetInfProbCount() {return infprobcount;}
 
 	protected:
 
-	void Create(int innsite, int indim, int insitemin,int insitemax);
+	virtual void ActivateZip() {}
+	virtual void InactivateZip() {}
+
+	void Create();
 	void Delete();
 
 	// basic modules for creating deleting arrays of conditional likelihoods
@@ -98,7 +91,6 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 
 	double* CreateProbVector()	{
 		return new double[GetSiteMax() - GetSiteMin()];
-		// return new double[GetNsite()];
 	}
 
 	void CreateCondSiteLogL();
@@ -110,48 +102,67 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 
 	// CPU : level 1
 	// if aux==0, assumes likelihoods have been computed
-	void DrawAllocations(double*** aux = 0);
+	void DrawAllocations(double*** aux);
 
 	// in the following
 	// bool condalloc = true means that we want to make the computation, for each site,
 	// only for the category specified for that site by double* ratealloc
 
 	// CPU : level 1
-	void Reset(double*** condl, bool condalloc = false);
-	void Multiply(double*** from, double*** to, bool condalloc = false);
-	void MultiplyByStationaries(double*** from, bool condalloc = false);
-	void Offset(double*** condl, bool condalloc = false);
-	virtual void Initialize(double*** condl, const int* leafstates, bool condalloc = false);
+	void Reset(double*** condl, bool condalloc);
+	void Multiply(double*** from, double*** to, bool condalloc);
+	void MultiplyByStationaries(double*** from, bool condalloc);
+	void Offset(double*** condl, bool condalloc);
+	virtual void Initialize(double*** condl, const int* leafstates, bool condalloc);
 
 	// CPU : level 2
-	double ComputeLikelihood(double*** aux, bool condalloc = false);
+	double ComputeLikelihood(double*** aux, bool condalloc);
 
 	// CPU : level 3
 	// implemented in GTR or POisson Substitution process
-	virtual void Propagate(double*** from, double*** to, double time, bool condalloc = false) = 0;
+	virtual void Propagate(double*** from, double*** to, double time, bool condalloc) = 0;
 
 	// CPU : level 1
 	// implemented in GTR or POisson Substitution process
 	// here, assumes that each site is under the rate category defined by double* ratealloc
 	virtual void ChooseStates(double*** aux, int* states);
 	
+
+	// site-wise versions of the same functions
+
+	// CPU : level 1
+	// if aux==0, assumes likelihoods have been computed
+	void SiteDrawAllocations(int site, double** aux);
+
+	// CPU : level 1
+	void SiteReset(int site, double** condl, bool condalloc = false);
+	void SiteMultiply(int site, double** from, double** to, bool condalloc = false);
+	void SiteMultiplyByStationaries(int site, double** from, bool condalloc = false);
+	void SiteOffset(int site, double** condl, bool condalloc = false);
+	virtual void SiteInitialize(int site, double** condl, const int leafstate, bool condalloc = false);
+
+	// CPU : level 2
+	double SiteComputeLikelihood(int site, double** aux, bool condalloc = false);
+
 	// CPU : level 3
 	// implemented in GTR or POisson Substitution process
-	virtual BranchSitePath** SamplePaths(int* stateup, int* statedown, double time) = 0;
-	virtual BranchSitePath** SampleRootPaths(int* rootstate) = 0;
+	virtual void SitePropagate(int site, double** from, double** to, double time, bool condalloc = false) = 0;
+
+	// CPU : level 1
+	// implemented in GTR or POisson Substitution process
+	// here, assumes that each site is under the rate category defined by double* ratealloc
+	virtual int SiteChooseState(int site, double** aux);
+	
+	// CPU : level 3
+	// implemented in GTR or POisson Substitution process
+	void SamplePaths(BranchSitePath** patharray, int* stateup, int* statedown, double time);
+	void SampleRootPaths(BranchSitePath** patharray, int* rootstate);
+
+	virtual BranchSitePath* SampleSitePath(int site, int stateup, int statedown, double time) = 0;
+	virtual BranchSitePath* SampleRootSitePath(int site, int rootstate) = 0;
 
 	// -------------------------
 
-	/*
-	virtual int GetNprocs() = 0;
-	virtual int GetMyid() = 0;
-	virtual int GetSiteMin(int proc = -1) = 0;
-	virtual int GetSiteMax(int proc = -1) = 0;
-	virtual void MakeMPIPartition() = 0;
-	*/
-
-	int sitemin;
-	int sitemax;
 	double** condsitelogL;
 	double* sitelogL;
 	double* meansiterate;

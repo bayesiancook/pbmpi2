@@ -13,12 +13,13 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-#include <cassert>
 #include "RASCATGTRDPGammaPhyloProcess.h"
 #include "Parallel.h"
 #include <string>
 
 void RASCATGTRDPGammaPhyloProcess::GlobalUpdateParameters()	{
+
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
 	// about model parameters
@@ -38,8 +39,6 @@ void RASCATGTRDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	// and then call
 	// SetBranchLengthsFromArray()
 	// SetAlpha(inalpha)
-
-	assert(myid == 0);
 
 	// ResampleWeights();
 
@@ -96,12 +95,11 @@ void RASCATGTRDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	// Now send out the doubles and ints over the wire...
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
 }
 
 
 void RASCATGTRDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
-
-	assert(myid > 0);
 
 	switch(signal) {
 
@@ -113,9 +111,6 @@ void RASCATGTRDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 		break;
 	case PROFILE_MOVE:
 		SlaveMoveProfile();
-		break;
-	case MIX_MOVE:
-		SlaveMixMove();
 		break;
 	default:
 		PhyloProcess::SlaveExecute(signal);

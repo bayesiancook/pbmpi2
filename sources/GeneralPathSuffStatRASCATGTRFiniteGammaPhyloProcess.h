@@ -17,39 +17,50 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef GENPATHSSRASCATGTR_H
 #define GENPATHSSRASCATGTR_H
 
-#include "GeneralPathSuffStatGTRPhyloProcess.h"
-#include "GeneralPathSuffStatGTRSubstitutionProcess.h"
+#include "GTRFiniteProfileProcess.h"
+#include "GeneralPathSuffStatMatrixMixtureProfileProcess.h"
+#include "GeneralPathSuffStatMatrixPhyloProcess.h"
+#include "GeneralPathSuffStatMatrixSubstitutionProcess.h"
 #include "DGamRateProcess.h"
-#include "GeneralPathSuffStatGTRFiniteProfileProcess.h"
 #include "GammaBranchProcess.h"
 
-class GeneralPathSuffStatRASCATGTRFiniteSubstitutionProcess : public virtual GeneralPathSuffStatGTRSubstitutionProcess, public virtual DGamRateProcess, public virtual GeneralPathSuffStatGTRFiniteProfileProcess {
+class GeneralPathSuffStatGTRFiniteProfileProcess : public virtual GTRFiniteProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
+
+	public:
+
+	GeneralPathSuffStatGTRFiniteProfileProcess() {}
+	virtual ~GeneralPathSuffStatGTRFiniteProfileProcess() {}
+
+	protected:
+
+	virtual void Create()	{
+		GTRFiniteProfileProcess::Create();
+		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
+	}
+
+	virtual void Delete()	{
+		GeneralPathSuffStatMatrixMixtureProfileProcess::Delete();
+		GTRFiniteProfileProcess::Delete();
+	}
+};
+
+class GeneralPathSuffStatRASCATGTRFiniteSubstitutionProcess : public virtual GeneralPathSuffStatMatrixSubstitutionProcess, public virtual DGamRateProcess, public virtual GeneralPathSuffStatGTRFiniteProfileProcess {
 
 	public:
 
 	GeneralPathSuffStatRASCATGTRFiniteSubstitutionProcess() {}
 	virtual ~GeneralPathSuffStatRASCATGTRFiniteSubstitutionProcess() {}
 
-	virtual void Create(int, int)	{
-		cerr << "error : in RASCATSubProcess::Create(int,int)\n";
-		exit(1);
-	}
-
-	virtual void Create(int nsite, int nratecat, int ncat, int nstate, int infixncomp, int inempmix, string inmixtype, string rrtype, int insitemin,int insitemax)	{
-	// virtual void Create(int nsite, int nratecat, int ncat, int nstate,int insitemin,int insitemax)	{
-		if (ncat == -1)	{
-			ncat = nsite;
-		}
-	
-		GeneralPathSuffStatGTRSubstitutionProcess::Create(nsite,nstate,insitemin,insitemax);
-		DGamRateProcess::Create(nsite,nratecat);
-		GeneralPathSuffStatGTRFiniteProfileProcess::Create(nsite,nstate,ncat,infixncomp,inempmix,inmixtype,rrtype);
+	virtual void Create()	{
+		GeneralPathSuffStatMatrixSubstitutionProcess::Create();
+		DGamRateProcess::Create();
+		GeneralPathSuffStatGTRFiniteProfileProcess::Create();
 	}
 
 	virtual void Delete()	{
 		GeneralPathSuffStatGTRFiniteProfileProcess::Delete();
 		DGamRateProcess::Delete();
-		GeneralPathSuffStatGTRSubstitutionProcess::Delete();
+		GeneralPathSuffStatMatrixSubstitutionProcess::Delete();
 	}
 
 };
@@ -58,128 +69,52 @@ class GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess : public virtual Gener
 
 	public:
 
-	GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess(string indatafile, string treefile, int nratecat, int ncat, int infixncomp, int inempmix, string inmixtype, string inrrtype, int infixtopo, int indc, int me, int np)	{
-		myid = me;
-		nprocs = np;
+	GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess() {}
 
-		fixtopo = infixtopo;
-		dc = indc;
+	GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess(int nratecat, int ncat, int infixncomp, int inempmix, string inmixtype, string inrrtype)	{
 
-		datafile = indatafile;
-		SequenceAlignment* plaindata = new FileSequenceAlignment(datafile,0,myid);
-		if (dc)	{
-			plaindata->DeleteConstantSites();
-		}
-		const TaxonSet* taxonset = plaindata->GetTaxonSet();
-		if (treefile == "None")	{
-			tree = new Tree(taxonset);
-			if (myid == 0)	{
-				tree->MakeRandomTree();
-				GlobalBroadcastTree();
-			}
-			else	{
-				SlaveBroadcastTree();
-			}
-		}
-		else	{
-			tree = new Tree(treefile);
-		}
-		tree->RegisterWith(taxonset,myid);
-		
-		int insitemin = -1,insitemax = -1;
-		if (myid > 0) {
-			int width = plaindata->GetNsite()/(nprocs-1);
-			insitemin = (myid-1)*width;
-			if (myid == (nprocs-1)) {
-				insitemax = plaindata->GetNsite();
-			}
-			else {
-				insitemax = myid*width;
-			}
-		}
-
-		Create(tree,plaindata,nratecat,ncat,infixncomp,inempmix,inmixtype,inrrtype,insitemin,insitemax);
-		if (myid == 0)	{
-			Sample();
-			GlobalUnfold();
-		}
+		Ncat = nratecat;
+		Ncomponent = ncat;
+		fixncomp = infixncomp;
+		empmix = inempmix;
+		mixtype = inmixtype;
+		rrtype = inrrtype;
 	}
 
-	GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess(istream& is, int me, int np)	{
+	GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
 
-		myid = me;
-		nprocs = np;
+		// generic
+		FromStreamHeader(is);
+		SetMPI(inmyid,innprocs);
 
-		is >> datafile;
-		int nratecat;
-		is >> nratecat;
-		int infixncomp;
-		int inempmix;
-		string inmixtype;
-		string inrrtype;
-		is >> infixncomp >> inempmix >> inmixtype;
-		is >> inrrtype;
-		is >> fixtopo;
-		is >> dc;
-		SequenceAlignment* plaindata = new FileSequenceAlignment(datafile,0,myid);
-		if (dc)	{
-			plaindata->DeleteConstantSites();
-		}
-		const TaxonSet* taxonset = plaindata->GetTaxonSet();
+		// specific
+		is >> Ncat;
+		is >> fixncomp;
+		is >> empmix;
+		is >> mixtype;
+		is >> rrtype;
 
-		int insitemin = -1,insitemax = -1;
-		if (myid > 0) {
-			int width = plaindata->GetNsite()/(nprocs-1);
-			insitemin = (myid-1)*width;
-			if (myid == (nprocs-1)) {
-				insitemax = plaindata->GetNsite();
-			}
-			else {
-				insitemax = myid*width;
-			}
-		}
+		Open(is);
+	}
 
-		tree = new Tree(taxonset);
-		if (myid == 0)	{
-			tree->ReadFromStream(is);
-			GlobalBroadcastTree();
-		}
-		else	{
-			SlaveBroadcastTree();
-		}
-		tree->RegisterWith(taxonset,0);
-
-		Create(tree,plaindata,nratecat,1,infixncomp,inempmix,inmixtype,inrrtype,insitemin,insitemax);
-
-		if (myid == 0)	{
-			FromStream(is);
-			GlobalUnfold();
-		}
+	void ToStreamHeader(ostream& os)	{
+		PhyloProcess::ToStreamHeader(os);
+		os << Ncat << '\n';
+		os << fixncomp << '\t' << empmix << '\t' << mixtype << '\n';
+		os << rrtype << '\n';
 	}
 
 	~GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess() {
 		Delete();
 	}
 
-	void SlaveUpdateParameters();
-	void GlobalUpdateParameters();
+	virtual void SlaveUpdateParameters();
+	virtual void GlobalUpdateParameters();
 
 	virtual void SlaveExecute(MESSAGE);
-	void UpdateRRSuffStat() {}
-	void GlobalUpdateRRSuffStat() {}
-	void SlaveUpdateRRSuffStat() {}
-
-	double GetLogProb()	{
-		return GetLogPrior() + GetLogLikelihood();
-	}
-
-	double GetLogPrior()	{
-		return 0;
-	}
-
-	double GetLogLikelihood()	{
-		return logL;
-	}
+	virtual void UpdateRRSuffStat() {}
+	virtual void GlobalUpdateRRSuffStat() {}
+	virtual void SlaveUpdateRRSuffStat() {}
 
 	void TraceHeader(ostream& os)	{
 		os << "#time\ttimeperccyle\ttopo\tlnL\tlength\talpha\tNmode\tstatent\tstatalpha";
@@ -195,7 +130,6 @@ class GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess : public virtual Gener
 		if (chronototal.GetTime())	{
 			os << '\t' << ((double) ((int) (chronototal.GetTime() / (1 + GetSize())))) / 1000;
 			os << '\t' << ((int) (propchrono.GetTime() / chronototal.GetTime() * 100));
-			// os << '\t' << ((int) (chronosuffstat.GetTime() / chronototal.GetTime() * 100));
 		}
 		else	{
 			os << '\t' << 0;
@@ -222,29 +156,21 @@ class GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess : public virtual Gener
 		chronototal.Start();
 
 		propchrono.Start();
-		// cerr << "BL move\n";
 		BranchLengthMove(tuning);
 		BranchLengthMove(0.1 * tuning);
-		// cerr << "gibbs\n";
 		if (!fixtopo)	{
-			MoveTopo(10,0);
+			MoveTopo();
 		}
 		propchrono.Stop();
 
-		// MPI2: reactivate this in order to test the suff stat code
-		// cerr << "collapse\n";
 		GlobalCollapse();
 
-		// cerr << "branch process move\n";
 		GammaBranchProcess::Move(tuning,10);
 
-		// cerr << "rates \n";
 		GlobalUpdateParameters();
 		DGamRateProcess::Move(0.3*tuning,10);
 		DGamRateProcess::Move(0.03*tuning,10);
 
-		// cerr << "profiles\n";
-		// GlobalUpdateParameters();
 		GeneralPathSuffStatGTRFiniteProfileProcess::Move(1,1,5);
 
 		if (! fixrr)	{
@@ -253,14 +179,9 @@ class GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess : public virtual Gener
 			LengthRelRateMove(0.01,10);
 		}
 
-
-		// cerr << "unfold\n";
 		GlobalUnfold();
-		// cerr << "unfold ok\n";
 
 		chronototal.Stop();
-
-		// Trace(cerr);
 
 		return 1;
 	}
@@ -294,17 +215,6 @@ class GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess : public virtual Gener
 		return naccept / nrep;
 	}
 
-	void ToStreamHeader(ostream& os)	{
-		os << datafile << '\n';
-		os << GetNcat() << '\n';
-		os << fixncomp << '\t' << empmix << '\t' << mixtype << '\n';
-		os << rrtype << '\n';
-		os << fixtopo << '\n';
-		os << dc << '\n';
-		GetTree()->ToStream(os);
-
-	}
-
 	void ToStream(ostream& os)	{
 
 		os << datafile << '\n';
@@ -325,11 +235,10 @@ class GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess : public virtual Gener
 
 	protected:
 
-	virtual void Create(Tree* intree, SequenceAlignment* indata, int nratecat,int ncat,int infixncomp, int inempmix, string inmixtype, string inrrtype, int insitemin,int insitemax)	{
-	// virtual void Create(Tree* intree, SequenceAlignment* indata, int nratecat, int ncat,int insitemin,int insitemax)	{
-		GeneralPathSuffStatMatrixPhyloProcess::Create(intree,indata,indata->GetNstate(),insitemin,insitemax);
-		GeneralPathSuffStatRASCATGTRFiniteSubstitutionProcess::Create(indata->GetNsite(),nratecat,ncat,indata->GetNstate(),infixncomp, inempmix, inmixtype, inrrtype, insitemin,insitemax);
-		GammaBranchProcess::Create(intree);
+	virtual void Create()	{
+		GeneralPathSuffStatMatrixPhyloProcess::Create();
+		GeneralPathSuffStatRASCATGTRFiniteSubstitutionProcess::Create();
+		GammaBranchProcess::Create();
 	}
 		
 	virtual void Delete()	{
@@ -337,9 +246,6 @@ class GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess : public virtual Gener
 		GeneralPathSuffStatRASCATGTRFiniteSubstitutionProcess::Delete();
 		GeneralPathSuffStatMatrixPhyloProcess::Delete();
 	}
-
-	int fixtopo;
-	int dc;
 };
 
 #endif

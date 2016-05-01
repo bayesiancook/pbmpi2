@@ -23,9 +23,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 
-void GTRMixtureProfileProcess::Create(int innsite, int indim)	{
-	GTRProfileProcess::Create(innsite,indim);
-	MatrixMixtureProfileProcess::Create(innsite,indim);
+void GTRMixtureProfileProcess::Create()	{
+	GTRProfileProcess::Create();
+	MatrixMixtureProfileProcess::Create();
 }
 
 void GTRMixtureProfileProcess::Delete() {
@@ -39,19 +39,6 @@ void GTRMixtureProfileProcess::CreateMatrix(int k)	{
 		cerr << matrixarray[k]->GetNstate() << '\n';
 		exit(1);
 	}
-	// matrixarray[k] = new LGSubMatrix(profile[k],false);
 	matrixarray[k] = new GTRSubMatrix(GetDim(),rr,profile[k],false);
 }
 
-void GTRMixtureProfileProcess::UpdateMatrix(int k)	{
-	/*
-	if (! matrixarray[k])	{
-		cerr << "error in GeneralPathSuffStatGTRMixtureProfileProcess::UpdateComponent: null matrix\n";
-		exit(1);
-	}
-	*/
-	if (matrixarray[k])	{
-	GetGTRMatrix(k)->CorruptMatrix();
-	}
-	// GetGTRMatrix(k)->UpdateMatrix();
-}

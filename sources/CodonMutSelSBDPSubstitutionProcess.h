@@ -32,17 +32,14 @@ class CodonMutSelSBDPSubstitutionProcess : public virtual CodonMutSelSBDPProfile
 	CodonMutSelSBDPSubstitutionProcess() {}
 	virtual ~CodonMutSelSBDPSubstitutionProcess() {}
 
+	virtual int GetNstate() {return GetNcodon();}
+
 	protected:
 
-	void Create(int insite, int indim, int sitemin, int sitemax)	{
-		cerr << "In four-argument Create of CodonMutSelSBDPSubstitutionProcess. Should not be here.\n";
-		exit(1);
-	}
-
-	void Create(int innsite, int indim, int sitemin, int sitemax, CodonStateSpace* instatespace)	{
-		CodonMutSelSBDPProfileProcess::Create(innsite,indim,instatespace);
-		UniformRateProcess::Create(innsite);
-		GeneralPathSuffStatMatrixSubstitutionProcess::Create(innsite,indim,sitemin,sitemax);
+	void Create()	{
+		CodonMutSelSBDPProfileProcess::Create();
+		UniformRateProcess::Create();
+		GeneralPathSuffStatMatrixSubstitutionProcess::Create();
 	}
 
 	void Delete()	{

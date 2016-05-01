@@ -17,11 +17,32 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef RASCATGTRDP_H
 #define RASCATGTRDP_H
 
+#include "GTRDPProfileProcess.h"
+#include "ExpoConjugateGTRMixtureProfileProcess.h"
 #include "ExpoConjugateGTRPhyloProcess.h"
 #include "DGamRateProcess.h"
-#include "ExpoConjugateGTRDPProfileProcess.h"
 #include "GammaBranchProcess.h"
 
+// Exponential conjugate GTR models
+class ExpoConjugateGTRDPProfileProcess : public virtual GTRDPProfileProcess, public virtual ExpoConjugateGTRMixtureProfileProcess {
+
+	public:
+
+	ExpoConjugateGTRDPProfileProcess() {}
+	virtual ~ExpoConjugateGTRDPProfileProcess() {}
+
+	protected:
+
+	virtual void Create()	{
+		GTRDPProfileProcess::Create();
+		ExpoConjugateGTRMixtureProfileProcess::Create();
+	}
+
+	virtual void Delete()	{
+		ExpoConjugateGTRMixtureProfileProcess::Delete();
+		GTRDPProfileProcess::Delete();
+	}
+};
 // this is the final class implementing the CATGTR phyloprocess
 
 class RASCATGTRDPSubstitutionProcess : public virtual ExpoConjugateGTRSubstitutionProcess, public virtual DGamRateProcess, public virtual ExpoConjugateGTRDPProfileProcess {
@@ -31,16 +52,10 @@ class RASCATGTRDPSubstitutionProcess : public virtual ExpoConjugateGTRSubstituti
 	RASCATGTRDPSubstitutionProcess() {}
 	virtual ~RASCATGTRDPSubstitutionProcess() {}
 
-	virtual void Create(int, int)	{
-		cerr << "error : in RASCATSubProcess::Create(int,int)\n";
-		exit(1);
-	}
-
-	virtual void Create(int nsite, int ncat, int nstate, string inrrtype, int insitemin,int insitemax)	{
-		ExpoConjugateGTRSubstitutionProcess::Create(nsite,nstate,insitemin,insitemax);
-		DGamRateProcess::Create(nsite,ncat);
-		ExpoConjugateGTRDPProfileProcess::Create(nsite,nstate);
-		SetRR(inrrtype);
+	virtual void Create()	{
+		ExpoConjugateGTRSubstitutionProcess::Create();
+		DGamRateProcess::Create();
+		ExpoConjugateGTRDPProfileProcess::Create();
 	}
 
 	virtual void Delete()	{
@@ -56,105 +71,35 @@ class RASCATGTRDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProcess
 	public:
 
         virtual void SlaveExecute(MESSAGE);
-	void GlobalUpdateParameters();
-	void SlaveUpdateParameters();
+	virtual void GlobalUpdateParameters();
+	virtual void SlaveUpdateParameters();
 
 
-	RASCATGTRDPGammaPhyloProcess(string indatafile, string treefile, int nratecat, string inrrtype, int infixtopo, int inkappaprior, int indc, int me, int np)	{
-		myid = me;
-		nprocs = np;
+	RASCATGTRDPGammaPhyloProcess(int nratecat, string inrrtype, int inkappaprior)	{
 
-		fixtopo = infixtopo;
-		dc = indc;
+		Ncat = nratecat;
 		kappaprior = inkappaprior;
-
-		datafile = indatafile;
-		SequenceAlignment* plaindata = new FileSequenceAlignment(datafile,0,myid);
-		if (dc)	{
-			plaindata->DeleteConstantSites();
-		}
-		const TaxonSet* taxonset = plaindata->GetTaxonSet();
-		if (treefile == "None")	{
-			tree = new Tree(taxonset);
-			if (myid == 0)	{
-				tree->MakeRandomTree();
-				GlobalBroadcastTree();
-			}
-			else	{
-				SlaveBroadcastTree();
-			}
-		}
-		else	{
-			tree = new Tree(treefile);
-		}
-		tree->RegisterWith(taxonset,myid);
-		
-		int insitemin = -1,insitemax = -1;
-		if (myid > 0) {
-			int width = plaindata->GetNsite()/(nprocs-1);
-			insitemin = (myid-1)*width;
-			if (myid == (nprocs-1)) {
-				insitemax = plaindata->GetNsite();
-			}
-			else {
-				insitemax = myid*width;
-			}
-		}
-
-		Create(tree,plaindata,nratecat,inrrtype,insitemin,insitemax);
-		if (myid == 0)	{
-			Sample();
-			GlobalUnfold();
-		}
+		rrtype = inrrtype;
 	}
 
-	RASCATGTRDPGammaPhyloProcess(istream& is, int me, int np)	{
+	RASCATGTRDPGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
 
-		myid = me;
-		nprocs = np;
-
+		// generic
 		FromStreamHeader(is);
-		is >> datafile;
-		int nratecat;
-		is >> nratecat;
-		string inrrtype;
-		is >> inrrtype;
-		is >> fixtopo;
-		is >> dc;
-		SequenceAlignment* plaindata = new FileSequenceAlignment(datafile,0,myid);
-		if (dc)	{
-			plaindata->DeleteConstantSites();
-		}
-		const TaxonSet* taxonset = plaindata->GetTaxonSet();
 
-		int insitemin = -1,insitemax = -1;
-		if (myid > 0) {
-			int width = plaindata->GetNsite()/(nprocs-1);
-			insitemin = (myid-1)*width;
-			if (myid == (nprocs-1)) {
-				insitemax = plaindata->GetNsite();
-			}
-			else {
-				insitemax = myid*width;
-			}
-		}
+		// specific
+		is >> Ncat;
+		is >> kappaprior;
+		is >> rrtype;
 
-		tree = new Tree(taxonset);
-		if (myid == 0)	{
-			tree->ReadFromStream(is);
-			GlobalBroadcastTree();
-		}
-		else	{
-			SlaveBroadcastTree();
-		}
-		tree->RegisterWith(taxonset,0);
+		Open(is);
+	}
 
-		Create(tree,plaindata,nratecat,inrrtype,insitemin,insitemax);
-
-		if (myid == 0)	{
-			FromStream(is);
-			GlobalUnfold();
-		}
+	void ToStreamHeader(ostream& os)	{
+		PhyloProcess::ToStreamHeader(os);
+		os << Ncat << '\n';
+		os << kappaprior << '\n';
+		os << rrtype << '\n';
 	}
 
 	~RASCATGTRDPGammaPhyloProcess() {
@@ -167,7 +112,6 @@ class RASCATGTRDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProcess
 			os << "\trrent\trrmean";
 		}
 		os << "\tkappa\tallocent";
-		// os << "\tunicount";
 		os << '\n'; 
 	}
 
@@ -205,34 +149,21 @@ class RASCATGTRDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProcess
 		chronototal.Start();
 
 		propchrono.Start();
-		// cerr << "BL move\n";
 		BranchLengthMove(tuning);
 		BranchLengthMove(0.1 * tuning);
-		// cerr << "BL move ok\n";
-		// cerr << "gibbs\n";
 		if (! fixtopo)	{
-			MoveTopo(10,0);
+			MoveTopo();
 		}
-		// cerr << "gibbs ok\n";
 		propchrono.Stop();
 
-		// MPI2: reactivate this in order to test the suff stat code
-		// cerr << "collapse\n";
 		GlobalCollapse();
-		// cerr << "collapse ok\n";
 
-		// cerr << "branch process move\n";
 		GammaBranchProcess::Move(tuning,10);
-		// cerr << "branch process move ok\n";
 
-		// cerr << "rate move\n";
 		GlobalUpdateParameters();
 		DGamRateProcess::Move(0.3*tuning,10);
 		DGamRateProcess::Move(0.03*tuning,10);
 
-		// cerr << "profile move\n";
-		// is called inside ExpoConjugateGTRDPProfileProcess::Move(1,1,10);
-		// GlobalUpdateParameters();
 		ExpoConjugateGTRDPProfileProcess::Move(1,1,10);
 
 		if (! fixrr)	{
@@ -241,27 +172,11 @@ class RASCATGTRDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProcess
 			LengthRelRateMove(0.01,10);
 		}
 
-
-		// cerr << "unfold\n";
 		GlobalUnfold();
-		// cerr << "unfold ok\n";
 
 		chronototal.Stop();
 
-		// Trace(cerr);
-
 		return 1;
-	}
-
-	void ToStreamHeader(ostream& os)	{
-		PhyloProcess::ToStreamHeader(os);
-		os << datafile << '\n';
-		os << GetNcat() << '\n';
-		os << rrtype << '\n';
-		os << fixtopo << '\n';
-		os << dc << '\n';
-		SetNamesFromLengths();
-		GetTree()->ToStream(os);
 	}
 
 	void ToStream(ostream& os)	{
@@ -279,10 +194,10 @@ class RASCATGTRDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProcess
 
 	protected:
 
-	virtual void Create(Tree* intree, SequenceAlignment* indata, int ncat, string inrrtype, int insitemin,int insitemax)	{
-		ExpoConjugateGTRPhyloProcess::Create(intree,indata,indata->GetNstate(),insitemin,insitemax);
-		RASCATGTRDPSubstitutionProcess::Create(indata->GetNsite(),ncat,indata->GetNstate(),inrrtype,insitemin,insitemax);
-		GammaBranchProcess::Create(intree);
+	virtual void Create()	{
+		ExpoConjugateGTRPhyloProcess::Create();
+		RASCATGTRDPSubstitutionProcess::Create();
+		GammaBranchProcess::Create();
 	}
 		
 	virtual void Delete()	{
@@ -290,9 +205,6 @@ class RASCATGTRDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProcess
 		RASCATGTRDPSubstitutionProcess::Delete();
 		ExpoConjugateGTRPhyloProcess::Delete();
 	}
-
-	int fixtopo;
-	int dc;
 };
 
 #endif

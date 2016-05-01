@@ -1,39 +1,38 @@
 CC=mpic++
 CPPFLAGS= -w -O3 -c
 LDFLAGS= -O3
-SRCS=  TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp CodonSequenceAlignment.cpp \
+SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp CodonSequenceAlignment.cpp \
 	StateSpace.cpp CodonStateSpace.cpp ZippedSequenceAlignment.cpp SubMatrix.cpp \
-	GTRSubMatrix.cpp CodonSubMatrix.cpp linalg.cpp Chrono.cpp BranchProcess.cpp \
-	GammaBranchProcess.cpp RateProcess.cpp DGamRateProcess.cpp ProfileProcess.cpp \
-	OneProfileProcess.cpp MatrixProfileProcess.cpp MatrixOneProfileProcess.cpp \
-	GTRProfileProcess.cpp ExpoConjugateGTRProfileProcess.cpp \
-	ExpoConjugateGTRDPProfileProcess.cpp ExpoConjugateGTRSBDPProfileProcess.cpp \
-	ExpoConjugateGTRFiniteProfileProcess.cpp GeneralPathSuffStatGTRProfileProcess.cpp \
-	GeneralPathSuffStatMatrixOneProfileProcess.cpp MixtureProfileProcess.cpp \
+	ZipSubMatrix.cpp GTRSubMatrix.cpp CodonSubMatrix.cpp linalg.cpp Chrono.cpp BranchProcess.cpp \
+	GammaBranchProcess.cpp RateProcess.cpp DGamRateProcess.cpp ProfileProcess.cpp DirichletProfileProcess.cpp \
+	SiteSpecificProfileProcess.cpp MatrixSiteSpecificProfileProcess.cpp GeneralPathSuffStatMatrixSiteSpecificProfileProcess.cpp \
+	CovMatrix.cpp MVNProfileProcess.cpp MVNSiteSpecificProfileProcess.cpp AACodonMutSelMVNSiteSpecificPhyloProcess.cpp \
+	GTRProfileProcess.cpp GTRDPProfileProcess.cpp GTRSBDPProfileProcess.cpp GTRFiniteProfileProcess.cpp ExpoConjugateGTRProfileProcess.cpp \
+	MixtureProfileProcess.cpp ZipMatrixProfileProcess.cpp \
 	PoissonMixtureProfileProcess.cpp MatrixMixtureProfileProcess.cpp \
 	GTRMixtureProfileProcess.cpp ExpoConjugateGTRMixtureProfileProcess.cpp \
 	GeneralPathSuffStatMatrixMixtureProfileProcess.cpp \
-	GeneralPathSuffStatGTRFiniteProfileProcess.cpp GeneralPathSuffStatGTRDPProfileProcess.cpp \
-	GeneralPathSuffStatGTRSBDPProfileProcess.cpp DPProfileProcess.cpp SBDPProfileProcess.cpp \
-	PoissonDPProfileProcess.cpp PoissonSBDPProfileProcess.cpp MatrixDPProfileProcess.cpp \
-	MatrixSBDPProfileProcess.cpp FiniteProfileProcess.cpp PoissonFiniteProfileProcess.cpp \
-	MatrixFiniteProfileProcess.cpp AAMutSelProfileProcess.cpp CodonMutSelProfileProcess.cpp \
+	DPProfileProcess.cpp SBDPProfileProcess.cpp \
+	PoissonDPProfileProcess.cpp PoissonSBDPProfileProcess.cpp \
+	FiniteProfileProcess.cpp PoissonFiniteProfileProcess.cpp \
+	CodonMutSelProfileProcess.cpp \
 	AACodonMutSelProfileProcess.cpp SubstitutionProcess.cpp Propagate.cpp \
 	PoissonSubstitutionProcess.cpp MatrixSubstitutionProcess.cpp \
 	ExpoConjugateGTRSubstitutionProcess.cpp GeneralPathSuffStatMatrixSubstitutionProcess.cpp \
-	PhyloProcess.cpp PoissonPhyloProcess.cpp MatrixPhyloProcess.cpp \
+	ZipGeneralPathSuffStatMatrixMixtureProfileProcess.cpp ZipMatrixPhyloProcess.cpp ZipExpoConjugateGTRPhyloProcess.cpp ReadPhyloProcess.cpp \
+	ZipGeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.cpp ZipGeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.cpp \
+	SMC.cpp PhyloProcess.cpp PoissonPhyloProcess.cpp MatrixPhyloProcess.cpp GTRPhyloProcess.cpp \
 	ExpoConjugateGTRPhyloProcess.cpp GeneralPathSuffStatMatrixPhyloProcess.cpp \
 	RASCATGammaPhyloProcess.cpp RASCATSBDPGammaPhyloProcess.cpp \
 	RASCATFiniteGammaPhyloProcess.cpp RASCATGTRFiniteGammaPhyloProcess.cpp \
 	RASCATGTRDPGammaPhyloProcess.cpp RASCATGTRSBDPGammaPhyloProcess.cpp \
 	GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.cpp \
-	GeneralPathSuffStatRASCATGTRDPGammaPhyloProcess.cpp \
-	GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.cpp AAMutSelFinitePhyloProcess.cpp AACodonMutSelFinitePhyloProcess.cpp CodonMutSelFinitePhyloProcess.cpp\
-	AAMutSelSiteSpecificPhyloProcess.cpp AAMutSelDPPhyloProcess.cpp \
-	AAMutSelSBDPPhyloProcess.cpp CodonMutSelSBDPPhyloProcess.cpp \
-	AACodonMutSelSBDPPhyloProcess.cpp MultiGeneMixture.cpp MultiGeneGTRSBDPMixture.cpp \
-	MultiGenePoissonSBDPMixture.cpp \
-	Bipartition.cpp BipartitionList.cpp Consensus.cpp TaxaParameters.cpp PBTree.cpp TreeList.cpp PolyNode.cpp correl.cpp correlation.cpp NNI.cpp \
+	GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.cpp AACodonMutSelFinitePhyloProcess.cpp CodonMutSelFinitePhyloProcess.cpp\
+	CodonMutSelSBDPPhyloProcess.cpp \
+	AACodonMutSelSBDPPhyloProcess.cpp \
+	AASubSelSubMatrix.cpp AASubSelRASCATSBDPGammaPhyloProcess.cpp \
+	Bipartition.cpp BipartitionList.cpp Consensus.cpp TaxaParameters.cpp PBTree.cpp TreeList.cpp PolyNode.cpp correl.cpp correlation.cpp \
+	NNI.cpp Gibbs.cpp CCP.cpp \
 	BP2Stat.cpp BP2util.cpp
 
 
@@ -42,7 +41,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= missfrac jackknife simucodon pb_mpi readpb_mpi tracecomp bpcomp bpcomp2
+ALL= pb_mpi ccpmcmc readpb_mpi tracecomp bpcomp bpcomp2
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean
@@ -67,6 +66,9 @@ endif
 
 # Targets
 
+$(PROGSDIR)/ccpmcmc: CCPMCMC.o $(OBJS)
+	$(CC) CCPMCMC.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+
 $(PROGSDIR)/missfrac: MissingFractionPerGene.o $(OBJS)
 	$(CC) MissingFractionPerGene.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
@@ -84,9 +86,6 @@ $(PROGSDIR)/bpcomp2: BPcomp2.o $(OBJS)
 
 $(PROGSDIR)/pb_mpi: PB.o $(OBJS)
 	$(CC) PB.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
-
-$(PROGSDIR)/mpb_mpi: MultiGenePB.o $(OBJS)
-	$(CC) MultiGenePB.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 $(PROGSDIR)/tracecomp: TraceComp.o $(OBJS)
 	$(CC) TraceComp.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@

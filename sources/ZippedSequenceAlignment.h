@@ -53,6 +53,9 @@ class ZippedSequenceAlignment : public SequenceAlignment	{
 	bool InOrbit(int site, int state)	{
 		return Orbit[site][state];
 	}
+	int* GetZipIndices(int site)	{
+		return ZipIndices[site];
+	}
 
 	private:
 

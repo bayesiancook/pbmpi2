@@ -21,17 +21,16 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 
 #include "Chrono.h"
+#include "MPIModule.h"
 
-class RateProcess {
+class RateProcess : public virtual MPIModule {
 
 	public:
 
-	RateProcess() : nsite(0) {}
+	RateProcess() : condflag(false) {}
 	virtual ~RateProcess() {}
 
-	virtual string GetVersion() = 0;
-
-	int GetNsite() {return nsite;}
+	virtual int GetNrate() {return 1;}
 
 	virtual int GetNrate(int site) = 0;
 	virtual double GetRate(int site, int cat = 0) = 0;
@@ -40,12 +39,15 @@ class RateProcess {
 	virtual double GetPriorMeanRate() = 0;
 	virtual double GetAlpha() {return 1;}
 
+	virtual void SiteActivateSumOverRateAllocation(int site) = 0;
+	virtual void SiteInactivateSumOverRateAllocation(int site, int ratealloc) = 0;
 	virtual void ActivateSumOverRateAllocations() = 0;
 	virtual void InactivateSumOverRateAllocations(int* ratealloc) = 0;
-	bool SumOverRateAllocations() {return sumflag;}
+	bool SumOverRateAllocations() {return ! condflag;}
 
 	virtual double LogRatePrior() = 0;
 	virtual void SampleRate() = 0;
+	virtual void PriorSampleRate() {};
 
 	virtual void ToStream(ostream& os) = 0;
 	virtual void FromStream(istream& is) = 0;
@@ -60,18 +62,10 @@ class RateProcess {
 	virtual double GetSiteRateSuffStatBeta(int site) = 0;
 	virtual int GetSiteRateSuffStatCount(int site) = 0;
 
-	void Create(int innsite)	{
-		nsite = innsite;
-	}
+	void Create() {}
 	void Delete() {}
 
-	virtual int GetNprocs() = 0;
-	virtual int GetMyid() = 0;
-	virtual int GetSiteMin() = 0;
-	virtual int GetSiteMax() = 0;
-
-	bool sumflag;
-	int nsite;
+	bool condflag;
 
 	Chrono chronorate;
 };

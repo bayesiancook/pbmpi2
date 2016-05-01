@@ -18,7 +18,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "Random.h"
 #include "IncompleteGamma.h"
 
-#include <cassert>
 #include "Parallel.h"
 #include <string.h>
 
@@ -29,15 +28,17 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 
 
-void DGamRateProcess::Create(int innsite, int inncat)	{
+void DGamRateProcess::Create()	{
 	if (! rate)	{
-		RateProcess::Create(innsite);
-		Ncat = inncat;
+		if (! GetNcat())	{
+			cerr << "error: DGamRateProcess::Ncat has not been initialized\n";
+			exit(1);
+		}
+		RateProcess::Create();
 		rate = new double[GetNcat()];
 		alloc = new int[GetNsite()];
 		ratesuffstatcount = new int[GetNcat()];
 		ratesuffstatbeta = new double[GetNcat()];
-		// SampleRate();
 	}
 }
 
@@ -87,6 +88,11 @@ void DGamRateProcess::UpdateDiscreteCategories()	{
 void DGamRateProcess::SampleRate()	{
 	// alpha = rnd::GetRandom().sExpo();
 	alpha = 1;
+	UpdateDiscreteCategories();
+}
+
+void DGamRateProcess::PriorSampleRate()	{
+	alpha = rnd::GetRandom().sExpo();
 	UpdateDiscreteCategories();
 }
 
@@ -150,56 +156,38 @@ double DGamRateProcess::NonMPIMoveAlpha(double tuning, int nrep)	{
 
 
 void DGamRateProcess::GlobalUpdateRateSuffStat()	{
-	assert(GetMyid() == 0);
+
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// should ask the slaves to call their UpdateRateSuffStat
 	// and then gather the statistics;
-	int i,j,nprocs = GetNprocs(),workload = GetNcat();
 	MPI_Status stat;
 	MESSAGE signal = UPDATE_RATE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	for(i=0; i<workload; ++i) {
+	for(int i=0; i<GetNcat(); i++) {
 		ratesuffstatcount[i] = 0;
 		ratesuffstatbeta[i] = 0.0;
 	}
-#ifdef BYTE_COM
-	int k,l;
-	double x;
-	unsigned char* bvector = new unsigned char[workload*(sizeof(int)+sizeof(double))];
-
-	for(i=1; i<nprocs; ++i) {
-		MPI_Recv(bvector,workload*(sizeof(int)+sizeof(double)),MPI_UNSIGNED_CHAR,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
-		for(j=0; j<workload; ++j) {
-			l = 0;
-			for(k=sizeof(int)-1; k>=0; --k) {
-				l = (l << 8) + bvector[sizeof(int)*j+k]; 
-			}
-			ratesuffstatcount[j] += l;
-		}
-		for(j=0; j<workload; ++j) {
-			memcpy(&x,&bvector[sizeof(int)*workload+sizeof(double)*j],sizeof(double));
-			ratesuffstatbeta[j] += x;
-		}
-	}
-	delete[] bvector;
-#else
-	int ivector[workload];
-	double dvector[workload];
-        for(i=1; i<nprocs; ++i) {
-                MPI_Recv(ivector,workload,MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
-                for(j=0; j<workload; ++j) {
+	int ivector[GetNcat()];
+	double dvector[GetNcat()];
+        for(int i=1; i<GetNprocs(); i++) {
+                MPI_Recv(ivector,GetNcat(),MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+                for(int j=0; j<GetNcat(); j++) {
                         ratesuffstatcount[j] += ivector[j];                      
                 }
         }
         MPI_Barrier(MPI_COMM_WORLD);
-        for(i=1; i<nprocs; ++i) {
-                MPI_Recv(dvector,workload,MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
-                for(j=0; j<workload; ++j) {
+        for(int i=1; i<GetNprocs(); i++) {
+                MPI_Recv(dvector,GetNcat(),MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+                for(int j=0; j<GetNcat(); j++) {
                         ratesuffstatbeta[j] += dvector[j]; 
                 }
         }
-#endif
+	}
+	else	{
+		UpdateRateSuffStat();
+	}
 }
 
 void DGamRateProcess::UpdateRateSuffStat()	{
@@ -209,40 +197,19 @@ void DGamRateProcess::UpdateRateSuffStat()	{
 		ratesuffstatbeta[i] = 0.0;
 	}
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		ratesuffstatcount[alloc[i]] += GetSiteRateSuffStatCount(i);
-		ratesuffstatbeta[alloc[i]] += GetSiteRateSuffStatBeta(i);
+		if (ActiveSite(i))	{
+			ratesuffstatcount[alloc[i]] += GetSiteRateSuffStatCount(i);
+			ratesuffstatbeta[alloc[i]] += GetSiteRateSuffStatBeta(i);
+		}
 	}
 
 }	
 
 void DGamRateProcess::SlaveUpdateRateSuffStat()	{
-	assert(GetMyid() > 0);
 
 	UpdateRateSuffStat();
 
-#ifdef BYTE_COM
-	int n = 0;
-	unsigned int j;
-	unsigned char el_int[sizeof(int)],el_dbl[sizeof(double)];
-	unsigned char* bvector = new unsigned char[GetNcat()*(sizeof(int)+sizeof(double))];
-
-	for(int i=0; i<GetNcat(); ++i) {
-		convert(el_int,ratesuffstatcount[i]);
-		for(j=0; j<sizeof(int); ++j) {
-			bvector[n] = el_int[j]; n++;
-		}
-	}
-	for(int i=0; i<GetNcat(); ++i) {
-		convert(el_dbl,ratesuffstatbeta[i]);
-		for(j=0; j<sizeof(double); ++j) {
-			bvector[n] = el_dbl[j]; n++;
-		}
-	}
-	MPI_Send(bvector,GetNcat()*(sizeof(int)+sizeof(double)),MPI_UNSIGNED_CHAR,0,TAG1,MPI_COMM_WORLD);
-	delete[] bvector;
-#else
 	MPI_Send(ratesuffstatcount,GetNcat(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Send(ratesuffstatbeta,GetNcat(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
-#endif
 }	

@@ -19,9 +19,11 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Chrono.h"
 #include "StateSpace.h"
+#include "SequenceAlignment.h"
 
 #include <iostream>
 #include <map>
+#include "MPIModule.h"
 
 using namespace std;
 
@@ -34,38 +36,81 @@ using namespace std;
 
 const double stateps = 1e-100;
 
-class ProfileProcess {
+class ProfileProcess : public virtual MPIModule {
 
 	public:
 
-	ProfileProcess() : nsite(0), dim(0), activesuffstat(false), burnin(false), statinfcount(0), totstatcount(0), mintotweight(0) {}
+	ProfileProcess() : dim(0), activesuffstat(false), statinfcount(0), totstatcount(0), profilepriortype(0), proposemode(0), allocmode(0) {}
 	virtual ~ProfileProcess() {}
 
-	virtual string GetVersion() = 0;
-
-	double GetStatInfCount() {
-		double tmp = ((double) statinfcount) / totstatcount;
-		statinfcount = 0;
-		totstatcount = 0;
-		return tmp;
-	}
+	//------
+	// basic accessors
+	//------
 
 	// dimension of the profile(s)
 	int GetDim() {return dim;}
-	int GetNsite() {return nsite;}
+
+	virtual int GetNstate() = 0;
+
+	virtual StateSpace* GetStateSpace() = 0;
+
+	// profile associated with given site
 	virtual double* GetProfile(int site) = 0;
 
-	// virtual int GetNOccupiedComponent()  = 0;
-	virtual StateSpace* GetStateSpace() = 0;
+
+	//------
+	// priors
+	//------
 
 	// total prior associated to all aspects of the substitution processes across sites
 	virtual double LogProfilePrior() = 0;
 
-	// sample all parameters 
+	// prior on hyperparameters
+	virtual double LogHyperPrior() = 0;
+
+	// prior on profiles, given hyperparameters
+	virtual double LogStatPrior() = 0;
+
+	// basic tool for getting the log prob associated to a profile
+	// can be a frequency profile (Dirichlet prior) or a log-frequency profile (normal prior)
+	virtual double LogFrequencyStatPrior(double* prof) = 0;
+
+	virtual double GetMinStat(double* profile, int site) = 0;
+
+
+	//------
+	// sampling from prior
+	//------
+
+	// sample all parameters (including hyperparameters)
+	// strictly from prior ...
+	virtual void PriorSampleProfile() {
+		// .. although .. 
+		SampleProfile();
+	}
+
+	// with some quirks to make draw more reasonable for MCMC
 	virtual void SampleProfile() = 0;
 
-	virtual double GetMeanStationaryEntropy() = 0;
-	virtual double GetSiteStationaryEntropy(int site) = 0;
+	// sampling hyperparameters
+	virtual void SampleHyper() = 0;
+
+	// sampling profiles, given hyperparameters
+	virtual void SampleStat() = 0;
+
+	// basic tool for sampling a profile, depending on the prior
+	// can be a frequency profile (Dirichlet prior) or a log-frequency profile (normal prior)
+	virtual void SampleFrequencyStat(double* prof) = 0;
+
+	//------
+	// log likelihoods based on sufficient statistics (substitution mappings)
+	//------
+
+	virtual double ProfileSuffStatLogProb() = 0;
+
+	//------
+	// moves
+	//------
 
 	// implemented in specialized phyloprocess classes
 	// will collect the sufficient statistics necessary for updating substitution parameters
@@ -75,22 +120,47 @@ class ProfileProcess {
 	virtual void GlobalUpdateSiteProfileSuffStat() = 0;
 	virtual void SlaveUpdateSiteProfileSuffStat() = 0;
 
+	virtual void GlobalUpdateModeProfileSuffStat() {}
+	virtual void SlaveUpdateModeProfileSuffStat() {}
+	virtual void UpdateModeProfileSuffStat() {}
+
 	virtual void GlobalUpdateParameters() = 0;
 	virtual void SlaveUpdateParameters() = 0;
 
-	/*
-	virtual void SendCurrentProfileConfig();
-	virtual void ReceiveCurrentProfileConfig();
-	*/
+	// MCMC MOVES
 
-	// returns that part of the total likelihood that depends on substitution process parameters (not including branch lengths and site rates)
-	virtual double ProfileSuffStatLogProb() = 0;
+	// generic Move function
+	virtual double Move(double tuning = 1, int n = 1, int nrep = 1) = 0;
+
+	// move on hyperparameters
+	virtual double MoveHyper(double tuning, int nrep) = 0;
+
+	// auxiliary: for Metropolis Moves on profiles
+	virtual double ProfileProposeMove(double* profile, double tuning, int n, int K, int cat, double statmin);
+
+	// move all parameters (except component-specific or site-specific frequency profiles) 
+	virtual double GlobalParametersMove() = 0;
+
+	// STREAMS
 
 	virtual void ToStream(ostream& os) = 0;
 	virtual void FromStream(istream& is) = 0;
 
-	virtual void SetBurnin(bool in)	{
-		burnin = in;
+
+	// more specialized methods
+
+	// summary statistics
+	virtual double GetMeanStationaryEntropy() = 0;
+	virtual double GetSiteStationaryEntropy(int site) = 0;
+
+	double GetStatInfCount() {
+		double tmp = 0;
+		if (totstatcount)	{
+			tmp = ((double) statinfcount) / totstatcount;
+		}
+		statinfcount = 0;
+		totstatcount = 0;
+		return tmp;
 	}
 
 	protected:
@@ -101,51 +171,42 @@ class ProfileProcess {
 	// but potentially called several times due to multiple inheritance
 	// thus, should internally control that no object is created twice
 	// (by checking that pointers are null before creating)
-	virtual void Create(int innsite, int indim);
 
-	// called at the end of the run only
-	// but potentially called several times due to multiple inheritance
-	// should check that pointers are not zero before deleting
+	void SetDim(int indim)	{
+		dim = indim;
+	}
+
+	virtual SequenceAlignment* GetData() = 0;
+
+	virtual void Create() {}
 	virtual void Delete() {}
-
-	virtual int GetNprocs() = 0;
-	virtual int GetMyid() = 0;
-	virtual int GetSiteMin() = 0;
-	virtual int GetSiteMax() = 0;
 
 	virtual double* GetEmpiricalFreq() = 0;
 
-	int nsite;
+	virtual double GlobalSMCAddSites();
+	virtual double SMCAddSites() {}
+
+	virtual void SampleSiteMapping(int site) = 0;
+	virtual double SiteLogLikelihood(int site) = 0;
+
 	int dim;
 	bool activesuffstat;
-
-	double GetMinTotWeight() {return mintotweight;}
-	void SetMinTotWeight(double in) {
-		mintotweight = in;
-		/*
-		cerr << "limit : " << in << '\n';
-		if (in < 0)	{
-			cerr << "dim : " << GetDim() << '\n';
-			mintotweight = ((double) GetDim()) / 4;
-		}
-		else	{
-			mintotweight = in;
-		}
-		cerr << "min tot weight : " << mintotweight << '\n';
-		*/
-	}
 
 	Chrono chronodp;
 	Chrono chronostat;
 	Chrono chronorr;
 
-	bool burnin;
-
 	int statinfcount;
 	int totstatcount;
 
-	double mintotweight;
+	int profilepriortype;
 
+	int proposemode;
+	double profacc;
+	double proftry;
+	int allocmode;
+	double rracc;
+	double rrtry;
 };
 
 

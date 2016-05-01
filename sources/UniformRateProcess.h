@@ -32,12 +32,20 @@ class UniformRateProcess : public virtual RateProcess {
 
 	double GetPriorMeanRate() {return 1;}
 
+	void SiteActivateSumOverRateAllocation(int site) {
+		condflag = false;
+	}
+
+	void SiteInactivateSumOverRateAllocation(int site, int ratealloc) {
+		condflag = true;
+	}
+
 	void ActivateSumOverRateAllocations() {
-		sumflag = true;
+		condflag = false;
 	}
 
 	void InactivateSumOverRateAllocations(int* ratealloc) {
-		sumflag = false;
+		condflag = true;
 	}
 
 	virtual double LogRatePrior() {return 0;}

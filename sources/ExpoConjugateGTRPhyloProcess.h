@@ -17,7 +17,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef EXPCONGTRPHYLO_H
 #define EXPCONGTRPHYLO_H
 
-#include "MatrixPhyloProcess.h"
+#include "GTRPhyloProcess.h"
 #include "ExpoConjugateGTRSubstitutionProcess.h"
 #include "RateProcess.h"
 
@@ -31,10 +31,10 @@ class ExpoConjugateGTRPhyloProcess : public virtual GTRPhyloProcess, public virt
 
 	protected:
 
-	virtual void Create(Tree* intree, SequenceAlignment* indata,int indim,int insitemin,int insitemax)	{
-		RateProcess::Create(indata->GetNsite());
-		ExpoConjugateGTRSubstitutionProcess::Create(indata->GetNsite(),indata->GetNstate(),insitemin,insitemax);
-		GTRPhyloProcess::Create(intree,indata, indata->GetNstate(),insitemin,insitemax);
+	virtual void Create()	{
+		RateProcess::Create();
+		ExpoConjugateGTRSubstitutionProcess::Create();
+		GTRPhyloProcess::Create();
 	}
 
 	virtual void Delete()	{
@@ -43,24 +43,18 @@ class ExpoConjugateGTRPhyloProcess : public virtual GTRPhyloProcess, public virt
 		RateProcess::Delete();
 	}
 
-	/*
-	void Unfold();
-	void Collapse();
-	*/
-
 	const int* GetSiteProfileSuffStatCount(int site) {return siteprofilesuffstatcount[site];}
 	const double* GetSiteProfileSuffStatBeta(int site) {return siteprofilesuffstatbeta[site];}
 
 	// protected:
 	public:
 
+	void ReadSiteProfiles(string name, int burnin, int every, int until);
+
 	void CreateSuffStat();
 	void DeleteSuffStat();
 
-	void GlobalUpdateRRSuffStat();
 	void GlobalUpdateSiteProfileSuffStat();
-
-	void SlaveUpdateRRSuffStat();
 	void SlaveUpdateSiteProfileSuffStat();
 
 	void UpdateSiteRateSuffStat();
@@ -78,8 +72,6 @@ class ExpoConjugateGTRPhyloProcess : public virtual GTRPhyloProcess, public virt
 	int* allocsiteprofilesuffstatcount;
 	double* allocsiteprofilesuffstatbeta;
 
-	int* tmpcount;
-	double* tmpbeta;
 };
 
 #endif

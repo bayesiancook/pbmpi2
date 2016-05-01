@@ -17,34 +17,51 @@ class Simulator : public NewickTree {
 
 	public:
 
-	Simulator(string datafile, int inNsite, string treefile, string paramfile)	{
+	Simulator(string datafile, int inNsite, string treefile, string paramfile, int inmask)	{
 
+		mask = inmask;
 
-		nucdata = new FileSequenceAlignment(datafile,1,0);
-		int fromNsite = nucdata->GetNsite();
-		// 3* : nuc -> codon
-		// +1 : final stop codon (removed at the end)
-		if (inNsite == -1)	{
-			Nsite = fromNsite;
+		tree = new Tree(treefile);
+
+		nucdata = 0;
+		if (datafile != "")	{
+			nucdata = new FileSequenceAlignment(datafile,1,0);
+			int fromNsite = nucdata->GetNsite();
+			if (inNsite == -1)	{
+				Nsite = fromNsite;
+			}
+			else	{
+				Nsite = 3*(inNsite+1);
+			}
+
+			codondata = new CodonSequenceAlignment(nucdata);
+			protdata = new ProteinSequenceAlignment(codondata);
+
+			taxonset = nucdata->GetTaxonSet();
+			statespace = nucdata->GetStateSpace();
+
+			// check whether tree and data fit together
+			tree->RegisterWith(taxonset);
 		}
+
 		else	{
+			cerr << "else\n";
+			tree->MakeTaxonSet();
+			statespace = new DNAStateSpace();
+			taxonset = tree->GetTaxonSet();
 			Nsite = 3*(inNsite+1);
+			cerr << "else ok\n";
 		}
 
-		codondata = new CodonSequenceAlignment(nucdata);
-		protdata = new ProteinSequenceAlignment(codondata);
 
-		taxonset = nucdata->GetTaxonSet();
-		statespace = nucdata->GetStateSpace();
+		cerr << "ntaxa\n";
+		Ntaxa = taxonset->GetNtaxa();
+		cerr << Ntaxa << '\n';
 		codonstatespace = new CodonStateSpace(Universal);
 
-		// get tree from file (newick format)
-		tree = new Tree(treefile);
-		// check whether tree and data fit together
-		tree->RegisterWith(taxonset);
-		Ntaxa = taxonset->GetNtaxa();
-
+		cerr << "create\n";
 		Create();
+		cerr << "create ok\n";
 
 		// get parameters from file
 		ifstream prmis(paramfile.c_str());
@@ -55,7 +72,7 @@ class Simulator : public NewickTree {
 		betaav = 0;
 		betacm = 0;
 
-		epibeta = 0;
+		episigma = 0;
 
 		prmis >> tmp;
 		if (tmp != "SiteFitness")	{
@@ -95,8 +112,8 @@ class Simulator : public NewickTree {
 			cerr << tmp << '\n';
 			exit(1);
 		}
-		prmis >> epibeta >> epifrac >> episigma;
-		if (epibeta)	{
+		prmis >> epiK >> episigma;
+		if (episigma)	{
 			SetEpistasy();
 		}
 
@@ -164,6 +181,7 @@ class Simulator : public NewickTree {
 			exit(1);
 		}
 		prmis >> scale;
+
 		prmis >> tmp;
 		if (tmp != "CodonUsage")	{
 			cerr << "error: missing CodonUSage keyword\n";
@@ -172,6 +190,9 @@ class Simulator : public NewickTree {
 		}
 		prmis >> cusigma;
 		MakeRandomCodonUsage();
+
+		////  if (tmp != "Mask")	{
+
 		totlength = 0;
 		RecursiveSetBranchLengths(GetRoot());
 
@@ -315,46 +336,76 @@ class Simulator : public NewickTree {
 
 	void SetEpistasy()	{
 
-		epicont = new int*[Nsite/3];
+		int** tmpmap = new int*[Nsite/3];
 		for (int i=0; i<Nsite/3; i++)	{
-			epicont[i] = new int[Nsite/3];
+			tmpmap[i] = new int[Nsite/3];
 			for (int j=0; j<Nsite/3; j++)	{
-				epicont[i][j] = 0;
+				tmpmap[i][j] = 0;
 			}
 		}
 
-		epipot = new double***[Nsite/3];
-		for (int i=0; i<Nsite/3; i++)	{
-			epipot[i] = new double**[Nsite/3];
-			for (int j=0; j<Nsite/3; j++)	{
-				epipot[i][j] = new double*[Naa];
-				for (int a=0; a<Naa; a++)	{
-					epipot[i][j][a] = new double[Naa];
-				}
-			}
-		}
-		
-		for (int i=0; i<Nsite/3; i++)	{
-			for (int j=0; j<Nsite/3; j++)	{
-				for (int a=0; a<Naa; a++)	{
-					for (int b=0; b<Naa; b++)	{
-						epipot[i][j][a][b] = 0;
-					}
-				}
-			}
-		}
+		double p =  epiK / Nsite * 3;
 
 		for (int i=1; i<Nsite/3-1; i++)	{
 			for (int j=i+1; j<Nsite/3-1; j++)	{
-				if (rnd::GetRandom().Uniform() < epifrac)	{
-					epicont[i][j] = epicont[j][i] = 1;
-					for (int a=0; a<Naa; a++)	{
-						for (int b=0; b<Naa; b++)	{
-							epipot[i][j][a][b] = episigma * rnd::GetRandom().sNormal();
-							epipot[j][i][b][a] = epipot[i][j][a][b];
-						}
-					}
+				if (rnd::GetRandom().Uniform() < p)	{
+					tmpmap[i][j] = 1;
+					tmpmap[j][i] = 1;
 				}
+			}
+		}
+
+		int maxn = 0;
+		for (int i=0; i<Nsite/3; i++)	{
+			int k = 0;
+			for (int j=0; j<Nsite/3; j++)	{
+				if (tmpmap[i][j])	{
+					k++;
+				}
+			}
+			if (maxn < k)	{
+				maxn = k;
+			}
+		}
+			
+		epincont = new int[Nsite/3];
+
+		epicont = new int*[Nsite/3];
+		for (int i=0; i<Nsite/3; i++)	{
+			epicont[i] = new int[maxn];
+			for (int j=0; j<maxn; j++)	{
+				epicont[i][j] = -1;
+			}
+		}
+
+		for (int i=0; i<Nsite/3; i++)	{
+			int k = 0;
+			for (int j=0; j<Nsite/3; j++)	{
+				if (tmpmap[i][j])	{
+					epicont[i][k] = j;
+					k++;
+				}
+			}
+			epincont[i] = k;
+		}
+
+		for (int i=0; i<Nsite/3; i++)	{
+			delete[] tmpmap[i];
+		}
+		delete[] tmpmap;
+			
+		epipot = new double*[Naa];
+		for (int a=0; a<Naa; a++)	{
+			epipot[a] = new double[Naa];
+			for (int b=0; b<Naa; b++)	{
+				epipot[a][b] = 0;
+			}
+		}
+
+		for (int a=0; a<Naa; a++)	{
+			for (int b=0; b<Naa; b++)	{
+				epipot[a][b] = episigma * rnd::GetRandom().sNormal();
+				epipot[b][a] = epipot[a][b];
 			}
 		}
 	}
@@ -429,8 +480,8 @@ class Simulator : public NewickTree {
 		link->SetBranch(branch);
 		GetRoot()->SetBranch(branch);
 		link->SetNode(node);
-		bl[branch] = 100;
-		if ((!flucsigma) && (! betacm) && (! epibeta))	{
+		bl[branch] = 1000;
+		if ((!flucsigma) && (! betacm) && (! episigma))	{
 			bl[branch] = 1;
 		}
 		link->SetOut(GetRoot());
@@ -682,15 +733,13 @@ class Simulator : public NewickTree {
 						}
 					}
 
-					if (epibeta)	{
-						for (int codpos2=0; codpos2<Nsite/3; codpos2++)	{
-							if (epicont[codpos][codpos2])	{
-								UpdateSubRate(3*codpos2);
-								UpdateSubRate(3*codpos2+1);
-								UpdateSubRate(3*codpos2+2);
-
-								UpdateFitnessStats(codpos2);
-							}
+					if (episigma)	{
+						for (int j=0; j<epincont[codpos]; j++)	{
+							int codpos2 = epicont[codpos][j];
+							UpdateSubRate(3*codpos2);
+							UpdateSubRate(3*codpos2+1);
+							UpdateSubRate(3*codpos2+2);
+							UpdateFitnessStats(codpos2);
 						}
 					}
 
@@ -985,20 +1034,20 @@ class Simulator : public NewickTree {
 			}
 		}
 
-		if (epibeta)	{
-			for (int codpos2=0; codpos2<Nsite/3; codpos2++)	{
-				if (epicont[codpos][codpos2])	{
-					int nuc1 = currentseq[3*codpos2];
-					int nuc2 = currentseq[3*codpos2 + 1];
-					int nuc3 = currentseq[3*codpos2 + 2];
-					if (codonstatespace->CheckStop(nuc1,nuc2,nuc3))	{
-						cerr << "error: position in contact has stop codon\n";
-						exit(1);
-					}
-					int codon = codonstatespace->GetCodonFromDNA(nuc1,nuc2,nuc3);
-					int bb = codonstatespace->Translation(codon);
-					fitness += epibeta * epipot[codpos][codpos2][aa][bb];
+		if (episigma)	{
+			for (int j=0; j<epincont[codpos]; j++)	{
+				int codpos2 = epicont[codpos][j];
+				int nuc1 = currentseq[3*codpos2];
+				int nuc2 = currentseq[3*codpos2 + 1];
+				int nuc3 = currentseq[3*codpos2 + 2];
+				if (codonstatespace->CheckStop(nuc1,nuc2,nuc3))	{
+					cerr << "error: position in contact has stop codon\n";
+					cerr << codpos2 << '\t' << Nsite/3 << '\n';
+					exit(1);
 				}
+				int codon = codonstatespace->GetCodonFromDNA(nuc1,nuc2,nuc3);
+				int bb = codonstatespace->Translation(codon);
+				fitness += epipot[aa][bb];
 			}
 		}
 
@@ -1106,14 +1155,13 @@ class Simulator : public NewickTree {
 		*/
 
 		CodonSequenceAlignment* codonali = new CodonSequenceAlignment(simuali);
-		CodonSequenceAlignment* codontemplate = new CodonSequenceAlignment(nucdata);
-		// codonali->GetMissingCellsFromTemplate(codontemplate);
 
-		codonali->Mask(codondata);
+		if (nucdata && mask)	{
+			codonali->Mask(codondata);
+		}
 
 		ofstream callos((basename + ".ali").c_str());
 		codonali->ToStream(callos);
-
 	
 		ProteinSequenceAlignment* protali = new ProteinSequenceAlignment(codonali);
 		ofstream protos((basename + "_prot.ali").c_str());
@@ -1142,7 +1190,9 @@ class Simulator : public NewickTree {
 		sos << "mean number of fluctuations per site : " << ((double) hiddencount) / Nsite * 3 << '\n';
 
 		sos << "mean diversity : " << protali->GetMeanDiversity() << '\n';
-		sos << "ref  diversity : " << protdata->GetMeanDiversity() << '\n';
+		if (nucdata)	{
+			sos << "ref  diversity : " << protdata->GetMeanDiversity() << '\n';
+		}
 		sos << '\n';
 		sos << "mean instant   diversity : " << globalmeaninstantdiv << '\n';
 		sos << "mean long-term diversity : " << globalmeanlongtermdiv << '\n';
@@ -1152,13 +1202,15 @@ class Simulator : public NewickTree {
 		sos << '\n';
 
 
-		cerr << "mean number of subs per site : " << ((double) count) / Nsite * 3 << '\n';
-		cerr << "mean number of syns per site : " << ((double) dscount) / Nsite * 3 << '\n';
-		cerr << "mean number of reps per site : " << ((double) dncount) / Nsite * 3 << '\n';
+		cout << "mean number of subs per site : " << ((double) count) / Nsite * 3 << '\n';
+		cout << "mean number of syns per site : " << ((double) dscount) / Nsite * 3 << '\n';
+		cout << "mean number of reps per site : " << ((double) dncount) / Nsite * 3 << '\n';
 		cerr << "mean number of fluctuations per site : " << ((double) hiddencount) / Nsite * 3 << '\n';
 
 		cerr << "mean diversity : " << protali->GetMeanDiversity() << '\n';
-		cerr << "ref  diversity : " << protdata->GetMeanDiversity() << '\n';
+		if (nucdata)	{
+			cerr << "ref  diversity : " << protdata->GetMeanDiversity() << '\n';
+		}
 		cerr << '\n';
 		cerr << "mean instant   diversity : " << globalmeaninstantdiv << '\n';
 		cerr << "mean long-term diversity : " << globalmeanlongtermdiv << '\n';
@@ -1169,6 +1221,10 @@ class Simulator : public NewickTree {
 
 		delete[] data;
 		delete[] names;
+	}
+
+	double GetDN()	{
+		return ((double) dncount) / Nsite * 3;
 	}
 
 	void RecursiveMakeData(const Link* from, int** data, string* names, int& n)	{
@@ -1239,15 +1295,15 @@ class Simulator : public NewickTree {
 		ifstream is(filename.c_str());
 		int nsite, nstate;
 		is >> nsite >> nstate;
-		if (nsite < Nsite/3)	{
-			cerr << "error: too small\n";
-			exit(1);
-		}
 		if (nstate != Naa)	{
 			cerr << "error when reading " << filename << '\n';
 			exit(1);
 		}
-		for (int codpos=0; codpos<Nsite/3; codpos++)	{
+		double** protalpha = new double*[nsite];
+		for (int codpos=0; codpos<nsite; codpos++)	{
+			protalpha[codpos] = new double[nstate];
+		}
+		for (int codpos=0; codpos<nsite; codpos++)	{
 			double tot = 0;
 			for (int a=0; a<Naa; a++)	{
 				double tmp;
@@ -1257,13 +1313,25 @@ class Simulator : public NewickTree {
 					cerr << "error: negative fitness\n";
 					exit(1);
 				}
-				alpha[codpos][a] = log(tmp);
+				protalpha[codpos][a] = log(tmp);
 			}
 			if (fabs(tot - 1) > 1e-4)	{
 				cerr << "error: profile does not sum to one : " << tot << '\n';
 				exit(1);
 			}
 		}
+
+		for (int codpos=0; codpos<Nsite/3; codpos++)	{
+			int site = (int) (nsite * rnd::GetRandom().Uniform());
+			for (int a=0; a<Naa; a++)	{
+				alpha[codpos][a] = protalpha[site][a];
+			}
+		}
+
+		for (int codpos=0; codpos<nsite; codpos++)	{
+			delete[] protalpha[codpos];
+		}
+		delete[] protalpha;
 	}
 
 	void CalculateNucStat()	{
@@ -1366,11 +1434,11 @@ class Simulator : public NewickTree {
 	double betaav;
 	double betacm;
 
-	double epibeta;
-	double epifrac;
+	double epiK;
 	double episigma;
 	int** epicont;
-	double**** epipot;
+	int* epincont;
+	double** epipot;
 
 	double** subrate;
 	int count;
@@ -1444,32 +1512,101 @@ class Simulator : public NewickTree {
 	FileSequenceAlignment* nucdata;
 	CodonSequenceAlignment* codondata;
 	ProteinSequenceAlignment* protdata;
-	TaxonSet* taxonset;
+	const TaxonSet* taxonset;
 	StateSpace* statespace;
 	CodonStateSpace* codonstatespace;
+
+	int mask;
 
 };
 
 int main(int argc, char* argv[])	{
 
-	string datafile = argv[1];
-	string treefile = argv[2];
-	string paramfile = argv[3];
-	int Nsite = atoi(argv[4]);
-	string basename = argv[5];
+	string datafile = "";
+	string treefile = "";
+	string paramfile = "";
+	int Nsite = -1;
+	string basename = "";
+	int mask = 0;
+	int nrep = 1;
+
+	try	{
+
+		if (argc == 1)	{
+			throw(0);
+		}
+
+		int i = 1;
+		while (i < argc)	{
+			string s = argv[i];
+			if ((s == "-d") || (s == "-data"))	{
+				i++;
+				datafile = argv[i];
+			}
+			else if (s == "-nrep")	{
+				i++;
+				nrep = atoi(argv[i]);
+			}
+			else if ((s == "-t") || (s == "-tree"))	{
+				i++;
+				treefile = argv[i];
+			}
+			else if ((s == "-p") || (s == "-param"))	{
+				i++;
+				paramfile = argv[i];
+			}
+			else if ((s == "-n") || (s == "-nsite"))	{
+				i++;
+				Nsite = atoi(argv[i]);
+			}
+			else if ((s == "-m") || (s == "-mask"))	{
+				i++;
+				mask = 1;
+			}
+			else	{
+				if (i != (argc -1))	{
+					throw(0);
+				}
+				basename = argv[i];
+			}
+			i++;
+		}
+		if (((datafile == "") && (Nsite == -1)) || (treefile == "") || (paramfile == "") || (basename == ""))	{
+			throw(0);
+		}
+	}
+	catch(...)	{
+		cerr << '\n';
+		cerr << "simucodon -p <paramfile> -t <treefile> [-d <datafile> | -n <nsite>] [-m | -mask] <basename>\n";
+		cerr << '\n';
+		exit(1);
+	}
 
 	cerr << "new sim\n";
-	Simulator* sim = new Simulator(datafile,Nsite,treefile,paramfile);
+	Simulator* sim = new Simulator(datafile,Nsite,treefile,paramfile,mask);
 
-	cerr << "simu\n";
-	sim->Simulate();
-	cerr << '\n';
+	double meandn = 0;
+	double vardn = 0;
+	for (int rep=0; rep<nrep; rep++)	{
+		cerr << "simu\n";
+		sim->Simulate();
+		cerr << '\n';
+		double dn = sim->GetDN();
+		meandn += dn;
+		vardn += dn*dn;
+	}
+	meandn /= nrep;
+	vardn /= nrep;
+	vardn -= meandn * meandn;
+	cout << "mean number of reps per site : " << meandn << " +/- " << sqrt(vardn) << '\n';
 
-	cerr << "write simu\n";
-	sim->WriteSimu(basename);
+	if (nrep == 1)	{
+		cerr << "write simu\n";
+		sim->WriteSimu(basename);
 
-	cerr << "simu written in " << basename << '\n';
-	cerr << '\n';
+		cerr << "simu written in " << basename << '\n';
+		cerr << '\n';
+	}
 
 }
 

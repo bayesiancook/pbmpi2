@@ -24,14 +24,13 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------
 //-----------------------------------------------------------------------
 
-void CodonMutSelProfileProcess::Create(int innsite, int indim, CodonStateSpace* instatespace)	{
+void CodonMutSelProfileProcess::Create()	{
 	
 	if ( (!nucrr) && (!nucstat) )	{
-		ProfileProcess::Create(innsite, indim);
+		ProfileProcess::Create();
 		Nnucrr = Nnuc * (Nnuc-1) / 2;
 		nucrr = new double[Nnucrr];
 		nucstat = new double[Nnuc];
-		statespace = instatespace;
 		SampleNucRR();
 		SampleNucStat();				
 
@@ -117,6 +116,41 @@ void CodonMutSelProfileProcess::SampleNucStat()	{
 }
 
 
+double CodonMutSelProfileProcess::GlobalParametersMove()	{
+
+	double tuning = 1.0;
+	int n = 1;
+	// mutation rates
+	GlobalUpdateParameters();
+	GlobalUpdateSiteProfileSuffStat();
+	UpdateModeProfileSuffStat();
+	MoveNucRR(tuning*0.5, 2);
+	MoveNucRR(tuning*0.4, 2);
+	MoveNucRR(tuning*0.3, 2);
+	MoveNucRR(tuning*0.2, 2);
+	MoveNucRR(tuning*0.1, 2);
+	MoveNucRR(tuning*0.05, 2);
+	MoveNucRR(tuning*0.04, 2);
+	MoveNucRR(tuning*0.03, 2);
+	MoveNucRR(tuning*0.02, 2);
+	MoveNucRR(tuning*0.01, 2);
+	MoveNucRR(tuning*0.05, n);
+	MoveNucRR(tuning*0.04, n);
+	MoveNucRR(tuning*0.03, n);
+	MoveNucRR(tuning*0.02, n);
+	MoveNucRR(tuning*0.01, n);
+	MoveNucStat(tuning*0.5,n);
+	MoveNucStat(tuning*0.4,n);
+	MoveNucStat(tuning*0.3,n);
+	MoveNucStat(tuning*0.2,n);
+	MoveNucStat(tuning*0.1,n);
+	MoveNucStat(tuning*0.05,n);
+	MoveNucStat(tuning*0.04,n);
+	MoveNucStat(tuning*0.03,n);
+	MoveNucStat(tuning*0.02,n);
+	MoveNucStat(tuning*0.01,n);
+}
+
 double CodonMutSelProfileProcess::MoveNucRR(double tuning)	{
 
 	//exponental prior
@@ -155,7 +189,7 @@ double CodonMutSelProfileProcess::MoveNucRR(double tuning, int n)	{
 		bk[k] = nucrr[k];
 	}
 	double deltalogprob = -ProfileSuffStatLogProb();
-	double loghastings = ProfileProposeMove(nucrr,tuning,n,GetNnucrr());
+	double loghastings = ProfileProposeMove(nucrr,tuning,n,GetNnucrr(),0,0);
 	UpdateMatrices();
 	deltalogprob += ProfileSuffStatLogProb();
 	deltalogprob += loghastings;
@@ -183,7 +217,7 @@ double CodonMutSelProfileProcess::MoveNucStat(double tuning, int n)	{
 		bk[k] = nucstat[k];
 	}
 	double deltalogprob = -ProfileSuffStatLogProb();
-	double loghastings = ProfileProposeMove(nucstat,tuning,n,Nnuc);
+	double loghastings = ProfileProposeMove(nucstat,tuning,n,Nnuc,0,0);
 	UpdateMatrices();
 	deltalogprob += ProfileSuffStatLogProb();
 	deltalogprob += loghastings;

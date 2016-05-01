@@ -16,6 +16,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ExpoConjugateGTRProfileProcess.h"
 #include "Random.h"
+#include "Parallel.h"
 	
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
@@ -24,9 +25,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 
 
-void ExpoConjugateGTRProfileProcess::Create(int innsite, int indim)	{
+void ExpoConjugateGTRProfileProcess::Create()	{
 	if (! rr)	{
-		GTRProfileProcess::Create(innsite,indim);
+		GTRProfileProcess::Create();
 	}
 	if (! rrsuffstatcount)	{
 		rrsuffstatcount = new int[Nrr];
@@ -44,35 +45,58 @@ void ExpoConjugateGTRProfileProcess::Delete()	{
 	}
 }
 
-void ExpoConjugateGTRProfileProcess::MoveRR()	{
+double ExpoConjugateGTRProfileProcess::MoveRR()	{
 	GlobalUpdateRRSuffStat();
 	for (int i=0; i<GetNrr(); i++)	{
 		rr[i] = rnd::GetRandom().Gamma(1.0 + rrsuffstatcount[i], 1.0 + rrsuffstatbeta[i]);
 	}
+	return 1;
 }
 
-/*
-void ExpoConjugateGTRProfileProcess::MoveRR()	{
-	double tuning = 0.3;
-	GlobalUpdateRRSuffStat();
-	int naccepted = 0;
-	for (int i=0; i<GetNrr(); i++)	{
-		double deltalogratio = - LogRRPrior() - ProfileSuffStatLogProb();
-		double bk = rr[i];
-		double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
-		double e = exp(m);
-		rr[i] *= e;
-		UpdateMatrices();
-		deltalogratio += LogRRPrior() + ProfileSuffStatLogProb();
-		deltalogratio += m;
-		int accepted = (log(rnd::GetRandom().Uniform()) < deltalogratio);
-		if (accepted)	{
-			naccepted++;
-		}
-		else	{
-			rr[i] = bk;
-			UpdateMatrices();
+void ExpoConjugateGTRProfileProcess::GlobalUpdateRRSuffStat()	{
+
+	if (GetNprocs() > 1)	{
+	MPI_Status stat;
+	MESSAGE signal = UPDATE_RRATE;
+
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	for(int i=0; i<GetNrr(); i++) {
+		rrsuffstatcount[i] = 0;
+		rrsuffstatbeta[i] = 0.0;
+	}
+
+	int ivector[GetNrr()];
+	double dvector[GetNrr()];
+	for(int i=1; i<GetNprocs(); i++) {
+		MPI_Recv(ivector,GetNrr(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+		for(int j=0; j<GetNrr(); j++) {
+			rrsuffstatcount[j] += ivector[j];
 		}
 	}
+	MPI_Barrier(MPI_COMM_WORLD);
+	for(int i=1; i<GetNprocs(); i++) {
+		MPI_Recv(dvector,GetNrr(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		for(int j=0; j<GetNrr(); j++) {
+			rrsuffstatbeta[j] += dvector[j];
+		}
+	}
+
+	MPI_Bcast(rrsuffstatcount,GetNrr(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(rrsuffstatbeta,GetNrr(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
+	else	{
+		UpdateRRSuffStat();
+	}
 }
-*/
+
+void ExpoConjugateGTRProfileProcess::SlaveUpdateRRSuffStat()	{
+
+	UpdateRRSuffStat();
+	MPI_Send(rrsuffstatcount,GetNrr(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Send(rrsuffstatbeta,GetNrr(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+
+	MPI_Bcast(rrsuffstatcount,GetNrr(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(rrsuffstatbeta,GetNrr(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+}

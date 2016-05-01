@@ -189,7 +189,6 @@ void LinAlg::HouseHolder(double** u, int dim, double** a, double** ql)	{
 	delete[] c;
 }
 
-
 int LinAlg::DiagonalizeSymmetricMatrix(double** u, int dim, int nmax, double epsilon, double* eigenval, double** eigenvect)	{
 
 	for (int i=0; i<dim; i++)	{
@@ -322,141 +321,6 @@ int LinAlg::DiagonalizeSymmetricMatrix(double** u, int dim, int nmax, double eps
 	return n;
 }
 
-/*
-int LinAlg::DiagonalizeSymmetricMatrix(double** u, int dim, int nmax, double epsilon, double* eigenval, double** eigenvect)	{
-
-	double** a = new double*[dim];
-	double** q = new double*[dim];
-	double** r = new double*[dim];
-	for (int i=0; i<dim; i++)	{
-		a[i] = new double[dim];
-		q[i] = new double[dim];
-		r[i] = new double[dim];
-		for (int j=0; j<dim; j++)	{
-			a[i][j] = u[i][j];
-			eigenvect[i][j] = 0;
-		}
-	}
-	for (int i=0; i<dim; i++)	{
-		eigenvect[i][i] = 1;
-	}
-
-	double premax = 0;
-	for (int i=0; i<dim; i++)	{
-		for (int j=0; j<dim; j++)	{
-			if (i!=j)	{
-				double tmp = fabs(u[i][j]);
-				if (premax < tmp)	{
-					premax = tmp;
-				}
-			}
-		}
-	}
-	if (premax < epsilon)	{
-		for (int i=0; i<dim; i++)	{
-			eigenval[i] = u[i][i];
-		}
-		// here delete !!!
-		for (int i=0; i<dim; i++)	{
-			delete[] a[i];
-			delete[] q[i];
-			delete[] r[i];
-		}
-		delete[] a;
-		delete[] q;
-		delete[] r;
-		return 0;
-	}
-
-	HouseHolder(u,dim,a,r);
-
-	for (int i=0; i<dim; i++)	{
-		for (int j=0; j<dim; j++)	{
-			eigenvect[i][j]  = r[j][i];
-		}
-	}
-
-	int n = 0;
-	double max = 0;
-	int s = dim-1;
-	do	{
-		max = 0;
-		double shift = 0;
-		if (s>=0)	{
-			shift = a[s][s];
-			for (int i=0; i<s+1; i++)	{
-				a[i][i] -= shift;
-			}
-		}
-		for (int i=0; i<dim; i++)	{
-			for (int j=0; j<dim; j++)	{
-				q[i][j] = 0;
-				r[i][j] = 0;
-			}
-		}
-		for (int i=0; i<dim; i++)	{
-			q[i][i] = 1;
-		}
-
-		QR(a,s+1,q,r);
-		// QR(a,dim,q,r);
-		n++;
-		for (int i=0; i<s+1; i++)	{
-			for (int j=0; j<s+1; j++)	{
-				double total = 0;
-				for (int k=0; k<s+1; k++)	{
-					total += r[i][k] * q[j][k];
-				}
-				a[i][j] = total;
-				if (i!=j)	{
-					if (max < fabs(total))	{
-						max = fabs(total);
-					}
-				}
-			}
-		}
-		if (s>=0)	{
-			for (int i=0; i<s+1; i++)	{
-				a[i][i] += shift;
-			}
-			// cerr << a[s][s-1] << '\n';
-			if (fabs(a[s][s-1]) < epsilon)	{
-				s--;
-			}
-		}
-		for (int i=0; i<dim; i++)	{
-			for (int j=0; j<dim; j++)	{
-				double total = 0;
-				for (int k=0; k<dim; k++)	{
-					total += eigenvect[i][k] * q[j][k];
-				}
-				r[i][j] = total;
-			}
-		}
-		for (int i=0; i<dim; i++)	{
-			for (int j=0; j<dim; j++)	{
-				eigenvect[i][j] = r[i][j];
-			}
-		}
-	}
-	while ((s >=0) && (n < nmax));
-	// while ((max > epsilon) && (n < nmax));
-
-	for (int i=0; i<dim; i++)	{
-		eigenval[i] = a[i][i];
-	}
-
-	for (int i=0; i<dim; i++)	{
-		delete[] a[i];
-		delete[] q[i];
-		delete[] r[i];
-	}
-	delete[] a;
-	delete[] q;
-	delete[] r;
-	return n;
-};
-*/
 
 // diagonalize a reversible rate matrix
 // first transforms reversible matrix into a symmetric matrix
@@ -547,6 +411,14 @@ double LinAlg::Gauss(double** a, int dim, double** invu)	{
 
 		if (max < 1e-10)	{
 			cerr << "error in Gauss: non invertible matrix\n";
+			cerr << "dim : " << dim << '\n';
+			for (int j=0; j<dim; j++)	{
+				for (int k=0; k<dim; k++)	{
+					cerr << a[j][k] << '\t';
+				}
+				cerr << '\n';
+			}
+			return 1.0 / 0;
 			exit(1);
 		}
 

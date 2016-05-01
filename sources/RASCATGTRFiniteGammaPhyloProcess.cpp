@@ -15,13 +15,14 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "StringStreamUtils.h"
 
-#include <cassert>
 #include "RASCATGTRFiniteGammaPhyloProcess.h"
 #include "Parallel.h"
 #include <string>
 
 
 void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
+
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
 	// about model parameters
@@ -42,8 +43,6 @@ void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	// SetBranchLengthsFromArray()
 	// SetAlpha(inalpha)
 
-	assert(myid == 0);
-
 	// ResampleWeights();
 	RenormalizeProfiles();
 
@@ -52,6 +51,9 @@ void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	L1 = GetNmodeMax();
 	L2 = GetDim();
 	nd = 3 + nbranch + nrr + L2 + L1*(L2+1);
+	if (empmix == 2)	{
+		nd += 2;
+	}
 	ni = 1 + GetNsite();
 	int ivector[ni];
 	double dvector[nd]; 
@@ -90,6 +92,14 @@ void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 		dvector[index] = dirweight[i];
 		index++;
 	}
+	if (empmix == 2)	{
+		/*
+		dvector[index] = weightalpha;
+		index++;
+		*/
+		dvector[index] = statfixalpha;
+		index++;
+	}
 
 	// Now the vector of ints
 	ivector[0] = GetNcomponent();
@@ -100,12 +110,13 @@ void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	// Now send out the doubles and ints over the wire...
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
+
+	// UpdateMatrices();
 }
 
 
 void RASCATGTRFiniteGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
-
-	assert(myid > 0);
 
 	switch(signal) {
 
@@ -121,6 +132,9 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 	case PROFILE_MOVE:
 		SlaveMoveProfile();
 		break;
+	case STATFIX:
+		SlaveGetStatFix();
+		break;
 	default:
 		PhyloProcess::SlaveExecute(signal);
 	}
@@ -134,6 +148,9 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
 	L1 = GetNmodeMax();
 	L2 = GetDim();
 	nd = 3 + nbranch + nrr + L2 + L1*(L2+1);
+	if (empmix == 2)	{
+		nd += 2;
+	}
 	ni = 1 + GetNsite();
 	int* ivector = new int[ni];
 	double* dvector = new double[nd];
@@ -166,6 +183,14 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
 		dirweight[i] = dvector[index];
 		index++;
 	}
+	if (empmix == 2)	{
+		/*
+		weightalpha = dvector[index];
+		index++;
+		*/
+		statfixalpha = dvector[index];
+		index++;
+	}
 
 	Ncomponent = ivector[0];
 	for(i=0; i<GetNsite(); ++i) {
@@ -174,6 +199,8 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
 	// cerr << "after update params: " << GetTotalLength() << '\n';
 	delete[] dvector;
 	delete[] ivector;
+
+	// UpdateMatrices();
 }
 
 void RASCATGTRFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
@@ -188,6 +215,8 @@ void RASCATGTRFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	// 2 : diversity statistic
 	// 3 : compositional statistic
 
+	int ss = 0;
+	int ms = 0;
 	int cv = 0;
 	int sitelogl = 0;
 	int map = 0;
@@ -217,6 +246,12 @@ void RASCATGTRFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 			}
 			else if (s == "-r")	{
 				rates = 1;
+			}
+			else if (s == "-ss")	{
+				ss = 1;
+			}
+			else if (s == "-ms")	{
+				ms = 1;
 			}
 			else if (s == "-map")	{
 				map = 1;
@@ -286,6 +321,12 @@ void RASCATGTRFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	else if (rates)	{
 		ReadSiteRates(name,burnin,every,until);
 	}
+	else if (ss)	{
+		ReadSiteProfiles(name,burnin,every,until);
+	}
+	else if (ms)	{
+		ReadModeProfiles(name,burnin,every,until);
+	}
 	else if (ppred)	{
 		PostPred(ppred,name,burnin,every,until);
 	}
@@ -297,6 +338,80 @@ void RASCATGTRFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	}
 }
 
+void RASCATGTRFiniteGammaPhyloProcess::ReadModeProfiles(string name, int burnin, int every, int until)	{
+
+	double* modeweight = new double[GetNcomponent()];
+	for (int i=0; i<GetNcomponent(); i++)	{
+		modeweight[i] = 0;
+	}
+	double** modestat = new double*[GetNcomponent()];
+	for (int i=0; i<GetNcomponent(); i++)	{
+		modestat[i] = new double[GetDim()];
+		for (int k=0; k<GetDim(); k++)	{
+			modestat[i][k] = 0;
+		}
+	}
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		for (int i=0; i<GetNcomponent(); i++)	{
+			double* p = profile[i];
+			for (int k=0; k<GetDim(); k++)	{
+				modestat[i][k] += p[k];
+			}
+			modeweight[i] += weight[i];
+		}
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+	
+	ofstream os((name + ".modeprofiles").c_str());
+	/*
+	for (int k=0; k<GetDim(); k++)	{
+		os << GetStateSpace()->GetState(k) << ' ';
+	}
+	os << '\n';
+	os << '\n';
+	*/
+	os << GetNcomponent() << '\t' << GetDim() << '\n';
+	for (int i=0; i<GetNcomponent(); i++)	{
+		modeweight[i] /= samplesize;
+		os << modeweight[i];
+		// os << i+1;
+		for (int k=0; k<GetDim(); k++)	{
+			modestat[i][k] /= samplesize;
+			os << '\t' << modestat[i][k];
+		}
+		os << '\n';
+	}
+	cerr << "mean mixture profiles in " << name << ".modeprofiles\n";
+	cerr << '\n';
+}
+
 void RASCATGTRFiniteGammaPhyloProcess::SlaveComputeCVScore()	{
 
 	if (! SumOverRateAllocations())	{
@@ -304,7 +419,8 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveComputeCVScore()	{
 		exit(1);
 	}
 
-	sitemax = sitemin + testsitemax - testsitemin;
+	int sitemin = GetSiteMin();
+	int sitemax = GetSiteMin() + testsitemax - testsitemin;
 	double** sitelogl = new double*[GetNsite()];
 	for (int i=sitemin; i<sitemax; i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
@@ -345,9 +461,6 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveComputeCVScore()	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;
-
-	sitemax = bksitemax;
-
 }
 
 void RASCATGTRFiniteGammaPhyloProcess::SlaveComputeSiteLogL()	{
@@ -358,18 +471,18 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveComputeSiteLogL()	{
 	}
 
 	double** sitelogl = new double*[GetNsite()];
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
 	}
 	
 	// UpdateMatrices();
 
 	for (int k=0; k<GetNcomponent(); k++)	{
-		for (int i=sitemin; i<sitemax; i++)	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			ExpoConjugateGTRFiniteProfileProcess::alloc[i] = k;
 		}
 		UpdateConditionalLikelihoods();
-		for (int i=sitemin; i<sitemax; i++)	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			sitelogl[i][k] = sitelogL[i];
 		}
 	}
@@ -378,7 +491,7 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveComputeSiteLogL()	{
 	for (int i=0; i<GetNsite(); i++)	{
 		meansitelogl[i] = 0;
 	}
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		double max = 0;
 		for (int k=0; k<GetNcomponent(); k++)	{
 			if ((!k) || (max < sitelogl[i][k]))	{
@@ -396,7 +509,7 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveComputeSiteLogL()	{
 
 	MPI_Send(meansitelogl,GetNsite(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;

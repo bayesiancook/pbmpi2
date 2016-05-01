@@ -86,7 +86,7 @@ class GTRProfileProcess : public virtual MatrixProfileProcess {
 
 	protected:
 
-	virtual void Create(int innsite, int indim);
+	virtual void Create();
 	virtual void Delete();
 
 	// relative rates
@@ -102,7 +102,22 @@ class GTRProfileProcess : public virtual MatrixProfileProcess {
 
 	// Metropolis or Gibbs Sampling algorithm,
 	// (depending on what is permitted by the type of sufficient satistics used)
-	virtual void MoveRR() = 0;
+	virtual double MoveRR(double tuning, int n, int nrep);
+
+	virtual double MoveRR()	{
+		MoveRR(1.0,1,Nrr);
+		MoveRR(0.1,1,Nrr);
+		return 1;
+	}
+
+	virtual double GlobalParametersMove()	{
+		if (! fixrr)	{
+			GlobalUpdateParameters();
+			GlobalUpdateSiteProfileSuffStat();
+			UpdateModeProfileSuffStat();
+			MoveRR();
+		}
+	}
 
 	int Nrr;
 	double* rr;

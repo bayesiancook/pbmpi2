@@ -17,8 +17,9 @@ class Simulator : public NewickTree {
 
 	public:
 
-	Simulator(string datafile, int inNsite, string treefile, string paramfile, int inmask)	{
+	Simulator(string datafile, int inNsite, string treefile, string paramfile, int inmask, string inbasename)	{
 
+		basename = inbasename; 
 		mask = inmask;
 
 		tree = new Tree(treefile);
@@ -102,7 +103,7 @@ class Simulator : public NewickTree {
 			cerr << tmp << '\n';
 			exit(1);
 		}
-		prmis >> flucrho >> flucstat >> flucsigma >> Khidden;
+		prmis >> flucrho >> flucstat >> flucsigma >> Khidden >> cutoff;
 		SetupHiddenZ();
 		MakeRandomFluctuations();
 
@@ -470,6 +471,9 @@ class Simulator : public NewickTree {
 		dscount = 0;
 		dncount = 0;
 		hiddencount = 0;
+		meanS = 0;
+		varS = 0;
+		posS = 0;
 
 		// RecursiveSimulate(GetRoot());
 
@@ -677,30 +681,39 @@ class Simulator : public NewickTree {
 
 					int codpos = pos/3;
 
+					double S = - GetFitness(codpos,1);
+
 					int a1 = currentseq[3*codpos];
 					int a2 = currentseq[3*codpos + 1];
 					int a3 = currentseq[3*codpos + 2];
 					int c = codonstatespace->GetCodonFromDNA(a1,a2,a3);
+
 					currentseq[pos] = final;
 					int b1 = currentseq[3*codpos];
 					int b2 = currentseq[3*codpos + 1];
 					int b3 = currentseq[3*codpos + 2];
 					int d = codonstatespace->GetCodonFromDNA(b1,b2,b3);
-					if (from != GetRoot())	{
-						if (codonstatespace->Synonymous(c,d))	{
-							dscount++;
-						}
-						else	{
-							dncount++;
-						}
-					}
-
 					// recalculate rates at all three sites of the same codon
 					UpdateSubRate(3*codpos);
 					UpdateSubRate(3*codpos + 1);
 					UpdateSubRate(3*codpos + 2);
 
 					UpdateFitnessStats(codpos);
+					S += GetFitness(codpos,1);
+
+					if (from != GetRoot())	{
+						if (codonstatespace->Synonymous(c,d))	{
+							dscount++;
+						}
+						else	{
+							meanS += S;
+							varS += S * S;
+							if (S > 0)	{
+								posS++;
+							}
+							dncount++;
+						}
+					}
 
 					// if codon first site: recalculate rate at previous nuc site
 					if (pos % 3 == 0)	{
@@ -1133,7 +1146,7 @@ class Simulator : public NewickTree {
 		}
 	}
 
-	void WriteSimu(string basename)	{
+	void WriteSimu()	{
 
 		// dataset
 		int** data = new int*[Ntaxa];
@@ -1202,9 +1215,9 @@ class Simulator : public NewickTree {
 		sos << '\n';
 
 
-		cerr << "mean number of subs per site : " << ((double) count) / Nsite * 3 << '\n';
-		cerr << "mean number of syns per site : " << ((double) dscount) / Nsite * 3 << '\n';
-		cerr << "mean number of reps per site : " << ((double) dncount) / Nsite * 3 << '\n';
+		cout << "mean number of subs per site : " << ((double) count) / Nsite * 3 << '\n';
+		cout << "mean number of syns per site : " << ((double) dscount) / Nsite * 3 << '\n';
+		cout << "mean number of reps per site : " << ((double) dncount) / Nsite * 3 << '\n';
 		cerr << "mean number of fluctuations per site : " << ((double) hiddencount) / Nsite * 3 << '\n';
 
 		cerr << "mean diversity : " << protali->GetMeanDiversity() << '\n';
@@ -1219,8 +1232,19 @@ class Simulator : public NewickTree {
 		cerr << "relative rate of change  : " << (globalmeandist ? globalmeandist / 2 / globalvarfitness / 3.0 / mu : 0) << '\n';
 		cerr << '\n';
 
+		meanS /= dncount;
+		varS /= dncount;
+		varS -= meanS * meanS;
+		posS /= dncount;
+		cerr << "mean fitness flux : " << meanS << " +/- " << sqrt(varS) << '\n';
+		cerr << "fraction adaptive : " << posS << '\n';
+
 		delete[] data;
 		delete[] names;
+	}
+
+	double GetDN()	{
+		return ((double) dncount) / Nsite * 3;
 	}
 
 	void RecursiveMakeData(const Link* from, int** data, string* names, int& n)	{
@@ -1261,11 +1285,66 @@ class Simulator : public NewickTree {
 
 	void MakeRandomFluctuations()	{
 
+		if (cutoff == -1)	{
+		for (int codpos=0; codpos<Nsite/3; codpos++)	{
+			if (hiddenz[codpos])	{
+				double max1 = 0;
+				double max2 = 0;
+				int i1 = 0;
+				int i2 = 0;
+				for (int a=0; a<Naa; a++)	{
+					double tmp = exp(alpha[codpos][a]);
+					if (max1 < tmp)	{
+						max1 = tmp;
+						i1 = a;
+					}
+				}
+				for (int a=0; a<Naa; a++)	{
+					if (a != i1)	{
+						double tmp = exp(alpha[codpos][a]);
+						if (max2 < tmp)	{
+							max2 = tmp;
+							i2 = a;
+						}
+					}
+				}
+				double delta = flucsigma * rnd::GetRandom().sNormal();
+				if (Khidden != 2)	{
+					cerr << "error in make random fluc: cutoff -1, Khidden should be 2\n";
+					exit(1);
+				}
+				for (int a=0; a<Naa; a++)	{
+					dalpha[codpos][0][a] = alpha[codpos][a];
+					dalpha[codpos][1][a] = alpha[codpos][a];
+				}
+				dalpha[codpos][0][i1] = alpha[codpos][i1] + delta;
+				dalpha[codpos][0][i2] = alpha[codpos][i2] - delta;
+				dalpha[codpos][1][i1] = alpha[codpos][i1] - delta;
+				dalpha[codpos][1][i2] = alpha[codpos][i2] + delta;
+			}
+			else	{
+				for (int k=0; k<Khidden; k++)	{
+					for (int a=0; a<Naa; a++)	{
+						dalpha[codpos][k][a] = 0;
+					}
+				}
+			}
+			
+		}
+
+		}
+		else	{
+
 		for (int codpos=0; codpos<Nsite/3; codpos++)	{
 			for (int k=0; k<Khidden; k++)	{
 				if (hiddenz[codpos])	{
 					for (int a=0; a<Naa; a++)	{
-						dalpha[codpos][k][a] = flucsigma * rnd::GetRandom().sNormal();
+						if (exp(alpha[codpos][a]) > cutoff)	{
+							dalpha[codpos][k][a] = flucsigma * rnd::GetRandom().sNormal();
+						}
+						else	{
+							dalpha[codpos][k][a] = 0;
+						}
 					}
 				}
 				else	{
@@ -1274,6 +1353,8 @@ class Simulator : public NewickTree {
 					}
 				}
 			}
+		}
+		
 		}
 	}
 
@@ -1299,6 +1380,9 @@ class Simulator : public NewickTree {
 		for (int codpos=0; codpos<nsite; codpos++)	{
 			protalpha[codpos] = new double[nstate];
 		}
+		double mean = 0;
+		double var = 0;
+		int count = 0;
 		for (int codpos=0; codpos<nsite; codpos++)	{
 			double tot = 0;
 			for (int a=0; a<Naa; a++)	{
@@ -1309,13 +1393,21 @@ class Simulator : public NewickTree {
 					cerr << "error: negative fitness\n";
 					exit(1);
 				}
-				protalpha[codpos][a] = log(tmp);
+				double temp = log(tmp);
+				mean += temp;
+				var += temp * temp;
+				count++;
+				protalpha[codpos][a] = temp;
 			}
 			if (fabs(tot - 1) > 1e-4)	{
 				cerr << "error: profile does not sum to one : " << tot << '\n';
 				exit(1);
 			}
 		}
+		mean /= count;
+		var /= count;
+		var -= mean*mean;
+		cerr << "empirical stddev : " << sqrt(var) << '\n';
 
 		for (int codpos=0; codpos<Nsite/3; codpos++)	{
 			int site = (int) (nsite * rnd::GetRandom().Uniform());
@@ -1442,6 +1534,10 @@ class Simulator : public NewickTree {
 	int dncount;
 	int hiddencount;
 	double Ne;
+
+	double meanS;
+	double varS;
+	double posS;
 	
 	double flucrho;
 	double flucstat;
@@ -1454,6 +1550,7 @@ class Simulator : public NewickTree {
 
 	int Nhidden;
 	int Khidden;
+	double cutoff;
 	int* currenthidden;
 	int* hiddenz;
 
@@ -1514,6 +1611,8 @@ class Simulator : public NewickTree {
 
 	int mask;
 
+	string basename;
+
 };
 
 int main(int argc, char* argv[])	{
@@ -1524,6 +1623,7 @@ int main(int argc, char* argv[])	{
 	int Nsite = -1;
 	string basename = "";
 	int mask = 0;
+	int nrep = 1;
 
 	try	{
 
@@ -1537,6 +1637,10 @@ int main(int argc, char* argv[])	{
 			if ((s == "-d") || (s == "-data"))	{
 				i++;
 				datafile = argv[i];
+			}
+			else if (s == "-nrep")	{
+				i++;
+				nrep = atoi(argv[i]);
 			}
 			else if ((s == "-t") || (s == "-tree"))	{
 				i++;
@@ -1574,17 +1678,30 @@ int main(int argc, char* argv[])	{
 	}
 
 	cerr << "new sim\n";
-	Simulator* sim = new Simulator(datafile,Nsite,treefile,paramfile,mask);
+	Simulator* sim = new Simulator(datafile,Nsite,treefile,paramfile,mask,basename);
 
-	cerr << "simu\n";
-	sim->Simulate();
-	cerr << '\n';
+	double meandn = 0;
+	double vardn = 0;
+	for (int rep=0; rep<nrep; rep++)	{
+		cerr << "simu\n";
+		sim->Simulate();
+		cerr << '\n';
+		double dn = sim->GetDN();
+		meandn += dn;
+		vardn += dn*dn;
+	}
+	meandn /= nrep;
+	vardn /= nrep;
+	vardn -= meandn * meandn;
+	cout << "mean number of reps per site : " << meandn << " +/- " << sqrt(vardn) << '\n';
 
-	cerr << "write simu\n";
-	sim->WriteSimu(basename);
+	if (nrep == 1)	{
+		cerr << "write simu\n";
+		sim->WriteSimu();
 
-	cerr << "simu written in " << basename << '\n';
-	cerr << '\n';
+		cerr << "simu written in " << basename << '\n';
+		cerr << '\n';
+	}
 
 }
 

@@ -62,6 +62,7 @@ class SubMatrix  	{
 	// ComputeArray(int state) is in charge of computing the row of the rate matrix
 	// corresponding to all possible rates of substitution AWAY from state
 	//
+	virtual void 		ComputeFullArray();
 	virtual void 		ComputeArray(int state) = 0;
 
 	// ComputeStationary() is in charge of computing the vector of stationary probabilities (equilibirum frequencies)
@@ -111,7 +112,7 @@ class SubMatrix  	{
 	double* 		GetEigenVal();
 	double** 		GetEigenVect();
 	double** 		GetInvEigenVect();
-
+	double** 		GetQ();
 
 	// uniformization resampling methods
 	// CPU level 1
@@ -185,6 +186,13 @@ class SubMatrix  	{
 //	* Inline definitions
 //-------------------------------------------------------------------------
 
+inline void SubMatrix::ComputeFullArray()	{
+	for (int k=0; k<Nstate; k++)	{
+		ComputeArray(k);
+		flagarray[k] = true;
+	}
+}
+
 inline double	SubMatrix::operator()(int i, int j)	{
 	if (! flagarray[i])	{
 		UpdateRow(i);
@@ -204,6 +212,14 @@ inline const double* SubMatrix::GetStationary() {
 		UpdateStationary();
 	}
 	return mStationary;
+}
+
+inline double** SubMatrix::GetQ()	{
+
+	if (! ArrayUpdated())	{
+		ComputeFullArray();
+	}
+	return Q;
 }
 
 inline double SubMatrix::Stationary(int i)	{
@@ -305,8 +321,8 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
 			cerr << m << '\n';
 			cerr << stateup << '\t' << statedown << '\n';
 
-			// ToStream(cerr);
-			// CheckReversibility();
+			ToStream(cerr);
+			CheckReversibility();
 			throw;
 		}
 	}

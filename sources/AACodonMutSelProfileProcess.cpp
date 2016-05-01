@@ -24,15 +24,14 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------
 //-----------------------------------------------------------------------
 
-void AACodonMutSelProfileProcess::Create(int innsite, int indim, CodonStateSpace* instatespace)	{
+void AACodonMutSelProfileProcess::Create()	{
 	
 	if ( (!nucrr) && (!nucstat) && (!codonprofile) && (!omega) )	{
-		ProfileProcess::Create(innsite, indim);
+		ProfileProcess::Create();
 		Nnucrr = Nnuc * (Nnuc-1) / 2;
 		nucrr = new double[Nnucrr];
 		nucstat = new double[Nnuc];
-		statespace = instatespace;
-		codonprofile = new double[statespace->GetNstate()];
+		codonprofile = new double[GetNcodon()];
 		omega = new double;
 		SampleNucRR();
 		SampleNucStat();
@@ -130,12 +129,12 @@ double AACodonMutSelProfileProcess::LogCodonProfilePrior()	{
 
 void AACodonMutSelProfileProcess::SampleCodonProfile()	{
 	double total = 0;
-	for (int i=0; i<statespace->GetNstate(); i++)  {
+	for (int i=0; i<GetNcodon(); i++)	{
 		//codonprofile[i] = rnd::GetRandom().sExpo();
-		codonprofile[i] = 1.0/statespace->GetNstate();
+		codonprofile[i] = 1.0/GetNcodon();
 		total += codonprofile[i];
 	}
-	for (int i=0; i<statespace->GetNstate(); i++)  {
+	for (int i=0; i<GetNcodon(); i++)	{
 		codonprofile[i] /= total;
 	}
 }
@@ -167,6 +166,43 @@ void AACodonMutSelProfileProcess::SampleOmega()        {
 	//double rv2 = -log(Random::Uniform());
 	//*omega = rv1/rv2;
 	*omega = 1.0;
+}
+
+double AACodonMutSelProfileProcess::GlobalParametersMove()	{
+
+	double tuning = 1.0;
+	int n = 1;
+	if (0)	{
+	// if (! fixcodonprofile)	{
+		MoveCodonProfile(tuning,30,10);
+		MoveNucStatCodonProfile(tuning,30,10);
+		MoveNucRR(tuning,2);
+		MoveCodonProfile(tuning*0.5,30,10);
+		MoveNucStatCodonProfile(tuning*0.5,30,10);
+		MoveNucRR(tuning*0.5,2);
+		MoveCodonProfile(tuning*0.1,30,10);
+		MoveNucStatCodonProfile(tuning*0.1,30,10);
+		MoveNucRR(tuning*0.1,2);
+		MoveCodonProfile(tuning*0.01,30,10);
+		MoveNucStatCodonProfile(tuning*0.01,30,10);
+		MoveNucRR(tuning*0.01,2);
+		MoveCodonProfile(tuning*0.001,30,10);
+		MoveNucStatCodonProfile(tuning*0.001,30,10);
+		MoveNucRR(tuning*0.001,2);
+	}
+	else	{
+		MoveNucRR(tuning,2);
+		MoveNucStat(tuning,2);
+	
+		MoveNucRR(tuning*0.1,2);
+		MoveNucStat(tuning*0.1,2);
+	}
+
+	if (1)	{
+	// if (! fixomega)	{
+		MoveOmega(tuning);
+		MoveOmega(tuning*0.3);
+	}
 }
 
 double AACodonMutSelProfileProcess::MoveOmega(double tuning)        {
@@ -244,7 +280,7 @@ double AACodonMutSelProfileProcess::MoveNucRR(double tuning, int n)	{
 		bk[k] = nucrr[k];
 	}
 	double deltalogprob = -ProfileSuffStatLogProb();
-	double loghastings = ProfileProposeMove(nucrr,tuning,n,GetNnucrr());
+	double loghastings = ProfileProposeMove(nucrr,tuning,n,GetNnucrr(),0,0);
 	UpdateMatrices();
 	deltalogprob += ProfileSuffStatLogProb();
 	deltalogprob += loghastings;
@@ -272,7 +308,7 @@ double AACodonMutSelProfileProcess::MoveNucStat(double tuning, int n)	{
 		bk[k] = nucstat[k];
 	}
 	double deltalogprob = -ProfileSuffStatLogProb();
-	double loghastings = ProfileProposeMove(nucstat,tuning,n,Nnuc);
+	double loghastings = ProfileProposeMove(nucstat,tuning,n,Nnuc,0,0);
 	UpdateMatrices();
 	deltalogprob += ProfileSuffStatLogProb();
 	deltalogprob += loghastings;
@@ -294,13 +330,13 @@ double AACodonMutSelProfileProcess::MoveNucStat(double tuning, int n)	{
 double AACodonMutSelProfileProcess::MoveCodonProfile(double tuning, int n, int nrep)	{
 
 	int naccepted = 0;
-	double* bk = new double[statespace->GetNstate()];
+	double* bk = new double[GetNcodon()];
 	for (int rep=0; rep<nrep; rep++)	{
-		for (int k=0; k<statespace->GetNstate(); k++)  {
+		for (int k=0; k<GetNcodon(); k++)  {
 			bk[k] = codonprofile[k];
 		}
 		double deltalogprob = -ProfileSuffStatLogProb();
-		double loghastings = ProfileProposeMove(codonprofile,tuning,n,statespace->GetNstate());
+		double loghastings = ProfileProposeMove(codonprofile,tuning,n,GetNcodon(),0,0);
 		UpdateMatrices();
 		deltalogprob += ProfileSuffStatLogProb();
 		deltalogprob += loghastings;
@@ -309,7 +345,7 @@ double AACodonMutSelProfileProcess::MoveCodonProfile(double tuning, int n, int n
 			naccepted ++;
 		}
 		else    {
-			for (int k=0; k<statespace->GetNstate(); k++)  {
+			for (int k=0; k<GetNcodon(); k++)  {
 				codonprofile[k] = bk[k];
 			}
 			UpdateMatrices();
@@ -322,18 +358,18 @@ double AACodonMutSelProfileProcess::MoveCodonProfile(double tuning, int n, int n
 double AACodonMutSelProfileProcess::MoveNucStatCodonProfile(double tuning, int n, int nrep)	{
 
 	int naccepted = 0;
-	double* bkcodon = new double[statespace->GetNstate()];
+	double* bkcodon = new double[GetNcodon()];
 	double* bknuc = new double[Nnuc];
 	for (int rep=0; rep<nrep; rep++)	{
-		for (int k=0; k<statespace->GetNstate(); k++)  {
+		for (int k=0; k<GetNcodon(); k++)  {
 			bkcodon[k] = codonprofile[k];
 		}
 		for (int k=0; k<Nnuc; k++)  {
 			bknuc[k] = nucstat[k];
 		}
 		double deltalogprob = -ProfileSuffStatLogProb();
-		ProfileProposeMove(codonprofile,tuning,n,statespace->GetNstate());
-		ProfileProposeMove(nucstat,tuning,n,Nnuc);
+		ProfileProposeMove(codonprofile,tuning,n,GetNcodon(),0,0);
+		ProfileProposeMove(nucstat,tuning,n,Nnuc,0,0);
 		UpdateMatrices();
 		deltalogprob += ProfileSuffStatLogProb();
 		int accepted = (rnd::GetRandom().Uniform() < exp(deltalogprob));
@@ -341,7 +377,7 @@ double AACodonMutSelProfileProcess::MoveNucStatCodonProfile(double tuning, int n
 			naccepted ++;
 		}
 		else    {
-			for (int k=0; k<statespace->GetNstate(); k++)  {
+			for (int k=0; k<GetNcodon(); k++)  {
 				codonprofile[k] = bkcodon[k];
 			}
 			for (int k=0; k<Nnuc; k++)  {
@@ -358,7 +394,7 @@ double AACodonMutSelProfileProcess::MoveNucStatCodonProfile(double tuning, int n
 double AACodonMutSelProfileProcess::GetCodonProfileEntropy()	{
 	double ent = 0;
 	double tmp;
-	for (int i=0; i<statespace->GetNstate(); i++)	{
+	for (int i=0; i<GetNcodon(); i++)	{
 		tmp = codonprofile[i];
 		if (tmp > 1e-6)	{
 			ent -= tmp * log(tmp);

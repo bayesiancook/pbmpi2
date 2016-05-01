@@ -70,6 +70,14 @@ void PoissonDPProfileProcess::FromStream(istream& is)	{
 
 double PoissonDPProfileProcess::IncrementalDPMove(int nrep)	{
 
+	cerr << "in PoissonDPProfileProcess::IncrementalDPMove: check active sites\n";
+	exit(1);
+
+	if (GetMyid())	{
+		cerr << "error: slave in PoissonDPProfileProcess::IncrementalDPMove\n";
+		exit(1);
+	}
+
 	UpdateOccupancyNumbers();
 	int NAccepted = 0;
 	int Nrep = (GetNsite() * nrep )/ 10;
@@ -148,4 +156,71 @@ double PoissonDPProfileProcess::IncrementalDPMove(int nrep)	{
 	}
 	return ((double) NAccepted) / GetNsite() / nrep * 10;
 }
+
+/*
+
+double PoissonDPProfileProcess::SMCAddSites()	{
+
+	if (GetNprocs() > 1)	{
+		cerr << "in DPProfileProcess::SMCAddSites: only in serial mode\n";
+		exit(1);
+	}
+
+	double logw = 0;
+
+	for (int site = GetBKSiteMax(); site<GetSiteMax(); site++)	{
+
+		int h = Ncomponent+1;
+
+		CreateComponent(Ncomponent);
+
+		double logl[h];
+		double cumul[h];
+		double p[h];
+		
+		double max = 0;
+		for (int k=0; k<h; k++)	{
+			alloc[site] = k;
+			// AddSite(site,k);
+			logl[k] = SiteLogLikelihood(site);
+			if ((!k) || (max < logl[k]))	{
+				max = logl[k];
+			}
+			// RemoveSite(site,k);
+		}
+
+		double tot = 0;
+		for (int k=0; k<K0; k++)	{
+			double tmp = weight[k] * exp(logl[k] - max);
+			p[k] = tmp;
+			tot += tmp;
+			cumul[k] = tmp;
+		}
+		logw += log(tot) + max;
+		double u = tot * rnd::GetRandom().Uniform();
+		int k = 0;
+		while ((k<K0) && (cumul[k] > u))	{
+			k++;
+		}
+		if (k == K0)	{
+			cerr << "error in FiniteProfileProcess::SMCAddSites:overflow\n";
+			exit(1);
+		}
+		AddSite(site,k);
+		SiteLogLikelihood(site);
+		SampleSiteMapping(site);
+	}
+
+	delete[] logl;
+	delete[] p;
+	delete[] cumul;
+
+	// send back allocations to master
+	if (GetMyid())	{
+		MPI_Send(alloc,GetFinalNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	}
+
+	return logw;
+}
+*/
 

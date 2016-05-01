@@ -28,15 +28,19 @@ class ExpoConjugateGTRSubstitutionProcess : public virtual GTRSubstitutionProces
 	ExpoConjugateGTRSubstitutionProcess() {}
 	virtual ~ExpoConjugateGTRSubstitutionProcess() {}
 
+	// need to redefine
+	virtual int GetNstate() {return GetDim();}
+	virtual int GetNstate(int site) {return GetDim();}
+
 	protected:
 
-	void Create(int innsite, int indim,int insitemin,int insitemax)	{
-		ExpoConjugateGTRProfileProcess::Create(innsite,indim);
-		SubstitutionProcess::Create(innsite,indim,insitemin,insitemax);
+	void Create()	{
+		ExpoConjugateGTRProfileProcess::Create();
+		GTRSubstitutionProcess::Create();
 	}
 
 	void Delete() {
-		SubstitutionProcess::Delete();
+		GTRSubstitutionProcess::Delete();
 		ExpoConjugateGTRProfileProcess::Delete();
 	}
 

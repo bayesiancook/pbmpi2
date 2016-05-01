@@ -16,7 +16,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "StringStreamUtils.h"
 
-#include <cassert>
 #include "RASCATGTRSBDPGammaPhyloProcess.h"
 #include "Parallel.h"
 #include <string>
@@ -24,6 +23,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "TexTab.h"
 
 void RASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
+
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
 	// about model parameters
@@ -43,8 +44,6 @@ void RASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	// and then call
 	// SetBranchLengthsFromArray()
 	// SetAlpha(inalpha)
-
-	assert(myid == 0);
 
 	// ResampleWeights();
 	RenormalizeProfiles();
@@ -106,12 +105,11 @@ void RASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	MPI_Bcast(V,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 	MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
 }
 
 
 void RASCATGTRSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
-
-	assert(myid > 0);
 
 	switch(signal) {
 
@@ -123,9 +121,6 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 		break;
 	case PROFILE_MOVE:
 		SlaveMoveProfile();
-		break;
-	case REALLOC_MOVE:
-		SlaveIncrementalDPMove();
 		break;
 	case MIX_MOVE:
 		SlaveMixMove();
@@ -210,6 +205,8 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int rates = 0;
 	int map = 0;
 	string testdatafile = "";
+	int testprofile = 0;
+	double tuning = 1;
 
 	try	{
 
@@ -236,6 +233,12 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				cv = 1;
 				i++;
 				testdatafile = argv[i];
+			}
+			else if (s == "-testprof")	{
+				i++;
+				testprofile = atoi(argv[i]);
+				i++;
+				tuning = atof(argv[i]);
 			}
 			else if (s == "-ss")	{
 				ss = 1;
@@ -305,6 +308,9 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 
 	if (nocc)	{
 		ReadNocc(name,burnin,every,until);
+	}
+	else if (testprofile)	{
+		ReadTestProfile(name,tuning,testprofile,burnin,every,until);
 	}
 	else if (cv)	{
 		ReadCV(testdatafile,name,burnin,every,until);
@@ -434,70 +440,6 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadNocc(string name, int burnin, int every
 	cerr << '\n';
 }
 
-void RASCATGTRSBDPGammaPhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int until)	{
-
-	double** sitestat = new double*[GetNsite()];
-	for (int i=0; i<GetNsite(); i++)	{
-		sitestat[i] = new double[GetDim()];
-		for (int k=0; k<GetDim(); k++)	{
-			sitestat[i][k] = 0;
-		}
-	}
-	ifstream is((name + ".chain").c_str());
-	if (!is)	{
-		cerr << "error: no .chain file found\n";
-		exit(1);
-	}
-
-	cerr << "burnin : " << burnin << "\n";
-	cerr << "until : " << until << '\n';
-	int i=0;
-	while ((i < until) && (i < burnin))	{
-		FromStream(is);
-		i++;
-	}
-	int samplesize = 0;
-
-	while (i < until)	{
-		cerr << ".";
-		cerr.flush();
-		samplesize++;
-		FromStream(is);
-		i++;
-
-		for (int i=0; i<GetNsite(); i++)	{
-			double* p = GetProfile(i);
-			for (int k=0; k<GetDim(); k++)	{
-				sitestat[i][k] += p[k];
-			}
-		}
-		int nrep = 1;
-		while ((i<until) && (nrep < every))	{
-			FromStream(is);
-			i++;
-			nrep++;
-		}
-	}
-	cerr << '\n';
-	
-	ofstream os((name + ".siteprofiles").c_str());
-	for (int k=0; k<GetDim(); k++)	{
-		os << GetStateSpace()->GetState(k) << ' ';
-	}
-	os << '\n';
-	os << '\n';
-	for (int i=0; i<GetNsite(); i++)	{
-		os << i+1;
-		for (int k=0; k<GetDim(); k++)	{
-			sitestat[i][k] /= samplesize;
-			os << '\t' << sitestat[i][k];
-		}
-		os << '\n';
-	}
-	cerr << "mean site-specific profiles in " << name << ".siteprofiles\n";
-	cerr << '\n';
-}
-
 void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 
 	if (! SumOverRateAllocations())	{
@@ -505,7 +447,8 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 		exit(1);
 	}
 
-	sitemax = sitemin + testsitemax - testsitemin;
+	int sitemin = GetSiteMin();
+	int sitemax = GetSiteMin() + testsitemax - testsitemin;
 	double** sitelogl = new double*[GetNsite()];
 	for (int i=sitemin; i<sitemax; i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
@@ -546,9 +489,6 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;
-
-	sitemax = bksitemax;
-
 }
 
 void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
@@ -559,18 +499,18 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
 	}
 
 	double** sitelogl = new double*[GetNsite()];
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
 	}
 	
 	// UpdateMatrices();
 
 	for (int k=0; k<GetNcomponent(); k++)	{
-		for (int i=sitemin; i<sitemax; i++)	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			ExpoConjugateGTRSBDPProfileProcess::alloc[i] = k;
 		}
 		UpdateConditionalLikelihoods();
-		for (int i=sitemin; i<sitemax; i++)	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			sitelogl[i][k] = sitelogL[i];
 		}
 	}
@@ -579,7 +519,7 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
 	for (int i=0; i<GetNsite(); i++)	{
 		meansitelogl[i] = 0;
 	}
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		double max = 0;
 		for (int k=0; k<GetNcomponent(); k++)	{
 			if ((!k) || (max < sitelogl[i][k]))	{
@@ -597,10 +537,84 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
 
 	MPI_Send(meansitelogl,GetNsite(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;
 	delete[] meansitelogl;
+
+}
+
+void RASCATGTRSBDPGammaPhyloProcess::ReadTestProfile(string name, int nrep, double tuning, int burnin, int every, int until)	{
+
+	proposemode = 1;
+	
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	ofstream os((name + ".testprofile").c_str());
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		// quick update and mapping on the fly
+		MPI_Status stat;
+		MESSAGE signal = BCAST_TREE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		GlobalBroadcastTree();
+		GlobalUpdateConditionalLikelihoods();
+		GlobalCollapse();
+
+		// collect suff stats
+		GlobalUpdateSiteProfileSuffStat();
+		UpdateModeProfileSuffStat();
+		UpdateOccupancyNumbers();
+
+		// for each component
+		// propose try new profiles
+		// calculate the acceptance probability
+		// as if in a gibbs
+		// average over nrep replicates
+		for (int k=0; k<Ncomponent; k++)	{
+			double a = 0;
+			for (int rep=0; rep<nrep; rep++)	{
+				double logratio = - ProfileSuffStatLogProb(k) - LogStatPrior(k);
+				double logh = ProfileProposeMove(profile[k],tuning,0,0,k,0);
+				logratio += ProfileSuffStatLogProb(k) + LogStatPrior(k);
+				logratio += logh;
+				if (logratio < 0)	{
+					a += exp(logratio);
+				}
+			}
+			a /= nrep;
+			os << occupancy[k] << '\t' << a << '\n';
+		}
+
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+
+	// delete arrays
 
 }

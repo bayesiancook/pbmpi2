@@ -13,13 +13,14 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-#include <cassert>
 #include "GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.h"
 #include "Parallel.h"
 #include <string.h>
 
 
 void GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
+
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
 	// about model parameters
@@ -39,7 +40,6 @@ void GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters
 	// and then call
 	// SetBranchLengthsFromArray()
 	// SetAlpha(inalpha)
-	assert(myid == 0);
 	int i,j,nrr,nbranch = GetNbranch(),ni,nd,L1,L2,k = 0;
 	nrr = GetNrr();
 	L1 = GetNmodeMax();
@@ -83,11 +83,10 @@ void GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters
 	// Now send out the doubles and ints over the wire...
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
 }
 
 void GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
-
-	assert(myid > 0);
 
 	switch(signal) {
 
@@ -102,6 +101,9 @@ void GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess::SlaveExecute(MESSAGE s
 		break;
 	case PROFILE_MOVE:
 		SlaveMoveProfile();
+		break;
+	case STATFIX:
+		SlaveGetStatFix();
 		break;
 	default:
 		PhyloProcess::SlaveExecute(signal);

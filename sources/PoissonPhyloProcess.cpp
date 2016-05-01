@@ -14,7 +14,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#include <cassert>
 #include "Parallel.h"
 #include <string>
 #include "PoissonPhyloProcess.h"
@@ -25,23 +24,19 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 
-void PoissonPhyloProcess::Create(Tree* intree, SequenceAlignment* indata)	{
+void PoissonPhyloProcess::Create()	{
 	if (! zipdata)	{
-		truedata = indata;
+		truedata = data;
 		zipdata = new ZippedSequenceAlignment(truedata);
-		PhyloProcess::Create(intree,zipdata,indata->GetNstate());
+		data = zipdata;
+		PhyloProcess::Create();
 		truedata->GetEmpiricalFreq(empfreq);
 		CreateZip();
-		// CreateNodeStates();
-		// CreateMappings();
-		// condflag = false;
 	}
 }
 
 void PoissonPhyloProcess::Delete()	{
 	if (zipdata)	{
-		// DeleteMappings();
-		// DeleteNodeStates();
 		PhyloProcess::Delete();
 		delete zipdata;
 		zipdata = 0;
@@ -55,24 +50,25 @@ void PoissonPhyloProcess::CreateSuffStat()	{
 		cerr << "error in PoissonPhyloProcess::CreateSuffStat\n";
 		exit(1);
 	}
-	allocsiteprofilesuffstatcount = new int[GetNsite()*GetDim()];
-	siteprofilesuffstatcount = new int*[GetNsite()];
-	// for (int i=sitemin; i<sitemax; i++)	{
-	for (int i=0; i<GetNsite(); i++)	{
-		siteprofilesuffstatcount[i] = allocsiteprofilesuffstatcount + i*GetDim();
-		// siteprofilesuffstatcount[i] = new int[GetDim()];
+	if (! GetMyid())	{
+		allocsiteprofilesuffstatcount = new int[GetNsite()*GetDim()];
+		siteprofilesuffstatcount = new int*[GetNsite()];
+		for (int i=0; i<GetNsite(); i++)	{
+			siteprofilesuffstatcount[i] = allocsiteprofilesuffstatcount + i*GetDim();
+		}
+	}
+	else	{
+		allocsiteprofilesuffstatcount = new int[(GetSiteMax() - GetSiteMin())*GetDim()];
+		siteprofilesuffstatcount = new int*[GetNsite()];
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			siteprofilesuffstatcount[i] = allocsiteprofilesuffstatcount + (i-GetSiteMin())*GetDim();
+		}
 	}
 }
 
 void PoissonPhyloProcess::DeleteSuffStat()	{
 
 	if (siteprofilesuffstatcount)	{
-		// for (int i=sitemin; i<sitemax; i++)	{
-		/*
-		for (int i=0; i<GetNsite(); i++)	{
-			delete[] siteprofilesuffstatcount[i];
-		}
-		*/
 		delete[] siteprofilesuffstatcount;
 		siteprofilesuffstatcount = 0;
 		delete[] allocsiteprofilesuffstatcount;
@@ -82,12 +78,8 @@ void PoissonPhyloProcess::DeleteSuffStat()	{
 }
 
 void PoissonPhyloProcess::UpdateBranchLengthSuffStat()	{
-	if (! GetMyid())	{
-		cerr << "error in update branch length suff stat: master\n";
-		exit(1);
-	}
-	double R = (GetSiteMax() - GetSiteMin()) * GetMeanRate();
-	// double R = GetNsite() * GetMeanRate();
+
+	double R = GetNactiveSite() * GetMeanRate();
 	branchlengthsuffstatbeta[0] = 0;
 	branchlengthsuffstatcount[0] = 0;
 	for (int j=1; j<GetNbranch(); j++)	{
@@ -99,9 +91,11 @@ void PoissonPhyloProcess::UpdateBranchLengthSuffStat()	{
 
 void PoissonPhyloProcess::UpdateSiteRateSuffStat()	{
 	double totallength = GetTotalLength();
-	for (int i=sitemin; i<sitemax; i++)	{
-		siteratesuffstatcount[i] = 0;
-		siteratesuffstatbeta[i] = totallength;
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			siteratesuffstatcount[i] = 0;
+			siteratesuffstatbeta[i] = totallength;
+		}
 	}
 	for (int j=1; j<GetNbranch(); j++)	{
 		AddSiteRateSuffStat(siteratesuffstatcount,submap[j]);
@@ -110,9 +104,11 @@ void PoissonPhyloProcess::UpdateSiteRateSuffStat()	{
 
 void PoissonPhyloProcess::UpdateSiteProfileSuffStat()	{
 
-	for (int i=sitemin; i<sitemax; i++)	{
-		for (int k=0; k<GetDim(); k++)	{
-			siteprofilesuffstatcount[i][k] = 0;
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			for (int k=0; k<GetDim(); k++)	{
+				siteprofilesuffstatcount[i][k] = 0;
+			}
 		}
 	}
 	for (int j=0; j<GetNbranch(); j++)	{
@@ -122,94 +118,71 @@ void PoissonPhyloProcess::UpdateSiteProfileSuffStat()	{
 
 void PoissonPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// ask slaves to update siteprofilesuffstats
 	// slaves should call : UpdateSiteProfileSuffStat
 	// then collect all suff stats
-	assert(myid == 0);
-	int i,j,k,l,width,nalloc,smin[nprocs-1],smax[nprocs-1],workload[nprocs-1];
 	MPI_Status stat;
 	MESSAGE signal = UPDATE_SPROFILE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	// suff stats are contained in 2 arrays
-	// int** siteprofilesuffstatcount
-	// double** siteprofilesuffstatbeta
-	// [site][state]
-
 	// each slave computes its array for sitemin <= site < sitemax
 	// thus, one just needs to gather all arrays into the big master array 0 <= site < Nsite
 	// (gather)
-	width = GetNsite()/(nprocs-1);
-	nalloc = 0;
-	for(i=0; i<nprocs-1; ++i) {
-		smin[i] = width*i;
-		smax[i] = width*(1+i);
-		if (i == (nprocs-2)) smax[i] = GetNsite();
-		workload[i] = (smax[i] - smin[i])*GetDim();
-		if (workload[i] > nalloc) nalloc = workload[i];
-	}
+	int nalloc = GetMaxSiteNumber() * GetDim();
 	int ivector[nalloc];
-	for(i=1; i<nprocs; ++i) {
-		MPI_Recv(ivector,workload[i-1],MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
-		l = 0;
-		for(j=smin[i-1]; j<smax[i-1]; ++j) {
-			for(k=0; k<GetDim(); ++k) {
-				siteprofilesuffstatcount[j][k] = ivector[l]; l++;
+	for(int i=1; i<GetNprocs(); ++i) {
+		MPI_Recv(ivector,GetProcSiteNumber(i)*GetDim(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+		int l = 0;
+		for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); j++) {
+			if (ActiveSite(j))	{
+				for(int k=0; k<GetDim(); ++k) {
+					siteprofilesuffstatcount[j][k] = ivector[l];
+					l++;
+				}
 			}
 		}
 	}
-	// MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Bcast(allocsiteprofilesuffstatcount,GetNsite()*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
+	}
+	else	{
+		UpdateSiteProfileSuffStat();
+	}
 }
 
 void PoissonPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 
 	UpdateSiteProfileSuffStat();
-	int i,j,workload = (sitemax - sitemin)*GetDim();
-	int k = 0,ivector[workload];
-	for(i=sitemin; i<sitemax; ++i) {
-		for(j=0; j<GetDim(); ++j) {
-			ivector[k] = siteprofilesuffstatcount[i][j]; k++;
+	int workload = (GetSiteMax() - GetSiteMin())*GetDim();
+	int ivector[workload];
+	int k = 0;
+	for(int i=GetSiteMin(); i<GetSiteMax(); i++) {
+		if (ActiveSite(i))	{
+			for(int j=0; j<GetDim(); j++) {
+				ivector[k] = siteprofilesuffstatcount[i][j];
+				k++;
+			}
 		}
 	}
 	MPI_Send(ivector,workload,MPI_INT,0,TAG1,MPI_COMM_WORLD);
-	// MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Bcast(allocsiteprofilesuffstatcount,GetNsite()*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
 }
 
-
-
-/*
-void PoissonSubstitutionProcess::ChooseTrueStates(BranchSitePath** patharray, int* nodestateup, int* nodestatedown, bool root)	{
-	for (int i=sitemin; i<sitemax; i++)	{
-		int tmp = nodestateup[i];
-		if (root || patharray[i]->GetNsub())	{
-			tmp = GetRandomStateFromZip(i,patharray[i]->GetFinalState());
-		}
-		cerr  << ' '<< i  << ' '<< patharray[i]->GetNsub() << ' '<< tmp  << '\n';
-		nodestatedown[i] = tmp;
-	}
-}
-
-*/
 
 void PoissonPhyloProcess::GlobalSetTestData()	{
 
 	testnsite = testdata->GetNsite();
 	int* tmp = new int[testnsite * GetNtaxa()];
 	testdata->GetDataVector(tmp);
-	/*
-	for (int i=0; i<testnsite*GetNtaxa(); i++)	{
-		tmp[i] = -1;
+
+	if (GetNprocs() > 1)	{
+		MESSAGE signal = SETTESTDATA;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(&testnsite,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(tmp,testnsite*GetNtaxa(),MPI_INT,0,MPI_COMM_WORLD);
 	}
-	*/
-
-	MESSAGE signal = SETTESTDATA;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(&testnsite,1,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(tmp,testnsite*GetNtaxa(),MPI_INT,0,MPI_COMM_WORLD);
-
+	else	{
+		data->SetTestData(testnsite,0,0,testnsite,tmp);
+	}
 	delete[] tmp;
 
 	// GlobalCollapse();
@@ -218,8 +191,6 @@ void PoissonPhyloProcess::GlobalSetTestData()	{
 
 	zipdata = new ZippedSequenceAlignment(truedata);
 	CreateZip();
-	// GlobalUnfold();
-	
 }
 
 void PoissonPhyloProcess::SlaveSetTestData()	{
@@ -229,7 +200,7 @@ void PoissonPhyloProcess::SlaveSetTestData()	{
 	MPI_Bcast(tmp,testnsite*GetNtaxa(),MPI_INT,0,MPI_COMM_WORLD);
 	
 	SetTestSiteMinAndMax();
-	truedata->SetTestData(testnsite,sitemin,testsitemin,testsitemax,tmp);
+	truedata->SetTestData(testnsite,GetSiteMin(),testsitemin,testsitemax,tmp);
 
 	delete[] tmp;
 
@@ -271,32 +242,3 @@ void PoissonPhyloProcess::SampleTrueNodeStates(const Link* from)	{
 	}
 }
 
-
-/*
-void PoissonPhyloProcess::GlobalSetTestData()	{
-
-	ZippedSequenceAlignment* ziptestdata = new ZippedSequenceAlignment(testdata);
-	testnsite = testdata->GetNsite();
-	int* tmp = new int[testnsite * GetNtaxa()];
-	ziptestdata->GetDataVector(tmp);
-
-	MESSAGE signal = SETTESTDATA;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(&testnsite,1,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(tmp,testnsite*GetNtaxa(),MPI_INT,0,MPI_COMM_WORLD);
-
-	delete[] tmp;
-}
-
-void PoissonPhyloProcess::SlaveSetTestData()	{
-
-	MPI_Bcast(&testnsite,1,MPI_INT,0,MPI_COMM_WORLD);
-	int* tmp = new int[testnsite * GetNtaxa()];
-	MPI_Bcast(tmp,testnsite*GetNtaxa(),MPI_INT,0,MPI_COMM_WORLD);
-	
-	SetTestSiteMinAndMax();
-	zipdata->SetTestData(testnsite,sitemin,testsitemin,testsitemax,tmp);
-
-	delete[] tmp;
-}
-*/

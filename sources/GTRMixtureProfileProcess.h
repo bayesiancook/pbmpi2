@@ -30,12 +30,11 @@ class GTRMixtureProfileProcess : public virtual GTRProfileProcess, public virtua
 
 	protected:
 
-	virtual void Create(int innsite, int indim);
+	virtual void Create();
 	virtual void Delete();
 
 	// simply creates/deletes GTR matrices for all currently existing components
 	void CreateMatrix(int k);
-	virtual void UpdateMatrix(int k);
 
 	GTRSubMatrix* GetGTRMatrix(int k)	{
 		GTRSubMatrix* tmp = dynamic_cast<GTRSubMatrix*>(matrixarray[k]);
@@ -66,12 +65,6 @@ class GTRMixtureProfileProcess : public virtual GTRProfileProcess, public virtua
 				tot += occupancy[k] + 1;
 			}
 		}
-		/*
-		if (tot != GetNsite() + GetNcomponent())	{
-			cerr << "error in norm factor\n";
-			exit(1);
-		}
-		*/
 		norm /= tot;
 		return norm;
 	}

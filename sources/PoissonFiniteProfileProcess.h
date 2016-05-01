@@ -27,42 +27,22 @@ class PoissonFiniteProfileProcess: public virtual PoissonMixtureProfileProcess, 
 	PoissonFiniteProfileProcess() {}
 	virtual ~PoissonFiniteProfileProcess() {}
 
-	virtual double Move(double tuning = 1, int n = 1, int nrep = 1)	{
-		for (int rep=0; rep<nrep; rep++)	{
-			GlobalUpdateParameters();
-			GlobalUpdateSiteProfileSuffStat();
-			// UpdateSiteProfileSuffStat();
-			// GlobalUpdateParameters();
-			// GlobalUpdateSiteProfileSuffStat();
-			UpdateModeProfileSuffStat();
-			GlobalIncrementalFiniteMove(1);
-
-			if (! empmix)	{
-				GlobalUpdateParameters();
-				GlobalUpdateSiteProfileSuffStat();
-				UpdateModeProfileSuffStat();
-				MoveProfile();
-				GlobalUpdateParameters();
-				GlobalUpdateSiteProfileSuffStat();
-				MoveHyper(tuning,10);
-			}
-		}
-		return 1;
-	}
+	virtual double Move(double tuning = 1, int n = 1, int nrep = 1);
+	virtual double MPIMove(double tuning = 1, int n = 1, int nrep = 1);
+	virtual double NonMPIMove(double tuning = 1, int n = 1, int nrep = 1);
 
 	virtual void ToStream(ostream& os);
 	virtual void FromStream(istream& is);
 
-	protected:
-
-	virtual void Create(int innsite, int indim)	{
-		cerr << "in create 2 arguments\n";
-		exit(1);
+	virtual double GlobalParametersMove()	{
+		return 1;
 	}
 
-	virtual void Create(int innsite, int indim, int ncat, int infixncomp, int inempmix, string inmixtype)	{
-		FiniteProfileProcess::Create(innsite,indim,ncat,infixncomp,inempmix,inmixtype);
-		PoissonMixtureProfileProcess::Create(innsite,indim);
+	protected:
+
+	virtual void Create()	{
+		FiniteProfileProcess::Create();
+		PoissonMixtureProfileProcess::Create();
 	}
 
 	virtual void Delete()	{
@@ -70,10 +50,7 @@ class PoissonFiniteProfileProcess: public virtual PoissonMixtureProfileProcess, 
 		FiniteProfileProcess::Delete();
 	}
 
-	double IncrementalFiniteMove(int nrep)	{
-		cerr << "error : in Poisson Finite Profile Process inc move\n";
-		exit(1);
-	}
+	double IncrementalFiniteMove(int nrep);
 
 	double GlobalIncrementalFiniteMove(int nrep);
 	double SlaveIncrementalFiniteMove();

@@ -18,37 +18,48 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define DPPROFILE_H
 
 #include <cmath>
-#include "MixtureProfileProcess.h"
+#include "DirichletMixtureProfileProcess.h"
 
 // general superclass for all finite process mixtures on site-specific profiles
-class DPProfileProcess: public virtual MixtureProfileProcess	{
+class DPProfileProcess: public virtual DirichletMixtureProfileProcess	{
 
 	public:
 
-	DPProfileProcess() : kappa(1), movekappa(true), kappaprior(0) {}
+	DPProfileProcess() : kappa(1), movekappa(true), kappaprior(0), Nadd(30), Ninc(3) {}
 	virtual ~DPProfileProcess(){}
 
 	protected:
 
-	virtual double IncrementalDPMove(int nrep) = 0;
+	virtual double Move(double tuning = 1, int n = 1, int nrep = 1);
+
+	virtual double IncrementalDPMove(int nrep, double epsilon);
 	double MoveHyper(double tuning, int nrep);
 	virtual double MoveKappa(double tuning, int nrep);
 
+	// the following MPI move
+	// assumes that master and all slaves are in sync concerning siteprofilesuffstats
+	// (which will be the case upon calling GlobalUpdateSiteProfileSuffStat)
+	// double GlobalIncrementalDPMove(int nrep);
+	// double SlaveIncrementalDPMove();
+	double IncrementalDPMove(int nrep);
+
+	// in DP incremental move: Nadd additional components are proposed
+	int Nadd;
+	int Ninc;
 
 	// static allocation of many component-specific variables
 	// such as: profiles, occupancy number
 	// basically everything except substitution matrices
 
-	// called at the beginning and end of the run (see PhyloProcess)
-	/*
-	virtual void Create(int innsite, int indim);
-	virtual void Delete();
-	*/
-
 	// multinomial 
 	virtual double LogProxy(int site, int cat);
 	virtual void SampleAlloc();
 	void SampleHyper();
+
+	virtual void PriorSampleProfile() 	{
+		cerr << "in DPProfileProcess::PriorSampleProfile\n";
+		exit(1);
+	}
 
 	// kappa has an exponential prior of mean 10
 	double LogHyperPrior();
@@ -59,9 +70,6 @@ class DPProfileProcess: public virtual MixtureProfileProcess	{
 	int kappaprior;
 	// 0 : exponential of mean 20
 	// 1 : jeffreys prior 
-	int dirweightprior;
-	// 0 : flexible
-	// 1 : rigid
 };
 
 #endif

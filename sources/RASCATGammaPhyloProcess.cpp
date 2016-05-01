@@ -15,12 +15,13 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "StringStreamUtils.h"
-#include <cassert>
 #include "RASCATGammaPhyloProcess.h"
 #include "Parallel.h"
 #include <string>
 
 void RASCATGammaPhyloProcess::GlobalUpdateParameters()	{
+
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
 	// about model parameters
@@ -40,8 +41,6 @@ void RASCATGammaPhyloProcess::GlobalUpdateParameters()	{
 	// and then call
 	// SetBranchLengthsFromArray()
 	// SetAlpha(inalpha)
-
-	assert(myid == 0);
 
 	// ResampleWeights();
 	RenormalizeProfiles();
@@ -91,19 +90,16 @@ void RASCATGammaPhyloProcess::GlobalUpdateParameters()	{
 	// Now send out the doubles and ints over the wire...
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
+	else	{
+		UpdateZip();
+	}
 }
 
 void RASCATGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
-	assert(myid > 0);
-
 	switch(signal) {
 
-	/*
-	case PRINT_TREE:
-		SlavePrintTree();
-		break;
-	*/
 	case UPDATE_RATE:
 		SlaveUpdateRateSuffStat();
 		break;

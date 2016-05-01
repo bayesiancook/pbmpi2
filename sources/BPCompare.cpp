@@ -13,22 +13,20 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-#include "phylo.h"
+#include "CCP.h"
+#include "StringStreamUtils.h"
+
 #include "Parallel.h"
 MPI_Datatype Propagate_arg;
 
-const double default_cutoff = 0.05;
-const int MaxChain = 10;
-
 int main(int argc, char* argv[])	{
 
-	int mergeallbp = 0;
-	string* ChainName = new string[argc];
+	string* name = new string[argc];
 	for (int i=0; i<argc; i++)	{
-		ChainName[i] = "";
+		name[i] = "";
 	}
 
-	string OutFile = "";
+	string outfile = "bpcomp";
 	double cutoff = 0.05;
 	int burnin = -1;
 	double conscutoff = 0.5;
@@ -37,10 +35,10 @@ int main(int argc, char* argv[])	{
 	bool bench = false;
 
 	if (argc == 1)	{
-		cerr << "bpcomp [-cox] ChainName1 ChainName2 ... \n";
+		cerr << "bpcomp [-covx] ChainName1 ChainName2 ... \n";
 		cerr << "\t-c <cutoff> : only partitions with max prob >  cutoff. (default 0.5)\n";
-		cerr << "\t-o <output> : detailed output into file\n"; 
-		cerr << "\t-ps         : postscript output (requires LateX)\n";
+		cerr << "\t-o <output> : output into file\n"; 
+		cerr << "\t-v          : verbose output\n";
 		cerr << "\t-x <burnin> [<every> <until>]. default burnin = 1/10 of the chain\n";
 		cerr << '\n';
 		cerr << "\t compare bipartition frequencies between independent chains\n";
@@ -55,22 +53,13 @@ int main(int argc, char* argv[])	{
 
 	int every = 1;
 	int until = -1;
-	int ps = 0;
-
-	bool rootonly = false;
 
 	while (i < argc)	{
 		string s = argv[i];
-		if (s == "-m")	{
-			mergeallbp = 1;
-		}
-		else if (s == "-c")	{
+		if (s == "-c")	{
 			i++;
 			s = argv[i];
 			conscutoff = atof(argv[i]);
-		}
-		else if (s == "-r")	{
-			rootonly = true;
 		}
 		else if ( (s == "-x") || (s == "-extract") )	{
 			i++;
@@ -100,20 +89,69 @@ int main(int argc, char* argv[])	{
 			}
 		}
 		else if (s == "-v")	{
-			verbose = 2;
+			verbose = 1;
 		}
 		else if (s == "-o")	{
 			i++;
-			OutFile = argv[i];
+			outfile = argv[i];
 		}
 		else	{
-			ChainName[P] = argv[i];
+			name[P] = argv[i];
 			P++;
 		}
 		i++;
 	}
 
-	BPCompare(ChainName, P, burnin, every, until, ps, verbose, mergeallbp, OutFile, cutoff, conscutoff, rootonly, bench);
+	ofstream os((outfile + ".bplist").c_str());
 
+	if (P == 1)	{
+
+		BpList* bplist = new BpList(0);
+		bplist->Read(name[0],burnin,every,until);
+		const TaxonSet* taxset = bplist->GetTaxonSet();
+		TpList* tplist = new TpList(taxset);
+		tplist->Read(name[0],burnin,every,until);
+
+		taxset->ToStream(os);
+		os << '\n';
+		bplist->ToStream(os);
+		os << '\n';
+		tplist->ToStream(os);
+	}
+	else	{
+
+		MultiBpList* globalbplist = 0;
+		const TaxonSet* taxset = 0;	
+		for (int i=0; i<P; i++)	{
+			cerr << name[i] << '\n';
+			BpList* bplist = new BpList(taxset);
+			bplist->Read(name[i],burnin,every,until);
+			cerr << bplist->totweight << '\n';
+			if (!i)	{
+				taxset = bplist->GetTaxonSet();
+				globalbplist = new MultiBpList(taxset);
+				
+			}
+			globalbplist->Add(bplist);
+		}
+		globalbplist->Merge();
+		// globalbplist->ToStreamSexy(os);
+
+		MultiBpList* globaltplist = new MultiBpList(taxset);
+		for (int i=0; i<P; i++)	{
+			cerr << name[i] << '\n';
+			TpList* tplist = new TpList(taxset);
+			tplist->Read(name[i],burnin,every,until);
+			cerr << tplist->totweight << '\n';
+			globaltplist->Add(tplist);
+		}
+		globaltplist->Merge();
+
+		taxset->ToStream(os);
+		os << '\n';
+		globalbplist->ToStream(os);
+		os << '\n';
+		globaltplist->ToStream(os);
+	}
 }
 

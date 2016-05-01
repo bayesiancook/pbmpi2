@@ -19,24 +19,65 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Tree.h"
 #include "Chrono.h"
+#include "MPIModule.h"
 
-class BranchProcess : public NewickTree {
+class BranchProcess : public NewickTree, public virtual MPIModule {
 
 	public:
 
-	BranchProcess() : tree(0), blarray(0) {}
+	BranchProcess() : tree(0), blarray(0), swaproot(0) {}
 	virtual ~BranchProcess() {}
 
-	virtual string GetVersion() = 0;
-
-	// 
 	NewickTree* GetLengthTree() {return this;}
 	Tree* GetTree() {return tree;}
-	Link* GetRoot() {return tree->GetRoot();}
-	const Link* GetRoot() const {return tree->GetRoot();}
+	Tree* GetTree2() {return tree2;}
+	Link* GetRoot() {
+		if (swaproot)	{
+			return tree2->GetRoot();
+		}
+		return tree->GetRoot();
+	}
+
+	const Link* GetRoot() const {
+		if (swaproot)	{
+			return tree2->GetRoot();
+		}
+		return tree->GetRoot();
+	}
+
+	void GlobalSwapRoot();
+
+	void SwapRoot()	{
+		swaproot = 1 - swaproot;
+	}
+	Link* GetRoot2() {return tree2->GetRoot();}
+	const Link* GetRoot2() const {return tree2->GetRoot();}
 
 	string GetBranchName(const Link* link) const;
 	string GetNodeName(const Link* link) const;
+
+	double GetMinLength(const Link* from, double l)	{
+
+		double min = -1;
+		const Link* link = from;
+		do	{
+			if (! link->isRoot())	{
+				double tmp = GetLength(link->GetBranch());
+				if (tmp != l)	{
+					if ((min == -1) || (min > tmp))	{
+						min = tmp;
+					}
+				}
+			}
+			link = link->Next();
+		}
+		while (link != from);
+		if (! min)	{
+			cerr << "error in BranchProcess::GetMinLength\n";
+			exit(1);
+		}
+		return min;
+	}
 
 	double GetLength(const Branch* branch) {return branch ? blarray[branch->GetIndex()] : 0;}
 	double GetLength(const Branch* branch) const {return branch ? blarray[branch->GetIndex()] : 0;}
@@ -54,7 +95,9 @@ class BranchProcess : public NewickTree {
 
 	void Backup();
 	void Restore();
+	void Swap();
 
+	virtual double BranchProcessMove(double tuning = 1, int nrep=1) = 0;
 	double ProposeMove(const Branch* branch, double tuning);
 	void MoveBranch(const Branch* branch, double factor);
 	void Restore(const Branch* branch);
@@ -111,6 +154,7 @@ class BranchProcess : public NewickTree {
 	void RecursiveSetLengthsFromNames(const Link* from);
 	void RecursiveSetNamesFromLengths(const Link* from);
 
+	virtual void PriorSampleLength() = 0;
 	void SampleLength()	{
 		RecursiveSampleLength(GetRoot());
 	}
@@ -119,14 +163,15 @@ class BranchProcess : public NewickTree {
 		return RecursiveLogLengthPrior(GetRoot());
 	}
 
+	virtual double LogHyperPrior() = 0;
+
+	double LogBranchProcessPrior()	{
+		return LogLengthPrior() + LogHyperPrior();
+	}
+
 	virtual void GlobalUpdateBranchLengthSuffStat() = 0;
 	virtual void SlaveUpdateBranchLengthSuffStat() = 0;
 	virtual void UpdateBranchLengthSuffStat() = 0;
-
-	/*
-	virtual double GetBranchLengthSuffStatBeta(const Branch* branch) = 0;
-	virtual int GetBranchLengthSuffStatCount(const Branch* branch) = 0;
-	*/
 
 	virtual double GetBranchLengthSuffStatBeta(int index) = 0;
 	virtual int GetBranchLengthSuffStatCount(int index) = 0;
@@ -157,26 +202,132 @@ class BranchProcess : public NewickTree {
 		return tree->GetNlink();
 	}
 
-	virtual void Create(Tree* intree) {
+	void SetTree(Tree* intree)	{
+		cerr << "in BranchProcess::SetTree\n";
+		exit(1);
 		tree = intree;
-		blarray = new double[GetNbranch()];
-		bkarray = new double[GetNbranch()];
-		blarray[0] = 0;
-		SetLengthsFromNames();
+	}
+
+	void CloneTree()	{
+		tree2 = new Tree(tree);
+	}
+
+	virtual void Create() {
+		if (! blarray)	{
+			if (! tree)	{
+				cerr << "error: BranchProcess::tree has not been initialized\n";
+				exit(1);
+			}
+			blarray = new double[GetNbranch()];
+			bkarray = new double[GetNbranch()];
+			bk2array = new double[GetNbranch()];
+			blarray[0] = 0;
+			SetLengthsFromNames();
+		}
 	}
 	virtual void Delete() {
 		delete[] blarray;
 		delete[] bkarray;
+		delete[] bk2array;
 	}
 
 	double RecursiveLogLengthPrior(const Link* from);
 	void RecursiveSampleLength(const Link* from);
 
+	// translation tables : from pointers of type Link* Branch* and Node* to their index and vice versa
+	// this translation is built when the Tree::RegisterWithTaxonSet method is called (in the model, in PB.cpp)
+	Link* GetLink(int linkindex)	{
+		if (! linkindex)	{
+			//return GetRoot();
+			return 0;
+		}
+		return GetTree()->GetLink(linkindex);
+	}
+
+	Link* GetLink2(int linkindex)	{
+		if (! linkindex)	{
+			//return GetRoot();
+			return 0;
+		}
+		return GetTree2()->GetLink(linkindex);
+	}
+
+	Link* GetLinkForGibbs(int linkindex)	{
+		if (! linkindex)	{
+			return GetRoot();
+		}
+		return GetTree()->GetLink(linkindex);
+	}
+
+	Link* GetLinkForGibbs2(int linkindex)	{
+		if (! linkindex)	{
+			return GetRoot2();
+		}
+		return GetTree2()->GetLink(linkindex);
+	}
+
+	const Branch* GetBranch(int branchindex)	{
+		return GetTree()->GetBranch(branchindex);
+	}
+
+	const Node* GetNode(int nodeindex)	{
+		return GetTree()->GetNode(nodeindex);
+	}
+
+
+	int GetLinkIndex(const Link* link)	{
+		return link ? link->GetIndex() : 0;
+	}
+
+	int GetBranchIndex(const Branch* branch)	{
+		if (! branch)	{
+			cerr << "error in get branch index\n";
+			exit(1);
+		}
+		return branch->GetIndex();
+	}
+
+	int GetNodeIndex(const Node* node)	{
+		return node->GetIndex();
+	}
+
+	Link* GetCloneLink(const Link* link)	{
+		return GetLinkForGibbs2(link->GetIndex());
+	}
+
+	Link* GlobalDetach(Link* down, Link* up);
+	void GlobalAttach(Link* down, Link* up, Link* fromdown, Link* fromup);
+	virtual void SlaveDetach(int,int);
+	virtual void SlaveAttach(int,int,int,int);
+
+	Link* GlobalDetach1(Link* down, Link* up);
+	void GlobalAttach1(Link* down, Link* up, Link* fromdown, Link* fromup);
+	virtual void SlaveDetach1(int,int);
+	virtual void SlaveAttach1(int,int,int,int);
+
+	Link* GlobalDetach2(Link* down, Link* up);
+	void GlobalAttach2(Link* down, Link* up, Link* fromdown, Link* fromup);
+	virtual void SlaveDetach2(int,int);
+	virtual void SlaveAttach2(int,int,int,int);
+
+	void GlobalKnit(Link*);
+	void SlaveKnit();
+
+	void GetWeights(Link* from, map<pair<Link*,Link*>,double>& weights, double lambda);
+	double WeightedDrawSubTree(double lambda, Link*& down, Link*& up);
+	double GetSubTreeWeight(double lambda, Link* down, Link* up);
+
 	Tree* tree;
+	Tree* tree2;
 	double* blarray;
 	double* bkarray;
+	double* bk2array;
+
+	int fixbl;
 
 	Chrono chronolength;
+
+	int swaproot;
 
 };
 

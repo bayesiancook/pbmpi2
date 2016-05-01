@@ -23,6 +23,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 using namespace std;
 
+
 typedef int Boolean;
 
 

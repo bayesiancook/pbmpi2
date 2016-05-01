@@ -20,7 +20,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "PhyloProcess.h"
 #include "MatrixSubstitutionProcess.h"
-#include "GTRSubstitutionProcess.h"
 
 class MatrixPhyloProcess : public virtual PhyloProcess, public virtual MatrixSubstitutionProcess	{
 
@@ -37,31 +36,6 @@ class MatrixPhyloProcess : public virtual PhyloProcess, public virtual MatrixSub
 
 	// virtual void UpdateSubstitutionProcess();
 
-};
-
-
-class GTRPhyloProcess : public virtual MatrixPhyloProcess, public virtual GTRSubstitutionProcess	{
-
-
-	public:
-
-	GTRPhyloProcess() {}
-	virtual ~GTRPhyloProcess() {}
-
-	protected:
-
-	virtual void Create(Tree* intree, SequenceAlignment* indata,int indim,int insitemin,int insitemax)	{
-		MatrixPhyloProcess::Create(intree,indata,indata->GetNstate());
-		GTRSubstitutionProcess::Create(indata->GetNsite(),indata->GetNstate(),insitemin,insitemax);
-	}
-
-	void Delete() {
-		GTRSubstitutionProcess::Delete();
-		MatrixPhyloProcess::Delete();
-	}
-
-
-	double LengthRelRateMove(double tuning, int nrep);
 };
 
 #endif

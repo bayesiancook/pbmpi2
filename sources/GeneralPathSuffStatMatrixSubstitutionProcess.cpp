@@ -23,33 +23,36 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 
 void GeneralPathSuffStatMatrixSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray)	{
-	for (int i=sitemin; i<sitemax; i++)	{
-	// for (int i=0; i<GetNsite(); i++)	{
-		patharray[i]->AddGeneralPathRateSuffStat(count,beta,GetRate(i),GetMatrix(i));
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			patharray[i]->AddGeneralPathRateSuffStat(count,beta,GetRate(i),GetMatrix(i));
+		}
 	}
 }
 
 void GeneralPathSuffStatMatrixSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength)	{
-	for (int i=sitemin; i<sitemax; i++)	{
-	// for (int i=0; i<GetNsite(); i++)	{
-		patharray[i]->AddGeneralPathRateSuffStat(siteratesuffstatcount[i],siteratesuffstatbeta[i],branchlength,GetMatrix(i));
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			patharray[i]->AddGeneralPathRateSuffStat(siteratesuffstatcount[i],siteratesuffstatbeta[i],branchlength,GetMatrix(i));
+		}
 	}
 }
 
 void GeneralPathSuffStatMatrixSubstitutionProcess::AddSiteProfileSuffStat(int* siterootstate, map<pair<int,int>, int>* sitepaircount, map<int,double>* sitewaitingtime, BranchSitePath** patharray, double branchlength, bool isroot)	{
 	if (!isroot)	{
 		// non root case
-		for (int i=sitemin; i<sitemax; i++)	{
-		// for (int i=0; i<GetNsite(); i++)	{
-			// patharray[i]->AddGeneralPathSuffStat(sitepaircount[i], sitewaitingtime[i], efflength);
-			patharray[i]->AddGeneralPathSuffStat(sitepaircount[i],sitewaitingtime[i],GetRate(i)*branchlength);
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+				patharray[i]->AddGeneralPathSuffStat(sitepaircount[i],sitewaitingtime[i],GetRate(i)*branchlength);
+			}
 		}
 	}
 	else	{
 		// root case
-		for (int i=sitemin; i<sitemax; i++)	{
-		// for (int i=0; i<GetNsite(); i++)	{
-			siterootstate[i] = patharray[i]->GetInitState();
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+				siterootstate[i] = patharray[i]->GetInitState();
+			}
 		}
 	}
 }

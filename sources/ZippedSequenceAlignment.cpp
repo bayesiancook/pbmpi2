@@ -109,7 +109,9 @@ void ZippedSequenceAlignment::ComputeZipArrays()	{
 				// Zip identity:
 				// Indices[i][Data[j][i]] == template->Data[j][i] , for every i and j
 				// within their respective range
-
+				if (Indices[i][Data[j][i]] != GetTemplate()->GetState(j,i))	{
+					cerr << "error in zip table\n";
+				}
 			}
 
 			// here, may be check that ZipData != -2

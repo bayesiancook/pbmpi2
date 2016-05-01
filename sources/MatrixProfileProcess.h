@@ -29,7 +29,9 @@ class MatrixProfileProcess : public virtual ProfileProcess	{
 	virtual ~MatrixProfileProcess() {}
 
 	// access to matrices
-	virtual SubMatrix* GetMatrix(int site) = 0;
+	virtual SubMatrix* GetMatrix(int site) {return GetOriginalMatrix(site);}
+
+	virtual SubMatrix* GetOriginalMatrix(int site) = 0;
 
 	protected:
 
@@ -38,9 +40,6 @@ class MatrixProfileProcess : public virtual ProfileProcess	{
 	virtual void CreateMatrices() = 0;
 	// Delete called when deactivating pruning-based computation and activating sufficient statistics (Collapse in PhyloProcess)
 	virtual void DeleteMatrices() = 0;
-
-	// auxiliary: for Metropolis Moves on profiles
-	double ProfileProposeMove(double* profile, double tuning, int n, int K=0, double statmin = 0);
 
 	// updates all matrices
 	// (should be called, e.g. when performing a Metropolis on relative exchangeabilities or global mutation parameters)

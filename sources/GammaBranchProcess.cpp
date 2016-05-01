@@ -55,7 +55,7 @@ void GammaBranchProcess::ToStreamWithLengths(ostream& os, const Link* from)	{
 void GammaBranchProcess::FromStream(istream& is)	{
 
 	tree->ReadFromStream(is);
-	tree->RegisterWith(tree->GetTaxonSet());
+	// tree->RegisterWith(tree->GetTaxonSet());
 	SetLengthsFromNames();
 	branchalpha = -1;
 	branchbeta = -1;
@@ -78,13 +78,10 @@ void GammaBranchProcess::SampleLength(const Branch* branch)	{
 	blarray[index] = rnd::GetRandom().Gamma(branchalpha,branchbeta);
 }
 	
-void GammaBranchProcess::SampleLength()	{
-	cerr << "sample length\n";
-	exit(1);
+void GammaBranchProcess::PriorSampleLength()	{
 	branchalpha = rnd::GetRandom().sExpo();
-	branchbeta = rnd::GetRandom().sExpo();
-	blarray[0] = 0;
-	// SampleLength();
+	branchbeta = 10 * rnd::GetRandom().sExpo();
+	SampleLength();
 }
 
 double GammaBranchProcess::LogHyperPrior()	{
@@ -106,8 +103,9 @@ double GammaBranchProcess::LogHyperPrior()	{
 
 double GammaBranchProcess::Move(double tuning, int nrep)	{
 	double total = MoveLength();
-	total += MoveBranchBeta(tuning,nrep);
-	// cerr << "in bl move : " << GetTotalLength() << '\n';
+	if (nrep)	{
+		total += MoveBranchBeta(tuning,nrep);
+	}
 	return total;
 }
 

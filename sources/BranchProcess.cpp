@@ -13,9 +13,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-
 #include "BranchProcess.h"
 #include "Random.h"
+#include "Parallel.h"
 
 #include <sstream>
 #include <iomanip>
@@ -41,16 +41,28 @@ string BranchProcess::GetBranchName(const Link* link) const	{
 }	
 
 void BranchProcess::Backup()	{
+
 	for (int i=0; i<GetNbranch(); i++)	{
-		bkarray[i] = blarray[i];
+		bk2array[i] = blarray[i];
 	}
 }
 
 void BranchProcess::Restore()	{
+
 	for (int i=0; i<GetNbranch(); i++)	{
-		blarray[i] = bkarray[i];
+		blarray[i] = bk2array[i];
 	}
 }
+
+void BranchProcess::Swap()	{
+
+	for (int i=0; i<GetNbranch(); i++)	{
+		double tmp = bkarray[i];
+		blarray[i] = bk2array[i];
+		bk2array[i] = tmp;
+	}
+}
+
 
 void BranchProcess::Restore(const Branch* branch)	{
 	if (! branch)	{
@@ -193,5 +205,243 @@ double BranchProcess::LengthSuffStatLogProb()	{
 	return total;
 }
 
+void BranchProcess::GlobalSwapRoot()	{
 
+	if (GetNprocs() > 1)	{
+		MESSAGE signal = SWAP;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	SwapRoot();
+}
+
+void BranchProcess::GlobalKnit(Link* from)	{
+
+	MESSAGE signal = KNIT;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	int args[] = {GetLinkIndex(from)};
+	MPI_Bcast(args,1,MPI_INT,0,MPI_COMM_WORLD);
+	from->Knit();
+	GetCloneLink(from)->Knit();
+
+}
+
+void BranchProcess::SlaveKnit()	{
+	int arg;
+	MPI_Bcast(&arg,1,MPI_INT,0,MPI_COMM_WORLD);
+	GetLinkForGibbs(arg)->Knit();
+	GetLinkForGibbs2(arg)->Knit();
+}
+
+Link* BranchProcess::GlobalDetach(Link* down, Link* up)	{
+
+	if (GetNprocs() > 1)	{
+		// MPI
+		// master and all slaved should call 
+		// GetTree()->Detach(down,up,fromdown,fromup);
+		// but message passing will again  use link to index, then index to link, translations.
+		MESSAGE signal = DETACH;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		int args[] = {GetLinkIndex(down),GetLinkIndex(up)};
+		// int args[] = {down->GetIndex(),up->GetIndex(),fromdown->GetIndex(),fromup->GetIndex()};
+		MPI_Bcast(args,2,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	GetTree2()->Detach(GetCloneLink(down),GetCloneLink(up));
+	return GetTree()->Detach(down,up);
+}
+
+void BranchProcess::GlobalAttach(Link* down, Link* up, Link* fromdown, Link* fromup)	{
+
+	if (GetNprocs() > 1)	{
+		// MPI
+		// same thing as for detach
+		MESSAGE signal = ATTACH;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		int args[] = {GetLinkIndex(down),GetLinkIndex(up),GetLinkIndex(fromdown),GetLinkIndex(fromup)};
+		// int args[] = {down->GetIndex(),up->GetIndex(),fromdown->GetIndex(),fromup->GetIndex()};
+		MPI_Bcast(args,4,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	GetTree2()->Attach(GetCloneLink(down),GetCloneLink(up),GetCloneLink(fromdown),GetCloneLink(fromup));
+	GetTree()->Attach(down,up,fromdown,fromup);
+}
+
+
+
+void BranchProcess::SlaveDetach(int n,int m) {
+	Link* down = GetLinkForGibbs(n);
+	Link* up = GetLinkForGibbs(m);
+	Link* down2 = GetLinkForGibbs2(n);
+	Link* up2 = GetLinkForGibbs2(m);
+	GetTree2()->Detach(down2,up2);
+	GetTree()->Detach(down,up);
+}
+
+void BranchProcess::SlaveAttach(int n,int m,int p,int q) {
+	Link* down = GetLinkForGibbs(n);
+	Link* up = GetLinkForGibbs(m);
+	Link* fromdown = GetLinkForGibbs(p);
+	Link* fromup = GetLinkForGibbs(q);
+	Link* down2 = GetLinkForGibbs2(n);
+	Link* up2 = GetLinkForGibbs2(m);
+	Link* fromdown2 = GetLinkForGibbs2(p);
+	Link* fromup2 = GetLinkForGibbs2(q);
+	GetTree2()->Attach(down2,up2,fromdown2,fromup2);
+	GetTree()->Attach(down,up,fromdown,fromup);
+}
+
+Link* BranchProcess::GlobalDetach1(Link* down, Link* up)	{
+
+	if (GetNprocs() > 1)	{
+		// MPI
+		// master and all slaved should call 
+		// GetTree()->Detach(down,up,fromdown,fromup);
+		// but message passing will again  use link to index, then index to link, translations.
+		MESSAGE signal = DETACH1;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		int args[] = {GetLinkIndex(down),GetLinkIndex(up)};
+		// int args[] = {down->GetIndex(),up->GetIndex(),fromdown->GetIndex(),fromup->GetIndex()};
+		MPI_Bcast(args,2,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	return GetTree()->Detach(down,up);
+}
+
+void BranchProcess::GlobalAttach1(Link* down, Link* up, Link* fromdown, Link* fromup)	{
+
+	if (GetNprocs() > 1)	{
+		// MPI
+		// same thing as for detach
+		MESSAGE signal = ATTACH1;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		int args[] = {GetLinkIndex(down),GetLinkIndex(up),GetLinkIndex(fromdown),GetLinkIndex(fromup)};
+		// int args[] = {down->GetIndex(),up->GetIndex(),fromdown->GetIndex(),fromup->GetIndex()};
+		MPI_Bcast(args,4,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	GetTree()->Attach(down,up,fromdown,fromup);
+}
+
+
+
+void BranchProcess::SlaveDetach1(int n,int m) {
+	Link* down = GetLinkForGibbs(n);
+	Link* up = GetLinkForGibbs(m);
+	Link* down2 = GetLinkForGibbs2(n);
+	Link* up2 = GetLinkForGibbs2(m);
+	GetTree()->Detach(down,up);
+}
+
+void BranchProcess::SlaveAttach1(int n,int m,int p,int q) {
+	Link* down = GetLinkForGibbs(n);
+	Link* up = GetLinkForGibbs(m);
+	Link* fromdown = GetLinkForGibbs(p);
+	Link* fromup = GetLinkForGibbs(q);
+	GetTree()->Attach(down,up,fromdown,fromup);
+}
+
+Link* BranchProcess::GlobalDetach2(Link* down, Link* up)	{
+
+	if (GetNprocs() > 1)	{
+		// MPI
+		// master and all slaved should call 
+		// GetTree()->Detach(down,up,fromdown,fromup);
+		// but message passing will again  use link to index, then index to link, translations.
+		MESSAGE signal = DETACH2;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		int args[] = {GetLinkIndex(down),GetLinkIndex(up)};
+		// int args[] = {down->GetIndex(),up->GetIndex(),fromdown->GetIndex(),fromup->GetIndex()};
+		MPI_Bcast(args,2,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	GetTree2()->Detach(GetCloneLink(down),GetCloneLink(up));
+	return 0;
+}
+
+void BranchProcess::GlobalAttach2(Link* down, Link* up, Link* fromdown, Link* fromup)	{
+
+	if (GetNprocs() > 1)	{
+		// MPI
+		// same thing as for detach
+		MESSAGE signal = ATTACH2;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		int args[] = {GetLinkIndex(down),GetLinkIndex(up),GetLinkIndex(fromdown),GetLinkIndex(fromup)};
+		// int args[] = {down->GetIndex(),up->GetIndex(),fromdown->GetIndex(),fromup->GetIndex()};
+		MPI_Bcast(args,4,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	GetTree2()->Attach(GetCloneLink(down),GetCloneLink(up),GetCloneLink(fromdown),GetCloneLink(fromup));
+}
+
+
+void BranchProcess::SlaveDetach2(int n,int m) {
+	Link* down2 = GetLinkForGibbs2(n);
+	Link* up2 = GetLinkForGibbs2(m);
+	GetTree2()->Detach(down2,up2);
+}
+
+void BranchProcess::SlaveAttach2(int n,int m,int p,int q) {
+	Link* down2 = GetLinkForGibbs2(n);
+	Link* up2 = GetLinkForGibbs2(m);
+	Link* fromdown2 = GetLinkForGibbs2(p);
+	Link* fromup2 = GetLinkForGibbs2(q);
+	GetTree2()->Attach(down2,up2,fromdown2,fromup2);
+}
+
+void BranchProcess::GetWeights(Link* from, map<pair<Link*,Link*>,double>& weights, double lambda)	{
+
+	for (Link* link=from->Next(); link!=from; link=link->Next())	{
+		double w = exp(-lambda * GetMinLength(link,GetLength(link->GetBranch())));
+		weights[pair<Link*,Link*>(from,link->Out())] = w;
+		GetWeights(link->Out(),weights,lambda);
+	}
+}
+
+double BranchProcess::WeightedDrawSubTree(double lambda, Link*& down, Link*& up)	{
+
+	map<pair<Link*,Link*>,double> weights;
+	for (const Link* link=GetRoot()->Next(); link!=GetRoot(); link=link->Next())	{
+		GetWeights(link->Out(),weights,lambda);
+	}
+
+	double totweight = 0;
+	for (map<pair<Link*,Link*>,double>::iterator i=weights.begin(); i!=weights.end(); i++)	{
+		totweight += i->second;
+	}
+	double u = totweight * rnd::GetRandom().Uniform();
+	map<pair<Link*,Link*>, double>::iterator i = weights.begin();
+	double cumul = i->second;
+	while ((i!=weights.end()) && (cumul < u))	{
+		i++;
+		cumul += i->second;
+	}
+	if (i == weights.end())	{
+		cerr << "error in BranchProcess::WeightedDrawSubTree: overflow\n";
+		exit(1);
+	}
+	
+	down = i->first.second;
+	up = i->first.first;
+
+	if ((! down) || (down->isRoot()))	{
+		cerr << "error in tree::drawsubtree: down\n";
+		cerr << down << '\n';
+		exit(1);
+	}
+	if ((! up) || (up->isLeaf()))	{
+		cerr << "error in tree::drawsubtree: up\n";
+		cerr << up << '\n';
+		exit(1);
+	}
+	return i->second/totweight;
+}
+
+double BranchProcess::GetSubTreeWeight(double lambda, Link* down, Link* up)	{
+
+	lambda = 0;
+	map<pair<Link*,Link*>,double> weights;
+	for (const Link* link=GetRoot()->Next(); link!=GetRoot(); link=link->Next())	{
+		GetWeights(link->Out(),weights,lambda);
+	}
+
+	double totweight = 0;
+	for (map<pair<Link*,Link*>,double>::iterator i=weights.begin(); i!=weights.end(); i++)	{
+		totweight += i->second;
+	}
+	return weights[pair<Link*,Link*>(up,down)] / totweight;
+}
 

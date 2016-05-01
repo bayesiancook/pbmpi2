@@ -16,6 +16,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "GeneralPathSuffStatMatrixMixtureProfileProcess.h"
 #include "Random.h"
+#include "Parallel.h"
 
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
@@ -23,9 +24,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 
-void GeneralPathSuffStatMatrixMixtureProfileProcess::Create(int innsite, int indim)	{
+void GeneralPathSuffStatMatrixMixtureProfileProcess::Create()	{
 	if (! profilepaircount)	{
-		MatrixMixtureProfileProcess::Create(innsite,indim);
+		MatrixMixtureProfileProcess::Create();
 		profilepaircount = new map< pair<int,int>, int>[GetNmodeMax()];
 		profilewaitingtime = new map<int,double>[GetNmodeMax()];
 		profilerootcount = new map<int,int>[GetNmodeMax()];
@@ -44,36 +45,140 @@ void GeneralPathSuffStatMatrixMixtureProfileProcess::Delete() {
 	}
 }
 
+void GeneralPathSuffStatMatrixMixtureProfileProcess::GlobalUpdateModeProfileSuffStat()	{
+
+	UpdateModeProfileSuffStat();
+
+	if (GetNprocs() > 1)	{
+	MESSAGE signal = UPDATE_MPROFILE;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	int* pairvector = new int[GetNcomponent() * GetNstate() * GetNstate()];
+	for (int i=0; i<GetNcomponent() * GetNstate() * GetNstate(); i++)	{
+		pairvector[i] = 0;
+	}
+
+	int* rootvector = new int[GetNcomponent() * GetNstate()];
+	for (int i=0; i<GetNcomponent() * GetNstate(); i++)	{
+		rootvector[i] = 0;
+	}
+
+	double* waitvector = new double[GetNcomponent() * GetNstate()];
+	for (int i=0; i<GetNcomponent() * GetNstate(); i++)	{
+		waitvector[i] = 0;
+	}
+
+	for (int cat=0; cat<GetNcomponent(); cat++)	{
+		for (map<int,int>::iterator i = profilerootcount[cat].begin(); i!= profilerootcount[cat].end(); i++)	{
+			rootvector[cat*GetNstate() + i->first] = i->second;
+		}
+		for (map<int,double>::iterator i = profilewaitingtime[cat].begin(); i!= profilewaitingtime[cat].end(); i++)	{
+			waitvector[cat*GetNstate() + i->first] = i->second;
+		}
+		for (map<pair<int,int>, int>::iterator i = profilepaircount[cat].begin(); i!= profilepaircount[cat].end(); i++)	{
+			pairvector[cat*GetNstate()*GetNstate() + i->first.first*GetNstate() + i->first.second] = i->second;
+		}
+	}
+
+	MPI_Bcast(pairvector,GetNcomponent()*GetNstate()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(rootvector,GetNcomponent()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(waitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+	delete[] pairvector;
+	delete[] rootvector;
+	delete[] waitvector;
+	}
+}
+
+void GeneralPathSuffStatMatrixMixtureProfileProcess::SlaveUpdateModeProfileSuffStat()	{
+
+	int* pairvector = new int[GetNcomponent() * GetNstate() * GetNstate()];
+	for (int i=0; i<GetNcomponent() * GetNstate() * GetNstate(); i++)	{
+		pairvector[i] = 0;
+	}
+
+	int* rootvector = new int[GetNcomponent() * GetNstate()];
+	for (int i=0; i<GetNcomponent() * GetNstate(); i++)	{
+		rootvector[i] = 0;
+	}
+
+	double* waitvector = new double[GetNcomponent() * GetNstate()];
+	for (int i=0; i<GetNcomponent() * GetNstate(); i++)	{
+		waitvector[i] = 0;
+	}
+
+	MPI_Bcast(pairvector,GetNcomponent()*GetNstate()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(rootvector,GetNcomponent()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(waitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+	int rm = 0;
+	int pm = 0;
+	int wm = 0;
+	for (int cat=0; cat<GetNcomponent(); cat++)	{
+		profilepaircount[cat].clear();
+		profilerootcount[cat].clear();
+		profilewaitingtime[cat].clear();
+
+		for (int i=0; i<GetNstate(); i++)	{
+			if (rootvector[rm])	{
+				profilerootcount[cat][i] = rootvector[rm];
+			}
+			rm++;
+		}
+		for (int i=0; i<GetNstate(); i++)	{
+			if (waitvector[wm])	{
+				profilewaitingtime[cat][i] = waitvector[wm];
+			}
+			wm++;
+		}
+		for (int i=0; i<GetNstate(); i++)	{
+			for (int j=0; j<GetNstate(); j++)	{
+				if (pairvector[pm])	{
+					profilepaircount[cat][pair<int,int>(i,j)] = pairvector[pm];
+				}
+				pm++;
+			}
+		}
+	}
+
+	delete[] pairvector;
+	delete[] rootvector;
+	delete[] waitvector;
+}
+
 void GeneralPathSuffStatMatrixMixtureProfileProcess::UpdateModeProfileSuffStat()	{
+
+	if (GetMyid())	{
+		cerr << "error: slave in GPSSMatrixMixtureProfileProcess::UpdateModeProfileSuffStat\n";
+		exit(1);
+	}
+
 	for (int i=0; i<GetNcomponent(); i++)	{
 		profilepaircount[i].clear();
 		profilerootcount[i].clear();
 		profilewaitingtime[i].clear();
 	}
 	for (int i=0; i<GetNsite(); i++)	{
+
+		if (ActiveSite(i))	{
 		
-		map<pair<int,int>, int>& paircount = GetSitePairCount(i);
-		map<int,double>& waitingtime = GetSiteWaitingTime(i);
-		int rootstate = GetSiteRootState(i);
-		/*
-		if (rootstate < 0)	{
-			cerr << "error : negative root state \n";
-			cerr << rootstate << '\n';
-			exit(1);
-		}
-		*/
-		int cat = alloc[i];
-		profilerootcount[cat][rootstate]++;
-		for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
-			profilewaitingtime[cat][i->first] += i->second;
-		}
-		for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
-			profilepaircount[cat][i->first] += i->second;
+			map<pair<int,int>, int>& paircount = GetSitePairCount(i);
+			map<int,double>& waitingtime = GetSiteWaitingTime(i);
+			int rootstate = GetSiteRootState(i);
+			int cat = alloc[i];
+			profilerootcount[cat][rootstate]++;
+			for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
+				profilewaitingtime[cat][i->first] += i->second;
+			}
+			for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
+				profilepaircount[cat][i->first] += i->second;
+			}
 		}
 	}
 }
 
 double GeneralPathSuffStatMatrixMixtureProfileProcess::ProfileSuffStatLogProb(int cat)	{
+
 	double total = 0;
 	SubMatrix* mat = matrixarray[cat];
 	if (! mat)	{
@@ -96,29 +201,8 @@ double GeneralPathSuffStatMatrixMixtureProfileProcess::ProfileSuffStatLogProb(in
 	return total;
 }
 
-void GeneralPathSuffStatMatrixMixtureProfileProcess::SwapComponents(int cat1, int cat2)	{
-
-	MatrixMixtureProfileProcess::SwapComponents(cat1,cat2);
-
-	// booh! inefficient copies!
-	//cerr << "swap in general path suff stat matrix mixture profile process\n";
-	//exit(1);
-
-	map<int,int> roottmp = profilerootcount[cat1];
-	profilerootcount[cat1] = profilerootcount[cat2];
-	profilerootcount[cat2] = roottmp;
-
-	map<int,double> timetmp = profilewaitingtime[cat1];
-	profilewaitingtime[cat1] = profilewaitingtime[cat2];
-	profilewaitingtime[cat2] = timetmp;
-
-	map<pair<int,int>,int> pairtmp = profilepaircount[cat1];
-	profilepaircount[cat1] = profilepaircount[cat2];
-	profilepaircount[cat2] = pairtmp;
-}
-
-
 double GeneralPathSuffStatMatrixMixtureProfileProcess::LogStatProb(int site, int cat)	{
+
 	double total = 0;
 	SubMatrix* mat = matrixarray[cat];
 	const double* stat = matrixarray[cat]->GetStationary();
@@ -140,40 +224,8 @@ double GeneralPathSuffStatMatrixMixtureProfileProcess::LogStatProb(int site, int
 void GeneralPathSuffStatMatrixMixtureProfileProcess::AddSite(int site, int cat)	{
 	alloc[site] = cat;
 	occupancy[cat] ++;
-		
-	/*
-	if (activesuffstat)	{
-		profilerootcount[cat][GetSiteRootState(site)]++;
-
-		map<int,double>& waitingtime = GetSiteWaitingTime(site);
-		for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
-			profilewaitingtime[cat][i->first] += i->second;
-		}
-
-		map<pair<int,int>, int>& paircount = GetSitePairCount(site);
-		for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
-			profilepaircount[cat][i->first] += i->second;
-		}
-	}
-	*/
 }
 
 void GeneralPathSuffStatMatrixMixtureProfileProcess::RemoveSite(int site, int cat)	{
 	occupancy[cat] --;
-		
-	/*
-	if (activesuffstat)	{
-		profilerootcount[cat][GetSiteRootState(site)]--;
-
-		map<int,double>& waitingtime = GetSiteWaitingTime(site);
-		for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
-			profilewaitingtime[cat][i->first] -= i->second;
-		}
-
-		map<pair<int,int>, int>& paircount = GetSitePairCount(site);
-		for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
-			profilepaircount[cat][i->first] -= i->second;
-		}
-	}
-	*/
 }

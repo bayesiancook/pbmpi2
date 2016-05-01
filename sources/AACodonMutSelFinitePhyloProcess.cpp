@@ -14,7 +14,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 #include "StringStreamUtils.h"
-#include <cassert>
 #include "AACodonMutSelFinitePhyloProcess.h"
 #include "Parallel.h"
 #include <string.h>
@@ -28,7 +27,7 @@ void AACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nnucrr = GetNnucrr(),nnucstat = 4;
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	int nstate = data->GetNstate();
+	int nstate = GetData()->GetNstate();
 	nd = 2+ nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + 1; // check if these last terms are correct in this context...
 	ni = 1 + ProfileProcess::GetNsite();
 	int* ivector = new int[ni];
@@ -90,27 +89,22 @@ void AACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 
 void AACodonMutSelFinitePhyloProcess::SlaveExecute(MESSAGE signal)	{
 
-	assert(myid > 0);
-
 	switch(signal) {
 
-	/*
-	case PRINT_TREE:
-		SlavePrintTree();
-		break;
-	*/
-	case REALLOC_MOVE:
-		SlaveIncrementalFiniteMove();
-		break;
-	case PROFILE_MOVE:
-		SlaveMoveProfile();
-		break;
-	default:
-		PhyloProcess::SlaveExecute(signal);
+		case REALLOC_MOVE:
+			SlaveIncrementalFiniteMove();
+			break;
+		case PROFILE_MOVE:
+			SlaveMoveProfile();
+			break;
+		default:
+			PhyloProcess::SlaveExecute(signal);
 	}
 }
 
 void AACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
+
+	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
 	// about model parameters
@@ -122,13 +116,12 @@ void AACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	// store it in the local copies of the variables
 	// and then call
 	// SetBranchLengthsFromArray()
-	assert(myid == 0);
 	int i,j,nnucrr,nnucstat,nbranch = GetNbranch(),ni,nd,L1,L2;
 	nnucrr = GetNnucrr();
 	nnucstat = 4;	
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	int nstate = data->GetNstate();
+	int nstate = GetData()->GetNstate();
 	nd = 2 + nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + 1;  // check if these last terms are correct in this context...
 	ni = 1 + ProfileProcess::GetNsite(); // 1 for the number of componenets, and the rest for allocations
 	int ivector[ni];
@@ -186,17 +179,14 @@ void AACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	// Now send out the doubles and ints over the wire...
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
 }
 
 
 void AACodonMutSelFinitePhyloProcess::SlaveComputeCVScore()	{
 
-	//if (! SumOverRateAllocations())	{
-	//	cerr << "rate error\n";
-	//	exit(1);
-	//}
-
-	sitemax = sitemin + testsitemax - testsitemin;
+	int sitemin = GetSiteMin();
+	int sitemax = GetSiteMin() + testsitemax - testsitemin;
 	double** sitelogl = new double*[ProfileProcess::GetNsite()];
 	for (int i=sitemin; i<sitemax; i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
@@ -205,16 +195,9 @@ void AACodonMutSelFinitePhyloProcess::SlaveComputeCVScore()	{
 	for (int k=0; k<GetNcomponent(); k++)	{
 		for (int i=sitemin; i<sitemax; i++)	{
 			AACodonMutSelFiniteProfileProcess::alloc[i] = k;
-			//UpdateMatrix(i);
 		}
-		//cerr << "before UpdateMatrix\n";
-		//cerr.flush();
 		UpdateMatrix(k);
-		//cerr << "after UpdateMatrix, before UpdateConditionalLikelihoods\n";
-		//cerr.flush();
 		UpdateConditionalLikelihoods();
-		//cerr << "after UpdateCondtionalLikelihoods\n";
-		//cerr.flush();
 		for (int i=sitemin; i<sitemax; i++)	{
 			sitelogl[i][k] = sitelogL[i];
 		}
@@ -243,9 +226,6 @@ void AACodonMutSelFinitePhyloProcess::SlaveComputeCVScore()	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;
-
-	sitemax = bksitemax;
-
 }
 
 void AACodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[])	{

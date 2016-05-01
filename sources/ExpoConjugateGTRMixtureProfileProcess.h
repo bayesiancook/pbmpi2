@@ -18,9 +18,10 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "GTRMixtureProfileProcess.h"
 #include "ExpoConjugateGTRProfileProcess.h"
+#include "DirichletProfileProcess.h"
 
 // Exponential conjugate GTR models
-class ExpoConjugateGTRMixtureProfileProcess : public virtual GTRMixtureProfileProcess, public virtual ExpoConjugateGTRProfileProcess {
+class ExpoConjugateGTRMixtureProfileProcess : public virtual GTRMixtureProfileProcess, public virtual ExpoConjugateGTRProfileProcess, public virtual DirichletProfileProcess {
 
 	public:
 
@@ -28,6 +29,8 @@ class ExpoConjugateGTRMixtureProfileProcess : public virtual GTRMixtureProfilePr
 	virtual ~ExpoConjugateGTRMixtureProfileProcess() {}
 
 	protected:
+
+	// virtual double ProfileProposeMove(double* profile, double tuning, int n, int K, int cat, double statmin);
 
 	// matrices are not used during Sufficient-statistics based updates
 	// all matrices are deleted upon 'Collapsing' (pruning->suffstat)
@@ -55,15 +58,24 @@ class ExpoConjugateGTRMixtureProfileProcess : public virtual GTRMixtureProfilePr
 	void SwapComponents(int cat1, int cat2);
 	virtual double LogStatProb(int site, int cat);
 
-	virtual void Create(int innsite, int indim);
+	virtual double LogProxy(int site, int cat)	{
+		cerr << "in ExpoConjugateGTRMixtureProfileProcess::LogProxy\n";
+		exit(1);
+	}
+
+	virtual void Create();
 	virtual void Delete();
 
 	// collects site-specific suffstats and pools them componentwise
-	void UpdateModeProfileSuffStat();
+	virtual void UpdateModeProfileSuffStat();
+	virtual void GlobalUpdateModeProfileSuffStat();
+	virtual void SlaveUpdateModeProfileSuffStat();
 
 	// component-specific sufficient statistics
 	int** profilesuffstatcount;
 	double** profilesuffstatbeta;
+	int* allocprofilesuffstatcount;
+	double* allocprofilesuffstatbeta;
 
 	double PoissonDiffLogSampling(int cat, int site);
 };

@@ -55,7 +55,11 @@ class ProfileProcess : public virtual MPIModule {
 	virtual StateSpace* GetStateSpace() = 0;
 
 	// profile associated with given site
-	virtual double* GetProfile(int site) = 0;
+	virtual double* GetProfile(int site)	{
+		cerr << "in ProfileProcess::GetProfile()\n";
+		exit(1);
+		return 0;
+	}
 
 
 	//------
@@ -63,19 +67,39 @@ class ProfileProcess : public virtual MPIModule {
 	//------
 
 	// total prior associated to all aspects of the substitution processes across sites
-	virtual double LogProfilePrior() = 0;
+	virtual double LogProfilePrior()	{
+		cerr << "in ProfileProcess::LogProfilePrior\n";
+		exit(1);
+		return 0;
+	}
 
 	// prior on hyperparameters
-	virtual double LogHyperPrior() = 0;
+	virtual double LogHyperPrior()	{
+		cerr << "in ProfileProcess::LogHyperPrior\n";
+		exit(1);
+		return 0;
+	}
 
 	// prior on profiles, given hyperparameters
-	virtual double LogStatPrior() = 0;
+	virtual double LogStatPrior()	{
+		cerr << "in ProfileProcess::LogStatPrior\n";
+		exit(1);
+		return 0;
+	}
 
 	// basic tool for getting the log prob associated to a profile
 	// can be a frequency profile (Dirichlet prior) or a log-frequency profile (normal prior)
-	virtual double LogFrequencyStatPrior(double* prof) = 0;
+	virtual double LogFrequencyStatPrior(double* prof)	{
+		cerr << "in ProfileProcess::LogFrequencyStatPrior\n";
+		exit(1);
+		return 0;
+	}
 
-	virtual double GetMinStat(double* profile, int site) = 0;
+	virtual double GetMinStat(double* profile, int site)	{
+		cerr << "in ProfileProcess::GetMinStat\n";
+		exit(1);
+		return 0;
+	}
 
 
 	//------
@@ -90,23 +114,38 @@ class ProfileProcess : public virtual MPIModule {
 	}
 
 	// with some quirks to make draw more reasonable for MCMC
-	virtual void SampleProfile() = 0;
+	virtual void SampleProfile()	{
+		cerr << "in ProfileProcess::SampleProfile\n";
+		exit(1);
+	}
 
 	// sampling hyperparameters
-	virtual void SampleHyper() = 0;
+	virtual void SampleHyper()	{
+		cerr << "in ProfileProcess::SampleHyper\n";
+		exit(1);
+	}
 
 	// sampling profiles, given hyperparameters
-	virtual void SampleStat() = 0;
+	virtual void SampleStat()	{
+		cerr << "in ProfileProcess::SampleStat\n";
+		exit(1);
+	}
 
 	// basic tool for sampling a profile, depending on the prior
 	// can be a frequency profile (Dirichlet prior) or a log-frequency profile (normal prior)
-	virtual void SampleFrequencyStat(double* prof) = 0;
+	virtual void SampleFrequencyStat(double* prof)	{
+		cerr << "in ProfileProcess::SampleFrequencyStat\n";
+		exit(1);
+	}
 
 	//------
 	// log likelihoods based on sufficient statistics (substitution mappings)
 	//------
 
-	virtual double ProfileSuffStatLogProb() = 0;
+	virtual double ProfileSuffStatLogProb()	{
+		cerr << "in ProfileProcess::ProfileSuffStatLogProb\n";
+		exit(1);
+	}
 
 	//------
 	// moves
@@ -116,42 +155,85 @@ class ProfileProcess : public virtual MPIModule {
 	// will collect the sufficient statistics necessary for updating substitution parameters
 	// separately for each site
 	// these statistics will be accessed through specific functions declared and implemented in subclasses
-	virtual void UpdateSiteProfileSuffStat() = 0;
-	virtual void GlobalUpdateSiteProfileSuffStat() = 0;
-	virtual void SlaveUpdateSiteProfileSuffStat() = 0;
+	virtual void UpdateSiteProfileSuffStat()	{
+		cerr << "in ProfileProcess::UpdateSiteProfileSuffStat\n";
+		exit(1);
+	}
+	virtual void GlobalUpdateSiteProfileSuffStat()	{
+		cerr << "in ProfileProcess::GlobalUpdateSiteProfileSuffStat\n";
+		exit(1);
+	}
+	virtual void SlaveUpdateSiteProfileSuffStat()	{
+		cerr << "in ProfileProcess::SlaveUpdateSiteProfileSuffStat\n";
+		exit(1);
+	}
 
 	virtual void GlobalUpdateModeProfileSuffStat() {}
 	virtual void SlaveUpdateModeProfileSuffStat() {}
 	virtual void UpdateModeProfileSuffStat() {}
 
-	virtual void GlobalUpdateParameters() = 0;
-	virtual void SlaveUpdateParameters() = 0;
+	virtual void GlobalUpdateParameters()	{
+		cerr << "in ProfileProcess::GlobalUpdateParameters\n";
+		exit(1);
+	}
+	virtual void SlaveUpdateParameters()	{
+		cerr << "in ProfileProcess::SlaveUpdateParameters\n";
+		exit(1);
+	}
 
 	// MCMC MOVES
 
 	// generic Move function
-	virtual double Move(double tuning = 1, int n = 1, int nrep = 1) = 0;
+	virtual double Move(double tuning = 1, int n = 1, int nrep = 1)	{
+		cerr << "in ProfileProcess::Move\n";
+		exit(1);
+		return 0;
+	}
 
 	// move on hyperparameters
-	virtual double MoveHyper(double tuning, int nrep) = 0;
+	virtual double MoveHyper(double tuning, int nrep)	{
+		cerr << "in ProfileProcess::MoveHyper\n";
+		exit(1);
+		return 0;
+	}
 
 	// auxiliary: for Metropolis Moves on profiles
 	virtual double ProfileProposeMove(double* profile, double tuning, int n, int K, int cat, double statmin);
 
 	// move all parameters (except component-specific or site-specific frequency profiles) 
-	virtual double GlobalParametersMove() = 0;
+	virtual double GlobalParametersMove()	{
+		cerr << "in ProfileProcess::GlobalParametersMove\n";
+		exit(1);
+		return 0;
+	}
 
 	// STREAMS
 
-	virtual void ToStream(ostream& os) = 0;
-	virtual void FromStream(istream& is) = 0;
+	virtual void ToStream(ostream& os)	{
+		cerr << "in ProfileProcess::ToStream\n";
+		exit(1);
+	}
+
+	virtual void FromStream(istream& is)	{
+		cerr << "in ProfileProcess::FromStream\n";
+		exit(1);
+	}
 
 
 	// more specialized methods
 
 	// summary statistics
-	virtual double GetMeanStationaryEntropy() = 0;
-	virtual double GetSiteStationaryEntropy(int site) = 0;
+	virtual double GetMeanStationaryEntropy()	{
+		cerr << "in ProfileProcess::GetMeanStationaryEntropy\n";
+		exit(1);
+		return 0;
+	}
+
+	virtual double GetSiteStationaryEntropy(int site)	{
+		cerr << "in ProfileProcess::GetSiteStationaryEntropy\n";
+		exit(1);
+		return 0;
+	}
 
 	double GetStatInfCount() {
 		double tmp = 0;
@@ -176,18 +258,34 @@ class ProfileProcess : public virtual MPIModule {
 		dim = indim;
 	}
 
-	virtual SequenceAlignment* GetData() = 0;
+	virtual SequenceAlignment* GetData()	{
+		cerr << "in ProfileProcess::GetData\n";
+		exit(1);
+		return 0;
+	}
 
 	virtual void Create() {}
 	virtual void Delete() {}
 
-	virtual double* GetEmpiricalFreq() = 0;
+	virtual double* GetEmpiricalFreq()	{
+		cerr << "in ProfileProcess::GetEmpiricalFreq\n";
+		exit(1);
+		return 0;
+	}
 
 	virtual double GlobalSMCAddSites();
 	virtual double SMCAddSites() {}
 
-	virtual void SampleSiteMapping(int site) = 0;
-	virtual double SiteLogLikelihood(int site) = 0;
+	virtual void SampleSiteMapping(int site)	{
+		cerr << "in ProfileProcess::SampleSiteMapping\n";
+		exit(1);
+	}
+
+	virtual double SiteLogLikelihood(int site)	{
+		cerr << "in ProfileProcess::SiteLogLikelihood\n";
+		exit(1);
+		return 0;
+	}
 
 	int dim;
 	bool activesuffstat;

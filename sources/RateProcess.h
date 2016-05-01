@@ -32,35 +32,94 @@ class RateProcess : public virtual MPIModule {
 
 	virtual int GetNrate() {return 1;}
 
-	virtual int GetNrate(int site) = 0;
-	virtual double GetRate(int site, int cat = 0) = 0;
-	virtual double GetRateWeight(int site, int cat) = 0;
+	virtual int GetNrate(int site)	{
+		cerr << "in RateProcess::GetNrate\n";
+		exit(1);
+		return 0;
+	}
+
+	virtual double GetRate(int site, int cat = 0)	{
+		cerr << "in RateProcess::GetRate\n";
+		exit(1);
+		return 0;
+	}
+
+	virtual double GetRateWeight(int site, int cat)	{
+		cerr << "in RateProcess::GetRateWeight\n";
+		exit(1);
+		return 0;
+	}
+
 	double GetMeanRate();
-	virtual double GetPriorMeanRate() = 0;
+	virtual double GetPriorMeanRate()	{
+		cerr << "in RateProcess::GetPriorMeanRate\n";
+		exit(1);
+	}
+
 	virtual double GetAlpha() {return 1;}
 
-	virtual void SiteActivateSumOverRateAllocation(int site) = 0;
-	virtual void SiteInactivateSumOverRateAllocation(int site, int ratealloc) = 0;
-	virtual void ActivateSumOverRateAllocations() = 0;
-	virtual void InactivateSumOverRateAllocations(int* ratealloc) = 0;
+	virtual void SiteActivateSumOverRateAllocation(int site)	{
+		cerr << "in RateProcess::SiteActivateSumOverRateAlloc\n";
+		exit(1);
+	}
+	virtual void SiteInactivateSumOverRateAllocation(int site, int ratealloc)	{
+		cerr << "in RateProcess::SiteINactivateSumOverRateAlloc\n";
+		exit(1);
+	}
+	virtual void ActivateSumOverRateAllocations()	{
+		cerr << "in RateProcess::ActivateSumOverRateAlloc\n";
+		exit(1);
+	}
+	virtual void InactivateSumOverRateAllocations(int* ratealloc)	{
+		cerr << "in RateProcess::InactivateSumOverRateAlloc\n";
+		exit(1);
+	}
 	bool SumOverRateAllocations() {return ! condflag;}
 
-	virtual double LogRatePrior() = 0;
-	virtual void SampleRate() = 0;
+	virtual double LogRatePrior()	{
+		cerr << "in RateProcess::LogRatePrior\n";
+		exit(1);
+		return 0;
+	}
+	virtual void SampleRate()	{
+		cerr << "in RateProcess::SampleRate\n";
+		exit(1);
+	}
 	virtual void PriorSampleRate() {};
 
-	virtual void ToStream(ostream& os) = 0;
-	virtual void FromStream(istream& is) = 0;
+	virtual void ToStream(ostream& os)	{
+		cerr << "in RateProcess::ToStream\n";
+		exit(1);
+	}
+	virtual void FromStream(istream& is)	{
+		cerr << "in RateProcess::FromStream\n";
+		exit(1);
+	}
 
 	protected:
 
 	// abstract classes will be implemented in phyloprocess
-	virtual void GlobalUpdateSiteRateSuffStat() = 0;
-	virtual void SlaveUpdateSiteRateSuffStat() = 0;
+	virtual void GlobalUpdateSiteRateSuffStat()	{
+		cerr << "in RateProcess::GlobalUpdateSiteRateSuffStat\n";
+		exit(1);
+	}
+	virtual void SlaveUpdateSiteRateSuffStat()	{
+		cerr << "in RateProcess::SlaveUpdateSiteRateSuffStat\n";
+		exit(1);
+	}
 
-	virtual void UpdateSiteRateSuffStat() = 0;
-	virtual double GetSiteRateSuffStatBeta(int site) = 0;
-	virtual int GetSiteRateSuffStatCount(int site) = 0;
+	virtual void UpdateSiteRateSuffStat()	{
+		cerr << "in RateProcess::UpdateSiteRateSuffStat\n";
+		exit(1);
+	}
+	virtual double GetSiteRateSuffStatBeta(int site)	{
+		cerr << "in RateProcess::GetSiteRateSuffStatBeta\n";
+		exit(1);
+	}
+	virtual int GetSiteRateSuffStatCount(int site)	{
+		cerr << "in RateProcess::GetSiteRateSuffStatCount\n";
+		exit(1);
+	}
 
 	void Create() {}
 	void Delete() {}

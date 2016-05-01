@@ -97,19 +97,35 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	void Restore();
 	void Swap();
 
-	virtual double BranchProcessMove(double tuning = 1, int nrep=1) = 0;
+	virtual double BranchProcessMove(double tuning = 1, int nrep=1)	{
+		cerr << "in BranchProcess::BranchProcessMove\n";
+		exit(1);
+		return 0;
+	}
+
 	double ProposeMove(const Branch* branch, double tuning);
 	void MoveBranch(const Branch* branch, double factor);
 	void Restore(const Branch* branch);
 
-	virtual double GetNormFactor()  = 0;
+	virtual double GetNormFactor()	{
+		cerr << "in BranchProcess::GetNormFactor\n";
+		exit(1);
+		return 0;
+	}
 
 	// return number of branches
 	int MoveAllBranches(double factor);
 	int RecursiveMoveAllBranches(const Link* from, double e);
 
-	virtual void SampleLength(const Branch* branch) = 0;
-	virtual double LogBranchLengthPrior(const Branch* branch) = 0;
+	virtual void SampleLength(const Branch* branch)	{
+		cerr << "in BranchProcess::SampleLength\n";
+		exit(1);
+	}
+
+	virtual double LogBranchLengthPrior(const Branch* branch)	{
+		cerr << "in BranchProcess::LogBranchLengthPrior\n";
+		exit(1);
+	}
 
 	double GetTotalLength()	{
 		return RecursiveTotalLength(GetRoot());
@@ -154,7 +170,11 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	void RecursiveSetLengthsFromNames(const Link* from);
 	void RecursiveSetNamesFromLengths(const Link* from);
 
-	virtual void PriorSampleLength() = 0;
+	virtual void PriorSampleLength()	{
+		cerr << "in BranchProcess::PriorSampleLength\n";
+		exit(1);
+	}
+
 	void SampleLength()	{
 		RecursiveSampleLength(GetRoot());
 	}
@@ -163,18 +183,43 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		return RecursiveLogLengthPrior(GetRoot());
 	}
 
-	virtual double LogHyperPrior() = 0;
+	virtual double LogHyperPrior()	{
+		cerr << "in BranchProcess::LogHyperPrior\n";
+		exit(1);
+		return 0;
+	}
 
 	double LogBranchProcessPrior()	{
 		return LogLengthPrior() + LogHyperPrior();
 	}
 
-	virtual void GlobalUpdateBranchLengthSuffStat() = 0;
-	virtual void SlaveUpdateBranchLengthSuffStat() = 0;
-	virtual void UpdateBranchLengthSuffStat() = 0;
+	virtual void GlobalUpdateBranchLengthSuffStat()	{
+		cerr << "in BranchProcess::GlobalUpdateBranchLengthSuffStat\n";
+		exit(1);
+	}
 
-	virtual double GetBranchLengthSuffStatBeta(int index) = 0;
-	virtual int GetBranchLengthSuffStatCount(int index) = 0;
+	virtual void SlaveUpdateBranchLengthSuffStat()	{
+		cerr << "in BranchProcess::SlaveUpdateBranchLengthSuffStat\n";
+		exit(1);
+	}
+
+	virtual void UpdateBranchLengthSuffStat()	{
+		cerr << "in BranchProcess::UpdateBranchLengthSuffStat\n";
+		exit(1);
+	}
+
+
+	virtual double GetBranchLengthSuffStatBeta(int index)	{
+		cerr << "in BranchProcess::GetBranchLengthSuffStatBeta\n";
+		exit(1);
+		return 0;
+	}
+
+	virtual int GetBranchLengthSuffStatCount(int index)	{
+		cerr << "in BranchProcess::GetBranchLengthSuffStatCount\n";
+		exit(1);
+		return 0;
+	}
 
 	// implements a map<const Branch*, double>
 
@@ -183,8 +228,14 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 
 	double LengthSuffStatLogProb();
 
-	virtual void ToStream(ostream& os) = 0;
-	virtual void FromStream(istream& is) = 0;
+	virtual void ToStream(ostream& os)	{
+		cerr << "in BranchProcess::ToStream\n";
+		exit(1);
+	}
+	virtual void FromStream(istream& is)	{
+		cerr << "in BranchProcess::FromStream\n";
+		exit(1);
+	}
 
 	virtual const TaxonSet* GetTaxonSet() const = 0;
 

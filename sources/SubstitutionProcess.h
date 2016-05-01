@@ -72,7 +72,11 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 	// those two accessors are abstract: what they return depends on whether we use recoded Poisson or GTR substitution processes
 	virtual int GetNstate(int site) {return GetNstate();}
 	virtual int GetNstate() {return GetDim();}
-	virtual const double* GetStationary(int site) = 0;
+	virtual const double* GetStationary(int site)	{
+		cerr << "in SubstitutionProcess::GetStationary\n";
+		exit(1);
+		return 0;
+	}
 
 	int GetInfProbCount() {return infprobcount;}
 
@@ -120,7 +124,10 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 
 	// CPU : level 3
 	// implemented in GTR or POisson Substitution process
-	virtual void Propagate(double*** from, double*** to, double time, bool condalloc) = 0;
+	virtual void Propagate(double*** from, double*** to, double time, bool condalloc)	{
+		cerr << "in SubstitutionProcess::Propagate\n";
+		exit(1);
+	}
 
 	// CPU : level 1
 	// implemented in GTR or POisson Substitution process
@@ -146,7 +153,10 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 
 	// CPU : level 3
 	// implemented in GTR or POisson Substitution process
-	virtual void SitePropagate(int site, double** from, double** to, double time, bool condalloc = false) = 0;
+	virtual void SitePropagate(int site, double** from, double** to, double time, bool condalloc = false)	{
+		cerr << "in SubstitutionProcess::SitePropagate\n";
+		exit(1);
+	}
 
 	// CPU : level 1
 	// implemented in GTR or POisson Substitution process
@@ -158,8 +168,17 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 	void SamplePaths(BranchSitePath** patharray, int* stateup, int* statedown, double time);
 	void SampleRootPaths(BranchSitePath** patharray, int* rootstate);
 
-	virtual BranchSitePath* SampleSitePath(int site, int stateup, int statedown, double time) = 0;
-	virtual BranchSitePath* SampleRootSitePath(int site, int rootstate) = 0;
+	virtual BranchSitePath* SampleSitePath(int site, int stateup, int statedown, double time)	{
+		cerr << "in SubstitutionProcess::SampleSitePath\n";
+		exit(1);
+		return 0;
+	}
+
+	virtual BranchSitePath* SampleRootSitePath(int site, int rootstate)	{
+		cerr << "in SubstitutionProcess::SampleRootSitePath\n";
+		exit(1);
+		return 0;
+	}
 
 	// -------------------------
 

@@ -48,77 +48,8 @@ class MultiGeneMPIModule	{
 
 class MultiGeneProfileProcess : public virtual ProfileProcess, public virtual MultiGeneMPIModule	{
 
-	// anything here ?
-	// make default versions of stupid functions
-	virtual double* GetProfile(int site)	{
-		cerr << "error: in multi gene getprofile\n";
-		exit(1);
-		return 0;
-	}
-
-	virtual void SampleProfile()	{
-		cerr << "error: in multi gene sampleprofile\n";
-		exit(1);
-	}
-
-	virtual double ProfileSuffStatLogProb()	{
-		cerr << "error: in multi gene profilesuffstatlogprob\n";
-		exit(1);
-		return 0;
-	}
-
-	virtual double LogProfilePrior() {
-		cerr << "error: in multi gene\n";
-		exit(1);
-		return 0;
-	}
-	virtual double LogHyperPrior()	{
-		cerr << "error: in multi gene\n";
-		exit(1);
-		return 0;
-	}
-	virtual double LogStatPrior()	{
-		cerr << "error: in multi gene\n";
-		exit(1);
-		return 0;
-	}
-	virtual double LogFrequencyStatPrior(double* prof)	{
-		cerr << "error: in multi gene\n";
-		exit(1);
-		return 0;
-	}
-	virtual double GetMinStat(double* profile, int site)	{
-		cerr << "error: in multi gene\n";
-		exit(1);
-		return 0;
-	}
-
-	virtual void SampleHyper()	{
-		cerr << "error: in multi gene\n";
-		exit(1);
-	}
-	virtual void SampleStat()	{
-		cerr << "error: in multi gene\n";
-		exit(1);
-	}
-	virtual void SampleFrequencyStat(double* prof)	{
-		cerr << "error: in multi gene\n";
-		exit(1);
-	}
-	virtual void UpdateSiteProfileSuffStat()	{
-		cerr << "error: in multi gene\n";
-		exit(1);
-	}
-	virtual void GlobalUpdateSiteProfileSuffStat()	{
-		cerr << "error: in multi gene\n";
-		exit(1);
-	}
-	virtual void SlaveUpdateSiteProfileSuffStat()	{
-		cerr << "error: in multi gene\n";
-		exit(1);
-	}
-
 };
+
 
 class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiGeneProfileProcess	{
 
@@ -129,15 +60,6 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 
 	virtual void Create();
 	virtual void Delete();
-
-	double GetLogLikelihood();
-
-	void GlobalToStream(ostream& os);
-	void GlobalFromStream(istream& is);
-	void SlaveToStream();
-	void SlaveFromStream();
-
-	void WaitLoop();
 
 	protected:
 
@@ -153,21 +75,25 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 
         virtual void SlaveExecute(MESSAGE);
 
-	void GlobalSample();
-	void GlobalUnfold();
-	void GlobalCollapse();
-	void GlobalGeneMove();
+	void SlaveLikelihood();
 
+	void GlobalSample();
 	void SlaveSample();
-	void SlaveUnfold();
-	void SlaveCollapse();
+
+	void GlobalGeneMove();
 	void SlaveGeneMove();
 
-	void GlobalCollectGeneLikelihoods();
-	void SlaveSendGeneLikelihoods();
-
-	void GlobalCollectGeneParameters();
-	void SlaveSendGeneParameters();
+	void SlaveUnfold();
+	void SlaveCollapse();
+	void SlaveRoot(int n);
+	void SlavePropose(int n, double x);
+	void SlaveRestore(int n);
+	void SlaveReset(int n, bool v);
+	void SlaveMultiply(int n, int m, bool v);
+	void SlaveSMultiply(int n, bool v);
+	void SlaveInitialize(int n, int m, bool v);
+	void SlavePropagate(int n, int m, bool v, double t);
+	void SlaveGibbsSPRScan(int idown, int iup);
 
 	PhyloProcess** process;
 	double* genelnL;

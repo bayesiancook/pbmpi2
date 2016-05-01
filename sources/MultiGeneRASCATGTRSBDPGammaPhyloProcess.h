@@ -21,49 +21,16 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "RASCATGTRSBDPGammaPhyloProcess.h"
 #include "ExpoConjugateGTRProfileProcess.h"
 
-// should be a GammaBranchProcess, a DGamRateProcess
-// a DirichletProfileProcess
-// should re-implement 
 
-
-/*
-class MultiGeneGTRSBDPProfileProcess : public virtual DirichletProfileProcess, public virtual ExpoConjugateGTRProfileProcess	{
-
-	protected:
-
-	// should have access to 
-	// number of genes
-	// number of components per gene
-	// nmodemax for each gene
-	// list of all profiles and occupancy numbers for each gene
-	// this gives required information to implement LogStatPrior()
-
-	virtual double LogStatPrior();
-
-	void GlobalGetGeneMixtures();
-	void SlaveGetGeneMixtures();
-
-	virtual double Move(double tuning = 1, int n = 1, int nrep = 1);
-
-	virtual GTRSBDPProfileProcess* GetGTRSBDPProfileProcess(int gene) = 0;
-
-	int Ngene;
-	int* GeneNcomponent;
-	int* GeneNmodeMax;
-	int* GeneNsite;
-	int** GeneOccupancy;
-	double** GeneProfile;
-	double* allocprofile;
-	
-};
-*/
-
-class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual GammaBranchProcess, public virtual DGamRateProcess, public virtual ExpoConjugateGTRProfileProcess, public virtual MultiGeneProfileProcess	{
+class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual GammaBranchProcess, public virtual DGamRateProcess, public virtual ExpoConjugateGTRProfileProcess	{
 
 	public:
 
         virtual void SlaveExecute(MESSAGE);
+
+	// broadcast only the global parameters (not the gene-specific ones)
 	virtual void GlobalUpdateParameters();
+	// receive global parameters and then send them to genes
 	virtual void SlaveUpdateParameters();
 
 	// re-implement: should gather gene-specific suff stats
@@ -81,8 +48,12 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 	void SlaveGetMeanStatAlpha();
 	void SlaveGetMeanKappa();
 
+	void SlaveGeneMove();
+	/*
+	// move relative rates and, possibly, profile hyperparameters
 	double GlobalGeneProfileMove();
 	void SlaveGeneProfileMove();
+	*/
 
 	virtual void Create();
 	virtual void Delete();
@@ -94,6 +65,9 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		Ncat = nratecat;
 		rrtype = inrrtype;
 		kappaprior = inkappaprior;
+
+		// if slave
+		// create the array of gene-specific phylo processes
 	}
 
 	MultiGeneRASCATGTRSBDPGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
@@ -197,7 +171,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 			ExpoConjugateGTRSBDPProfileProcess::Move(0.01,1,15);
 		}
 		*/
-		GlobalGeneProfileMove();
+		GlobalGeneeMove();
 
 		if (! fixrr){
 			LengthRelRateMove(1,10);
@@ -228,7 +202,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 			GlobalUpdateParameters();
 			MoveRR();
 			GlobalUpdateParameters();
-			GlobalGeneProfileMove();
+			GlobalGeneMove();
 		}
 		return 1;
 	}

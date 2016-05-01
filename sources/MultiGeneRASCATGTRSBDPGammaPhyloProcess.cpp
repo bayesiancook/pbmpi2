@@ -27,15 +27,7 @@ void MultiGeneRASCATGTRSBDPPhyloProcess::Delete()	{
 	}
 }
 
-double MultiGeneRASCATGTRSBDPPhyloProcess::GlobalGeneProfileMove()	{
-
-	assert(myid == 0);
-	MESSAGE signal = GENE_MOVE;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-	return 1;
-}
-
-void MultiGeneRASCATGTRSBDPPhyloProcess::SlaveGeneProfileMove()	{
+void MultiGeneRASCATGTRSBDPPhyloProcess::SlaveGeneMove()	{
 
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
@@ -73,3 +65,4 @@ void MultiGeneRASCATGTRSBDPPhyloProcess::GlobalUpdateParameters() {}
 void MultiGeneRASCATGTRSBDPPhyloProcess::SlaveUpdateParameters() {}
 
 void MultiGeneRASCATGTRSBDPPhyloProcess::SlaveExecute(MESSAGE)	{}
+

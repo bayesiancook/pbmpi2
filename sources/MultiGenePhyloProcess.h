@@ -46,12 +46,8 @@ class MultiGeneMPIModule	{
 
 };
 
-class MultiGeneProfileProcess : public virtual ProfileProcess, public virtual MultiGeneMPIModule	{
 
-};
-
-
-class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiGeneProfileProcess	{
+class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiGeneMPIModule	{
 
 	public:
 
@@ -80,8 +76,8 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	void GlobalSample();
 	void SlaveSample();
 
-	void GlobalGeneMove();
-	void SlaveGeneMove();
+	virtual void GlobalGeneMove();
+	virtual void SlaveGeneMove();
 
 	void SlaveUnfold();
 	void SlaveCollapse();

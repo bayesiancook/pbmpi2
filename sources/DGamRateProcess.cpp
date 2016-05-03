@@ -86,14 +86,18 @@ void DGamRateProcess::UpdateDiscreteCategories()	{
 }
 
 void DGamRateProcess::SampleRate()	{
-	// alpha = rnd::GetRandom().sExpo();
-	alpha = 1;
-	UpdateDiscreteCategories();
+	if (! FixAlpha())	{
+		// alpha = rnd::GetRandom().sExpo();
+		alpha = 1;
+		UpdateDiscreteCategories();
+	}
 }
 
 void DGamRateProcess::PriorSampleRate()	{
-	alpha = rnd::GetRandom().sExpo();
-	UpdateDiscreteCategories();
+	if (! FixAlpha())	{
+		alpha = rnd::GetRandom().sExpo();
+		UpdateDiscreteCategories();
+	}
 }
 
 double DGamRateProcess::LogRatePrior()	{

@@ -80,10 +80,12 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 
 	int GetInfProbCount() {return infprobcount;}
 
-	protected:
+	int* ratealloc;
 
 	virtual void ActivateZip() {}
 	virtual void InactivateZip() {}
+
+	protected:
 
 	void Create();
 	void Delete();
@@ -186,7 +188,6 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 	double* sitelogL;
 	double* meansiterate;
 	double logL;
-	int* ratealloc;
 
 	int infprobcount;
 	int suboverflowcount;

@@ -44,13 +44,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void SlaveGibbsSPRScan(int,int);
 	void LocalGibbsSPRScan(int,int);
 
-	virtual void SlaveLikelihood(int,int);
-	double LocalLikelihood(int,int);
-
-	virtual void SlavePropose(int,double);
+	virtual void SlaveProposeMove(int,double);
 	virtual void SlaveRestore(int);
 	virtual void SlaveReset(int,bool);
-	virtual void SlaveSMultiply(int,bool);
+	virtual void SlaveMultiplyByStationaries(int,bool);
 	virtual void SlaveMultiply(int,int,bool);
 	virtual void SlaveInitialize(int,int,bool);
 	virtual void SlavePropagate(int,int,bool,double);
@@ -122,9 +119,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void GlobalBackupTree();
 	void GlobalRestoreTree();
 	void GlobalSwapTree();
-	void SlaveBackupTree();
-	void SlaveRestoreTree();
-	void SlaveSwapTree();
+	virtual void SlaveBackupTree();
+	virtual void SlaveRestoreTree();
+	virtual void SlaveSwapTree();
 
 	virtual void GlobalActivateFastTopo();
 	virtual void GlobalInactivateFastTopo();
@@ -144,6 +141,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	// weird but simpler for multiple inheritance reasons
 	virtual void GlobalActivateZip();
 	virtual void GlobalInactivateZip();
+
+	virtual void SlaveActivateZip();
+	virtual void SlaveInactivateZip();
 
 	virtual double SiteLogLikelihood(int site);
 	virtual void SampleSiteMapping(int site);
@@ -199,7 +199,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double GlobalRestrictedTemperedMove();	
 
 	void GlobalSetMinMax(double min, double max);
-	void SlaveSetMinMax();
+	virtual void SlaveSetMinMax();
 
 	// print out the first line (header) of the trace file
 	virtual void TraceHeader(ostream& os) = 0;
@@ -395,10 +395,16 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		exit(1);
 	}
 
-	const TaxonSet* GetTaxonSet() const {return GetData()->GetTaxonSet();}
+	const TaxonSet* GetTaxonSet() const {
+		return GetData()->GetTaxonSet();
+	}
 
 	void GlobalUpdateConditionalLikelihoods();
+	virtual void SlaveUpdateConditionalLikelihoods();
+
 	double GlobalComputeNodeLikelihood(const Link* from, int auxindex = -1);
+	virtual void SlaveComputeNodeLikelihood(int,int);
+	double LocalComputeNodeLikelihood(int,int);
 
 	// Feb 1st, 2016
 	// special device set up for calculating, on the fly, the likelihood summed over profile allocations
@@ -411,8 +417,22 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	protected:
 
-	virtual SequenceAlignment* GetData() {return data;}
-	virtual const SequenceAlignment* GetData() const {return data;}
+	virtual SequenceAlignment* GetData() {
+		if (! data)	{
+			cerr << "error in PhyloProcess::GetData: no data\n";
+			exit(1);
+		}
+		return data;
+	}
+
+	virtual const SequenceAlignment* GetData() const {
+		if (! data)	{
+			cerr << "error in PhyloProcess::GetData: no data\n";
+			exit(1);
+		}
+		return data;
+	}
+
 	virtual StateSpace* GetStateSpace() {return GetData()->GetStateSpace();}
 
 	double GetMinStat(double* profile, int site)	{
@@ -448,13 +468,21 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void Collapse();
 
 	void GlobalBroadcastTree();
-	void SlaveBroadcastTree();
+	virtual void SlaveBroadcastTree();
 
 	// MPI Global dispatcher functions
 	// all methods with a "Global" prefix are the ones through which MPI parallelization is supposed to go
 	// these methods should dispatch the computation over slaves, and possibly, collect the result of the computation
 	// in the non MPI version, they just call their non MPI counterpart (or nearly so)
 
+	void SetFixTopo(bool in)	{
+		fixtopo = in;
+	}
+
+	bool FixTopo()	{
+		return fixtopo;
+	}
+	
 	public: 
 
 	void QuickUpdate()	{
@@ -545,6 +573,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void GlobalUnfold();
 	virtual void GlobalCollapse();
 
+	virtual void SlaveUnfold();
+	virtual void SlaveCollapse();
+
 	void GlobalReset(const Link* from, bool condalloc = false);
 	void GlobalMultiply(const Link* from, const Link* to, bool condalloc = false);
 	void GlobalMultiplyByStationaries(const Link* from, bool condalloc = false);
@@ -560,7 +591,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double GibbsNNI(double tuning, int);
 	int  GlobalNNI(Link*,double,int);
 	void GlobalPropagateOverABranch(Link*);
-	void SlaveNNI(Link*,int);
+	virtual void SlavePropagateOverABranch(int);
+	void SlaveNNI(int,int);
 	void PropagateOverABranch(const Link*);
 	int SlaveSendNNILikelihood(Link*);
 	double SendRandomBranches(Link*,double,Link**&, int);
@@ -677,10 +709,13 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int GetBranchLengthSuffStatCount(int index) {return branchlengthsuffstatcount[index];}
 	double GetBranchLengthSuffStatBeta(int index) {return branchlengthsuffstatbeta[index];}
 
+	const int* GetBranchLengthSuffStatCount() {return branchlengthsuffstatcount;}
+	const double* GetBranchLengthSuffStatBeta() {return branchlengthsuffstatbeta;}
+
 	void GlobalUpdateSiteRateSuffStat();
 	void GlobalUpdateBranchLengthSuffStat();
 
-	void SlaveUpdateSiteRateSuffStat();
+	virtual void SlaveUpdateSiteRateSuffStat();
 	void SlaveUpdateBranchLengthSuffStat();
 
 	void GlobalGetMeanSiteRate();
@@ -688,6 +723,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	void GlobalActivateSumOverRateAllocations();
 	void GlobalInactivateSumOverRateAllocations();
+	virtual void SlaveActivateSumOverRateAllocations();
+	virtual void SlaveInactivateSumOverRateAllocations();
 
 	virtual int CountMapping();
 	virtual int CountMapping(int site);
@@ -729,7 +766,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		}	
 	}
 
-	void SetTree(string treefile)	{
+	virtual void SetTree(string treefile)	{
 		if (treefile == "None")	{
 			tree = new Tree(GetData()->GetTaxonSet());
 			if (GetMyid() == 0)	{
@@ -752,7 +789,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		SetDim(GetData()->GetNstate());
 	}
 
-	void New();
+	virtual void New();
 
 	void Open(istream& is);
 

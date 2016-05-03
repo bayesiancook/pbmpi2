@@ -27,6 +27,8 @@ class ExpoConjugateGTRProfileProcess : public virtual GTRProfileProcess {
 	ExpoConjugateGTRProfileProcess() : rrsuffstatcount(0), rrsuffstatbeta(0) {}
 	virtual ~ExpoConjugateGTRProfileProcess() {}
 
+	const int* GetRRSuffStatCount() {return rrsuffstatcount;}
+	const double* GetRRSuffStatBeta() {return rrsuffstatbeta;}
 	// protected:
 
 	virtual void Create();

@@ -30,6 +30,12 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 	SBDPProfileProcess() : DPProfileProcess(), V(0), maxweighterror(0), InitIncremental(0) {}
 	virtual ~SBDPProfileProcess(){}
 
+	virtual double Move(double tuning = 1, int n = 1, int nrep = 1, int nalloc = 1);
+
+	int GetNDisplayedComponent()	{
+		return GetNOccupiedComponent();
+	}
+
 	protected:
 
 	double GetMaxWeightError() {return maxweighterror;}
@@ -38,7 +44,6 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 	virtual void Create();
 	virtual void Delete();
 
-	virtual double Move(double tuning = 1, int n = 1, int nrep = 1, int nalloc = 1);
 	virtual double MPIMove(double tuning = 1, int n = 1, int nrep = 1, int nalloc = 1);
 	virtual double NonMPIMove(double tuning = 1, int n = 1, int nrep = 1, int nalloc = 1);
 
@@ -53,10 +58,6 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 			}
 		}
 		return tot;
-	}
-
-	int GetNDisplayedComponent()	{
-		return GetNOccupiedComponent();
 	}
 
 	int GetLastOccupiedComponent()	{

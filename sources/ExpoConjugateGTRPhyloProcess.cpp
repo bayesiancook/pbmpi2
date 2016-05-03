@@ -133,6 +133,7 @@ void ExpoConjugateGTRPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 	MESSAGE signal = UPDATE_SPROFILE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
+	/*
 	int nalloc = GetMaxSiteNumber() * GetNstate();
 	int ivector[nalloc];
 	double dvector[nalloc];
@@ -161,6 +162,7 @@ void ExpoConjugateGTRPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 			}
 		}
 	}
+	*/
 
 	}
 	else	{
@@ -171,6 +173,7 @@ void ExpoConjugateGTRPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 void ExpoConjugateGTRPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 
 	UpdateSiteProfileSuffStat();
+	/*
 	int workload = (GetSiteMax() - GetSiteMin())*GetNstate();
 	int ivector[workload];
 	int k = 0;
@@ -194,6 +197,7 @@ void ExpoConjugateGTRPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 		}
 	}
 	MPI_Send(dvector,workload,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+	*/
 
 }
 

@@ -20,7 +20,63 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "MultiGenePhyloProcess.h"
 
-void MultiGeneMPIModule::AllocateAlignments(string datafile, string treefile)	{
+void MultiGenePhyloProcess::New()	{
+
+
+	CreateMPI(0);
+	// SetMPI(myid,nprocs);
+	AllocateAlignments(datafile,treefile);
+	SetProfileDim();
+	SetTree(treefile);
+
+	Create();
+
+	if (! GetMyid())	{
+		GlobalBroadcastTree();
+		Sample();
+		GlobalUpdateParameters();
+		GlobalSample();
+		GlobalUnfold();
+	}
+	else	{
+		SlaveBroadcastTree();
+	}
+
+	if (BPP)	{
+		BPP->RegisterWithTaxonSet(GetData()->GetTaxonSet());
+	}
+}
+
+
+void MultiGenePhyloProcess::Create()	{
+
+	if (! genelnL)	{
+		PhyloProcess::Create();
+		genelnL = new double[Ngene];
+		tmpgenelnL = new double[Ngene];
+		process = new PhyloProcess*[Ngene];
+		for (int gene=0; gene<Ngene; gene++)	{
+			process[gene] = 0;
+		}
+	}
+}
+
+void MultiGenePhyloProcess::Delete()	{
+
+	if (genelnL)	{
+		delete[] genelnL;
+		delete[] tmpgenelnL;
+		genelnL = 0;
+		for (int gene=0; gene<Ngene; gene++)	{
+			delete process[gene];
+			process[gene] = 0;
+		}
+		delete[] process;
+		PhyloProcess::Delete();
+	}
+}
+
+void MultiGenePhyloProcess::AllocateAlignments(string datafile, string treefile)	{
 
 	ifstream is(datafile.c_str());
 	is >> Ngene;
@@ -32,22 +88,24 @@ void MultiGeneMPIModule::AllocateAlignments(string datafile, string treefile)	{
 	// genedata = new SequenceAlignment*[Ngene];
 	for (int gene=0; gene<Ngene; gene++)	{
 		is >> genename[gene];
-		SequenceAlignment* data = new FileSequenceAlignment(genename[gene],0,myid);
-		int nstate = data->GetNstate();
+		SequenceAlignment* localdata = new FileSequenceAlignment(genename[gene]);
+		int nstate = localdata->GetNstate();
 		if (! gene)	{
-			Nstate = nstate;
-			statespace = data->GetStateSpace();
+			data = localdata;
 		}
 		else	{
-			if (Nstate != nstate)	{
+			if (nstate != data->GetNstate())	{
 				cerr << "error: all data files do not have the same alphabet\n";
+				cerr << nstate << '\t' << data->GetNstate() << '\n';
 				exit(1);
 			}
 		}
 
-		genesize[gene] = data->GetNsite();
-		geneweight[gene] = data->GetNsite() * data->GetNtaxa();
-		delete data;
+		genesize[gene] = localdata->GetNsite();
+		geneweight[gene] = localdata->GetNsite() * localdata->GetNtaxa();
+		if (gene)	{
+			delete localdata;
+		}
 	}
 	delete tis;
 	tis = 0;
@@ -129,11 +187,12 @@ void MultiGeneMPIModule::AllocateAlignments(string datafile, string treefile)	{
 	}
 	if (! myid)	{
 		cerr << '\n';
+		cerr << "number of sites allocated to each slave:\n";
 		for (int i=1; i<nprocs; i++)	{
 			cerr << i << '\t' << globalnsite[i] << '\n';
 		}
 		cerr << '\n';
-		cerr << "total: " << GetGlobalNsite() << '\n';
+		// cerr << "total: " << GetGlobalNsite() << '\n';
 	}
 	
 	// check total size
@@ -158,81 +217,42 @@ void MultiGeneMPIModule::AllocateAlignments(string datafile, string treefile)	{
 	delete[] geneweight;
 }
 
-void MultiGenePhyloProcess::Create()	{
+int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{
 
-	if (! genelnL)	{
-		genelnL = new double[Ngene];
-		tmpgenelnL = new double[Ngene];
+	switch(signal) {
+	case SAMPLE:
+		SlaveSample();
+		return 1;
+		break;
+	case GENE_MOVE:
+		SlaveGeneMove();
+		return 1;
+		break;
+
+	default:
+		return 0;
+		// PhyloProcess::SlaveExecute(signal);
 	}
-}
-
-void MultiGenePhyloProcess::Delete()	{
-
-	if (genelnL)	{
-		delete[] genelnL;
-		delete[] tmpgenelnL;
-		genelnL = 0;
-	}
-}
-
-/*
-double MultiGenePhyloProcess::GetLogLikelihood()	{
-	GlobalCollectGeneLikelihoods();
-	lnL = 0;
-	for (int gene=0; gene<Ngene; gene++)	{
-		lnL += genelnL[gene];
-	}
-	return lnL;
-}
-
-void MultiGenePhyloProcess::GlobalCollectGeneLikelihoods()	{
-	// send signal
-	assert(myid == 0);
-	MESSAGE signal = LIKELIHOOD;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-
-	MPI_Status stat;
-	for (int j=1; j<nprocs; j++)	{
-		MPI_Recv(tmpgenelnL,Ngene,MPI_DOUBLE,j,TAG1,MPI_COMM_WORLD,&stat);
-		for (int gene=0; gene<Ngene; gene++)	{
-			if (genealloc[gene] == j)	{
-				genelnL[gene] = tmpgenelnL[gene];
-			}
-		}
-	}
-}
-
-void MultiGenePhyloProcess::SlaveSendGeneLikelihoods()	{
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			genelnL[gene] = process[gene]->GetLogLikelihood();
-		}
-	}
-	MPI_Send(genelnL,Ngene,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
-}
-*/
-
-void MultiGenePhyloProcess::SlaveLikelihood(int fromindex,int auxindex) {
-	double totlogl = 0;
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			genelnL[gene] = process[gene]->LocalLikelihood(fromindex,auxindex);
-			totlogl += genelnL[gene];
-		}
-	}
-	MPI_Send(&totlogl,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
-}
-
-void MultiGenePhyloProcess::GlobalGeneMove()	{
-	assert(myid == 0);
-	MESSAGE signal = GENE_MOVE;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 }
 
 // should be defined at the level of the non specialized PhyloProcess class
 void MultiGenePhyloProcess::GlobalSample()	{
 	assert(myid == 0);
 	MESSAGE signal = SAMPLE;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+}
+
+void MultiGenePhyloProcess::SlaveSample()	{
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->Sample();
+		}
+	}
+}
+
+void MultiGenePhyloProcess::GlobalGeneMove()	{
+	assert(myid == 0);
+	MESSAGE signal = GENE_MOVE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 }
 
@@ -244,12 +264,28 @@ void MultiGenePhyloProcess::SlaveGeneMove()	{
 	}
 }
 
-void MultiGenePhyloProcess::SlaveSample()	{
+void MultiGenePhyloProcess::SlaveBroadcastTree()	{
+
+	int len;
+	MPI_Bcast(&len,1,MPI_INT,0,MPI_COMM_WORLD);
+	unsigned char* bvector = new unsigned char[len];
+	MPI_Bcast(bvector,len,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
+	ostringstream os;
+	for (int i=0; i<len; i++)	{
+		os << bvector[i];
+	}
+	istringstream is(os.str());
+	tree->ReadFromStream(is);
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->Sample();
+			istringstream is(os.str());
+			process[gene]->GetTree()->ReadFromStream(is);
+			process[gene]->GetTree()->RegisterWith(GetData()->GetTaxonSet());
+			process[gene]->CloneTree();
+			process[gene]->GetTree2()->RegisterWith(GetData()->GetTaxonSet());
 		}
 	}
+	delete[] bvector;
 }
 
 void MultiGenePhyloProcess::SlaveUnfold()	{
@@ -268,29 +304,78 @@ void MultiGenePhyloProcess::SlaveCollapse()	{
 	}
 }
 
-
-void MultiGenePhyloProcess::SlaveRoot(int n) {
+void MultiGenePhyloProcess::SlaveActivateSumOverRateAllocations()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->SlaveRoot(n);
+			process[gene]->ActivateSumOverRateAllocations();
+			process[gene]->sumratealloc = 1;
+		}
+	}
+	sumratealloc = 1;
+}
+
+void MultiGenePhyloProcess::SlaveInactivateSumOverRateAllocations()	{
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->InactivateSumOverRateAllocations(process[gene]->ratealloc);
+			process[gene]->sumratealloc = 0;
+		}
+	}
+	sumratealloc = 0;
+}
+
+void MultiGenePhyloProcess::SlaveActivateZip()	{
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->ActivateZip();
 		}
 	}
 }
 
-void MultiGenePhyloProcess::SlavePropose(int n,double x) {
+void MultiGenePhyloProcess::SlaveInactivateZip()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->SlavePropose(n,x);
+			process[gene]->InactivateZip();
 		}
 	}
 }
 
-void MultiGenePhyloProcess::SlaveRestore(int n) {
+void MultiGenePhyloProcess::SlaveUpdateConditionalLikelihoods()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->SlaveRestore(n);
+			process[gene]->UpdateConditionalLikelihoods();
 		}
 	}
+}
+
+void MultiGenePhyloProcess::SlaveComputeNodeLikelihood(int fromindex,int auxindex) {
+	double totlogl = 0;
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			genelnL[gene] = process[gene]->LocalComputeNodeLikelihood(fromindex,auxindex);
+			totlogl += genelnL[gene];
+		}
+	}
+	MPI_Send(&totlogl,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
+void MultiGenePhyloProcess::SlaveGetFullLogLikelihood()	{
+
+	cerr << "in multigenephyloprocess::slavegetfullloglikelihood\n";
+	exit(1);
+	double totlogl = 0;
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			genelnL[gene] = process[gene]->GetFullLogLikelihood();
+			totlogl += genelnL[gene];
+		}
+	}
+	double sum[2];
+	sum[0] = totlogl;
+	// normally, should be the likelihood conditional on allocations
+	sum[1] = totlogl;
+	// sum[1] = logL;
+	MPI_Send(&totlogl,2,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
 void MultiGenePhyloProcess::SlaveReset(int n,bool v) {
@@ -309,10 +394,10 @@ void MultiGenePhyloProcess::SlaveMultiply(int n,int m,bool v) {
 	}
 }
 
-void MultiGenePhyloProcess::SlaveSMultiply(int n,bool v) {
+void MultiGenePhyloProcess::SlaveMultiplyByStationaries(int n,bool v) {
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->SlaveSMultiply(n,v);
+			process[gene]->SlaveMultiplyByStationaries(n,v);
 		}
 	}
 }
@@ -333,6 +418,66 @@ void MultiGenePhyloProcess::SlavePropagate(int n,int m,bool v,double t) {
 	}
 }
 
+void MultiGenePhyloProcess::SlaveProposeMove(int n,double x) {
+	PhyloProcess::SlaveProposeMove(n,x);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->SlaveProposeMove(n,x);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveRestore(int n) {
+	PhyloProcess::SlaveRestore(n);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->SlaveRestore(n);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveRoot(int n) {
+	PhyloProcess::SlaveRoot(n);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->SlaveRoot(n);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveBackupTree()	{
+	GetTree()->Backup();
+	GetTree2()->Backup();
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->GetTree()->Backup();
+			process[gene]->GetTree2()->Backup();
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveRestoreTree()	{
+	GetTree()->Restore();
+	GetTree2()->Restore();
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->GetTree()->Restore();
+			process[gene]->GetTree2()->Restore();
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveSwapTree()	{
+	GetTree()->Swap();
+	GetTree2()->Swap();
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->GetTree()->Swap();
+			process[gene]->GetTree2()->Swap();
+		}
+	}
+}
+
 void MultiGenePhyloProcess::SlaveGibbsSPRScan(int idown, int iup)	{
 	for(int i=0; i<GetNbranch(); i++) {
 		loglarray[i] = 0.0;
@@ -348,29 +493,94 @@ void MultiGenePhyloProcess::SlaveGibbsSPRScan(int idown, int iup)	{
 	MPI_Send(loglarray,GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
-void MultiGenePhyloProcess::SlaveExecute(MESSAGE signal)	{
+void MultiGenePhyloProcess::SlaveSetMinMax()	{
 
-	switch(signal) {
-	case LIKELIHOOD:
-		SlaveSendGeneLikelihoods();
-		break;
-	case SAMPLE:
-		SlaveSample();
-		break;
-	case UNFOLD:
-		SlaveUnfold();
-		break;
-	case COLLAPSE:
-		SlaveCollapse();
-		break;
-	case PARAMETER_DIFFUSION:
-		SlaveUpdateParameters();
-		break;
-	case GENE_MOVE:
-		SlaveGeneMove();
-		break;
-
-	default:
-		PhyloProcess::SlaveExecute(signal);
+	double minmax[2];
+	MPI_Bcast(minmax,2,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->SetMinMax(minmax[0],minmax[1]);
+		}
 	}
 }
+
+void MultiGenePhyloProcess::SlaveDetach(int n,int m) {
+
+	LocalDetach(n,m);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalDetach(n,m);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveAttach(int n,int m,int p,int q) {
+
+	LocalAttach(n,m,p,q);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalAttach(n,m,p,q);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveDetach1(int n,int m) {
+
+	LocalDetach1(n,m);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalDetach1(n,m);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveAttach1(int n,int m,int p,int q) {
+
+	LocalAttach1(n,m,p,q);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalAttach1(n,m,p,q);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveDetach2(int n,int m) {
+
+	LocalDetach2(n,m);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalDetach2(n,m);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveAttach2(int n,int m,int p,int q) {
+
+	LocalAttach2(n,m,p,q);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalAttach2(n,m,p,q);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveSwapRoot()	{
+
+	SwapRoot();
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->SwapRoot();
+		}
+	}
+}
+
+
+void MultiGenePhyloProcess::SlaveUpdateSiteRateSuffStat()	{
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->UpdateSiteRateSuffStat();
+		}
+	}
+}
+

@@ -35,6 +35,13 @@ class MatrixMixtureProfileProcess : public virtual MatrixProfileProcess, public 
 		return matrixarray[alloc[site]];
 	}
 
+	// should be called each time global parameters are modified
+	virtual void UpdateMatrices()	{
+		for (int k=0; k<GetNcomponent(); k++)	{
+			UpdateMatrix(k);
+		}
+	}
+
 	protected:
 
 	Chrono sschrono;
@@ -42,13 +49,6 @@ class MatrixMixtureProfileProcess : public virtual MatrixProfileProcess, public 
 	// called at the beginning and the end of the run
 	virtual void Create();
 	virtual void Delete();
-
-	// should be called each time global parameters are modified
-	virtual void UpdateMatrices()	{
-		for (int k=0; k<GetNcomponent(); k++)	{
-			UpdateMatrix(k);
-		}
-	}
 
 	virtual void CreateMatrices()	{
 		for (int k=0; k<GetNmodeMax(); k++)	{

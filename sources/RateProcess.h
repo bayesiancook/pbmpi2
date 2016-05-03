@@ -96,6 +96,11 @@ class RateProcess : public virtual MPIModule {
 		exit(1);
 	}
 
+	virtual void UpdateSiteRateSuffStat()	{
+		cerr << "in RateProcess::UpdateSiteRateSuffStat\n";
+		exit(1);
+	}
+
 	protected:
 
 	// abstract classes will be implemented in phyloprocess
@@ -108,10 +113,6 @@ class RateProcess : public virtual MPIModule {
 		exit(1);
 	}
 
-	virtual void UpdateSiteRateSuffStat()	{
-		cerr << "in RateProcess::UpdateSiteRateSuffStat\n";
-		exit(1);
-	}
 	virtual double GetSiteRateSuffStatBeta(int site)	{
 		cerr << "in RateProcess::GetSiteRateSuffStatBeta\n";
 		exit(1);

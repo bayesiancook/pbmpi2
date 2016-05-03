@@ -28,6 +28,10 @@ class DPProfileProcess: public virtual DirichletMixtureProfileProcess	{
 	DPProfileProcess() : kappa(1), movekappa(true), kappaprior(0), Nadd(30), Ninc(3) {}
 	virtual ~DPProfileProcess(){}
 
+	double GetKappa()	{
+		return kappa;
+	}
+
 	protected:
 
 	virtual double Move(double tuning = 1, int n = 1, int nrep = 1);

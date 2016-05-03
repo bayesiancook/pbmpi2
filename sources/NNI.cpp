@@ -248,9 +248,10 @@ double PhyloProcess::SendRandomBranches(Link* from, double tuning, Link**& branc
 
 
 
-void PhyloProcess::SlaveNNI(Link* from, int n){
-	
+void PhyloProcess::SlaveNNI(int l, int n){
 
+	Link* from = GetLinkForGibbs(l);
+	
 	MPI_Status stat;
 	Link* up = from->Next();
 
@@ -335,6 +336,12 @@ void PhyloProcess::GlobalPropagateOverABranch(Link* from)	{
 		int args[] = {GetLinkIndex(from)};
 		MPI_Bcast(args,1,MPI_INT,0,MPI_COMM_WORLD);
 	}
+}
+
+void PhyloProcess::SlavePropagateOverABranch(int l)	{
+
+	const Link* from = GetLinkForGibbs(l);
+	PropagateOverABranch(from);
 }
 
 // Update the conditional Likelihoods associated to from

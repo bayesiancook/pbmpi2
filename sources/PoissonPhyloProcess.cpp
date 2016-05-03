@@ -127,6 +127,7 @@ void PoissonPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 	MESSAGE signal = UPDATE_SPROFILE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
+	/*
 	// each slave computes its array for sitemin <= site < sitemax
 	// thus, one just needs to gather all arrays into the big master array 0 <= site < Nsite
 	// (gather)
@@ -144,6 +145,7 @@ void PoissonPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 			}
 		}
 	}
+	*/
 	}
 	else	{
 		UpdateSiteProfileSuffStat();
@@ -153,6 +155,7 @@ void PoissonPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 void PoissonPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 
 	UpdateSiteProfileSuffStat();
+	/*
 	int workload = (GetSiteMax() - GetSiteMin())*GetDim();
 	int ivector[workload];
 	int k = 0;
@@ -165,6 +168,7 @@ void PoissonPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 		}
 	}
 	MPI_Send(ivector,workload,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	*/
 }
 
 

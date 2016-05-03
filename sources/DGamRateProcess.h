@@ -23,7 +23,7 @@ class DGamRateProcess : public virtual RateProcess {
 
 	public:
 
-	DGamRateProcess() : Ncat(0), rate(0) {}
+	DGamRateProcess() : Ncat(0), rate(0), fixalpha(false) {}
 	virtual ~DGamRateProcess() {}
 
 	double GetAlpha() {return alpha;}
@@ -41,6 +41,14 @@ class DGamRateProcess : public virtual RateProcess {
 	virtual int GetNrate() {return GetNcat();}
 
 	int GetNcat() {return Ncat;}
+
+	void SetFixAlpha(bool in)	{
+		fixalpha = in;
+	}
+
+	bool FixAlpha()	{
+		return fixalpha;
+	}
 
 	double GetRate(int site, int cat = 0)	{
 		// cat should be == 0
@@ -112,6 +120,10 @@ class DGamRateProcess : public virtual RateProcess {
 	void ToStream(ostream& os);
 	void FromStream(istream& is);
 
+	virtual void UpdateRateSuffStat();
+	const int* GetRateSuffStatCount() {return ratesuffstatcount;}
+	const double* GetRateSuffStatBeta() {return ratesuffstatbeta;}
+
 	protected:
 
 	void SetNcat(int inncat)	{
@@ -125,10 +137,8 @@ class DGamRateProcess : public virtual RateProcess {
 	void PriorSampleRate();
 	double LogRatePrior();
 
-
 	void GlobalUpdateRateSuffStat();
-	virtual void SlaveUpdateRateSuffStat();
-	void UpdateRateSuffStat();
+	void SlaveUpdateRateSuffStat();
 	double RateSuffStatLogProb();
 
 	void UpdateDiscreteCategories();
@@ -140,6 +150,7 @@ class DGamRateProcess : public virtual RateProcess {
 	double* ratesuffstatbeta;
 
 	int Ncat;
+	bool fixalpha;
 };
 
 #endif

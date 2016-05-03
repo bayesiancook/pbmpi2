@@ -79,9 +79,11 @@ void GammaBranchProcess::SampleLength(const Branch* branch)	{
 }
 	
 void GammaBranchProcess::PriorSampleLength()	{
-	branchalpha = rnd::GetRandom().sExpo();
-	branchbeta = 10 * rnd::GetRandom().sExpo();
-	SampleLength();
+	if (! fixbl)	{
+		branchalpha = rnd::GetRandom().sExpo();
+		branchbeta = 10 * rnd::GetRandom().sExpo();
+		SampleLength();
+	}
 }
 
 double GammaBranchProcess::LogHyperPrior()	{

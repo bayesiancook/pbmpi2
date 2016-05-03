@@ -265,29 +265,6 @@ void BranchProcess::GlobalAttach(Link* down, Link* up, Link* fromdown, Link* fro
 }
 
 
-
-void BranchProcess::SlaveDetach(int n,int m) {
-	Link* down = GetLinkForGibbs(n);
-	Link* up = GetLinkForGibbs(m);
-	Link* down2 = GetLinkForGibbs2(n);
-	Link* up2 = GetLinkForGibbs2(m);
-	GetTree2()->Detach(down2,up2);
-	GetTree()->Detach(down,up);
-}
-
-void BranchProcess::SlaveAttach(int n,int m,int p,int q) {
-	Link* down = GetLinkForGibbs(n);
-	Link* up = GetLinkForGibbs(m);
-	Link* fromdown = GetLinkForGibbs(p);
-	Link* fromup = GetLinkForGibbs(q);
-	Link* down2 = GetLinkForGibbs2(n);
-	Link* up2 = GetLinkForGibbs2(m);
-	Link* fromdown2 = GetLinkForGibbs2(p);
-	Link* fromup2 = GetLinkForGibbs2(q);
-	GetTree2()->Attach(down2,up2,fromdown2,fromup2);
-	GetTree()->Attach(down,up,fromdown,fromup);
-}
-
 Link* BranchProcess::GlobalDetach1(Link* down, Link* up)	{
 
 	if (GetNprocs() > 1)	{
@@ -315,24 +292,6 @@ void BranchProcess::GlobalAttach1(Link* down, Link* up, Link* fromdown, Link* fr
 		// int args[] = {down->GetIndex(),up->GetIndex(),fromdown->GetIndex(),fromup->GetIndex()};
 		MPI_Bcast(args,4,MPI_INT,0,MPI_COMM_WORLD);
 	}
-	GetTree()->Attach(down,up,fromdown,fromup);
-}
-
-
-
-void BranchProcess::SlaveDetach1(int n,int m) {
-	Link* down = GetLinkForGibbs(n);
-	Link* up = GetLinkForGibbs(m);
-	Link* down2 = GetLinkForGibbs2(n);
-	Link* up2 = GetLinkForGibbs2(m);
-	GetTree()->Detach(down,up);
-}
-
-void BranchProcess::SlaveAttach1(int n,int m,int p,int q) {
-	Link* down = GetLinkForGibbs(n);
-	Link* up = GetLinkForGibbs(m);
-	Link* fromdown = GetLinkForGibbs(p);
-	Link* fromup = GetLinkForGibbs(q);
 	GetTree()->Attach(down,up,fromdown,fromup);
 }
 
@@ -368,19 +327,84 @@ void BranchProcess::GlobalAttach2(Link* down, Link* up, Link* fromdown, Link* fr
 }
 
 
+void BranchProcess::SlaveDetach(int n,int m) {
+	LocalDetach(n,m);
+}
+
+void BranchProcess::LocalDetach(int n,int m) {
+	Link* down = GetLinkForGibbs(n);
+	Link* up = GetLinkForGibbs(m);
+	Link* down2 = GetLinkForGibbs2(n);
+	Link* up2 = GetLinkForGibbs2(m);
+	GetTree2()->Detach(down2,up2);
+	GetTree()->Detach(down,up);
+}
+
+void BranchProcess::SlaveAttach(int n,int m,int p,int q) {
+	LocalAttach(n,m,p,q);
+}
+
+void BranchProcess::LocalAttach(int n,int m,int p,int q) {
+	Link* down = GetLinkForGibbs(n);
+	Link* up = GetLinkForGibbs(m);
+	Link* fromdown = GetLinkForGibbs(p);
+	Link* fromup = GetLinkForGibbs(q);
+	Link* down2 = GetLinkForGibbs2(n);
+	Link* up2 = GetLinkForGibbs2(m);
+	Link* fromdown2 = GetLinkForGibbs2(p);
+	Link* fromup2 = GetLinkForGibbs2(q);
+	GetTree2()->Attach(down2,up2,fromdown2,fromup2);
+	GetTree()->Attach(down,up,fromdown,fromup);
+}
+
+
+void BranchProcess::SlaveDetach1(int n,int m) {
+	LocalDetach1(n,m);
+}
+
+void BranchProcess::LocalDetach1(int n,int m) {
+	Link* down = GetLinkForGibbs(n);
+	Link* up = GetLinkForGibbs(m);
+	Link* down2 = GetLinkForGibbs2(n);
+	Link* up2 = GetLinkForGibbs2(m);
+	GetTree()->Detach(down,up);
+}
+
+void BranchProcess::SlaveAttach1(int n,int m,int p,int q) {
+	LocalAttach1(n,m,p,q);
+}
+
+void BranchProcess::LocalAttach1(int n,int m,int p,int q) {
+	Link* down = GetLinkForGibbs(n);
+	Link* up = GetLinkForGibbs(m);
+	Link* fromdown = GetLinkForGibbs(p);
+	Link* fromup = GetLinkForGibbs(q);
+	GetTree()->Attach(down,up,fromdown,fromup);
+}
+
+
 void BranchProcess::SlaveDetach2(int n,int m) {
+	LocalDetach2(n,m);
+}
+
+void BranchProcess::LocalDetach2(int n,int m) {
 	Link* down2 = GetLinkForGibbs2(n);
 	Link* up2 = GetLinkForGibbs2(m);
 	GetTree2()->Detach(down2,up2);
 }
 
 void BranchProcess::SlaveAttach2(int n,int m,int p,int q) {
+	LocalAttach2(n,m,p,q);
+}
+
+void BranchProcess::LocalAttach2(int n,int m,int p,int q) {
 	Link* down2 = GetLinkForGibbs2(n);
 	Link* up2 = GetLinkForGibbs2(m);
 	Link* fromdown2 = GetLinkForGibbs2(p);
 	Link* fromup2 = GetLinkForGibbs2(q);
 	GetTree2()->Attach(down2,up2,fromdown2,fromup2);
 }
+
 
 void BranchProcess::GetWeights(Link* from, map<pair<Link*,Link*>,double>& weights, double lambda)	{
 

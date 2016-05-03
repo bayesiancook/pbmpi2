@@ -22,7 +22,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "ExpoConjugateGTRProfileProcess.h"
 
 
-class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual GammaBranchProcess, public virtual DGamRateProcess, public virtual ExpoConjugateGTRProfileProcess	{
+class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual GammaBranchProcess, public virtual DGamRateProcess, public virtual RASCATGTRSBDPGammaPhyloProcess	{
+// class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual GammaBranchProcess, public virtual DGamRateProcess, public virtual ExpoConjugateGTRProfileProcess	{
 
 	public:
 
@@ -38,12 +39,14 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 	void UpdateRateSuffStat();
 	void UpdateBranchLengthSuffStat();
 
+	void SlaveUpdateSiteProfileSuffStat();
+
 	double GlobalGetMeanNcomponent();
 	double GlobalGetMeanStatEnt();
 	double GlobalGetMeanStatAlpha();
-	double GlobalGetMeanStatKappa();
+	double GlobalGetMeanKappa();
 
-	void SlaveGetMeanKappa();
+	void SlaveGetMeanNcomponent();
 	void SlaveGetMeanStatEnt();
 	void SlaveGetMeanStatAlpha();
 	void SlaveGetMeanKappa();
@@ -58,6 +61,15 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 	virtual void Create();
 	virtual void Delete();
 
+	RASCATGTRSBDPGammaPhyloProcess* GetProcess(int gene)	{
+		RASCATGTRSBDPGammaPhyloProcess* proc = dynamic_cast<RASCATGTRSBDPGammaPhyloProcess*> (process[gene]);
+		if ((! proc) && (process[gene]))	{
+			cerr << "error in phyloprocess conversion\n";
+			exit(1);
+		}
+		return proc;
+	}
+
 	MultiGeneRASCATGTRSBDPGammaPhyloProcess() {}
 
 	MultiGeneRASCATGTRSBDPGammaPhyloProcess(int nratecat, string inrrtype, int inkappaprior)	{
@@ -65,9 +77,6 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		Ncat = nratecat;
 		rrtype = inrrtype;
 		kappaprior = inkappaprior;
-
-		// if slave
-		// create the array of gene-specific phylo processes
 	}
 
 	MultiGeneRASCATGTRSBDPGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
@@ -106,6 +115,10 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		os << '\n'; 
 	}
 
+	virtual double GetNormalizationFactor()	{
+		return 1.0;
+	}
+
 	void Trace(ostream& os)	{
 
 		os << GetSize();
@@ -121,6 +134,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		}
 
 		os << '\t' << GetLogLikelihood();
+		// os << '\t' << GetTotalLength();
 		os << '\t' << GetRenormTotalLength();
 		os << '\t' << GetAlpha();
 		os << '\t' << GlobalGetMeanNcomponent();
@@ -139,54 +153,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		PhyloProcess::Monitor(os);
 	}
 
-	double Move(double tuning = 1.0)	{
-
-		chronototal.Start();
-
-		propchrono.Start();
-		BranchLengthMove(tuning);
-		BranchLengthMove(0.1 * tuning);
-
-		if (! fixtopo)	{
-			MoveTopo();
-		}
-
-		propchrono.Stop();
-
-		GlobalCollapse();
-
-		GammaBranchProcess::Move(tuning,10);
-
-		GlobalUpdateParameters();
-		DGamRateProcess::Move(0.3*tuning,10);
-		DGamRateProcess::Move(0.03*tuning,10);
-
-		GlobalUpdateParameters();
-		MoveRR();
-		GlobalUpdateParameters();
-		/*
-		ExpoConjugateGTRSBDPProfileProcess::Move(1,1,10);
-		if (iscodon){
-			ExpoConjugateGTRSBDPProfileProcess::Move(0.1,1,15);
-			ExpoConjugateGTRSBDPProfileProcess::Move(0.01,1,15);
-		}
-		*/
-		GlobalGeneeMove();
-
-		if (! fixrr){
-			LengthRelRateMove(1,10);
-			LengthRelRateMove(0.1,10);
-			LengthRelRateMove(0.01,10);
-		}
-
-		GlobalUpdateParameters();
-
-		GlobalUnfold();
-
-		chronototal.Stop();
-
-		return 1;
-	}
+	double Move(double tuning = 1.0);
 
 	virtual double GlobalRestrictedMoveCycle(int nrep = 1, double tuning = 1.0)	{
 
@@ -222,14 +189,14 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 	void ToStream(ostream& os)	{
 		GammaBranchProcess::ToStream(os);
 		DGamRateProcess::ToStream(os);
-		ExpoConjugateGTRProfileProcess::ToStream(os);
+		// ExpoConjugateGTRProfileProcess::ToStream(os);
 		// ExpoConjugateGTRSBDPProfileProcess::ToStream(os);
 	}
 
 	void FromStream(istream& is)	{
 		GammaBranchProcess::FromStream(is);
 		DGamRateProcess::FromStream(is);
-		ExpoConjugateGTRProfileProcess::FromStream(is);
+		// ExpoConjugateGTRProfileProcess::FromStream(is);
 		// ExpoConjugateGTRSBDPProfileProcess::FromStream(is);
 		GlobalUpdateParameters();
 	}
@@ -243,6 +210,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 	void SlaveComputeSiteLogL();
 	*/
 
+	int kappaprior;
 };
 
 #endif

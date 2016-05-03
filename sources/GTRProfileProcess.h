@@ -40,6 +40,12 @@ class GTRProfileProcess : public virtual MatrixProfileProcess {
 		return rr;
 	}
 
+	void SetRR(const double* inrr)	{
+		for (int i=0; i<Nrr; i++)	{
+			rr[i] = inrr[i];
+		}
+	}
+
 	double GetRRMean()	{
 		double mean = 0;
 		for (int i=0; i<Nrr; i++)	{
@@ -50,6 +56,14 @@ class GTRProfileProcess : public virtual MatrixProfileProcess {
 	}
 
 	void SetRR(string type);
+
+	void SetFixRR(bool in)	{
+		fixrr = in;
+	}
+
+	bool FixRR()	{
+		return fixrr;
+	}
 
 	double GetRRVarCoeff()	{
 		double mean = 0;

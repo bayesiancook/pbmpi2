@@ -55,7 +55,7 @@ class ExpoConjugateGTRPhyloProcess : public virtual GTRPhyloProcess, public virt
 	void DeleteSuffStat();
 
 	void GlobalUpdateSiteProfileSuffStat();
-	void SlaveUpdateSiteProfileSuffStat();
+	virtual void SlaveUpdateSiteProfileSuffStat();
 
 	void UpdateSiteRateSuffStat();
 	void UpdateBranchLengthSuffStat();

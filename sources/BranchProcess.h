@@ -25,7 +25,7 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 
 	public:
 
-	BranchProcess() : tree(0), blarray(0), swaproot(0) {}
+	BranchProcess() : tree(0), blarray(0), swaproot(0), fixbl(0) {}
 	virtual ~BranchProcess() {}
 
 	NewickTree* GetLengthTree() {return this;}
@@ -45,16 +45,28 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		return tree->GetRoot();
 	}
 
+	Link* GetRoot2() {return tree2->GetRoot();}
+	const Link* GetRoot2() const {return tree2->GetRoot();}
+
 	void GlobalSwapRoot();
+	virtual void SlaveSwapRoot()	{
+		SwapRoot();
+	}
 
 	void SwapRoot()	{
 		swaproot = 1 - swaproot;
 	}
-	Link* GetRoot2() {return tree2->GetRoot();}
-	const Link* GetRoot2() const {return tree2->GetRoot();}
 
 	string GetBranchName(const Link* link) const;
 	string GetNodeName(const Link* link) const;
+
+	void SetFixBL(bool in)	{
+		fixbl = in;
+	}
+
+	bool FixBL()	{
+		return fixbl;
+	}
 
 	double GetMinLength(const Link* from, double l)	{
 
@@ -91,6 +103,16 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 			exit(1);
 		}
 		blarray[branch->GetIndex()] = inlength;
+	}
+
+	void SetBranchLengths(const double* inblarray)	{
+		for (int j=0; j<GetNbranch(); j++)	{
+			blarray[j] = inblarray[j];
+		}
+	}
+
+	const double* GetBranchLengths()	{
+		return blarray;
 	}
 
 	void Backup();
@@ -173,10 +195,14 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	virtual void PriorSampleLength()	{
 		cerr << "in BranchProcess::PriorSampleLength\n";
 		exit(1);
+		if (! fixbl)	{
+		}
 	}
 
 	void SampleLength()	{
-		RecursiveSampleLength(GetRoot());
+		if (! fixbl)	{
+			RecursiveSampleLength(GetRoot());
+		}
 	}
 
 	double LogLengthPrior()	{
@@ -239,7 +265,7 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 
 	virtual const TaxonSet* GetTaxonSet() const = 0;
 
-	protected:
+	// protected:
 
 	int GetNbranch()	{
 		return tree->GetNbranch();
@@ -350,19 +376,25 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	void GlobalAttach(Link* down, Link* up, Link* fromdown, Link* fromup);
 	virtual void SlaveDetach(int,int);
 	virtual void SlaveAttach(int,int,int,int);
+	virtual void LocalDetach(int,int);
+	virtual void LocalAttach(int,int,int,int);
 
 	Link* GlobalDetach1(Link* down, Link* up);
 	void GlobalAttach1(Link* down, Link* up, Link* fromdown, Link* fromup);
 	virtual void SlaveDetach1(int,int);
 	virtual void SlaveAttach1(int,int,int,int);
+	virtual void LocalDetach1(int,int);
+	virtual void LocalAttach1(int,int,int,int);
 
 	Link* GlobalDetach2(Link* down, Link* up);
 	void GlobalAttach2(Link* down, Link* up, Link* fromdown, Link* fromup);
 	virtual void SlaveDetach2(int,int);
 	virtual void SlaveAttach2(int,int,int,int);
+	virtual void LocalDetach2(int,int);
+	virtual void LocalAttach2(int,int,int,int);
 
 	void GlobalKnit(Link*);
-	void SlaveKnit();
+	virtual void SlaveKnit();
 
 	void GetWeights(Link* from, map<pair<Link*,Link*>,double>& weights, double lambda);
 	double WeightedDrawSubTree(double lambda, Link*& down, Link*& up);
@@ -374,11 +406,11 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	double* bkarray;
 	double* bk2array;
 
-	int fixbl;
-
 	Chrono chronolength;
 
 	int swaproot;
+
+	int fixbl;
 
 };
 

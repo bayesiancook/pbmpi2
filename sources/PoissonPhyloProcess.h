@@ -65,7 +65,7 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 	void UpdateBranchLengthSuffStat();
 
 	void GlobalUpdateSiteProfileSuffStat();
-	void SlaveUpdateSiteProfileSuffStat();
+	virtual void SlaveUpdateSiteProfileSuffStat();
 
 	const int* GetSiteProfileSuffStatCount(int site) {return siteprofilesuffstatcount[site];}
 

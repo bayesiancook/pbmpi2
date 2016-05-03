@@ -170,10 +170,12 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 		chronototal.Start();
 
 		propchrono.Start();
-		BranchLengthMove(tuning);
-		BranchLengthMove(0.1 * tuning);
+		if (! FixBL())	{
+			BranchLengthMove(tuning);
+			BranchLengthMove(0.1 * tuning);
+		}
 
-		if (! fixtopo)	{
+		if (! FixTopo())	{
 			MoveTopo();
 		}
 
@@ -181,11 +183,16 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 
 		GlobalCollapse();
 
-		GammaBranchProcess::Move(tuning,10);
+		if (! FixBL())	{
+			GammaBranchProcess::Move(tuning,10);
+		}
 
 		GlobalUpdateParameters();
-		DGamRateProcess::Move(0.3*tuning,10);
-		DGamRateProcess::Move(0.03*tuning,10);
+
+		if (! FixAlpha())	{
+			DGamRateProcess::Move(0.3*tuning,10);
+			DGamRateProcess::Move(0.03*tuning,10);
+		}
 
 		ExpoConjugateGTRSBDPProfileProcess::Move(1,1,10);
 		if (iscodon){
@@ -193,7 +200,7 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 			ExpoConjugateGTRSBDPProfileProcess::Move(0.01,1,15);
 		}
 
-		if (! fixrr){
+		if (! FixRR()){
 			LengthRelRateMove(1,10);
 			LengthRelRateMove(0.1,10);
 			LengthRelRateMove(0.01,10);

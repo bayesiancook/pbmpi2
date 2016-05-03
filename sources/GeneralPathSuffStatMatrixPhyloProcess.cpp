@@ -149,15 +149,18 @@ void GeneralPathSuffStatMatrixPhyloProcess::UpdateBranchLengthSuffStat()	{
 void GeneralPathSuffStatMatrixPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 
 	if (GetNprocs() > 1)	{
+		/*
 		for (int i=0; i<GetNsite(); i++)	{
 			sitepaircount[i].clear();
 			sitewaitingtime[i].clear();
 		}
+		*/
 
 		MPI_Status stat;
 		MESSAGE signal = UPDATE_SPROFILE;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
+		/*
 		int inalloc = GetMaxSiteNumber() * (GetNstate()*GetNstate() + 1);
 		int dnalloc = GetMaxSiteNumber() * GetNstate();
 		int* ivector = new int[inalloc];
@@ -199,6 +202,7 @@ void GeneralPathSuffStatMatrixPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 
 		delete[] ivector;
 		delete[] dvector;
+		*/
 	}
 	else	{
 		UpdateSiteProfileSuffStat();
@@ -208,6 +212,7 @@ void GeneralPathSuffStatMatrixPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 void GeneralPathSuffStatMatrixPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 
 	UpdateSiteProfileSuffStat();
+	/*
 	int nn = GetNstate()*GetNstate()+1;
 	int iworkload = (GetSiteMax() - GetSiteMin())*(GetNstate()*GetNstate()+1);
 	int* ivector = new int[iworkload];
@@ -243,6 +248,7 @@ void GeneralPathSuffStatMatrixPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 
 	delete[] ivector;
 	delete[] dvector;
+	*/
 }
 
 

@@ -53,6 +53,8 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	virtual int GetNmodeMax() {return GetNsite() > nmodemax ? nmodemax : GetNsite();}
 	virtual void SetNmodeMax(int n) {nmodemax = n;}
 
+	double GetStatEnt();
+
 	protected:
 
 	//------
@@ -136,7 +138,6 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	double GetSiteStationaryEntropy(int site) {return GetStatEnt(alloc[site]);}
 
 	// summary statistic: mean entropy over all profiles
-	double GetStatEnt();
 	double GetStatEnt(int k);
 
 	void RenormalizeProfiles();

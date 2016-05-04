@@ -49,30 +49,32 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
 
 	propchrono.Stop();
 
+	for (int rep=0; rep<5; rep++)	{
 	GlobalCollapse();
 
-	GammaBranchProcess::Move(tuning,10);
+		GammaBranchProcess::Move(tuning,10);
 
-	GlobalUpdateParameters();
+		GlobalUpdateParameters();
 
-	DGamRateProcess::Move(0.3*tuning,10);
-	DGamRateProcess::Move(0.03*tuning,10);
+		DGamRateProcess::Move(0.3*tuning,10);
+		DGamRateProcess::Move(0.03*tuning,10);
 
-	GlobalUpdateParameters();
-	MoveRR();
-	GlobalUpdateParameters();
+		GlobalUpdateParameters();
+		MoveRR();
+		GlobalUpdateParameters();
 
-	GlobalGeneMove();
+		GlobalGeneMove();
 
-	if (! fixrr){
-		LengthRelRateMove(1,10);
-		LengthRelRateMove(0.1,10);
-		LengthRelRateMove(0.01,10);
-	}
+		if (! fixrr){
+			LengthRelRateMove(1,10);
+			LengthRelRateMove(0.1,10);
+			LengthRelRateMove(0.01,10);
+		}
 
-	GlobalUpdateParameters();
+		GlobalUpdateParameters();
 
 	GlobalUnfold();
+	}
 
 	chronototal.Stop();
 
@@ -83,7 +85,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveGeneMove()	{
 
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			GetProcess(gene)->ExpoConjugateGTRSBDPProfileProcess::Move(1,1,10);
+			GetProcess(gene)->ExpoConjugateGTRSBDPProfileProcess::Move(1,1,2);
 		}
 	}
 }

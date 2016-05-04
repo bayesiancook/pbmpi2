@@ -87,8 +87,18 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 
 		propchrono.Stop();
 
-
 		GlobalCollapse();
+
+		AugmentedMove(tuning);
+
+		GlobalUnfold();
+		chronototal.Stop();
+
+		return 1;
+	
+	}
+
+	virtual double AugmentedMove(double tuning = 1.0)	{
 
 		GammaBranchProcess::Move(tuning,10);
 
@@ -101,12 +111,6 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 			PoissonSBDPProfileProcess::Move(0.1,1,15);
 			PoissonSBDPProfileProcess::Move(0.01,1,15);
 		}
-
-		GlobalUnfold();
-		chronototal.Stop();
-
-		return 1;
-	
 	}
 
 	virtual double GlobalRestrictedMoveCycle(int nrep = 1, double tuning = 1.0)	{

@@ -113,7 +113,7 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 	void TraceHeader(ostream& os)	{
 		os << "#iter\ttime\ttopo\tloglik\tlength\talpha";
 		if (! GlobalAlpha())	{
-			os << "\tmean\tvaralpha";
+			os << "\tvaralpha";
 		}
 		os << "\tNmode\tstatent\tstatalpha\tkappa";
 		os << '\n'; 
@@ -140,9 +140,9 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 		os << '\t' << GetLogLikelihood();
 		// os << '\t' << GetTotalLength();
 		os << '\t' << GetRenormTotalLength();
-		os << '\t' << GetAlpha();
+		os << '\t' << GetMeanAlpha();
 		if (! GlobalAlpha())	{
-			os << '\t' << meanalpha << '\t' << varalpha;
+			os << '\t' << varalpha;
 		}
 		os << '\t' << GlobalGetMeanNcomponent();
 		os << '\t' << GlobalGetMeanStatEnt();

@@ -46,6 +46,8 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 
 	public:
 
+	RASCATSBDPGammaPhyloProcess() {}
+
 	RASCATSBDPGammaPhyloProcess(int nratecat, int inkappaprior) : RASCATGammaPhyloProcess(nratecat, inkappaprior)	{}
 
 	RASCATSBDPGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{

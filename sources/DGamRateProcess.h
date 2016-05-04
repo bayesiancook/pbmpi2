@@ -23,7 +23,7 @@ class DGamRateProcess : public virtual RateProcess {
 
 	public:
 
-	DGamRateProcess() : Ncat(0), rate(0), fixalpha(false) {}
+	DGamRateProcess() : Ncat(0), rate(0), fixalpha(false), meanalpha(1), varalpha(1) {}
 	virtual ~DGamRateProcess() {}
 
 	double GetAlpha() {return alpha;}
@@ -95,7 +95,7 @@ class DGamRateProcess : public virtual RateProcess {
 		return total / GetNcat();
 	}
 
-	double Move(double tuning = 1, int nrep = 1)	{
+	virtual double Move(double tuning = 1, int nrep = 1)	{
 		GlobalUpdateSiteRateSuffStat();
 		chronorate.Start();
 		return MoveAlpha(tuning, nrep);
@@ -130,12 +130,12 @@ class DGamRateProcess : public virtual RateProcess {
 		Ncat = inncat;
 	}
 
-	void Create();
-	void Delete();
+	virtual void Create();
+	virtual void Delete();
 
-	void SampleRate();
-	void PriorSampleRate();
-	double LogRatePrior();
+	virtual void SampleRate();
+	virtual void PriorSampleRate();
+	virtual double LogRatePrior();
 
 	void GlobalUpdateRateSuffStat();
 	void SlaveUpdateRateSuffStat();
@@ -151,6 +151,12 @@ class DGamRateProcess : public virtual RateProcess {
 
 	int Ncat;
 	bool fixalpha;
+
+	public:
+
+	double meanalpha;
+	double varalpha;
+
 };
 
 #endif

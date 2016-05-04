@@ -14,37 +14,13 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#ifndef MULTIGENERASCATGTRSBDPGAMMAPHYLOPROCESS_H
-#define MULTIGENERASCATGTRSBDPGAMMAPHYLOPROCESS_H
+#ifndef MULTIGENERASCATSBDPGAMMAPHYLOPROCESS_H
+#define MULTIGENERASCATSBDPGAMMAPHYLOPROCESS_H
 
 #include "MultiGenePhyloProcess.h"
-#include "RASCATGTRSBDPGammaPhyloProcess.h"
-#include "ExpoConjugateGTRProfileProcess.h"
+#include "RASCATSBDPGammaPhyloProcess.h"
 
-class MultiGeneExpoConjugateGTRProfileProcess : public virtual ExpoConjugateGTRProfileProcess, public virtual MultiGeneProfileProcess	{
-
-	public:
-
-	MultiGeneExpoConjugateGTRProfileProcess()	{}
-	virtual ~MultiGeneExpoConjugateGTRProfileProcess() {}
-
-	// re-implement: should gather gene-specific suff stats
-	virtual void UpdateRRSuffStat();
-
-	ExpoConjugateGTRProfileProcess* GetGTRProfileProcess(int gene)	{
-		ExpoConjugateGTRProfileProcess* tmp = dynamic_cast<ExpoConjugateGTRProfileProcess*>(process[gene]);
-		if (! tmp)	{
-			cerr << "error in GetGTRProfileProcess\n";
-			exit(1);
-		}
-		return tmp;
-	}
-
-};
-
-
-class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual MultiGeneExpoConjugateGTRProfileProcess, public virtual RASCATGTRSBDPGammaPhyloProcess	{
-// class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual GammaBranchProcess, public virtual DGamRateProcess, public virtual ExpoConjugateGTRProfileProcess	{
+class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual RASCATSBDPGammaPhyloProcess	{
 
 	public:
 
@@ -75,10 +51,6 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		MultiGenePhyloProcess::UpdateRateSuffStat();
 	}
 
-	virtual void UpdateRRSuffStat()	{
-		MultiGeneExpoConjugateGTRProfileProcess::UpdateRRSuffStat();
-	}
-
 	double GlobalGetMeanNcomponent();
 	double GlobalGetMeanStatEnt();
 	double GlobalGetMeanStatAlpha();
@@ -92,8 +64,8 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 	virtual void Create();
 	virtual void Delete();
 
-	RASCATGTRSBDPGammaPhyloProcess* GetProcess(int gene)	{
-		RASCATGTRSBDPGammaPhyloProcess* proc = dynamic_cast<RASCATGTRSBDPGammaPhyloProcess*> (process[gene]);
+	RASCATSBDPGammaPhyloProcess* GetProcess(int gene)	{
+		RASCATSBDPGammaPhyloProcess* proc = dynamic_cast<RASCATSBDPGammaPhyloProcess*> (process[gene]);
 		if ((! proc) && (process[gene]))	{
 			cerr << "error in phyloprocess conversion\n";
 			exit(1);
@@ -101,17 +73,16 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		return proc;
 	}
 
-	MultiGeneRASCATGTRSBDPGammaPhyloProcess() {}
+	MultiGeneRASCATSBDPGammaPhyloProcess() {}
 
-	MultiGeneRASCATGTRSBDPGammaPhyloProcess(int nratecat, string inrrtype, int inkappaprior, int inglobalalpha)	{
+	MultiGeneRASCATSBDPGammaPhyloProcess(int nratecat, int inkappaprior, int inglobalalpha)	{
 
 		Ncat = nratecat;
-		rrtype = inrrtype;
 		kappaprior = inkappaprior;
 		globalalpha = inglobalalpha;
 	}
 
-	MultiGeneRASCATGTRSBDPGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
+	MultiGeneRASCATSBDPGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
 
 		// generic
 		FromStreamHeader(is);
@@ -122,14 +93,13 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		// specific
 		is >> Ncat;
 		is >> kappaprior;
-		is >> rrtype;
 		is >> globalalpha;
 
 		Open(is);
 
 	}
 
-	~MultiGeneRASCATGTRSBDPGammaPhyloProcess() {
+	~MultiGeneRASCATSBDPGammaPhyloProcess() {
 		Delete();
 	}
 
@@ -137,7 +107,6 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		PhyloProcess::ToStreamHeader(os);
 		os << Ncat << '\n';
 		os << kappaprior << '\n';
-		os << rrtype << '\n';
 		os << globalalpha << '\n';
 	}
 
@@ -147,9 +116,6 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 			os << "\tmean\tvaralpha";
 		}
 		os << "\tNmode\tstatent\tstatalpha\tkappa";
-		if (! fixrr)	{
-			os << "\trrent\trrmean";
-		}
 		os << '\n'; 
 	}
 
@@ -174,7 +140,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		os << '\t' << GetLogLikelihood();
 		// os << '\t' << GetTotalLength();
 		os << '\t' << GetRenormTotalLength();
-		os << '\t' << GetMeanAlpha();
+		os << '\t' << GetAlpha();
 		if (! GlobalAlpha())	{
 			os << '\t' << meanalpha << '\t' << varalpha;
 		}
@@ -182,10 +148,6 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		os << '\t' << GlobalGetMeanStatEnt();
 		os << '\t' << GlobalGetMeanStatAlpha();
 		os << '\t' << GlobalGetMeanKappa();
-		if (! fixrr)	{
-			os << '\t' << GetRREntropy();
-			os << '\t' << GetRRMean();
-		}
 		os << '\n';
 
 	}
@@ -198,6 +160,8 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 
 	virtual double GlobalRestrictedMoveCycle(int nrep = 1, double tuning = 1.0)	{
 
+		cerr << "in multi gene: globalrestriced move\n";
+		exit(1);
 		for (int rep=0; rep<nrep; rep++)	{
 
 			GlobalUpdateParameters();
@@ -206,9 +170,8 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 			GlobalUpdateParameters();
 			DGamRateProcess::Move(0.3*tuning,10);
 			DGamRateProcess::Move(0.03*tuning,10);
-			//ExpoConjugateGTRSBDPProfileProcess::Move(1,1,1);
 			GlobalUpdateParameters();
-			MoveRR();
+
 			GlobalUpdateParameters();
 			GlobalGeneMove();
 		}
@@ -242,14 +205,6 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		GlobalUpdateParameters();
 	}
 
-	/*
-	virtual void ReadPB(int argc, char* argv[]);
-	void ReadNocc(string name, int burnin, int every, int until);
-	void ReadTestProfile(string name, int nrep, double tuning, int burnin, int every, int until);
-	void ReadRelRates(string name, int burnin, int every, int until);
-	void SlaveComputeCVScore();
-	void SlaveComputeSiteLogL();
-	*/
 };
 
 #endif

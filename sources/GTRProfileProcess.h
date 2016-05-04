@@ -98,7 +98,7 @@ class GTRProfileProcess : public virtual MatrixProfileProcess {
 		return (i<j) ? (2 * nstate - i - 1) * i / 2 + j - i - 1 : (2 * nstate - j - 1) * j / 2 + i - j - 1 ;
 	}
 
-	protected:
+	// protected:
 
 	virtual void Create();
 	virtual void Delete();

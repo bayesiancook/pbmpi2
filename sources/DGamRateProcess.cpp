@@ -101,7 +101,10 @@ void DGamRateProcess::PriorSampleRate()	{
 }
 
 double DGamRateProcess::LogRatePrior()	{
-	return -alpha;
+	double a = meanalpha * meanalpha / varalpha;
+	double b = meanalpha / varalpha;
+	double ret = a*log(b) - rnd::GetRandom().logGamma(a) + (a-1)*log(alpha) - b*alpha;
+	return ret;
 }
 
 double DGamRateProcess::RateSuffStatLogProb()	{

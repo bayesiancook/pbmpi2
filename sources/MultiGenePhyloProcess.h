@@ -18,8 +18,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define MULTIGENEPHYLOPROCESS_H
 
 #include "PhyloProcess.h"
+#include "GammaBranchProcess.h"
+#include "DGamRateProcess.h"
 
-/*
 class MultiGeneMPIModule	{
 
 	public:
@@ -27,21 +28,14 @@ class MultiGeneMPIModule	{
 	MultiGeneMPIModule() : Ngene(0)	{}
 	virtual ~MultiGeneMPIModule() {}
 
-	void AllocateAlignments(string datafile, string treefile);
-
-	virtual StateSpace* GetStateSpace() {return statespace;}
-	virtual int GetNstate() {return Nstate;}
-
-	void SetMPI(int inmyid, int innprocs)	{
-		myid = inmyid;
-		nprocs = innprocs;
-	}
+	virtual void Create();
+	virtual void Delete();
 
 	protected:
 
-	int Nstate;
-	StateSpace* statespace;
-
+	PhyloProcess** process;
+	double* genelnL;
+	double* tmpgenelnL;
 	int Ngene;
 	int* genealloc;
 	int* genesize;
@@ -50,21 +44,107 @@ class MultiGeneMPIModule	{
 	int GlobalNsite;
 	int* globalnsite;
 
-	int myid;
-	int nprocs;
-
 };
-*/
 
-class MultiGenePhyloProcess : public virtual PhyloProcess	{
+class MultiGeneRateProcess : public virtual DGamRateProcess, public virtual MultiGeneMPIModule	{
 
 	public:
 
-	MultiGenePhyloProcess() : genelnL(0) {}
+	MultiGeneRateProcess() : globalalpha(1), genealpha(0) {}
+	virtual ~MultiGeneRateProcess() {}
+
+	virtual void Create();
+	virtual void Delete();
+
+	virtual void SlaveUpdateSiteRateSuffStat();
+	virtual void UpdateRateSuffStat();
+
+	void SetGlobalAlpha(int inmode)	{
+		globalalpha = inmode;
+	}
+		
+	int GlobalAlpha()	{
+		return globalalpha;
+	}
+
+	double GetMeanAlpha()	{
+		if (globalalpha)	{
+			return GetAlpha();
+		}
+		return GlobalGetMeanAlpha();
+	}
+
+	double GlobalGetMeanAlpha();
+	void SlaveGetMeanAlpha();
+
+	void GlobalCollectGeneAlphas();
+	void SlaveCollectGeneAlphas();
+
+	virtual void SampleRate();
+	virtual void PriorSampleRate();
+
+	virtual double Move(double tuning = 1, int nrep = 1);
+	double MoveHyperParams(double tuning = 1, int nrep = 1);
+
+	virtual double LogRatePrior();
+
+	DGamRateProcess* GetRateProcess(int gene)	{
+
+		DGamRateProcess* tmp = dynamic_cast<DGamRateProcess*>(process[gene]);
+		if (!tmp)	{
+			cerr << "error in GetRateProcess\n";
+			exit(1);
+		}
+		return tmp;
+	}
+
+	int globalalpha;
+	double* genealpha;
+	double* tmpgenealpha;
+};
+
+class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual MultiGeneMPIModule	{
+
+	public:
+
+	MultiGeneBranchProcess() {}
+	virtual ~MultiGeneBranchProcess() {}
+
+	void SlaveDetach(int,int);
+	void SlaveAttach(int,int,int,int);
+	void SlaveDetach1(int,int);
+	void SlaveAttach1(int,int,int,int);
+	void SlaveDetach2(int,int);
+	void SlaveAttach2(int,int,int,int);
+	void SlaveSwapRoot();
+
+};
+
+class MultiGeneProfileProcess : public virtual ProfileProcess, public virtual MultiGeneMPIModule	{
+
+	public:
+
+	MultiGeneProfileProcess() {}
+	virtual ~MultiGeneProfileProcess() {}
+
+	virtual void SlaveUpdateSiteProfileSuffStat();
+	virtual void GlobalUpdateSiteProfileSuffStat();
+
+
+};
+
+class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiGeneRateProcess, MultiGeneBranchProcess, MultiGeneProfileProcess	{
+
+	public:
+
+	MultiGenePhyloProcess() {}
 	virtual ~MultiGenePhyloProcess() {}
 
 	virtual void Create();
 	virtual void Delete();
+
+	virtual void ToStream(ostream& os) {}
+	virtual void FromStream(istream& is) {}
 
 	void AllocateAlignments(string datafile, string treefile);
 
@@ -74,6 +154,19 @@ class MultiGenePhyloProcess : public virtual PhyloProcess	{
 
         virtual int SpecialSlaveExecute(MESSAGE);
 
+	virtual void SlaveUpdateSiteRateSuffStat()	{
+		MultiGeneRateProcess::SlaveUpdateSiteRateSuffStat();
+	}
+
+	virtual void GlobalUpdateSiteProfileSuffStat()	{
+		MultiGeneProfileProcess::GlobalUpdateSiteProfileSuffStat();
+	}
+
+	virtual void SlaveUpdateSiteProfileSuffStat()	{
+		MultiGeneProfileProcess::SlaveUpdateSiteProfileSuffStat();
+	}
+
+	virtual void UpdateBranchLengthSuffStat();
 
 	void GlobalSample();
 	void SlaveSample();
@@ -85,7 +178,25 @@ class MultiGenePhyloProcess : public virtual PhyloProcess	{
 	// should dispatch job over all genes,
 	// collect results and send back to master
 
-	void SlaveUpdateSiteRateSuffStat();
+	void SetTree(string treefile)	{
+		if (treefile == "None")	{
+			tree = new Tree(GetData()->GetTaxonSet());
+			if (GetMyid() == 0)	{
+				tree->MakeRandomTree();
+				GlobalBroadcastTree();
+			}
+			else	{
+				PhyloProcess::SlaveBroadcastTree();
+			}
+		}
+		else	{
+			tree = new Tree(treefile);
+		}
+		tree->RegisterWith(GetData()->GetTaxonSet());
+		CloneTree();
+		tree2->RegisterWith(GetData()->GetTaxonSet());
+	}
+
 
 	void SlaveBroadcastTree();
 
@@ -131,35 +242,8 @@ class MultiGenePhyloProcess : public virtual PhyloProcess	{
 	void SlaveSetMinMax();
 
 	// should be defined at the level of the BranchProcess
-	void SlaveDetach(int,int);
-	void SlaveAttach(int,int,int,int);
-	void SlaveDetach1(int,int);
-	void SlaveAttach1(int,int,int,int);
-	void SlaveDetach2(int,int);
-	void SlaveAttach2(int,int,int,int);
-	void SlaveSwapRoot();
 
-
-	void SetTree(string treefile)	{
-		if (treefile == "None")	{
-			tree = new Tree(GetData()->GetTaxonSet());
-			if (GetMyid() == 0)	{
-				tree->MakeRandomTree();
-				GlobalBroadcastTree();
-			}
-			else	{
-				PhyloProcess::SlaveBroadcastTree();
-			}
-		}
-		else	{
-			tree = new Tree(treefile);
-		}
-		tree->RegisterWith(GetData()->GetTaxonSet());
-		CloneTree();
-		tree2->RegisterWith(GetData()->GetTaxonSet());
-	}
-
-
+	/*
 	PhyloProcess** process;
 	double* genelnL;
 	double* tmpgenelnL;
@@ -171,6 +255,7 @@ class MultiGenePhyloProcess : public virtual PhyloProcess	{
 
 	int GlobalNsite;
 	int* globalnsite;
+	*/
 
 
 };

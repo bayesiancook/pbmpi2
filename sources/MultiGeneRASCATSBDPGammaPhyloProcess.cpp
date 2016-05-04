@@ -1,20 +1,14 @@
 
-#include "MultiGeneRASCATGTRSBDPGammaPhyloProcess.h"
+#include "MultiGeneRASCATSBDPGammaPhyloProcess.h"
 #include "Parallel.h"
 
-void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Create()	{
-	
-	/*
-	ExpoConjugateGTRProfileProcess::Create();
-	RASCATGTRSBDPSubstitutionProcess::Create();
-	GammaBranchProcess::Create();
-	*/
-	RASCATGTRSBDPGammaPhyloProcess::Create();
+void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
+	RASCATSBDPGammaPhyloProcess::Create();
 	MultiGenePhyloProcess::Create();
 	if (GetMyid())	{
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == myid)	{
-				process[gene] = new RASCATGTRSBDPGammaPhyloProcess(Ncat,rrtype,kappaprior);
+				process[gene] = new RASCATSBDPGammaPhyloProcess(Ncat,kappaprior);
 				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,fixtopo,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
 				process[gene]->SetName(name);
 				process[gene]->SetMPI(0,1);
@@ -25,7 +19,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Create()	{
 	}
 }
 	
-void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Delete()	{
+void MultiGeneRASCATSBDPGammaPhyloProcess::Delete()	{
 	if (GetMyid())	{
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == myid)	{
@@ -35,15 +29,10 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Delete()	{
 		}
 	}
 	MultiGenePhyloProcess::Delete();
-	RASCATGTRSBDPGammaPhyloProcess::Delete();
-	/*
-	GammaBranchProcess::Delete();
-	RASCATGTRSBDPSubstitutionProcess::Delete();
-	ExpoConjugateGTRProfileProcess::Delete();
-	*/
+	RASCATSBDPGammaPhyloProcess::Delete();
 }
 
-double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
+double MultiGeneRASCATSBDPGammaPhyloProcess::Move(double tuning)	{
 
 	chronototal.Start();
 	propchrono.Start();
@@ -57,8 +46,7 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
 
 	propchrono.Stop();
 
-	for (int rep=0; rep<5; rep++)	{
-
+	// for (int rep=0; rep<5; rep++)	{
 		GlobalCollapse();
 
 		GlobalGeneMove();
@@ -74,23 +62,15 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
 
 		GlobalUpdateParameters();
 
-		if (! fixrr){
-			LengthRelRateMove(1,10);
-			LengthRelRateMove(0.1,10);
-			LengthRelRateMove(0.01,10);
-		}
-
-		GlobalUpdateParameters();
-
 		GlobalUnfold();
-	}
+	// }
 
 	chronototal.Stop();
 
 	return 1;
 }
 
-double MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalGetMeanNcomponent()	{
+double MultiGeneRASCATSBDPGammaPhyloProcess::GlobalGetMeanNcomponent()	{
 
 	MESSAGE signal = MEANNCOMPONENT;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -104,7 +84,7 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalGetMeanNcomponent()	{
 	return ((double) ncomp) / Ngene;
 }
 
-double MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalGetMeanStatEnt()	{
+double MultiGeneRASCATSBDPGammaPhyloProcess::GlobalGetMeanStatEnt()	{
 
 	MESSAGE signal = MEANSTATENT;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -118,7 +98,7 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalGetMeanStatEnt()	{
 	return tot / Ngene;
 }
 
-double MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalGetMeanStatAlpha()	{
+double MultiGeneRASCATSBDPGammaPhyloProcess::GlobalGetMeanStatAlpha()	{
 
 	MESSAGE signal = MEANSTATALPHA;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -132,7 +112,7 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalGetMeanStatAlpha()	{
 	return tot / Ngene;
 }
 
-double MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalGetMeanKappa()	{
+double MultiGeneRASCATSBDPGammaPhyloProcess::GlobalGetMeanKappa()	{
 
 	MESSAGE signal = MEANKAPPA;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -146,7 +126,7 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalGetMeanKappa()	{
 	return tot / Ngene;
 }
 
-void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveGetMeanNcomponent() {
+void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveGetMeanNcomponent() {
 	int ncomp = 0;
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
@@ -156,7 +136,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveGetMeanNcomponent() {
 	MPI_Send(&ncomp,1,MPI_INT,0,TAG1,MPI_COMM_WORLD);
 }
 
-void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveGetMeanStatEnt() {
+void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveGetMeanStatEnt() {
 	double tot = 0;
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
@@ -166,7 +146,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveGetMeanStatEnt() {
 	MPI_Send(&tot,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
-void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveGetMeanStatAlpha() {
+void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveGetMeanStatAlpha() {
 	double tot = 0;
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
@@ -176,7 +156,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveGetMeanStatAlpha() {
 	MPI_Send(&tot,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
-void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveGetMeanKappa() {
+void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveGetMeanKappa() {
 	double tot = 0;
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
@@ -186,33 +166,12 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveGetMeanKappa() {
 	MPI_Send(&tot,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
-void MultiGeneExpoConjugateGTRProfileProcess::UpdateRRSuffStat() {
-
-	for(int i=0; i<GetNrr(); i++) {
-		rrsuffstatcount[i] = 0;
-		rrsuffstatbeta[i] = 0.0;
-	}
-
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			GetGTRProfileProcess(gene)->UpdateRRSuffStat();
-			const int* count = GetGTRProfileProcess(gene)->GetRRSuffStatCount();
-			const double* beta = GetGTRProfileProcess(gene)->GetRRSuffStatBeta();
-			for(int i=0; i<GetNrr(); i++) {
-				rrsuffstatcount[i] += count[i];
-				rrsuffstatbeta[i] += beta[i];
-			}
-		}
-	}
-}
-
-void MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters() {
+void MultiGeneRASCATSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 
 	if (GetNprocs() > 1)	{
 
 		int nbranch = GetNbranch();
-		int nrr = GetNrr();
-		int nd = 3 + nbranch + nrr;
+		int nd = 3 + nbranch;
 		double dvector[nd]; 
 		MESSAGE signal = PARAMETER_DIFFUSION;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -233,11 +192,6 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 			index++;
 		}
 		
-		for(int i=0; i<nrr ; ++i) {
-			dvector[index] = rr[i];
-			index++;
-		}
-
 		// Now send out the doubles and ints over the wire...
 		MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
@@ -246,11 +200,10 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 	}
 }
 
-void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters() {
+void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 
 	int nbranch = GetNbranch();
-	int nrr = GetNrr();
-	int nd = 3 + nbranch + nrr;
+	int nd = 3 + nbranch;
 	double dvector[nd]; 
 
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
@@ -261,13 +214,9 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 	index++;
 	varalpha = dvector[index];
 	index++;
+
 	for(int i=0; i<nbranch; ++i) {
 		blarray[i] = dvector[index];
-		index++;
-	}
-
-	for(int i=0; i<nrr; ++i) {
-		rr[i] = dvector[index];
 		index++;
 	}
 
@@ -281,14 +230,12 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 				GetProcess(gene)->varalpha = varalpha;
 			}
 			GetProcess(gene)->SetBranchLengths(GetBranchLengths());
-			GetProcess(gene)->SetRR(GetRR());
-			GetProcess(gene)->UpdateMatrices();
 		}
 	}
 }
 
 
-void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
+void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 	int ret = SpecialSlaveExecute(signal);
 	if (! ret)	{
@@ -307,7 +254,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 				SlaveGetMeanStatAlpha();
 				break;
 			default:
-			RASCATGTRSBDPGammaPhyloProcess::SlaveExecute(signal);
+			RASCATSBDPGammaPhyloProcess::SlaveExecute(signal);
 		}
 	}
 }

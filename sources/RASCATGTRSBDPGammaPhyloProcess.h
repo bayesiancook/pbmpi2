@@ -183,11 +183,22 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 
 		GlobalCollapse();
 
+		AugmentedMove(tuning);
+
+		GlobalUnfold();
+
+		chronototal.Stop();
+
+		return 1;
+	}
+
+	double AugemntedMove(double tuning = 1)	{
+
 		if (! FixBL())	{
 			GammaBranchProcess::Move(tuning,10);
+			GlobalUpdateParameters();
 		}
 
-		GlobalUpdateParameters();
 
 		if (! FixAlpha())	{
 			DGamRateProcess::Move(0.3*tuning,10);
@@ -205,12 +216,6 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 			LengthRelRateMove(0.1,10);
 			LengthRelRateMove(0.01,10);
 		}
-
-		GlobalUnfold();
-
-		chronototal.Stop();
-
-		return 1;
 	}
 
 	virtual double GlobalRestrictedMoveCycle(int nrep = 1, double tuning = 1.0)	{

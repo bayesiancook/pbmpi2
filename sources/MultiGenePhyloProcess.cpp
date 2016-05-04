@@ -20,6 +20,165 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "MultiGenePhyloProcess.h"
 
+void MultiGeneRateProcess::Create()	{
+
+	DGamRateProcess::Create();
+	if ((! genealpha) && (! GlobalAlpha()))	{
+		genealpha = new double[Ngene];
+		tmpgenealpha = new double[Ngene];
+	}
+}
+
+void MultiGeneRateProcess::Delete()	{
+
+	if (genealpha)	{
+		delete[] genealpha;
+		delete[] tmpgenealpha;
+		genealpha = 0;
+		tmpgenealpha = 0;
+	}
+	DGamRateProcess::Delete();
+}
+
+void MultiGeneRateProcess::SampleRate()	{
+	if (GlobalAlpha())	{
+		DGamRateProcess::SampleRate();
+	}
+	else	{
+		meanalpha = 1;
+		varalpha = 1;
+		for (int gene=0; gene<Ngene; gene++)	{
+			genealpha[gene] = rnd::GetRandom().Gamma(3,3);
+		}
+	}
+}
+
+void MultiGeneRateProcess::PriorSampleRate()	{
+	if (GlobalAlpha())	{
+		DGamRateProcess::PriorSampleRate();
+	}
+	else	{
+		meanalpha = rnd::GetRandom().sExpo();
+		varalpha = rnd::GetRandom().sExpo();
+		double a = meanalpha * meanalpha / varalpha;
+		double b = meanalpha / varalpha;
+		for (int gene=0; gene<Ngene; gene++)	{
+			genealpha[gene] = rnd::GetRandom().Gamma(a,b);
+		}
+	}
+}
+
+double MultiGeneRateProcess::GlobalGetMeanAlpha()	{
+
+	MESSAGE signal = MEANALPHA;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	double tot = 0;
+	MPI_Status stat;
+	for(int i=1; i<GetNprocs(); i++) {
+		double tmp;
+		MPI_Recv(&tmp,1,MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		tot += tmp;
+	}
+	return tot / Ngene;
+}
+
+void MultiGeneRateProcess::SlaveGetMeanAlpha() {
+	double tot = 0;
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			tot += GetRateProcess(gene)->GetAlpha();
+		}
+	}
+	MPI_Send(&tot,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
+void MultiGeneRateProcess::GlobalCollectGeneAlphas()	{
+
+	MESSAGE signal = COLLECTALPHA;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Status stat;
+	for(int i=1; i<GetNprocs(); i++) {
+		MPI_Recv(tmpgenealpha,Ngene,MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		for (int gene=0; gene<Ngene; gene++)	{
+			if (genealloc[gene] == myid)	{
+				genealpha[gene] = tmpgenealpha[gene];
+			}
+		}
+	}
+}
+
+void MultiGeneRateProcess::SlaveCollectGeneAlphas() {
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			tmpgenealpha[gene] = GetRateProcess(gene)->GetAlpha();
+		}
+	}
+	MPI_Send(tmpgenealpha,Ngene,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
+double MultiGeneRateProcess::Move(double tuning, int nrep)	{
+
+	double ret = 0;
+	chronorate.Start();
+	if (globalalpha)	{
+		ret = MoveAlpha(tuning, nrep);
+	}
+	else	{
+		GlobalCollectGeneAlphas();
+		ret += MoveHyperParams(tuning,nrep);
+		ret += MoveHyperParams(0.1*tuning,nrep);
+	}
+	chronorate.Stop();
+}
+
+double MultiGeneRateProcess::MoveHyperParams(double tuning, int nrep)	{
+
+	double nacc = 0;
+	for (int rep=0; rep<nrep; rep++)	{
+
+		double bkmeanalpha = meanalpha;
+		double bkvaralpha = varalpha;
+
+		double deltalogprob = - LogRatePrior();
+		double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
+		double e = exp(m);
+		int choose = (int) (2 * rnd::GetRandom().Uniform());
+		if (choose)	{
+			meanalpha *= e;
+		}
+		else	{
+			varalpha *= e;
+		}
+		deltalogprob += LogRatePrior();
+		deltalogprob += m;
+		int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
+
+		if (accepted)	{
+			nacc++;
+		}
+		else	{
+			meanalpha = bkmeanalpha;
+			varalpha = bkvaralpha;
+		}
+	}
+	return ((double) nacc) / nrep;
+}
+
+
+double MultiGeneRateProcess::LogRatePrior()	{
+	if (globalalpha)	{
+		return -alpha;
+	}
+	double tot = -meanalpha - varalpha;
+	double a = meanalpha * meanalpha / varalpha;
+	double b = meanalpha / varalpha;
+	for (int gene=0; gene<Ngene; gene++)	{
+		tot += a*log(b) - rnd::GetRandom().logGamma(a) + (a-1)*log(genealpha[gene]) - b*genealpha[gene];
+	}
+	return tot;
+}
+
+
 void MultiGenePhyloProcess::New()	{
 
 
@@ -50,8 +209,21 @@ void MultiGenePhyloProcess::New()	{
 
 void MultiGenePhyloProcess::Create()	{
 
+	PhyloProcess::Create();
+	MultiGeneRateProcess::Create();
+	MultiGeneMPIModule::Create();
+}
+
+void MultiGenePhyloProcess::Delete()	{
+
+	MultiGeneMPIModule::Delete();
+	MultiGeneRateProcess::Delete();
+	PhyloProcess::Delete();
+}
+
+void MultiGeneMPIModule::Create()	{
+
 	if (! genelnL)	{
-		PhyloProcess::Create();
 		genelnL = new double[Ngene];
 		tmpgenelnL = new double[Ngene];
 		process = new PhyloProcess*[Ngene];
@@ -61,7 +233,7 @@ void MultiGenePhyloProcess::Create()	{
 	}
 }
 
-void MultiGenePhyloProcess::Delete()	{
+void MultiGeneMPIModule::Delete()	{
 
 	if (genelnL)	{
 		delete[] genelnL;
@@ -72,7 +244,6 @@ void MultiGenePhyloProcess::Delete()	{
 			process[gene] = 0;
 		}
 		delete[] process;
-		PhyloProcess::Delete();
 	}
 }
 
@@ -228,6 +399,14 @@ int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{
 		SlaveGeneMove();
 		return 1;
 		break;
+	case MEANALPHA:
+		SlaveGetMeanAlpha();
+		return 1;
+		break;
+	case COLLECTALPHA:
+		SlaveCollectGeneAlphas();
+		return 1;
+		break;
 
 	default:
 		return 0;
@@ -259,7 +438,7 @@ void MultiGenePhyloProcess::GlobalGeneMove()	{
 void MultiGenePhyloProcess::SlaveGeneMove()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->Move();
+			process[gene]->AugmentedMove();
 		}
 	}
 }
@@ -504,7 +683,7 @@ void MultiGenePhyloProcess::SlaveSetMinMax()	{
 	}
 }
 
-void MultiGenePhyloProcess::SlaveDetach(int n,int m) {
+void MultiGeneBranchProcess::SlaveDetach(int n,int m) {
 
 	LocalDetach(n,m);
 	for (int gene=0; gene<Ngene; gene++)	{
@@ -514,7 +693,7 @@ void MultiGenePhyloProcess::SlaveDetach(int n,int m) {
 	}
 }
 
-void MultiGenePhyloProcess::SlaveAttach(int n,int m,int p,int q) {
+void MultiGeneBranchProcess::SlaveAttach(int n,int m,int p,int q) {
 
 	LocalAttach(n,m,p,q);
 	for (int gene=0; gene<Ngene; gene++)	{
@@ -524,7 +703,7 @@ void MultiGenePhyloProcess::SlaveAttach(int n,int m,int p,int q) {
 	}
 }
 
-void MultiGenePhyloProcess::SlaveDetach1(int n,int m) {
+void MultiGeneBranchProcess::SlaveDetach1(int n,int m) {
 
 	LocalDetach1(n,m);
 	for (int gene=0; gene<Ngene; gene++)	{
@@ -534,7 +713,7 @@ void MultiGenePhyloProcess::SlaveDetach1(int n,int m) {
 	}
 }
 
-void MultiGenePhyloProcess::SlaveAttach1(int n,int m,int p,int q) {
+void MultiGeneBranchProcess::SlaveAttach1(int n,int m,int p,int q) {
 
 	LocalAttach1(n,m,p,q);
 	for (int gene=0; gene<Ngene; gene++)	{
@@ -544,7 +723,7 @@ void MultiGenePhyloProcess::SlaveAttach1(int n,int m,int p,int q) {
 	}
 }
 
-void MultiGenePhyloProcess::SlaveDetach2(int n,int m) {
+void MultiGeneBranchProcess::SlaveDetach2(int n,int m) {
 
 	LocalDetach2(n,m);
 	for (int gene=0; gene<Ngene; gene++)	{
@@ -554,7 +733,7 @@ void MultiGenePhyloProcess::SlaveDetach2(int n,int m) {
 	}
 }
 
-void MultiGenePhyloProcess::SlaveAttach2(int n,int m,int p,int q) {
+void MultiGeneBranchProcess::SlaveAttach2(int n,int m,int p,int q) {
 
 	LocalAttach2(n,m,p,q);
 	for (int gene=0; gene<Ngene; gene++)	{
@@ -564,7 +743,7 @@ void MultiGenePhyloProcess::SlaveAttach2(int n,int m,int p,int q) {
 	}
 }
 
-void MultiGenePhyloProcess::SlaveSwapRoot()	{
+void MultiGeneBranchProcess::SlaveSwapRoot()	{
 
 	SwapRoot();
 	for (int gene=0; gene<Ngene; gene++)	{
@@ -575,7 +754,7 @@ void MultiGenePhyloProcess::SlaveSwapRoot()	{
 }
 
 
-void MultiGenePhyloProcess::SlaveUpdateSiteRateSuffStat()	{
+void MultiGeneRateProcess::SlaveUpdateSiteRateSuffStat()	{
 
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
@@ -584,3 +763,64 @@ void MultiGenePhyloProcess::SlaveUpdateSiteRateSuffStat()	{
 	}
 }
 
+
+void MultiGeneRateProcess::UpdateRateSuffStat() {
+
+	for(int i=0; i<GetNcat(); i++) {
+		ratesuffstatcount[i] = 0;
+		ratesuffstatbeta[i] = 0.0;
+	}
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			GetRateProcess(gene)->UpdateRateSuffStat();
+			const int* count = GetRateProcess(gene)->GetRateSuffStatCount();
+			const double* beta = GetRateProcess(gene)->GetRateSuffStatBeta();
+			for(int i=0; i<GetNcat(); i++) {
+				ratesuffstatcount[i] += count[i];
+				ratesuffstatbeta[i] += beta[i];
+			}
+		}
+	}
+}
+
+void MultiGeneProfileProcess::GlobalUpdateSiteProfileSuffStat()	{
+
+	if (GetNprocs() > 1)	{
+		MPI_Status stat;
+		MESSAGE signal = UPDATE_SPROFILE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	else	{
+		UpdateSiteProfileSuffStat();
+	}
+}
+
+void MultiGeneProfileProcess::SlaveUpdateSiteProfileSuffStat()	{
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->UpdateSiteProfileSuffStat();
+		}
+	}
+}
+
+void MultiGenePhyloProcess::UpdateBranchLengthSuffStat() {
+
+	for(int i=0; i<GetNbranch(); i++) {
+		branchlengthsuffstatcount[i] = 0;
+		branchlengthsuffstatbeta[i] = 0.0;
+	}
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->UpdateBranchLengthSuffStat();
+			const int* count = process[gene]->GetBranchLengthSuffStatCount();
+			const double* beta = process[gene]->GetBranchLengthSuffStatBeta();
+			for(int i=0; i<GetNbranch(); i++) {
+				branchlengthsuffstatcount[i] += count[i];
+				branchlengthsuffstatbeta[i] += beta[i];
+			}
+		}
+	}
+}

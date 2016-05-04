@@ -86,6 +86,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	// performs one full cycle of MCMC
 	// returns average success rate
 	virtual double Move(double tuning = 1.0) = 0;
+	virtual double AugmentedMove(double tuning = 1.0) {}
 
 	virtual double RestrictedMoveCycle(int nrep = 1, double tuning = 1.0) {
 		cerr << "in default restricted move cycle\n";

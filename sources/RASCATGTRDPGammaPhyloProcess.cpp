@@ -46,7 +46,7 @@ void RASCATGTRDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	nrr = GetNrr();
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	nd = 3 + nbranch + nrr + L1*L2 + GetDim() + 1;
+	nd = 1 + nbranch + nrr + L1*L2 + GetDim() + 1;
 	ni = 1 + GetNsite();
 	int ivector[ni];
 	double dvector[nd]; 
@@ -58,10 +58,6 @@ void RASCATGTRDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	// First we assemble the vector of doubles for distribution
 	int index = 0;
 	dvector[index] = GetAlpha();
-	index++;
-	dvector[index] = branchalpha;
-	index++;
-	dvector[index] = branchbeta;
 	index++;
 	for(i=0; i<nbranch; ++i) {
 		dvector[index] = blarray[i];
@@ -124,7 +120,7 @@ void RASCATGTRDPGammaPhyloProcess::SlaveUpdateParameters()	{
 	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nrr = GetNrr();
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	nd = 3 + nbranch + nrr + L1*L2 + GetDim() + 1;
+	nd = 1 + nbranch + nrr + L1*L2 + GetDim() + 1;
 	ni = 1 + GetNsite();
 	int* ivector = new int[ni];
 	double* dvector = new double[nd];
@@ -132,10 +128,6 @@ void RASCATGTRDPGammaPhyloProcess::SlaveUpdateParameters()	{
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	int index = 0;
 	SetAlpha(dvector[index]);
-	index++;
-	branchalpha = dvector[index];
-	index++;
-	branchbeta = dvector[index];
 	index++;
 	for(i=0; i<nbranch; ++i) {
 		blarray[i] = dvector[index];

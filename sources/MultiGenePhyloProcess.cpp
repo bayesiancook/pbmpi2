@@ -20,6 +20,143 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "MultiGenePhyloProcess.h"
 
+void MultiGeneBranchProcess::Create()	{
+
+	GammaBranchProcess::Create();
+	if ((! geneblarray) && (! GlobalBranchLengths()))	{
+		allocgeneblarray = new double[Ngene*GetNbranch()];
+		geneblarray = new double*[Ngene];
+		alloctmpgeneblarray = new double[Ngene*GetNbranch()];
+		tmpgeneblarray = new double*[Ngene];
+		for (int gene=0; gene<Ngene; gene++)	{
+			tmpgeneblarray[gene] = alloctmpgeneblarray + gene*GetNbranch();
+		}
+	}
+}
+
+void MultiGeneBranchProcess::Delete()	{
+
+	if (geneblarray)	{
+		delete[] allocgeneblarray;
+		delete[] alloctmpgeneblarray;
+		delete[] geneblarray;
+		delete[] tmpgeneblarray;
+		geneblarray = 0;
+	}
+	GammaBranchProcess::Delete();
+}
+
+void MultiGeneBranchProcess::SampleLength()	{
+
+	if (GlobalBranchLengths())	{
+		GammaBranchProcess::SampleLength();
+	}
+	else	{
+		meanbranchmean = 0.1;
+		relvarbranchmean = 1;
+		meanbranchrelvar = 1;
+		relvarbranchrelvar = 1;
+		double amean = 1.0 / relvarbranchmean;
+		double bmean = 1.0 / meanbranchmean;
+		double arelvar = 1.0 / relvarbranchrelvar;
+		double brelvar = 1.0 / meanbranchrelvar;
+		for (int j=0; j<GetNbranch(); j++)	{
+			branchmean[j] = rnd::GetRandom().Gamma(amean,bmean);
+			branchrelvar[j] = rnd::GetRandom().Gamma(arelvar,brelvar);
+		}	
+	}
+}
+
+void MultiGeneBranchProcess::PriorSampleLength()	{
+
+	if (GlobalBranchLengths())	{
+		GammaBranchProcess::SampleLength();
+	}
+	else	{
+		meanbranchmean = 0.1 * rnd::GetRandom().sExpo();
+		relvarbranchmean = rnd::GetRandom().sExpo();
+		meanbranchrelvar = rnd::GetRandom().sExpo();
+		relvarbranchrelvar = rnd::GetRandom().sExpo();
+		double amean = 1.0 / relvarbranchmean;
+		double bmean = 1.0 / meanbranchmean;
+		double arelvar = 1.0 / relvarbranchrelvar;
+		double brelvar = 1.0 / meanbranchrelvar;
+		for (int j=0; j<GetNbranch(); j++)	{
+			branchmean[j] = rnd::GetRandom().Gamma(amean,bmean);
+			branchrelvar[j] = rnd::GetRandom().Gamma(arelvar,brelvar);
+		}	
+	}
+}
+
+/*
+double MultiGeneBranchProcess::LogHyperPrior()	{
+
+}
+*/
+
+double MultiGeneBranchProcess::LogLengthPrior()	{
+	return 0;
+}
+
+double MultiGeneBranchProcess::Move(double tuning, int nrep)	{
+	return 0;
+}
+
+double MultiGeneBranchProcess::MoveHyperParams(double tuning, int nrep)	{
+	return 0;
+}
+
+double MultiGeneBranchProcess::GlobalGetMeanTotalLength()	{
+
+	MESSAGE signal = MEANTOTLENGTH;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	double tot = 0;
+	MPI_Status stat;
+	for(int i=1; i<GetNprocs(); i++) {
+		double tmp;
+		MPI_Recv(&tmp,1,MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		tot += tmp;
+	}
+	return tot / Ngene;
+}
+
+void MultiGeneBranchProcess::SlaveGetMeanTotalLength() {
+	double tot = 0;
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			tot += GetBranchProcess(gene)->GetTotalLength();
+		}
+	}
+	MPI_Send(&tot,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
+void MultiGeneBranchProcess::GlobalCollectGeneBranchLengths()	{
+
+	MESSAGE signal = COLLECTLENGTHS;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Status stat;
+	for(int i=1; i<GetNprocs(); i++) {
+		MPI_Recv(tmpgeneblarray,Ngene*GetNbranch(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		for (int gene=0; gene<Ngene; gene++)	{
+			if (genealloc[gene] == myid)	{
+				GetBranchProcess(gene)->SetBranchLengths(geneblarray[gene]);
+			}
+		}
+	}
+}
+
+void MultiGeneBranchProcess::SlaveCollectGeneBranchLengths() {
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			const double* bl = GetBranchProcess(gene)->GetBranchLengths();
+			for (int j=0; j<GetNbranch(); j++)	{
+				tmpgeneblarray[gene][j] = bl[j];
+			}
+		}
+	}
+	MPI_Send(tmpgeneblarray,Ngene*GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
 void MultiGeneRateProcess::Create()	{
 
 	DGamRateProcess::Create();
@@ -167,7 +304,7 @@ double MultiGeneRateProcess::MoveHyperParams(double tuning, int nrep)	{
 
 double MultiGeneRateProcess::LogRatePrior()	{
 	if (globalalpha)	{
-		return -alpha;
+		MultiGeneRateProcess::LogRatePrior();
 	}
 	double tot = -meanalpha - varalpha;
 	double a = meanalpha * meanalpha / varalpha;
@@ -405,6 +542,14 @@ int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{
 		break;
 	case COLLECTALPHA:
 		SlaveCollectGeneAlphas();
+		return 1;
+		break;
+	case MEANTOTLENGTH:
+		SlaveGetMeanTotalLength();
+		return 1;
+		break;
+	case COLLECTLENGTHS:
+		SlaveCollectGeneBranchLengths();
 		return 1;
 		break;
 

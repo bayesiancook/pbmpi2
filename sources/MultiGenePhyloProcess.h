@@ -107,8 +107,40 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 
 	public:
 
-	MultiGeneBranchProcess() {}
+	MultiGeneBranchProcess() : geneblarray(0) {}
 	virtual ~MultiGeneBranchProcess() {}
+
+	virtual void Create();
+	virtual void Delete();
+
+	void SetGlobalBranchLengths(int in)	{
+		globalbl = in;
+	}
+
+	int GlobalBranchLengths()	{
+		return globalbl;
+	}
+
+	double GetMeanTotalLength()	{
+		if (globalbl)	{
+			return GetTotalLength();
+		}
+		return GlobalGetMeanTotalLength();
+	}
+
+	double GlobalGetMeanTotalLength();
+	void SlaveGetMeanTotalLength();
+
+	void GlobalCollectGeneBranchLengths();
+	void SlaveCollectGeneBranchLengths();
+
+	virtual void SampleLength();
+	virtual void PriorSampleLength();
+
+	virtual double Move(double tuning = 1, int nrep = 1);
+	double MoveHyperParams(double tuning = 1, int nrep = 1);
+
+	virtual double LogLengthPrior();
 
 	void SlaveDetach(int,int);
 	void SlaveAttach(int,int,int,int);
@@ -118,6 +150,26 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 	void SlaveAttach2(int,int,int,int);
 	void SlaveSwapRoot();
 
+	GammaBranchProcess* GetBranchProcess(int gene)	{
+
+		GammaBranchProcess* tmp = dynamic_cast<GammaBranchProcess*>(process[gene]);
+		if (!tmp)	{
+			cerr << "error in GetBranchProcess\n";
+			exit(1);
+		}
+		return tmp;
+	}
+
+	int globalbl;
+	double** geneblarray;
+	double** tmpgeneblarray;
+	double* allocgeneblarray;
+	double* alloctmpgeneblarray;
+
+	double meanbranchmean;
+	double relvarbranchmean;
+	double meanbranchrelvar;
+	double relvarbranchrelvar;
 };
 
 class MultiGeneProfileProcess : public virtual ProfileProcess, public virtual MultiGeneMPIModule	{
@@ -133,7 +185,7 @@ class MultiGeneProfileProcess : public virtual ProfileProcess, public virtual Mu
 
 };
 
-class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiGeneRateProcess, MultiGeneBranchProcess, MultiGeneProfileProcess	{
+class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiGeneRateProcess, public virtual MultiGeneBranchProcess, public virtual MultiGeneProfileProcess	{
 
 	public:
 

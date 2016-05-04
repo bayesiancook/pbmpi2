@@ -118,7 +118,6 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		os << '\t' << GetLogLikelihood() << '\t' << GetRenormTotalLength() << '\t' << GetAlpha();
 		os << '\t' << GetNOccupiedComponent() << '\t' << GetStatEnt();
 		os << '\t' << GetMeanDirWeight();
-		os << '\t' << branchalpha << '\t' << branchbeta;
 		os << '\t' << currenttopo;
 		os << '\n';
 	}

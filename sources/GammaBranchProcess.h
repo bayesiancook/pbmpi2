@@ -22,22 +22,17 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 class GammaBranchProcess : public virtual BranchProcess	{
 
-	using BranchProcess::SampleLength;
-
 	public:
 
-	GammaBranchProcess() : betaprior(0), branchalpha(1.0), branchbeta(10.0) {}
+	GammaBranchProcess() : betaprior(0), branchmean(0), branchrelvar(0) {}
 	virtual ~GammaBranchProcess() {}
 
 	double LogBranchLengthPrior(const Branch* branch);
 
-	double LogHyperPrior();
+	virtual double LogHyperPrior();
 
-	double GetBranchAlpha() {return branchalpha;}
-	double GetBranchBeta() {return branchbeta;}
-
-	void PriorSampleLength();
-	void SampleLength(const Branch* branch);
+	virtual void PriorSampleLength();
+	virtual void SampleBranchLength(const Branch* branch);
 
 	void ToStreamWithLengths(ostream& os, const Link* from);
 
@@ -52,20 +47,37 @@ class GammaBranchProcess : public virtual BranchProcess	{
 	double NonMPIMove(double tuning = 1, int nrep=1);
 	double NonMPIMoveLength();
 
+	double GetMeanLengthRelVar()	{
+
+		double tot = 0;
+		for (int j=0; j<GetNbranch(); j++)	{
+			tot += branchrelvar[j];
+		}
+		tot /= GetNbranch();
+		return tot;
+	}
+
 	void ToStream(ostream& os);
 	void FromStream(istream& is);
 
-	protected:
+	void SetHyperParameters(double inmean, double inrelvar)	{
+		for (int j=0; j<GetNbranch(); j++)	{
+			branchmean[j] = inmean;
+			branchrelvar[j] = inrelvar;
+		}
+	}
 
-	void SetHyperParameters(double inalpha, double inbeta)	{
-		branchalpha = inalpha;
-		branchbeta = inbeta;
+	void SetHyperParameters(double* inmean, double* inrelvar)	{
+		for (int j=0; j<GetNbranch(); j++)	{
+			branchmean[j] = inmean[j];
+			branchrelvar[j] = inrelvar[j];
+		}
 	}
 
 	virtual void Delete() {}
 
-	double branchalpha;
-	double branchbeta;
+	double* branchmean;
+	double* branchrelvar;
 
 	int betaprior;
 };

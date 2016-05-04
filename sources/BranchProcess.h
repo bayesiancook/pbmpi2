@@ -139,8 +139,8 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	int MoveAllBranches(double factor);
 	int RecursiveMoveAllBranches(const Link* from, double e);
 
-	virtual void SampleLength(const Branch* branch)	{
-		cerr << "in BranchProcess::SampleLength\n";
+	virtual void SampleBranchLength(const Branch* branch)	{
+		cerr << "in BranchProcess::SampleBranchLength\n";
 		exit(1);
 	}
 
@@ -199,13 +199,13 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		}
 	}
 
-	void SampleLength()	{
+	virtual void SampleLength()	{
 		if (! fixbl)	{
 			RecursiveSampleLength(GetRoot());
 		}
 	}
 
-	double LogLengthPrior()	{
+	virtual double LogLengthPrior()	{
 		return RecursiveLogLengthPrior(GetRoot());
 	}
 

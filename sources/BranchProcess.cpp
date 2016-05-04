@@ -130,7 +130,7 @@ double BranchProcess::RecursiveLogLengthPrior(const Link* from)	{
 void BranchProcess::RecursiveSampleLength(const Link* from)	{
 
 	if (! from->isRoot())	{
-		SampleLength(from->GetBranch());
+		SampleBranchLength(from->GetBranch());
 	}
 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
 		RecursiveSampleLength(link->Out());

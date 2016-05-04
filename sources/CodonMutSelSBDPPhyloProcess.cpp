@@ -31,17 +31,13 @@ void CodonMutSelSBDPPhyloProcess::SlaveUpdateParameters()	{
 	L1 = GetNmodeMax();
 	L2 = GetDim();
 	//nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1); // check if these last terms are correct in this context...
-	nd = 2 + nbranch + nnucrr + nnucstat + L1*L2 + GetDim() + 1;
+	nd = nbranch + nnucrr + nnucstat + L1*L2 + GetDim() + 1;
 	ni = 1 + ProfileProcess::GetNsite();
 	int* ivector = new int[ni];
 	double* dvector = new double[nd];
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	int index = 0;
-	branchalpha = dvector[index];
-	index++;
-	branchbeta = dvector[index];
-	index++;
 	for(i=0; i<nbranch; ++i) {
 		blarray[i] = dvector[index];
 		index++;
@@ -120,7 +116,7 @@ void CodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
 	L1 = GetNmodeMax();
 	L2 = GetDim();
 	//nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1);  // check if these last terms are correct in this context...
-	nd = 2 + nbranch + nnucrr + + nnucstat + L1*L2 + GetDim() + 1;
+	nd = nbranch + nnucrr + + nnucstat + L1*L2 + GetDim() + 1;
 	ni = 1 + ProfileProcess::GetNsite(); // 1 for the number of componenets, and the rest for allocations
 	int ivector[ni];
 	double dvector[nd]; 
@@ -130,10 +126,6 @@ void CodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
 	// GlobalBroadcastTree();
 	// First we assemble the vector of doubles for distribution
 	int index = 0;
-	dvector[index] = branchalpha;
-	index++;
-	dvector[index] = branchbeta;
-	index++;
 	
 	for(i=0; i<nbranch; ++i) {
 		dvector[index] = blarray[i];

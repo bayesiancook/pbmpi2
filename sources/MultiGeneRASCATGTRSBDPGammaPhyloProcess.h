@@ -44,7 +44,6 @@ class MultiGeneExpoConjugateGTRProfileProcess : public virtual ExpoConjugateGTRP
 
 
 class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual MultiGeneExpoConjugateGTRProfileProcess, public virtual RASCATGTRSBDPGammaPhyloProcess	{
-// class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual GammaBranchProcess, public virtual DGamRateProcess, public virtual ExpoConjugateGTRProfileProcess	{
 
 	public:
 
@@ -142,7 +141,12 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 	}
 
 	void TraceHeader(ostream& os)	{
-		os << "#iter\ttime\ttopo\tloglik\tlength\talpha";
+		os << "#iter\ttime\ttopo\tloglik";
+		os << "\tlength";
+		if (! GlobalBranchLengths())	{
+			os << "\tlengthvar";
+		}
+		os << "\talpha";
 		if (! GlobalAlpha())	{
 			os << "\tvaralpha";
 		}
@@ -174,6 +178,9 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		os << '\t' << GetLogLikelihood();
 		// os << '\t' << GetTotalLength();
 		os << '\t' << GetRenormTotalLength();
+		if (! GlobalBranchLengths())	{
+			os << '\t' << GetMeanLengthRelVar();
+		}
 		os << '\t' << GetMeanAlpha();
 		if (! GlobalAlpha())	{
 			os << '\t' << varalpha;

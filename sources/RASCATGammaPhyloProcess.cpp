@@ -48,7 +48,7 @@ void RASCATGammaPhyloProcess::GlobalUpdateParameters()	{
 	int i,j,nbranch = GetNbranch(),ni,nd,L1,L2;
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	nd = 3 + nbranch + L1*L2 + GetDim() + 1;
+	nd = 1 + nbranch + L1*L2 + GetDim() + 1;
 	ni = 1 + GetNsite();
 	int ivector[ni];
 	double dvector[nd];
@@ -58,10 +58,6 @@ void RASCATGammaPhyloProcess::GlobalUpdateParameters()	{
 	// First we assemble the vector of doubles for distribution
 	int index = 0;
 	dvector[index] = GetAlpha();
-	index++;
-	dvector[index] = branchalpha;
-	index++;
-	dvector[index] = branchbeta;
 	index++;
 	for(i=0; i<nbranch; ++i) {
 		dvector[index] = blarray[i];
@@ -113,7 +109,7 @@ void RASCATGammaPhyloProcess::SlaveUpdateParameters()	{
 	int i,j,L1,L2,ni,nd,nbranch = GetNbranch();
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	nd = 3 + nbranch + L1*L2 + GetDim() + 1;
+	nd = 1 + nbranch + L1*L2 + GetDim() + 1;
 	ni = 1 + GetNsite();
 	int* ivector = new int[ni];
 	double* dvector = new double[nd];
@@ -122,10 +118,6 @@ void RASCATGammaPhyloProcess::SlaveUpdateParameters()	{
 
 	int index = 0;
 	SetAlpha(dvector[index]);
-	index++;
-	branchalpha = dvector[index];
-	index++;
-	branchbeta = dvector[index];
 	index++;
 	for(i=0; i<nbranch; ++i) {
 		blarray[i] = dvector[index];

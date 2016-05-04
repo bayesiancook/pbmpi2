@@ -14,6 +14,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
 				process[gene]->SetMPI(0,1);
 				process[gene]->New();
 				GetProcess(gene)->SetFixAlpha(GlobalAlpha());
+				GetProcess(gene)->SetFixBL(GlobalBranchLengths());
 			}
 		}
 	}
@@ -171,7 +172,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 	if (GetNprocs() > 1)	{
 
 		int nbranch = GetNbranch();
-		int nd = 3 + nbranch;
+		int nd = 3 + 3*nbranch;
 		double dvector[nd]; 
 		MESSAGE signal = PARAMETER_DIFFUSION;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -191,6 +192,14 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 			dvector[index] = blarray[i];
 			index++;
 		}
+		for(int i=0; i<nbranch; ++i) {
+			dvector[index] = branchmean[i];
+			index++;
+		}
+		for(int i=0; i<nbranch; ++i) {
+			dvector[index] = branchrelvar[i];
+			index++;
+		}
 		
 		// Now send out the doubles and ints over the wire...
 		MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
@@ -203,7 +212,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 
 	int nbranch = GetNbranch();
-	int nd = 3 + nbranch;
+	int nd = 3 + 3*nbranch;
 	double dvector[nd]; 
 
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
@@ -219,6 +228,14 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 		blarray[i] = dvector[index];
 		index++;
 	}
+	for(int i=0; i<nbranch; ++i) {
+		branchmean[i] = dvector[index];
+		index++;
+	}
+	for(int i=0; i<nbranch; ++i) {
+		branchrelvar[i] = dvector[index];
+		index++;
+	}
 
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
@@ -229,7 +246,12 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 				GetProcess(gene)->meanalpha = meanalpha;
 				GetProcess(gene)->varalpha = varalpha;
 			}
-			GetProcess(gene)->SetBranchLengths(GetBranchLengths());
+			if (GlobalBranchLengths())	{
+				GetProcess(gene)->SetBranchLengths(GetBranchLengths());
+			}
+			else	{
+				GetProcess(gene)->SetHyperParameters(branchmean,branchrelvar);
+			}
 		}
 	}
 }

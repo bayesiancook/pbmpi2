@@ -50,7 +50,7 @@ void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	nrr = GetNrr();
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	nd = 3 + nbranch + nrr + L2 + L1*(L2+1);
+	nd = 1 + nbranch + nrr + L2 + L1*(L2+1);
 	if (empmix == 2)	{
 		nd += 2;
 	}
@@ -66,10 +66,6 @@ void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	int index = 0;
 	dvector[index] = GetAlpha();
 	index ++;
-	dvector[index] = branchalpha;
-	index++;
-	dvector[index] = branchbeta;
-	index++;
 	for(i=0; i<nbranch; ++i) {
 		dvector[index] = blarray[i];
 		index++;
@@ -147,7 +143,7 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
 	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nrr = GetNrr();
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	nd = 3 + nbranch + nrr + L2 + L1*(L2+1);
+	nd = 1 + nbranch + nrr + L2 + L1*(L2+1);
 	if (empmix == 2)	{
 		nd += 2;
 	}
@@ -159,10 +155,6 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
 	int index = 0;
 	SetAlpha(dvector[index]);
 	index ++;
-	branchalpha = dvector[index];
-	index++;
-	branchbeta = dvector[index];
-	index++;
 	for(i=0; i<nbranch; ++i) {
 		blarray[i] = dvector[index];
 		index++;

@@ -28,14 +28,10 @@ void AACodonMutSelMVNSiteSpecificPhyloProcess::SlaveUpdateParameters()	{
 	L1 = GetNsite();
 	L2 = GetDim();
 	int nstate = GetData()->GetNstate();
-	nd = 2+ nbranch + nnucrr + nnucstat + L2 + L2*(L2+1)/2 + L1*L2 + nstate + 1; // check if these last terms are correct in this context...
+	nd = nbranch + nnucrr + nnucstat + L2 + L2*(L2+1)/2 + L1*L2 + nstate + 1; // check if these last terms are correct in this context...
 	double* dvector = new double[nd];
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	int index = 0;
-	dvector[index] = branchalpha;
-	index++;
-	dvector[index] = branchbeta;
-	index++;
 	for(i=0; i<nbranch; ++i) {
 		blarray[i] = dvector[index];
 		index++;
@@ -115,16 +111,12 @@ void AACodonMutSelMVNSiteSpecificPhyloProcess::GlobalUpdateParameters() {
 	L1 = GetNsite();
 	L2 = GetDim();
 	int nstate = GetData()->GetNstate();
-	nd = 2+ nbranch + nnucrr + nnucstat + L2 + L2*(L2+1)/2 + L1*L2 + nstate + 1; // check if these last terms are correct in this context...
+	nd = nbranch + nnucrr + nnucstat + L2 + L2*(L2+1)/2 + L1*L2 + nstate + 1; // check if these last terms are correct in this context...
 	double dvector[nd]; 
 	MESSAGE signal = PARAMETER_DIFFUSION;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	
 	int index = 0;
-	index++;
-	dvector[index] = branchalpha;
-	index++;
-	dvector[index] = branchbeta;
 	// First we assemble the vector of doubles for distribution
 	for(i=0; i<nbranch; ++i) {
 		dvector[index] = blarray[i];

@@ -100,6 +100,8 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 
 	virtual double AugmentedMove(double tuning = 1.0)	{
 
+		// important to start with that one
+		// if marginal suff stat move is done before that in a multi gene context
 		GammaBranchProcess::Move(tuning,10);
 
 		GlobalUpdateParameters();

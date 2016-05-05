@@ -113,6 +113,7 @@ void PhyloProcess::Create()	{
 			for (int j=0; j<GetNlink(); j++)	{
 				condlmap[j] = 0;
 			}
+
 			CreateCondSiteLogL();
 			ActivateSumOverRateAllocations();
 			CreateConditionalLikelihoods();
@@ -132,6 +133,24 @@ void PhyloProcess::Create()	{
 		CreateSiteConditionalLikelihoods();
 	}
 }
+
+/*
+void PhyloProcess::CreateMissingMap()	{
+
+	missingmap = new bool*[GetNnode()];
+	for (int j=0; j<GetNnode(); j++)	{
+		missingmap[j] = new bool[GetNsite()];
+		for (int i=0; i<GetNsite(); i++)	{
+			missinmap[j][i] = false;
+		}
+	}
+}
+
+void PhyloProcess::FillMissingMap()	{
+
+	RecursiveFillMissingMap(GetRoot());
+}
+*/
 
 void PhyloProcess::Delete() {
 

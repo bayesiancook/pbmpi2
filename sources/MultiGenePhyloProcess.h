@@ -107,7 +107,7 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 
 	public:
 
-	MultiGeneBranchProcess() : geneblarray(0) {}
+	MultiGeneBranchProcess() : geneblarray(0), mappsuffstat(1) {}
 	virtual ~MultiGeneBranchProcess() {}
 
 	virtual void Create();
@@ -137,6 +137,9 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 	void GlobalCollectGeneBranchLengths();
 	void SlaveCollectGeneBranchLengths();
 
+	void GlobalCollectGeneLengthMappingSuffStat();
+	void SlaveCollectGeneLengthMappingSuffStat();
+
 	void SampleLengthHyperParameters();
 	void PriorSampleLengthHyperParameters();
 
@@ -146,6 +149,8 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 	double LogLengthHyperHyperPrior();
 	double LogGeneLengthSuffStatPrior();
 	double LogGeneLengthSuffStatPrior(int j);
+	double LogGeneLengthMarginalSuffStatProb();
+	double LogGeneLengthMarginalSuffStatProb(int j);
 	void ComputeGeneLengthSuffStat();
 
 	double Move(double tuning = 1, int nrep = 1);
@@ -171,10 +176,22 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 	}
 
 	int globalbl;
+	int mappsuffstat;
+
 	double** geneblarray;
 	double** tmpgeneblarray;
 	double* allocgeneblarray;
 	double* alloctmpgeneblarray;
+
+	int** geneblcount;
+	int** tmpgeneblcount;
+	int* allocgeneblcount;
+	int* alloctmpgeneblcount;
+
+	double** geneblbeta;
+	double** tmpgeneblbeta;
+	double* allocgeneblbeta;
+	double* alloctmpgeneblbeta;
 
 	double* totlength;
 	double* totloglength;

@@ -56,11 +56,11 @@ double MultiGeneRASCATSBDPGammaPhyloProcess::Move(double tuning)	{
 	// for (int rep=0; rep<5; rep++)	{
 		GlobalCollapse();
 
-		GlobalGeneMove();
+		MultiGeneBranchProcess::Move(tuning,10);
 
 		GlobalUpdateParameters();
 
-		MultiGeneBranchProcess::Move(tuning,10);
+		GlobalGeneMove();
 
 		GlobalUpdateParameters();
 

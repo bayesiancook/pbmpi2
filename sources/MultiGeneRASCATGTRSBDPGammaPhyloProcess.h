@@ -185,8 +185,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		}
 
 		os << '\t' << GetLogLikelihood();
-		// os << '\t' << GetTotalLength();
-		os << '\t' << GetRenormTotalLength();
+		os << '\t' << GetMeanTotalLength();
 		if (! GlobalBranchLengths())	{
 			os << '\t' << GetMeanLengthRelVar();
 		}

@@ -199,6 +199,14 @@ double GammaBranchProcess::MPIMoveBranchLengths()	{
 			double branchbeta = 1.0 / branchmean[i];
 			double branchalpha = 1.0 / branchrelvar[i];
 			blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), branchbeta + GetBranchLengthSuffStatBeta(i));
+			if (blarray[i] == 0)	{
+				blarray[i] = 1e-6;
+				/*
+				cerr << "sampling a null branch length\n";
+				cerr << branchalpha << '\t' << GetBranchLengthSuffStatCount(i) << '\t' << branchbeta << '\t' << GetBranchLengthSuffStatBeta(i) << '\n';
+				exit(1);
+				*/
+			}
 		}
 	}
 	else	{

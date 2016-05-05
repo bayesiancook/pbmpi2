@@ -124,6 +124,7 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 		os << "\tlength";
 		if (! GlobalBranchLengths())	{
 			os << "\tlengthvar";
+			os << "\tmean\trelvar\tmean\tvrelvar";
 		}
 		os << "\talpha";
 		if (! GlobalAlpha())	{
@@ -152,10 +153,10 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 		}
 
 		os << '\t' << GetLogLikelihood();
-		// os << '\t' << GetTotalLength();
-		os << '\t' << GetRenormTotalLength();
+		os << '\t' << GetMeanTotalLength();
 		if (! GlobalBranchLengths())	{
 			os << '\t' << GetMeanLengthRelVar();
+			os << '\t' << meanbranchmean << '\t' << relvarbranchmean << '\t' << meanbranchrelvar << '\t' << relvarbranchrelvar;
 		}
 		os << '\t' << GetMeanAlpha();
 		if (! GlobalAlpha())	{

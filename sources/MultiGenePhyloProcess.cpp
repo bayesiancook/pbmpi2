@@ -29,6 +29,7 @@ void MultiGeneBranchProcess::Create()	{
 		alloctmpgeneblarray = new double[Ngene*GetNbranch()];
 		tmpgeneblarray = new double*[Ngene];
 		for (int gene=0; gene<Ngene; gene++)	{
+			geneblarray[gene] = allocgeneblarray + gene*GetNbranch();
 			tmpgeneblarray[gene] = alloctmpgeneblarray + gene*GetNbranch();
 		}
 
@@ -66,9 +67,13 @@ void MultiGeneBranchProcess::SampleLengthHyperParameters()	{
 		double bmean = 1.0 / meanbranchmean;
 		double arelvar = 1.0 / relvarbranchrelvar;
 		double brelvar = 1.0 / meanbranchrelvar;
-		for (int j=0; j<GetNbranch(); j++)	{
+		for (int j=1; j<GetNbranch(); j++)	{
+			/*
 			branchmean[j] = rnd::GetRandom().Gamma(amean,bmean);
 			branchrelvar[j] = rnd::GetRandom().Gamma(arelvar,brelvar);
+			*/
+			branchmean[j] = 0.1;
+			branchrelvar[j] = 1.0;
 		}	
 	}
 }
@@ -87,7 +92,7 @@ void MultiGeneBranchProcess::PriorSampleLengthHyperParameters()	{
 		double bmean = 1.0 / meanbranchmean;
 		double arelvar = 1.0 / relvarbranchrelvar;
 		double brelvar = 1.0 / meanbranchrelvar;
-		for (int j=0; j<GetNbranch(); j++)	{
+		for (int j=1; j<GetNbranch(); j++)	{
 			branchmean[j] = rnd::GetRandom().Gamma(amean,bmean);
 			branchrelvar[j] = rnd::GetRandom().Gamma(arelvar,brelvar);
 		}	
@@ -106,7 +111,7 @@ double MultiGeneBranchProcess::LogLengthHyperPrior()	{
 
 	if (! GlobalBranchLengths())	{
 		double total = 0;
-		for (int j=0; j<GetNbranch(); j++)	{
+		for (int j=1; j<GetNbranch(); j++)	{
 			total += LogLengthHyperPrior(j);
 		}
 		return total;
@@ -120,23 +125,46 @@ double MultiGeneBranchProcess::LogLengthHyperPrior(int j)	{
 	double bmean = 1.0 / meanbranchmean;
 	double arelvar = 1.0 / relvarbranchrelvar;
 	double brelvar = 1.0 / meanbranchrelvar;
+
 	double total = 0;
 	total += amean * log(bmean) - rnd::GetRandom().logGamma(amean) + (amean-1) * log(branchmean[j]) - bmean * branchmean[j];
 	total += arelvar * log(brelvar) - rnd::GetRandom().logGamma(arelvar) + (arelvar-1) * log(branchrelvar[j]) - brelvar * branchrelvar[j];
+	if (isnan(total))	{
+		cerr << "multi gene log length hyper prior is nan\n";
+		exit(1);
+	}
+	if (isinf(total))	{
+		cerr << "multi gene log length hyper prior is inf\n";
+		exit(1);
+	}
 	return total;
 }
 
 double MultiGeneBranchProcess::LogLengthHyperHyperPrior()	{
 
-	return - 10*meanbranchmean - relvarbranchmean - meanbranchmean - relvarbranchrelvar;
+	double ret = - 10*meanbranchmean - relvarbranchmean - meanbranchrelvar - relvarbranchrelvar;
+	if (isnan(ret))	{
+		cerr << "mult gene log length hyper hyper prior is nan\n";
+		exit(1);
+	}
+	if (isinf(ret))	{
+		cerr << "mult gene log length hyper hyper prior is inf\n";
+		exit(1);
+	}
+	return ret;
 }
 
 void MultiGeneBranchProcess::ComputeGeneLengthSuffStat()	{
 
-	for (int j=0; j<GetNbranch(); j++)	{
+	for (int j=1; j<GetNbranch(); j++)	{
 		totlength[j] = 0;
 		totloglength[j] = 0;
 		for (int gene=0; gene<Ngene; gene++)	{
+			double l = geneblarray[gene][j];
+			if (l <= 0)	{
+				cerr << "error in MultiGeneBranchProcess::ComputeGeneLengthSuffStat: invalid branch length : " << l << '\n';
+				exit(1);
+			}
 			totlength[j] += geneblarray[gene][j];
 			totloglength[j] += log(geneblarray[gene][j]);
 		}
@@ -147,7 +175,7 @@ double MultiGeneBranchProcess::LogGeneLengthSuffStatPrior()	{
 
 	ComputeGeneLengthSuffStat();
 	double total = 0;
-	for (int j=0; j<GetNbranch(); j++)	{
+	for (int j=1; j<GetNbranch(); j++)	{
 		total += LogGeneLengthSuffStatPrior(j);
 	}
 	return total;
@@ -157,7 +185,17 @@ double MultiGeneBranchProcess::LogGeneLengthSuffStatPrior(int j)	{
 
 	double alpha = 1.0 / branchrelvar[j];
 	double beta = 1.0 / branchmean[j];
-	return Ngene*(rnd::GetRandom().logGamma(alpha) - alpha*log(beta)) + (alpha-1)*totloglength[j] - beta*totlength[j];
+	double ret = Ngene*(alpha*log(beta) - rnd::GetRandom().logGamma(alpha)) + (alpha-1)*totloglength[j] - beta*totlength[j];
+	if (isnan(ret))	{
+		cerr << "multi gene log gene length suff stat prior is nan\n";
+		exit(1);
+	}
+	if (isinf(ret))	{
+		cerr << "multi gene log gene length suff stat prior is inf\n";
+		cerr << Ngene << '\t' << alpha << '\t' << beta << '\t' << totloglength[j] << '\t' << totlength[j] << '\n';
+		exit(1);
+	}
+	return ret;
 }
 
 double MultiGeneBranchProcess::Move(double tuning, int nrep)	{
@@ -180,7 +218,7 @@ double MultiGeneBranchProcess::MoveGeneLengthHyperParameters(double tuning, int 
 	ComputeGeneLengthSuffStat();
 
 	int Naccepted = 0;
-	for (int j=0; j<GetNbranch(); j++)	{
+	for (int j=1; j<GetNbranch(); j++)	{
 		for (int rep=0; rep<nrep; rep++)	{
 
 			double bkmean = branchmean[j];
@@ -190,6 +228,7 @@ double MultiGeneBranchProcess::MoveGeneLengthHyperParameters(double tuning, int 
 			double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
 			double e = exp(m);
 
+			// branchmean[j] *= e;
 			if (rnd::GetRandom().Uniform() < 0.5)	{
 				branchmean[j] *= e;
 			}
@@ -209,7 +248,7 @@ double MultiGeneBranchProcess::MoveGeneLengthHyperParameters(double tuning, int 
 			}
 		}
 	}
-	return ((double) Naccepted) / nrep / GetNbranch();
+	return ((double) Naccepted) / nrep / (GetNbranch()-1);
 }
 
 double MultiGeneBranchProcess::MoveGeneLengthHyperHyperParameters(double tuning, int nrep)	{
@@ -226,15 +265,16 @@ double MultiGeneBranchProcess::MoveGeneLengthHyperHyperParameters(double tuning,
 		double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
 		double e = exp(m);
 
+		// int c = (int) (2 * rnd::GetRandom().Uniform());
 		int c = (int) (4 * rnd::GetRandom().Uniform());
 		if (c == 0)	{
 			meanbranchmean *= e;
 		}
 		else if (c == 1)	{
-			meanbranchrelvar *= e;
+			relvarbranchmean *= e;
 		}
 		else if (c == 2)	{
-			relvarbranchmean *= e;
+			meanbranchrelvar *= e;
 		}
 		else	{
 			relvarbranchrelvar *= e;
@@ -249,8 +289,8 @@ double MultiGeneBranchProcess::MoveGeneLengthHyperHyperParameters(double tuning,
 		}
 		else	{
 			meanbranchmean = bkmeanbranchmean;
-			meanbranchrelvar = bkmeanbranchrelvar;
 			relvarbranchmean = bkrelvarbranchmean;
+			meanbranchrelvar = bkmeanbranchrelvar;
 			relvarbranchrelvar = bkrelvarbranchrelvar;
 		}
 	}
@@ -287,10 +327,16 @@ void MultiGeneBranchProcess::GlobalCollectGeneBranchLengths()	{
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Status stat;
 	for(int i=1; i<GetNprocs(); i++) {
-		MPI_Recv(tmpgeneblarray,Ngene*GetNbranch(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		MPI_Recv(alloctmpgeneblarray,Ngene*GetNbranch(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
 		for (int gene=0; gene<Ngene; gene++)	{
-			if (genealloc[gene] == myid)	{
-				GetBranchProcess(gene)->SetBranchLengths(geneblarray[gene]);
+			if (genealloc[gene] == i)	{
+				for (int j=1; j<GetNbranch(); j++)	{
+					geneblarray[gene][j] = tmpgeneblarray[gene][j];
+					if (! geneblarray[gene][j])	{
+						cerr << "error in global collect gene bl: null bl\n";
+						exit(1);
+					}
+				}
 			}
 		}
 	}
@@ -300,12 +346,20 @@ void MultiGeneBranchProcess::SlaveCollectGeneBranchLengths() {
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			const double* bl = GetBranchProcess(gene)->GetBranchLengths();
-			for (int j=0; j<GetNbranch(); j++)	{
+			for (int j=1; j<GetNbranch(); j++)	{
+				if (! bl[j])	{
+					cerr << "error in slave collect; null bl\n";
+					cerr << j << '\n';
+					for (int j=0; j<GetNbranch(); j++)	{
+						cerr << j << '\t' << bl[j] << '\n';
+					}
+					exit(1);
+				}
 				tmpgeneblarray[gene][j] = bl[j];
 			}
 		}
 	}
-	MPI_Send(tmpgeneblarray,Ngene*GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(alloctmpgeneblarray,Ngene*GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
 void MultiGeneRateProcess::Create()	{
@@ -499,12 +553,14 @@ void MultiGenePhyloProcess::Create()	{
 
 	PhyloProcess::Create();
 	MultiGeneRateProcess::Create();
+	MultiGeneBranchProcess::Create();
 	MultiGeneMPIModule::Create();
 }
 
 void MultiGenePhyloProcess::Delete()	{
 
 	MultiGeneMPIModule::Delete();
+	MultiGeneBranchProcess::Delete();
 	MultiGeneRateProcess::Delete();
 	PhyloProcess::Delete();
 }

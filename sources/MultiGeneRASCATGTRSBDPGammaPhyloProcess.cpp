@@ -18,9 +18,12 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Create()	{
 				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,fixtopo,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
 				process[gene]->SetName(name);
 				process[gene]->SetMPI(0,1);
-				process[gene]->New();
 				GetProcess(gene)->SetFixAlpha(GlobalAlpha());
 				GetProcess(gene)->SetFixBL(GlobalBranchLengths());
+				if (! GlobalBranchLengths())	{
+					GetProcess(gene)->hierarchicallengthprior = 1;
+				}
+				process[gene]->New();
 			}
 		}
 	}
@@ -213,7 +216,13 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 
 		int nbranch = GetNbranch();
 		int nrr = GetNrr();
-		int nd = 3 + 3*nbranch + nrr;
+		int nd = 3;
+		if (! GlobalBranchLengths())	{
+			nd += 3*nbranch;
+		}
+		else	{
+			nd += nbranch;
+		}
 		double dvector[nd]; 
 		MESSAGE signal = PARAMETER_DIFFUSION;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -233,13 +242,15 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 			dvector[index] = blarray[i];
 			index++;
 		}
-		for(int i=0; i<nbranch; ++i) {
-			dvector[index] = branchmean[i];
-			index++;
-		}
-		for(int i=0; i<nbranch; ++i) {
-			dvector[index] = branchrelvar[i];
-			index++;
+		if (! GlobalBranchLengths())	{
+			for(int i=0; i<nbranch; ++i) {
+				dvector[index] = branchmean[i];
+				index++;
+			}
+			for(int i=0; i<nbranch; ++i) {
+				dvector[index] = branchrelvar[i];
+				index++;
+			}
 		}
 		
 		for(int i=0; i<nrr ; ++i) {
@@ -259,7 +270,13 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 
 	int nbranch = GetNbranch();
 	int nrr = GetNrr();
-	int nd = 3 + 3*nbranch + nrr;
+	int nd = 3;
+	if (! GlobalBranchLengths())	{
+		nd += 3*nbranch;
+	}
+	else	{
+		nd += nbranch;
+	}
 	double dvector[nd]; 
 
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
@@ -274,13 +291,15 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 		blarray[i] = dvector[index];
 		index++;
 	}
-	for(int i=0; i<nbranch; ++i) {
-		branchmean[i] = dvector[index];
-		index++;
-	}
-	for(int i=0; i<nbranch; ++i) {
-		branchrelvar[i] = dvector[index];
-		index++;
+	if (! GlobalBranchLengths())	{
+		for(int i=0; i<nbranch; ++i) {
+			branchmean[i] = dvector[index];
+			index++;
+		}
+		for(int i=0; i<nbranch; ++i) {
+			branchrelvar[i] = dvector[index];
+			index++;
+		}
 	}
 
 	for(int i=0; i<nrr; ++i) {

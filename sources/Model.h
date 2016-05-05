@@ -58,7 +58,7 @@ class Model	{
 	int until;
 	int saveall;
 
-	Model(string datafile, string treefile, int multigene, int globalalpha, int modeltype, int nratecat, int mixturetype, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int fixtopo, int NSPR, int NMHSPR, int NTSPR, double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int sumratealloc, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
+	Model(string datafile, string treefile, int multigene, int globalalpha, int globalbl, int modeltype, int nratecat, int mixturetype, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int fixtopo, int NSPR, int NMHSPR, int NTSPR, double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int sumratealloc, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
 
 		every = inevery;
 		until = inuntil;
@@ -81,11 +81,11 @@ class Model	{
 
 			if (modeltype == 1)	{
 				type = "MULTIGENECATSBDP";
-				process = new MultiGeneRASCATSBDPGammaPhyloProcess(nratecat,kappaprior,globalalpha);
+				process = new MultiGeneRASCATSBDPGammaPhyloProcess(nratecat,kappaprior,globalalpha,globalbl);
 			}
 			else if (modeltype == 2)	{
 				type = "MULTIGENECATGTRSBDP";
-				process = new MultiGeneRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior,globalalpha);
+				process = new MultiGeneRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior,globalalpha,globalbl);
 			}
 			else	{
 				cerr << "model not recognized\n";

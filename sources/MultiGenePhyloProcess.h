@@ -84,7 +84,7 @@ class MultiGeneRateProcess : public virtual DGamRateProcess, public virtual Mult
 	virtual void PriorSampleRate();
 
 	virtual double Move(double tuning = 1, int nrep = 1);
-	double MoveHyperParams(double tuning = 1, int nrep = 1);
+	double MoveGeneRateHyperParams(double tuning = 1, int nrep = 1);
 
 	virtual double LogRatePrior();
 
@@ -149,8 +149,8 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 	void ComputeGeneLengthSuffStat();
 
 	double Move(double tuning = 1, int nrep = 1);
-	double MoveLengthHyperParameters(double tuning = 1, int nrep = 1);
-	double MoveLengthHyperHyperParameters(double tuning = 1, int nrep = 1);
+	double MoveGeneLengthHyperParameters(double tuning = 1, int nrep = 1);
+	double MoveGeneLengthHyperHyperParameters(double tuning = 1, int nrep = 1);
 
 	void SlaveDetach(int,int);
 	void SlaveAttach(int,int,int,int);

@@ -107,20 +107,12 @@ void GammaBranchProcess::SampleBranchLength(const Branch* branch)	{
 	
 void GammaBranchProcess::PriorSampleLengthHyperParameters()	{
 
-	if (hierarchicallengthprior)	{
-		cerr << "error: in default GammaBranchProcess::PriorSampleLengthHyperParameters, with hierarchical prior\n";
-		exit(1);
-	}
 	branchalpha = rnd::GetRandom().sExpo();
 	branchbeta = 10 * rnd::GetRandom().sExpo();
 }
 
 void GammaBranchProcess::SampleLengthHyperParameters()	{
 
-	if (hierarchicallengthprior)	{
-		cerr << "error: in default GammaBranchProcess::PriorSampleLengthHyperParameters, with hierarchical prior\n";
-		exit(1);
-	}
 	branchalpha = 1.0;
 	branchbeta = 10.0;
 }

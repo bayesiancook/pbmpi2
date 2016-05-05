@@ -165,17 +165,17 @@ double MultiGeneBranchProcess::Move(double tuning, int nrep)	{
 	if (! GlobalBranchLengths())	{
 		GlobalCollectGeneBranchLengths();
 		for (int rep=0; rep<nrep; rep++)	{
-			MoveLengthHyperParameters(tuning,10);
-			MoveLengthHyperParameters(0.1*tuning,10);
-			MoveLengthHyperHyperParameters(tuning,20);
-			MoveLengthHyperHyperParameters(0.1*tuning,20);
+			MoveGeneLengthHyperParameters(tuning,10);
+			MoveGeneLengthHyperParameters(0.1*tuning,10);
+			MoveGeneLengthHyperHyperParameters(tuning,20);
+			MoveGeneLengthHyperHyperParameters(0.1*tuning,20);
 		}
 		return 1.0;
 	}
 	return GammaBranchProcess::Move(tuning,nrep);
 }
 
-double MultiGeneBranchProcess::MoveLengthHyperParameters(double tuning, int nrep)	{
+double MultiGeneBranchProcess::MoveGeneLengthHyperParameters(double tuning, int nrep)	{
 
 	ComputeGeneLengthSuffStat();
 
@@ -212,7 +212,7 @@ double MultiGeneBranchProcess::MoveLengthHyperParameters(double tuning, int nrep
 	return ((double) Naccepted) / nrep / GetNbranch();
 }
 
-double MultiGeneBranchProcess::MoveLengthHyperHyperParameters(double tuning, int nrep)	{
+double MultiGeneBranchProcess::MoveGeneLengthHyperHyperParameters(double tuning, int nrep)	{
 
 	int Naccepted = 0;
 	for (int rep=0; rep<nrep; rep++)	{
@@ -413,13 +413,13 @@ double MultiGeneRateProcess::Move(double tuning, int nrep)	{
 	}
 	else	{
 		GlobalCollectGeneAlphas();
-		ret += MoveHyperParams(tuning,nrep);
-		ret += MoveHyperParams(0.1*tuning,nrep);
+		ret += MoveGeneRateHyperParams(tuning,nrep);
+		ret += MoveGeneRateHyperParams(0.1*tuning,nrep);
 	}
 	chronorate.Stop();
 }
 
-double MultiGeneRateProcess::MoveHyperParams(double tuning, int nrep)	{
+double MultiGeneRateProcess::MoveGeneRateHyperParams(double tuning, int nrep)	{
 
 	double nacc = 0;
 	for (int rep=0; rep<nrep; rep++)	{
@@ -455,7 +455,7 @@ double MultiGeneRateProcess::MoveHyperParams(double tuning, int nrep)	{
 
 double MultiGeneRateProcess::LogRatePrior()	{
 	if (globalalpha)	{
-		MultiGeneRateProcess::LogRatePrior();
+		return DGamRateProcess::LogRatePrior();
 	}
 	double tot = -meanalpha - varalpha;
 	double a = meanalpha * meanalpha / varalpha;

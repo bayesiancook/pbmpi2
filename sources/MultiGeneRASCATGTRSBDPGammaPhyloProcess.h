@@ -102,12 +102,16 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 
 	MultiGeneRASCATGTRSBDPGammaPhyloProcess() {}
 
-	MultiGeneRASCATGTRSBDPGammaPhyloProcess(int nratecat, string inrrtype, int inkappaprior, int inglobalalpha)	{
+	MultiGeneRASCATGTRSBDPGammaPhyloProcess(int nratecat, string inrrtype, int inkappaprior, int inglobalalpha, int inglobalbl)	{
 
 		Ncat = nratecat;
 		rrtype = inrrtype;
 		kappaprior = inkappaprior;
 		globalalpha = inglobalalpha;
+		globalbl = inglobalbl;
+		if (! globalbl)	{
+			hierarchicallengthprior = 1;
+		}
 	}
 
 	MultiGeneRASCATGTRSBDPGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
@@ -123,6 +127,10 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		is >> kappaprior;
 		is >> rrtype;
 		is >> globalalpha;
+		is >> globalbl;
+		if (! globalbl)	{
+			hierarchicallengthprior = 1;
+		}
 
 		Open(is);
 
@@ -138,6 +146,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		os << kappaprior << '\n';
 		os << rrtype << '\n';
 		os << globalalpha << '\n';
+		os << globalbl << '\n';
 	}
 
 	void TraceHeader(ostream& os)	{

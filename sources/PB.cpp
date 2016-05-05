@@ -114,6 +114,7 @@ int main(int argc, char* argv[])	{
 
 	int multigene = 0;
 	int globalalpha = 1;
+	int globalbl = 1;
 
 	try	{
 
@@ -300,6 +301,20 @@ int main(int argc, char* argv[])	{
 				}
 				else	{
 					cerr << "error after -alpha: should be gene or global\n";
+					throw(0);
+				}
+			}
+			else if (s == "-bl")	{
+				i++;
+				s = argv[i];
+				if (s == "gene")	{
+					globalbl = 0;
+				}
+				else if (s == "global")	{
+					globalbl = 1;
+				}
+				else	{
+					cerr << "error after -bl: should be gene or global\n";
 					throw(0);
 				}
 			}
@@ -717,7 +732,7 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,multigene,globalalpha,modeltype,dgam,mixturetype,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,fixtopo,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs);
+		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,modeltype,dgam,mixturetype,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,fixtopo,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs);
 
 		if (! myid)	{
 			cerr << '\n';

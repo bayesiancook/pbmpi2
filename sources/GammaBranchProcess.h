@@ -24,31 +24,40 @@ class GammaBranchProcess : public virtual BranchProcess	{
 
 	public:
 
-	GammaBranchProcess() : betaprior(0), branchmean(0), branchrelvar(0) {}
+	GammaBranchProcess() : branchmean(0), branchrelvar(0), betaprior(0), hierarchicallengthprior(0) {}
 	virtual ~GammaBranchProcess() {}
 
+	virtual void Create();
+	virtual void Delete();
+
 	double LogBranchLengthPrior(const Branch* branch);
+	virtual double LogLengthHyperPrior();
 
-	virtual double LogHyperPrior();
-
-	virtual void PriorSampleLength();
-	virtual void SampleBranchLength(const Branch* branch);
+	void SampleBranchLength(const Branch* branch);
+	virtual void PriorSampleLengthHyperParameters();
+	virtual void SampleLengthHyperParameters();
 
 	void ToStreamWithLengths(ostream& os, const Link* from);
 
 	// conjugate sampling
+
 	virtual double BranchProcessMove(double tuning = 1, int nrep=1)	{
 		return Move(tuning,nrep);
 	}
-	virtual double Move(double tuning = 1, int nrep=1);
-	double MoveBranchBeta(double tuning, int nrep);
-	double MoveLength();
 
-	double NonMPIMove(double tuning = 1, int nrep=1);
-	double NonMPIMoveLength();
+	virtual double Move(double tuning = 1, int nrep=1);
+	virtual double NonMPIMove(double tuning = 1, int nrep=1);
+	virtual double MoveLengthHyperParameters(double tuning, int nrep);
+
+	double MPIMoveBranchLengths();
+	double NonMPIMoveBranchLengths();
 
 	double GetMeanLengthRelVar()	{
 
+		if (! hierarchicallengthprior)	{
+			cerr << "error: in GammaBranchProcess::GetMeanLengthRelVar, with non hierarchical prior\n";
+			exit(1);
+		}
 		double tot = 0;
 		for (int j=0; j<GetNbranch(); j++)	{
 			tot += branchrelvar[j];
@@ -60,13 +69,6 @@ class GammaBranchProcess : public virtual BranchProcess	{
 	void ToStream(ostream& os);
 	void FromStream(istream& is);
 
-	void SetHyperParameters(double inmean, double inrelvar)	{
-		for (int j=0; j<GetNbranch(); j++)	{
-			branchmean[j] = inmean;
-			branchrelvar[j] = inrelvar;
-		}
-	}
-
 	void SetHyperParameters(double* inmean, double* inrelvar)	{
 		for (int j=0; j<GetNbranch(); j++)	{
 			branchmean[j] = inmean[j];
@@ -74,12 +76,13 @@ class GammaBranchProcess : public virtual BranchProcess	{
 		}
 	}
 
-	virtual void Delete() {}
-
+	double branchalpha;
+	double branchbeta;
 	double* branchmean;
 	double* branchrelvar;
 
 	int betaprior;
+	int hierarchicallengthprior;
 };
 
 #endif

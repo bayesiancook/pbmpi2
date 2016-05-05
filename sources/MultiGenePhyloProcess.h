@@ -115,6 +115,9 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 
 	void SetGlobalBranchLengths(int in)	{
 		globalbl = in;
+		if (! in)	{
+			hierarchicallengthprior = 1;
+		}
 	}
 
 	int GlobalBranchLengths()	{
@@ -134,13 +137,20 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 	void GlobalCollectGeneBranchLengths();
 	void SlaveCollectGeneBranchLengths();
 
-	virtual void SampleLength();
-	virtual void PriorSampleLength();
+	void SampleLengthHyperParameters();
+	void PriorSampleLengthHyperParameters();
 
-	virtual double Move(double tuning = 1, int nrep = 1);
-	double MoveHyperParams(double tuning = 1, int nrep = 1);
+	double LogLengthPrior();
+	double LogLengthHyperPrior();
+	double LogLengthHyperPrior(int j);
+	double LogLengthHyperHyperPrior();
+	double LogGeneLengthSuffStatPrior();
+	double LogGeneLengthSuffStatPrior(int j);
+	void ComputeGeneLengthSuffStat();
 
-	virtual double LogLengthPrior();
+	double Move(double tuning = 1, int nrep = 1);
+	double MoveLengthHyperParameters(double tuning = 1, int nrep = 1);
+	double MoveLengthHyperHyperParameters(double tuning = 1, int nrep = 1);
 
 	void SlaveDetach(int,int);
 	void SlaveAttach(int,int,int,int);
@@ -165,6 +175,9 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 	double** tmpgeneblarray;
 	double* allocgeneblarray;
 	double* alloctmpgeneblarray;
+
+	double* totlength;
+	double* totloglength;
 
 	double meanbranchmean;
 	double relvarbranchmean;

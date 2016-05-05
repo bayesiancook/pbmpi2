@@ -17,18 +17,43 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "GammaBranchProcess.h"
 #include "Random.h"
 
+void GammaBranchProcess::Create()	{
+
+	BranchProcess::Create();
+	if ((!branchmean) && hierarchicallengthprior)	{
+		branchmean = new double[GetNbranch()];
+		branchrelvar = new double[GetNbranch()];
+	}
+}
+
+void GammaBranchProcess::Delete()	{
+
+	if (branchmean)	{
+		delete[] branchmean;
+		delete[] branchrelvar;
+		branchmean = 0;
+	}
+	BranchProcess::Delete();
+}
+
 void GammaBranchProcess::ToStream(ostream& os)	{
 
 	SetNamesFromLengths();
 	tree->ToStream(os);
-	for (int j=0; j<GetNbranch(); j++)	{
-		os << branchmean[j] << '\t';
+	if (hierarchicallengthprior)	{
+		for (int j=0; j<GetNbranch(); j++)	{
+			os << branchmean[j] << '\t';
+		}
+		os << '\n';
+		for (int j=0; j<GetNbranch(); j++)	{
+			os << branchrelvar[j] << '\t';
+		}
+		os << '\n';
 	}
-	os << '\n';
-	for (int j=0; j<GetNbranch(); j++)	{
-		os << branchrelvar[j] << '\t';
+	else	{
+		os << branchalpha << '\n';
+		os << branchbeta << '\n';
 	}
-	os << '\n';
 }
 
 void GammaBranchProcess::ToStreamWithLengths(ostream& os, const Link* from)	{
@@ -56,113 +81,157 @@ void GammaBranchProcess::FromStream(istream& is)	{
 
 	tree->ReadFromStream(is);
 	SetLengthsFromNames();
-	for (int j=0; j<GetNbranch(); j++)	{
-		is >> branchmean[j];
+	if (hierarchicallengthprior)	{
+		for (int j=0; j<GetNbranch(); j++)	{
+			is >> branchmean[j];
+		}
+		for (int j=0; j<GetNbranch(); j++)	{
+			is >> branchrelvar[j];
+		}
 	}
-	for (int j=0; j<GetNbranch(); j++)	{
-		is >> branchrelvar[j];
+	else	{
+		is >> branchalpha;
+		is >> branchbeta;
 	}
-}
-	
-double GammaBranchProcess::LogBranchLengthPrior(const Branch* branch)	{
-	int index = branch->GetIndex();
-	double branchbeta = 1.0 / branchmean[index];
-	double branchalpha = 1.0 / branchrelvar[index];
-	return branchalpha * log(branchbeta) - rnd::GetRandom().logGamma(branchalpha) + (branchalpha-1) * log(blarray[index]) - branchbeta * blarray[index];
 }
 
 void GammaBranchProcess::SampleBranchLength(const Branch* branch)	{
 	int index = branch->GetIndex();
-	double branchbeta = 1.0 / branchmean[index];
-	double branchalpha = 1.0 / branchrelvar[index];
+	if (hierarchicallengthprior)	{
+		double branchbeta = 1.0 / branchmean[index];
+		double branchalpha = 1.0 / branchrelvar[index];
+		blarray[index] = rnd::GetRandom().Gamma(branchalpha,branchbeta);
+	}
 	blarray[index] = rnd::GetRandom().Gamma(branchalpha,branchbeta);
 }
 	
-void GammaBranchProcess::PriorSampleLength()	{
-	if (! fixbl)	{
-		double mean = 0.1 * rnd::GetRandom().sExpo();
-		double relvar = rnd::GetRandom().sExpo();
-		SetHyperParameters(mean,relvar);
-		SampleLength();
+void GammaBranchProcess::PriorSampleLengthHyperParameters()	{
+
+	if (hierarchicallengthprior)	{
+		cerr << "error: in default GammaBranchProcess::PriorSampleLengthHyperParameters, with hierarchical prior\n";
+		exit(1);
 	}
+	branchalpha = rnd::GetRandom().sExpo();
+	branchbeta = 10 * rnd::GetRandom().sExpo();
 }
 
-double GammaBranchProcess::LogHyperPrior()	{
-	double branchbeta = 1.0 / branchmean[0];
-	double branchalpha = 1.0 / branchrelvar[0];
+void GammaBranchProcess::SampleLengthHyperParameters()	{
+
+	if (hierarchicallengthprior)	{
+		cerr << "error: in default GammaBranchProcess::PriorSampleLengthHyperParameters, with hierarchical prior\n";
+		exit(1);
+	}
+	branchalpha = 1.0;
+	branchbeta = 10.0;
+}
 	
+double GammaBranchProcess::LogBranchLengthPrior(const Branch* branch)	{
+
+	int index = branch->GetIndex();
+	if (hierarchicallengthprior)	{
+		double branchbeta = 1.0 / branchmean[index];
+		double branchalpha = 1.0 / branchrelvar[index];
+		return branchalpha * log(branchbeta) - rnd::GetRandom().logGamma(branchalpha) + (branchalpha-1) * log(blarray[index]) - branchbeta * blarray[index];
+	}
+	return branchalpha * log(branchbeta) - rnd::GetRandom().logGamma(branchalpha) + (branchalpha-1) * log(blarray[index]) - branchbeta * blarray[index];
+}
+
+double GammaBranchProcess::LogLengthHyperPrior()	{
+
+	if (hierarchicallengthprior)	{
+		cerr << "error: in default GammaBranchProcess::LogHyperPrior, with hierarchical prior\n";
+		exit(1);
+	}
 	double total = -branchalpha;
 	if (betaprior == 1)	{
 		total -= log(branchbeta);
 		if ((branchbeta < 1e-4) || (branchbeta > 1e4))	{
 			total -= 1.0 / 0;
-			// total = InfProb;
 		}
 	}
 	else	{
 		total -= 0.1 * branchbeta;
 	}
 	return total;
-	// return -branchalpha - 0.1 * branchbeta ; // + 2 * log(branchbeta);
-	// return -branchalpha - 10.0*branchbeta ; // + 2 * log(branchbeta);
 }
 
 double GammaBranchProcess::Move(double tuning, int nrep)	{
-	double total = MoveLength();
-	if (nrep)	{
-		total += MoveBranchBeta(tuning,nrep);
+
+	double total = MPIMoveBranchLengths();
+	if (nrep && (! hierarchicallengthprior))	{
+		total += MoveLengthHyperParameters(tuning,nrep);
 	}
 	return total;
 }
 
-double GammaBranchProcess::MoveBranchBeta(double tuning, int nrep)	{
+double GammaBranchProcess::NonMPIMove(double tuning, int nrep)	{
+
+	NonMPIMoveBranchLengths();
+	if (! hierarchicallengthprior)	{
+		MoveLengthHyperParameters(tuning,nrep);
+	}
+}
+
+double GammaBranchProcess::MoveLengthHyperParameters(double tuning, int nrep)	{
+
+	if (hierarchicallengthprior)	{
+		cerr << "error: in GammaBranchProcess::MoveLengthHyperParams with hierarchical prior\n";
+		exit(1);
+	}
 	int Naccepted = 0;
 	for (int rep=0; rep<nrep; rep++)	{
-		double deltalogprob = - LogHyperPrior() - LogLengthPrior() - LengthSuffStatLogProb();
+		double deltalogprob = - LogLengthHyperPrior() - LogLengthPrior();
+		// double deltalogprob = - LogLengthHyperPrior() - LogLengthPrior() - LengthSuffStatLogProb();
 		double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
 		double e = exp(m);
-		double mean = branchmean[0];
-		double relvar = branchrelvar[0];
-		mean *= e;
-		SetHyperParameters(mean,relvar);
-		deltalogprob += LogHyperPrior() + LogLengthPrior() + LengthSuffStatLogProb();
+		branchbeta *= e;
+		deltalogprob += LogLengthHyperPrior() + LogLengthPrior();
+		// deltalogprob += LogLengthHyperPrior() + LogLengthPrior() + LengthSuffStatLogProb();
 		deltalogprob += m;
 		int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
 		if (accepted)	{
 			Naccepted ++;
 		}
 		else	{
-			mean /= e;
-			SetHyperParameters(mean,relvar);
+			branchbeta /= e;
 		}
 	}
 	return ((double) Naccepted) / nrep;
 }
 
-double GammaBranchProcess::MoveLength()	{
+double GammaBranchProcess::MPIMoveBranchLengths()	{
 
 	GlobalUpdateBranchLengthSuffStat();
-	for (int i=1; i<GetNbranch(); i++)	{
-		double branchbeta = 1.0 / branchmean[i];
-		double branchalpha = 1.0 / branchrelvar[i];
-		blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), branchbeta + GetBranchLengthSuffStatBeta(i));
+	if (hierarchicallengthprior)	{
+		for (int i=1; i<GetNbranch(); i++)	{
+			double branchbeta = 1.0 / branchmean[i];
+			double branchalpha = 1.0 / branchrelvar[i];
+			blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), branchbeta + GetBranchLengthSuffStatBeta(i));
+		}
+	}
+	else	{
+		for (int i=1; i<GetNbranch(); i++)	{
+			blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), branchbeta + GetBranchLengthSuffStatBeta(i));
+		}
 	}
 	return 1.0;
 }
 
-double GammaBranchProcess::NonMPIMoveLength()	{
+double GammaBranchProcess::NonMPIMoveBranchLengths()	{
 
 	UpdateBranchLengthSuffStat();
-	for (int i=1; i<GetNbranch(); i++)	{
-		double branchbeta = 1.0 / branchmean[i];
-		double branchalpha = 1.0 / branchrelvar[i];
-		blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), branchbeta + GetBranchLengthSuffStatBeta(i));
+	if (hierarchicallengthprior)	{
+		for (int i=1; i<GetNbranch(); i++)	{
+			double branchbeta = 1.0 / branchmean[i];
+			double branchalpha = 1.0 / branchrelvar[i];
+			blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), branchbeta + GetBranchLengthSuffStatBeta(i));
+		}
+	}
+	else	{
+		for (int i=1; i<GetNbranch(); i++)	{
+			blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), branchbeta + GetBranchLengthSuffStatBeta(i));
+		}
 	}
 	return 1.0;
-}
-
-double GammaBranchProcess::NonMPIMove(double tuning, int nrep)	{
-	NonMPIMoveLength();
-	MoveBranchBeta(tuning,nrep);
 }
 

@@ -522,20 +522,22 @@ void MultiGenePhyloProcess::SlavePropagateOverABranch(int l)	{
 	}
 }
 
-void MultiGenePhyloProcess::LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood)	{
+void MultiGenePhyloProcess::LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood, int mimick)	{
 
+	PhyloProcess::LocalTryNNI(l,n,br,m,loglikelihood,1);
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->LocalTryNNI(l,n,br,m,loglikelihood);
+			process[gene]->LocalTryNNI(l,n,br,m,loglikelihood,0);
 		}
 	}
 }
 
-void MultiGenePhyloProcess::LocalFinalizeNNI(int n, int* br, int choice)	{
+void MultiGenePhyloProcess::LocalFinalizeNNI(int n, int* br, int choice, int mimick)	{
 
+	PhyloProcess::LocalFinalizeNNI(n,br,choice,1);
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->LocalFinalizeNNI(n,br,choice);
+			process[gene]->LocalFinalizeNNI(n,br,choice,0);
 		}
 	}
 }

@@ -413,8 +413,8 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	virtual void LocalAttach2(int,int,int,int);
 
 	void GlobalKnit(Link*);
-	void SlaveKnit();
-	virtual void LocalKnit(int arg);
+	virtual void SlaveKnit();
+	void LocalKnit(int arg);
 
 	void GetWeights(Link* from, map<pair<Link*,Link*>,double>& weights, double lambda);
 	double WeightedDrawSubTree(double lambda, Link*& down, Link*& up);

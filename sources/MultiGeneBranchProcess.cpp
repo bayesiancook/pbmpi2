@@ -468,7 +468,11 @@ void MultiGeneBranchProcess::SlaveCollectGeneLengthMappingSuffStat() {
 	MPI_Send(alloctmpgeneblbeta,Ngene*GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
-void MultiGeneBranchProcess::LocalKnit(int arg)	{
+void MultiGeneBranchProcess::SlaveKnit()	{
+
+	int arg;
+	MPI_Bcast(&arg,1,MPI_INT,0,MPI_COMM_WORLD);
+	LocalKnit(arg);
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			GetBranchProcess(gene)->LocalKnit(arg);

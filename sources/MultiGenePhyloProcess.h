@@ -122,8 +122,8 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 
 	// in NNI.cpp
 	void SlavePropagateOverABranch(int);
-	virtual void LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood);
-	virtual void LocalFinalizeNNI(int n, int* br, int choice);
+	virtual void LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood, int mimick);
+	virtual void LocalFinalizeNNI(int n, int* br, int choice, int mimick);
 
 	// in SMC.cpp
 	void SlaveSetMinMax();

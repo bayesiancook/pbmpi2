@@ -599,8 +599,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	// int SendNNILikelihood(Link*);
 	double GlobalSendRandomBranches(Link*,double,Link**&, int);
 
-	virtual void LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood);
-	virtual void LocalFinalizeNNI(int n, int* br, int choice);
+	virtual void LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood, int mimick);
+	virtual void LocalFinalizeNNI(int n, int* br, int choice, int mimick);
 	// not very elegant: those are backups of 'local' variables, across two functions
 	Link* bknnifrom;
 	Link* bknniup;

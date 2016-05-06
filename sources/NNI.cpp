@@ -107,7 +107,6 @@ void PhyloProcess::RecursiveGibbsNNI(Link* from, double tuning, int type, int& s
 // GLOBAL NNI
 int PhyloProcess::GlobalNNI(Link* from, double tuning, int type)	{
 
-
 	// MPI send NNI signal
 	MESSAGE signal = NNI;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -129,7 +128,6 @@ int PhyloProcess::GlobalNNI(Link* from, double tuning, int type)	{
 	}
 	*/
 
-	int nmax = 5;
 	int n =0;
 	if (type)	{
 		n = 1 + (int) 5 * rnd::GetRandom().Uniform();
@@ -282,7 +280,7 @@ void PhyloProcess::SlaveNNI()	{
 
 	// this can be overloaded by MultiGenePhyloProcess
 	// distribute over genes and add up log likelihoods
-	LocalTryNNI(l,n,br,m,loglikelihood);
+	LocalTryNNI(l,n,br,m,loglikelihood,0);
 
 	// MPI Send likelihood components
 	MPI_Send(loglikelihood,2,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
@@ -294,7 +292,7 @@ void PhyloProcess::SlaveNNI()	{
 	// local computations 2
 	// this can be overloaded by MultiGenePhyloProcess
 	// just dispatch order across genes
-	LocalFinalizeNNI(n,br,choice);
+	LocalFinalizeNNI(n,br,choice,0);
 
 	if (n)	{
 		delete[] br;
@@ -303,7 +301,7 @@ void PhyloProcess::SlaveNNI()	{
 	delete[] loglikelihood;
 }
 
-void PhyloProcess::LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood)	{
+void PhyloProcess::LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood, int mimick)	{
 
 	Link* from = GetLinkForGibbs(l);
 	Link* up = from->Next();
@@ -314,26 +312,31 @@ void PhyloProcess::LocalTryNNI(int l, int n, int* br, double* m, double* loglike
 		for(int i=0; i<n; ++i){
 			Link* link = GetLinkForGibbs(br[i]);
 			MoveBranch(link->GetBranch(),m[i]);
-			if (link!=up)	{
+			if ((link!=up) && (! mimick))	{
 				PropagateOverABranch(link);
 			}
 		}
-		PropagateOverABranch(up);
+		if (! mimick)	{
+			PropagateOverABranch(up);
+		}
 	}
 	
 	GetTree()->NNIturn(from);
 	GetTree2()->NNIturn(GetCloneLink(from));
-	PropagateOverABranch(from->Next());
-	loglikelihood[0] += ComputeNodeLikelihood(from,-1);
+	if (! mimick)	{
+		PropagateOverABranch(from->Next());
+		loglikelihood[0] += ComputeNodeLikelihood(from,-1);
+	}
 
 	GetTree()->NNIturn(from);
 	GetTree2()->NNIturn(GetCloneLink(from));
-	PropagateOverABranch(from->Next());
-	loglikelihood[1] += ComputeNodeLikelihood(from,-1);
-
+	if (! mimick)	{
+		PropagateOverABranch(from->Next());
+		loglikelihood[1] += ComputeNodeLikelihood(from,-1);
+	}
 }
 
-void PhyloProcess::LocalFinalizeNNI(int n, int* br, int choice)	{
+void PhyloProcess::LocalFinalizeNNI(int n, int* br, int choice, int mimick)	{
 
 	// recover parameters
 	Link* from = bknnifrom;
@@ -344,7 +347,7 @@ void PhyloProcess::LocalFinalizeNNI(int n, int* br, int choice)	{
 			for(int i=0; i<n; ++i){
 				Link* link = GetLinkForGibbs(br[i]);
 				Restore(link->GetBranch());
-				if (link!=up)	{
+				if ((link!=up) && (!mimick))	{
 					PropagateOverABranch(link);
 				}
 			}
@@ -358,7 +361,9 @@ void PhyloProcess::LocalFinalizeNNI(int n, int* br, int choice)	{
 	if (choice != 2)	{
 		GetTree()->NNIturn(from);
 		GetTree2()->NNIturn(GetCloneLink(from));
-		PropagateOverABranch(up);
+		if (! mimick)	{
+			PropagateOverABranch(up);
+		}
 	}
 }
 

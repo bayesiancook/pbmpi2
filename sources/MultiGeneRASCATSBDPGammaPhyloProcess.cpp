@@ -52,6 +52,7 @@ double MultiGeneRASCATSBDPGammaPhyloProcess::Move(double tuning)	{
 	propchrono.Stop();
 
 	// for (int rep=0; rep<5; rep++)	{
+
 		GlobalCollapse();
 
 		MultiGeneBranchProcess::Move(tuning,10);

@@ -24,7 +24,7 @@ class MultiGeneMPIModule	{
 
 	public:
 
-	MultiGeneMPIModule() : Ngene(0)	{}
+	MultiGeneMPIModule() : Ngene(0), genelnL(0)	{}
 	virtual ~MultiGeneMPIModule() {}
 
 	virtual void Create();

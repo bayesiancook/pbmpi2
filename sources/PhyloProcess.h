@@ -55,7 +55,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	// virtual void SlaveUpdate();
 
 	// default constructor: pointers set to nil
-	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), fasttopo(0) {
+	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0) {
 		empfreq = 0;
 		spracc = sprtry = 0;
 		mhspracc = mhsprtry = 0;
@@ -756,23 +756,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		MakeObservedArray();
 	}
 
-	virtual void MakeObservedArray()	{
-
-		observedarray = new int*[data->GetNsite()];
-		for (int i=0; i<data->GetNsite(); i++)	{
-			observedarray[i] = new int[data->GetNstate()];
-			for (int k=0; k<data->GetNstate(); k++)	{
-				observedarray[i][k] = 0;
-			}
-		}
-		for (int i=0; i<data->GetNsite(); i++)	{
-			for (int j=0; j<GetNtaxa(); j++)	{
-				if (data->GetState(j,i))	{
-					observedarray[i][data->GetState(j,i)] = 1;
-				}
-			}
-		}	
-	}
+	void MakeObservedArray();
 
 	virtual void SetTree(string treefile)	{
 		if (treefile == "None")	{

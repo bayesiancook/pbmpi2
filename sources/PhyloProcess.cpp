@@ -57,6 +57,24 @@ void PhyloProcess::New(int unfold)	{
 	}
 }
 
+void PhyloProcess::MakeObservedArray()	{
+
+	observedarray = new int*[data->GetNsite()];
+	for (int i=0; i<data->GetNsite(); i++)	{
+		observedarray[i] = new int[data->GetNstate()];
+		for (int k=0; k<data->GetNstate(); k++)	{
+			observedarray[i][k] = 0;
+		}
+	}
+	for (int i=0; i<data->GetNsite(); i++)	{
+		for (int j=0; j<GetNtaxa(); j++)	{
+			if (data->GetState(j,i) != -1)	{
+				observedarray[i][data->GetState(j,i)] = 1;
+			}
+		}
+	}	
+}
+
 //-------------------------------------------------------------------------
 //	* Open
 //-------------------------------------------------------------------------

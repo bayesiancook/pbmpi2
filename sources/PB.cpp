@@ -18,7 +18,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 int main(int argc, char* argv[])	{
 
-	int myid,nprocs;
+	int myid  = 0;
+	int nprocs = 0;
 
 	MPI_Init(&argc,&argv);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);

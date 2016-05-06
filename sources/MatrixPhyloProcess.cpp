@@ -47,6 +47,7 @@ void MatrixPhyloProcess::Collapse()	{
 	}
 	SampleNodeStates();
 	// DeleteConditionalLikelihoods();
+	FillMissingMap();
 	SampleSubstitutionMappings(GetRoot());
 	// DeleteMatrices();
 	activesuffstat = true;

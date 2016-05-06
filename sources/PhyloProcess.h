@@ -802,12 +802,12 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		return GetData()->CompositionalHeterogeneity(0);
 	}
 
-	/*
 	void CreateMissingMap();
+	void DeleteMissingMap();
 	void FillMissingMap();
-	void RecursiveFillMissinMap(const Link* from);
-	bool** missingmap;
-	*/
+	void BackwardFillMissingMap(const Link* from);
+	void ForwardFillMissingMap(const Link* from, const Link* up);
+	int** missingmap;
 
 	double*** sitecondlmap;
 	double**** condlmap;

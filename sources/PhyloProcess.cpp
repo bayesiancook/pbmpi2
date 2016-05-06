@@ -120,6 +120,7 @@ void PhyloProcess::Create()	{
 			CreateNodeStates();
 			CreateMappings();
 			CreateSuffStat();
+			CreateMissingMap();
 			activesuffstat = false;
 		}
 		else {
@@ -128,29 +129,99 @@ void PhyloProcess::Create()	{
 			ActivateSumOverRateAllocations();
 			CreateNodeStates();
 			CreateSuffStat();
+			CreateMissingMap();
 			activesuffstat = false;
 		}
 		CreateSiteConditionalLikelihoods();
 	}
 }
 
-/*
 void PhyloProcess::CreateMissingMap()	{
 
-	missingmap = new bool*[GetNnode()];
+	missingmap = new int*[GetNbranch()];
 	for (int j=0; j<GetNnode(); j++)	{
-		missingmap[j] = new bool[GetNsite()];
+		missingmap[j] = new int[GetNsite()];
 		for (int i=0; i<GetNsite(); i++)	{
-			missinmap[j][i] = false;
+			missingmap[j][i] = -1;
 		}
 	}
 }
 
-void PhyloProcess::FillMissingMap()	{
+void PhyloProcess::DeleteMissingMap()	{
 
-	RecursiveFillMissingMap(GetRoot());
+	for (int j=0; j<GetNbranch(); j++)	{
+		delete[] missingmap[j];
+	}
+	delete[] missingmap;
 }
-*/
+
+void PhyloProcess::FillMissingMap()	{
+	BackwardFillMissingMap(GetRoot());
+	ForwardFillMissingMap(GetRoot(),GetRoot());
+}
+
+void PhyloProcess::BackwardFillMissingMap(const Link* from)	{
+
+	int index = GetBranchIndex(from->GetBranch());
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		missingmap[index][i] = 0;
+	}
+	if (from->isLeaf())	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			int state = GetData(from)[i];
+			if (state != -1)	{
+				missingmap[index][i] = 1;
+			}
+		}
+	}
+	else	{
+		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+			BackwardFillMissingMap(link->Out());
+			int j = GetBranchIndex(link->Out()->GetBranch());
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				if (missingmap[j][i])	{
+					missingmap[index][i] ++;
+				}
+			}
+		}
+	}
+}
+
+void PhyloProcess::ForwardFillMissingMap(const Link* from, const Link* up)	{
+
+	int index = GetBranchIndex(from->GetBranch());
+	int upindex = GetBranchIndex(up->GetBranch());
+	if (from->isRoot())	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (missingmap[index][i] <= 1)	{
+				missingmap[index][i] = 0;
+			}
+			else	{
+				missingmap[index][i] = 2;
+			}
+		}
+	}
+	else	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (missingmap[index][i] > 0)	{
+				if (missingmap[upindex][i])	{
+					missingmap[index][i] = 1;
+				}
+				else	{
+					if (missingmap[index][i] > 1)	{
+						missingmap[index][i] = 2;
+					}
+					else	{
+						missingmap[index][i] = 0;
+					}
+				}
+			}
+		}
+	}
+	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+		ForwardFillMissingMap(link->Out(),from);
+	}
+}
 
 void PhyloProcess::Delete() {
 
@@ -162,6 +233,7 @@ void PhyloProcess::Delete() {
 			DeleteNodeStates();
 			FullDeleteMappings();
 			DeleteSuffStat();
+			DeleteMissingMap();
 			delete[] nodestate;
 			delete[] condlmap;
 			SubstitutionProcess::Delete();
@@ -171,6 +243,7 @@ void PhyloProcess::Delete() {
 			delete[] nodestate;
 			DeleteCondSiteLogL();
 			DeleteSuffStat();
+			DeleteMissingMap();
 		}
 		// MPI master and slaves
 		BranchProcess::Delete();
@@ -371,6 +444,7 @@ void PhyloProcess::Collapse()	{
 		InactivateSumOverRateAllocations(ratealloc);
 	}
 	SampleNodeStates();
+	FillMissingMap();
 	SampleSubstitutionMappings(GetRoot());
 	activesuffstat = true;
 }

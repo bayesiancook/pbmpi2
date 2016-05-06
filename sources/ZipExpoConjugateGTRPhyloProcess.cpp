@@ -25,6 +25,7 @@ void ZipExpoConjugateGTRPhyloProcess::Collapse()	{
 		InactivateSumOverRateAllocations(ratealloc);
 	}
 	SampleNodeStates();
+	FillMissingMap();
 	SampleSubstitutionMappings(GetRoot());
 	DeleteMatrices();
 	activesuffstat = true;

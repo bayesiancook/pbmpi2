@@ -41,8 +41,8 @@ class PoissonSubstitutionProcess : public virtual SubstitutionProcess, public vi
 	BranchSitePath* SampleRootSitePath(int site, int rootstate);
 
 	// CPU Level 1: gathering sufficient statistics from substitution mappings
-	void AddSiteRateSuffStat(int* siteratesuffstatcount, BranchSitePath** patharray);
-	void AddBranchLengthSuffStat(int& count, BranchSitePath** patharray);
+	void AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, double branchlength, BranchSitePath** patharray, int* nonmissing);
+	void AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray, int* nonmissing);
 	void AddSiteProfileSuffStat(int** siteprofilesuffstatcount, BranchSitePath** patharray, bool root);
 
 	virtual void Delete() {

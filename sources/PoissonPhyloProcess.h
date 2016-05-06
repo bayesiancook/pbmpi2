@@ -64,6 +64,8 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 	void UpdateSiteProfileSuffStat();
 	void UpdateBranchLengthSuffStat();
 
+	int RecursiveUpdateSiteProfileSuffStat(const Link* from, int site);
+
 	virtual void GlobalUpdateSiteProfileSuffStat();
 	virtual void SlaveUpdateSiteProfileSuffStat();
 

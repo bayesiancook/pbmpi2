@@ -374,8 +374,11 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 
 	int GetBranchIndex(const Branch* branch)	{
 		if (! branch)	{
+			return 0;
+			/*
 			cerr << "error in get branch index\n";
 			exit(1);
+			*/
 		}
 		return branch->GetIndex();
 	}

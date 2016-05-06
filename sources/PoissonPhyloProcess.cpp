@@ -79,28 +79,64 @@ void PoissonPhyloProcess::DeleteSuffStat()	{
 
 void PoissonPhyloProcess::UpdateBranchLengthSuffStat()	{
 
-	double R = GetNactiveSite() * GetMeanRate();
+	// double R = GetNactiveSite() * GetMeanRate();
 	branchlengthsuffstatbeta[0] = 0;
 	branchlengthsuffstatcount[0] = 0;
 	for (int j=1; j<GetNbranch(); j++)	{
-		branchlengthsuffstatbeta[j] = R;
+		// branchlengthsuffstatbeta[j] = R;
+		branchlengthsuffstatbeta[j] = 0;
 		branchlengthsuffstatcount[j] = 0;
-		AddBranchLengthSuffStat(branchlengthsuffstatcount[j],submap[j]);
+		AddBranchLengthSuffStat(branchlengthsuffstatcount[j],branchlengthsuffstatbeta[j],submap[j],missingmap[j]);
 	}
 }
 
 void PoissonPhyloProcess::UpdateSiteRateSuffStat()	{
-	double totallength = GetTotalLength();
+	// double totallength = GetTotalLength();
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
 			siteratesuffstatcount[i] = 0;
-			siteratesuffstatbeta[i] = totallength;
+			siteratesuffstatbeta[i] = 0;
+			// siteratesuffstatbeta[i] = totallength;
 		}
 	}
 	for (int j=1; j<GetNbranch(); j++)	{
-		AddSiteRateSuffStat(siteratesuffstatcount,submap[j]);
+		AddSiteRateSuffStat(siteratesuffstatcount,siteratesuffstatbeta,blarray[j],submap[j],missingmap[j]);
 	}
 }
+
+int PoissonPhyloProcess::RecursiveUpdateSiteProfileSuffStat(const Link* from, int site)	{
+
+	int state = -1;
+	if (from->isLeaf())	{
+		state = GetData(from)[site];
+	}
+	else	{
+		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+			int tmp = RecursiveUpdateSiteProfileSuffStat(link->Out(),site);
+			if (tmp != -1)	{
+				if ((state != -1) && (state != tmp))	{
+					cerr << "error in PoissonPhyloProcess::RecursiveUpdateSiteProfileSuffStat: state should identical\n";
+					exit(1);
+				}
+				state = tmp;
+			}
+		}
+	}
+	if (state != -1)	{
+		BranchSitePath* path = submap[GetBranchIndex(from->GetBranch())][site];
+		if (from->isRoot() || path->GetNsub())	{
+			if ((GetZipSize(site) != GetOrbitSize(site)) && (state == GetOrbitSize(site)))	{
+				cerr << "error in PoissonPhyloProcess::RecursiveUpdateSiteProfileSuffStat: state should be observed at tips\n";
+				exit(1);
+			}
+			int truestate = GetStateFromZip(site,state);
+			siteprofilesuffstatcount[site][truestate]++;
+			state = -1;
+		}
+	}
+	return state;
+}
+
 
 void PoissonPhyloProcess::UpdateSiteProfileSuffStat()	{
 
@@ -109,11 +145,14 @@ void PoissonPhyloProcess::UpdateSiteProfileSuffStat()	{
 			for (int k=0; k<GetDim(); k++)	{
 				siteprofilesuffstatcount[i][k] = 0;
 			}
+			RecursiveUpdateSiteProfileSuffStat(GetRoot(),i);
 		}
 	}
+	/*
 	for (int j=0; j<GetNbranch(); j++)	{
 		AddSiteProfileSuffStat(siteprofilesuffstatcount,submap[j],(j==0));
 	}
+	*/
 }
 
 void PoissonPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{

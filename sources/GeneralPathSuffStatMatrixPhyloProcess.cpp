@@ -50,6 +50,7 @@ void GeneralPathSuffStatMatrixPhyloProcess::Collapse()	{
 	}
 	SampleNodeStates();
 	// DeleteConditionalLikelihoods();
+	FillMissingMap();
 	SampleSubstitutionMappings(GetRoot());
 	// DeleteMatrices();
 	activesuffstat = true;

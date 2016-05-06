@@ -36,7 +36,7 @@ extern MPI_Datatype Propagate_arg;
 //	* New
 //-------------------------------------------------------------------------
 
-void PhyloProcess::New()	{
+void PhyloProcess::New(int unfold)	{
 
 	ReadData(datafile);
 	SetProfileDim();
@@ -47,7 +47,9 @@ void PhyloProcess::New()	{
 
 	if (! GetMyid())	{
 		Sample();
-		GlobalUnfold();
+		if (unfold)	{
+			GlobalUnfold();
+		}
 	}
 
 	if (BPP)	{

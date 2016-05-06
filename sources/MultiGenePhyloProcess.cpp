@@ -627,7 +627,7 @@ double MultiGeneRateProcess::LogRatePrior()	{
 }
 
 
-void MultiGenePhyloProcess::New()	{
+void MultiGenePhyloProcess::New(int unfold)	{
 
 
 	CreateMPI(0);

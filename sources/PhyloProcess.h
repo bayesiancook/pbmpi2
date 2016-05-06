@@ -790,7 +790,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		SetDim(GetData()->GetNstate());
 	}
 
-	virtual void New();
+	virtual void New(int unfold = 1);
 
 	void Open(istream& is);
 

@@ -3,6 +3,7 @@
 #include "Parallel.h"
 
 void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
+
 	RASCATSBDPGammaPhyloProcess::Create();
 	MultiGenePhyloProcess::Create();
 	if (GetMyid())	{
@@ -17,7 +18,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
 				if (! GlobalBranchLengths())	{
 					GetProcess(gene)->hierarchicallengthprior = 1;
 				}
-				process[gene]->New();
+				process[gene]->New(0);
 			}
 		}
 	}

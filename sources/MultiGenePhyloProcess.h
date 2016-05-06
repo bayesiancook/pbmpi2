@@ -209,6 +209,16 @@ class MultiGeneProfileProcess : public virtual ProfileProcess, public virtual Mu
 	MultiGeneProfileProcess() {}
 	virtual ~MultiGeneProfileProcess() {}
 
+	virtual void Create()	{
+		ProfileProcess::Create();
+		MultiGeneMPIModule::Create();
+	}
+
+	virtual void Delete()	{
+		MultiGeneMPIModule::Delete();
+		ProfileProcess::Delete();
+	}
+
 	virtual void SlaveUpdateSiteProfileSuffStat();
 	virtual void GlobalUpdateSiteProfileSuffStat();
 
@@ -230,7 +240,7 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 
 	void AllocateAlignments(string datafile, string treefile);
 
-	virtual void New();
+	virtual void New(int unfold = 1);
 
 	protected:
 

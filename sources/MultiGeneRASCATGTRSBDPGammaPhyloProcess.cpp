@@ -4,13 +4,9 @@
 
 void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Create()	{
 	
-	/*
-	ExpoConjugateGTRProfileProcess::Create();
-	RASCATGTRSBDPSubstitutionProcess::Create();
-	GammaBranchProcess::Create();
-	*/
 	RASCATGTRSBDPGammaPhyloProcess::Create();
 	MultiGenePhyloProcess::Create();
+	MultiGeneExpoConjugateGTRProfileProcess::Create();
 	if (GetMyid())	{
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == myid)	{
@@ -23,7 +19,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Create()	{
 				if (! GlobalBranchLengths())	{
 					GetProcess(gene)->hierarchicallengthprior = 1;
 				}
-				process[gene]->New();
+				process[gene]->New(0);
 			}
 		}
 	}
@@ -38,13 +34,9 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Delete()	{
 			}
 		}
 	}
+	MultiGeneExpoConjugateGTRProfileProcess::Delete();
 	MultiGenePhyloProcess::Delete();
 	RASCATGTRSBDPGammaPhyloProcess::Delete();
-	/*
-	GammaBranchProcess::Delete();
-	RASCATGTRSBDPSubstitutionProcess::Delete();
-	ExpoConjugateGTRProfileProcess::Delete();
-	*/
 }
 
 double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
@@ -223,6 +215,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 		else	{
 			nd += nbranch;
 		}
+		nd += nrr;
 		double dvector[nd]; 
 		MESSAGE signal = PARAMETER_DIFFUSION;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -277,6 +270,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 	else	{
 		nd += nbranch;
 	}
+	nd += nrr;
 	double dvector[nd]; 
 
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);

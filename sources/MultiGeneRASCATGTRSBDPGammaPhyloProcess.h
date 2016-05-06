@@ -31,6 +31,16 @@ class MultiGeneExpoConjugateGTRProfileProcess : public virtual ExpoConjugateGTRP
 	// re-implement: should gather gene-specific suff stats
 	virtual void UpdateRRSuffStat();
 
+	virtual void Create()	{
+		ExpoConjugateGTRProfileProcess::Create();
+		MultiGeneProfileProcess::Create();
+	}
+
+	virtual void Delete()	{
+		MultiGeneProfileProcess::Delete();
+		ExpoConjugateGTRProfileProcess::Delete();
+	}
+
 	ExpoConjugateGTRProfileProcess* GetGTRProfileProcess(int gene)	{
 		ExpoConjugateGTRProfileProcess* tmp = dynamic_cast<ExpoConjugateGTRProfileProcess*>(process[gene]);
 		if (! tmp)	{

@@ -175,13 +175,15 @@ void MultiGenePhyloProcess::AllocateAlignments(string datafile, string treefile)
 		globalnsite[genealloc[gene]] += genesize[gene];
 	}
 	if (! myid)	{
+		GlobalNsite = 0;
 		cerr << '\n';
 		cerr << "number of sites allocated to each slave:\n";
 		for (int i=1; i<nprocs; i++)	{
 			cerr << i << '\t' << globalnsite[i] << '\n';
+			GlobalNsite += globalnsite[i];
 		}
 		cerr << '\n';
-		// cerr << "total: " << GetGlobalNsite() << '\n';
+		cerr << "total: " << GlobalNsite << '\n';
 	}
 	
 	// check total size

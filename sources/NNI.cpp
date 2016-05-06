@@ -108,11 +108,13 @@ void PhyloProcess::RecursiveGibbsNNI(Link* from, double tuning, int type, int& s
 int PhyloProcess::GlobalNNI(Link* from, double tuning, int type)	{
 
 
-	// MPI
+	// MPI send NNI signal
 	MESSAGE signal = NNI;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
 	ofstream tos((name + ".topo").c_str(),ios_base::app);
+
+	/*
 	ostringstream s1, s2, s3, s4;
 	GetTree()->ToStreamStandardForm(s1);
 	GetTree()->NNIturn(from);	
@@ -125,19 +127,24 @@ int PhyloProcess::GlobalNNI(Link* from, double tuning, int type)	{
 		cerr << "error in NNI: nni turns do not fall back onto original tree\n";
 		exit(1);
 	}
+	*/
 
+	int nmax = 5;
 	int n =0;
 	if (type)	{
 		n = 1 + (int) 5 * rnd::GetRandom().Uniform();
 	}
 	int args[] = {GetLinkIndex(from),n};
+
+	// MPI send NNI spot
 	MPI_Bcast(args,2,MPI_INT,0,MPI_COMM_WORLD);
 
+	// MPI send randomly jittered branch lengths
 	Link** branches;
 	double logDiffPriorAndHastings = 0.0;
 	if (type)	{
 		branches = new Link*[n];
-		logDiffPriorAndHastings = SendRandomBranches(from, tuning, branches, n);
+		logDiffPriorAndHastings = GlobalSendRandomBranches(from, tuning, branches, n);
 	}
 	// Initialise the loglikelihood vector
 	double* loglikelihood = new double[3];
@@ -145,7 +152,7 @@ int PhyloProcess::GlobalNNI(Link* from, double tuning, int type)	{
 	loglikelihood[1]=logDiffPriorAndHastings;
 	loglikelihood[2]=logDiffPriorAndHastings;
 
-	// Receive the new loglikelihood
+	// MPI receive the new loglikelihood
 	double* vec = new double[2];
 	MPI_Status stat;
 	for(int i=1; i<GetNprocs(); ++i) {
@@ -157,6 +164,8 @@ int PhyloProcess::GlobalNNI(Link* from, double tuning, int type)	{
 
 	// Sample a configuration
 	int choice = rnd::GetRandom().DrawFromLogDiscreteDistribution(loglikelihood, 3);
+
+	// NNI broadcast choice
 	MPI_Bcast(&choice,1,MPI_INT,0,MPI_COMM_WORLD);
 	bool success = (choice != 0);
 
@@ -184,6 +193,7 @@ int PhyloProcess::GlobalNNI(Link* from, double tuning, int type)	{
 		}
 	}
 
+	/*
 	ostringstream s5;
 	GetTree()->ToStreamStandardForm(s5);
 
@@ -199,13 +209,14 @@ int PhyloProcess::GlobalNNI(Link* from, double tuning, int type)	{
 		tos << "nni\t" << s1.str() << '\t' << s2.str() << '\t' << "reject\n";
 		tos << "nni\t" << s1.str() << '\t' << s3.str() << '\t' << "accept\n";
 	}
+	*/
 	
 	return success;
 }
 
 // This function fill the table of link with n link pointing on the branches that will move
 // It also send the movements to each of the slaves.
-double PhyloProcess::SendRandomBranches(Link* from, double tuning, Link**& branches, int n){
+double PhyloProcess::GlobalSendRandomBranches(Link* from, double tuning, Link**& branches, int n){
 
 	// Here we draw the n branches
 	int* br = new int[n];
@@ -245,23 +256,61 @@ double PhyloProcess::SendRandomBranches(Link* from, double tuning, Link**& branc
 	return logDiffPriorAndHastings;
 }
 
+void PhyloProcess::SlaveNNI()	{
 
+	// MPI receive arguments
+	int arg[2];
+	MPI_Bcast(arg,2,MPI_INT,0,MPI_COMM_WORLD);
 
-
-void PhyloProcess::SlaveNNI(int l, int n){
-
-	Link* from = GetLinkForGibbs(l);
-	
-	MPI_Status stat;
-	Link* up = from->Next();
-
+	int l = arg[0];
+	int n = arg[1];
 	int* br;
 	double* m;
 	if (n)	{
 		br = new int[n];
 		m = new double[n];
+
+		// MPI receive new branch lengths
 		MPI_Bcast(br,n,MPI_INT,0,MPI_COMM_WORLD);
 		MPI_Bcast(m,n,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
+
+	// local computations 1
+	double* loglikelihood = new double[2];
+	loglikelihood[0] = 0;
+	loglikelihood[1] = 0;
+
+	// this can be overloaded by MultiGenePhyloProcess
+	// distribute over genes and add up log likelihoods
+	LocalTryNNI(l,n,br,m,loglikelihood);
+
+	// MPI Send likelihood components
+	MPI_Send(loglikelihood,2,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+
+	// MPI Receive choice
+	int choice;
+	MPI_Bcast(&choice,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	// local computations 2
+	// this can be overloaded by MultiGenePhyloProcess
+	// just dispatch order across genes
+	LocalFinalizeNNI(n,br,choice);
+
+	if (n)	{
+		delete[] br;
+		delete[] m;
+	}
+	delete[] loglikelihood;
+}
+
+void PhyloProcess::LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood)	{
+
+	Link* from = GetLinkForGibbs(l);
+	Link* up = from->Next();
+	bknnifrom = from;
+	bknniup = up;
+
+	if (n)	{
 		for(int i=0; i<n; ++i){
 			Link* link = GetLinkForGibbs(br[i]);
 			MoveBranch(link->GetBranch(),m[i]);
@@ -272,11 +321,23 @@ void PhyloProcess::SlaveNNI(int l, int n){
 		PropagateOverABranch(up);
 	}
 	
+	GetTree()->NNIturn(from);
+	GetTree2()->NNIturn(GetCloneLink(from));
+	PropagateOverABranch(from->Next());
+	loglikelihood[0] += ComputeNodeLikelihood(from,-1);
 
+	GetTree()->NNIturn(from);
+	GetTree2()->NNIturn(GetCloneLink(from));
+	PropagateOverABranch(from->Next());
+	loglikelihood[1] += ComputeNodeLikelihood(from,-1);
 
-	int choice = SlaveSendNNILikelihood(from);
+}
 
-	
+void PhyloProcess::LocalFinalizeNNI(int n, int* br, int choice)	{
+
+	// recover parameters
+	Link* from = bknnifrom;
+	Link* up = bknniup;
 
 	if (n)	{
 		if (choice == 0)	{
@@ -288,10 +349,7 @@ void PhyloProcess::SlaveNNI(int l, int n){
 				}
 			}
 		}
-		delete[] br;
-		delete[] m;
 	}
-
 
 	if (choice == 1)	{
 		GetTree()->NNIturn(from);	
@@ -302,31 +360,6 @@ void PhyloProcess::SlaveNNI(int l, int n){
 		GetTree2()->NNIturn(GetCloneLink(from));
 		PropagateOverABranch(up);
 	}
-}
-
-
-
-
-int PhyloProcess::SlaveSendNNILikelihood(Link* from){
-	
-	double* loglikelihood = new double[2];
-
-	GetTree()->NNIturn(from);
-	GetTree2()->NNIturn(GetCloneLink(from));
-	PropagateOverABranch(from->Next());
-	loglikelihood[0]= ComputeNodeLikelihood(from,-1);
-
-	GetTree()->NNIturn(from);
-	GetTree2()->NNIturn(GetCloneLink(from));
-	PropagateOverABranch(from->Next());
-	loglikelihood[1]= ComputeNodeLikelihood(from,-1);
-
-	MPI_Send(loglikelihood,2,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
-	delete[] loglikelihood;
-
-	int choice;
-	MPI_Bcast(&choice,1,MPI_INT,0,MPI_COMM_WORLD);
-	return choice;
 }
 
 void PhyloProcess::GlobalPropagateOverABranch(Link* from)	{

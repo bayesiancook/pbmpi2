@@ -121,32 +121,12 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	void SlaveGibbsSPRScan(int idown, int iup);
 
 	// in NNI.cpp
-	/*
-	void SlaveKnit();
-	void SlaveNNI(int,int);
 	void SlavePropagateOverABranch(int);
-	*/
+	virtual void LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood);
+	virtual void LocalFinalizeNNI(int n, int* br, int choice);
 
 	// in SMC.cpp
 	void SlaveSetMinMax();
-
-	// should be defined at the level of the BranchProcess
-
-	/*
-	PhyloProcess** process;
-	double* genelnL;
-	double* tmpgenelnL;
-
-	int Ngene;
-	int* genealloc;
-	int* genesize;
-	string* genename;
-
-	int GlobalNsite;
-	int* globalnsite;
-	*/
-
-
 };
 
 #endif

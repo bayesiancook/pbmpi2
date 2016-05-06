@@ -513,124 +513,29 @@ void MultiGenePhyloProcess::SlaveSetMinMax()	{
 	}
 }
 
-void MultiGeneBranchProcess::SlaveDetach(int n,int m) {
+void MultiGenePhyloProcess::SlavePropagateOverABranch(int l)	{
 
-	LocalDetach(n,m);
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->LocalDetach(n,m);
+			process[gene]->SlavePropagateOverABranch(l);
 		}
 	}
 }
 
-void MultiGeneBranchProcess::SlaveAttach(int n,int m,int p,int q) {
+void MultiGenePhyloProcess::LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood)	{
 
-	LocalAttach(n,m,p,q);
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->LocalAttach(n,m,p,q);
+			process[gene]->LocalTryNNI(l,n,br,m,loglikelihood);
 		}
 	}
 }
 
-void MultiGeneBranchProcess::SlaveDetach1(int n,int m) {
-
-	LocalDetach1(n,m);
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			process[gene]->LocalDetach1(n,m);
-		}
-	}
-}
-
-void MultiGeneBranchProcess::SlaveAttach1(int n,int m,int p,int q) {
-
-	LocalAttach1(n,m,p,q);
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			process[gene]->LocalAttach1(n,m,p,q);
-		}
-	}
-}
-
-void MultiGeneBranchProcess::SlaveDetach2(int n,int m) {
-
-	LocalDetach2(n,m);
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			process[gene]->LocalDetach2(n,m);
-		}
-	}
-}
-
-void MultiGeneBranchProcess::SlaveAttach2(int n,int m,int p,int q) {
-
-	LocalAttach2(n,m,p,q);
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			process[gene]->LocalAttach2(n,m,p,q);
-		}
-	}
-}
-
-void MultiGeneBranchProcess::SlaveSwapRoot()	{
-
-	SwapRoot();
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			process[gene]->SwapRoot();
-		}
-	}
-}
-
-
-void MultiGeneRateProcess::SlaveUpdateSiteRateSuffStat()	{
+void MultiGenePhyloProcess::LocalFinalizeNNI(int n, int* br, int choice)	{
 
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->UpdateSiteRateSuffStat();
-		}
-	}
-}
-
-
-void MultiGeneRateProcess::UpdateRateSuffStat() {
-
-	for(int i=0; i<GetNcat(); i++) {
-		ratesuffstatcount[i] = 0;
-		ratesuffstatbeta[i] = 0.0;
-	}
-
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			GetRateProcess(gene)->UpdateRateSuffStat();
-			const int* count = GetRateProcess(gene)->GetRateSuffStatCount();
-			const double* beta = GetRateProcess(gene)->GetRateSuffStatBeta();
-			for(int i=0; i<GetNcat(); i++) {
-				ratesuffstatcount[i] += count[i];
-				ratesuffstatbeta[i] += beta[i];
-			}
-		}
-	}
-}
-
-void MultiGeneProfileProcess::GlobalUpdateSiteProfileSuffStat()	{
-
-	if (GetNprocs() > 1)	{
-		MPI_Status stat;
-		MESSAGE signal = UPDATE_SPROFILE;
-		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-	}
-	else	{
-		UpdateSiteProfileSuffStat();
-	}
-}
-
-void MultiGeneProfileProcess::SlaveUpdateSiteProfileSuffStat()	{
-
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			process[gene]->UpdateSiteProfileSuffStat();
+			process[gene]->LocalFinalizeNNI(n,br,choice);
 		}
 	}
 }

@@ -593,10 +593,17 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int  GlobalNNI(Link*,double,int);
 	void GlobalPropagateOverABranch(Link*);
 	virtual void SlavePropagateOverABranch(int);
-	void SlaveNNI(int,int);
+	void SlaveNNI();
+	// void SlaveNNI(int,int);
 	void PropagateOverABranch(const Link*);
-	int SlaveSendNNILikelihood(Link*);
-	double SendRandomBranches(Link*,double,Link**&, int);
+	// int SendNNILikelihood(Link*);
+	double GlobalSendRandomBranches(Link*,double,Link**&, int);
+
+	virtual void LocalTryNNI(int l, int n, int* br, double* m, double* loglikelihood);
+	virtual void LocalFinalizeNNI(int n, int* br, int choice);
+	// not very elegant: those are backups of 'local' variables, across two functions
+	Link* bknnifrom;
+	Link* bknniup;
 
 	// MCMC on branch lengths
 	double BranchLengthMove(double tuning);

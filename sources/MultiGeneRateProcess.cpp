@@ -178,3 +178,33 @@ double MultiGeneRateProcess::LogRatePrior()	{
 	}
 	return tot;
 }
+
+void MultiGeneRateProcess::SlaveUpdateSiteRateSuffStat()	{
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->UpdateSiteRateSuffStat();
+		}
+	}
+}
+
+
+void MultiGeneRateProcess::UpdateRateSuffStat() {
+
+	for(int i=0; i<GetNcat(); i++) {
+		ratesuffstatcount[i] = 0;
+		ratesuffstatbeta[i] = 0.0;
+	}
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			GetRateProcess(gene)->UpdateRateSuffStat();
+			const int* count = GetRateProcess(gene)->GetRateSuffStatCount();
+			const double* beta = GetRateProcess(gene)->GetRateSuffStatBeta();
+			for(int i=0; i<GetNcat(); i++) {
+				ratesuffstatcount[i] += count[i];
+				ratesuffstatbeta[i] += beta[i];
+			}
+		}
+	}
+}

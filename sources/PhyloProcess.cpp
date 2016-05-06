@@ -1530,8 +1530,9 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 		SlaveSetMinMax();
 		break;
 	case NNI:
-		MPI_Bcast(arg,2,MPI_INT,0,MPI_COMM_WORLD);
-		SlaveNNI(arg[0],arg[1]);
+		SlaveNNI();
+		// MPI_Bcast(arg,2,MPI_INT,0,MPI_COMM_WORLD);
+		// SlaveNNI(arg[0],arg[1]);
 		break;
 	case KNIT:
 		SlaveKnit();

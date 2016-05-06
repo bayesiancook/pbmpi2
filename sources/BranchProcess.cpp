@@ -228,6 +228,10 @@ void BranchProcess::GlobalKnit(Link* from)	{
 void BranchProcess::SlaveKnit()	{
 	int arg;
 	MPI_Bcast(&arg,1,MPI_INT,0,MPI_COMM_WORLD);
+	LocalKnit(arg);
+}
+
+void BranchProcess::LocalKnit(int arg)	{
 	GetLinkForGibbs(arg)->Knit();
 	GetLinkForGibbs2(arg)->Knit();
 }

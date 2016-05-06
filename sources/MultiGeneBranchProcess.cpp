@@ -467,3 +467,82 @@ void MultiGeneBranchProcess::SlaveCollectGeneLengthMappingSuffStat() {
 	MPI_Send(alloctmpgeneblcount,Ngene*GetNbranch(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
 	MPI_Send(alloctmpgeneblbeta,Ngene*GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
+
+void MultiGeneBranchProcess::LocalKnit(int arg)	{
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			GetBranchProcess(gene)->LocalKnit(arg);
+		}
+	}
+}
+
+
+void MultiGeneBranchProcess::SlaveDetach(int n,int m) {
+
+	LocalDetach(n,m);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalDetach(n,m);
+		}
+	}
+}
+
+void MultiGeneBranchProcess::SlaveAttach(int n,int m,int p,int q) {
+
+	LocalAttach(n,m,p,q);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalAttach(n,m,p,q);
+		}
+	}
+}
+
+void MultiGeneBranchProcess::SlaveDetach1(int n,int m) {
+
+	LocalDetach1(n,m);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalDetach1(n,m);
+		}
+	}
+}
+
+void MultiGeneBranchProcess::SlaveAttach1(int n,int m,int p,int q) {
+
+	LocalAttach1(n,m,p,q);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalAttach1(n,m,p,q);
+		}
+	}
+}
+
+void MultiGeneBranchProcess::SlaveDetach2(int n,int m) {
+
+	LocalDetach2(n,m);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalDetach2(n,m);
+		}
+	}
+}
+
+void MultiGeneBranchProcess::SlaveAttach2(int n,int m,int p,int q) {
+
+	LocalAttach2(n,m,p,q);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->LocalAttach2(n,m,p,q);
+		}
+	}
+}
+
+void MultiGeneBranchProcess::SlaveSwapRoot()	{
+
+	SwapRoot();
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->SwapRoot();
+		}
+	}
+}

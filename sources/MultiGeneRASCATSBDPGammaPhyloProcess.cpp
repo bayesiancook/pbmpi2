@@ -41,11 +41,8 @@ double MultiGeneRASCATSBDPGammaPhyloProcess::Move(double tuning)	{
 	chronototal.Start();
 	propchrono.Start();
 
-	/*
-	cerr << "bl\n";
 	BranchLengthMove(tuning);
 	BranchLengthMove(0.1 * tuning);
-	*/
 
 	if (! fixtopo)	{
 		MoveTopo();

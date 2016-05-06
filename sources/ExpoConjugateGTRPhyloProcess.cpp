@@ -76,7 +76,7 @@ void ExpoConjugateGTRPhyloProcess::UpdateRRSuffStat()	{
 		rrsuffstatbeta[k] = 0;
 	}
 	for (int j=1; j<GetNbranch(); j++)	{
-		AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,submap[j],blarray[j]);
+		AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,submap[j],blarray[j],missingmap[j]);
 	}
 }
 
@@ -89,7 +89,7 @@ void ExpoConjugateGTRPhyloProcess::UpdateSiteRateSuffStat()	{
 		}
 	}
 	for (int j=1; j<GetNbranch(); j++)	{
-		AddSiteRateSuffStat(siteratesuffstatcount,siteratesuffstatbeta,submap[j],blarray[j]);
+		AddSiteRateSuffStat(siteratesuffstatcount,siteratesuffstatbeta,submap[j],blarray[j],missingmap[j]);
 	}
 }
 
@@ -103,7 +103,7 @@ void ExpoConjugateGTRPhyloProcess::UpdateBranchLengthSuffStat()	{
 		double& beta = branchlengthsuffstatbeta[j];
 		count = 0;
 		beta = 0;
-		AddBranchLengthSuffStat(count,beta,submap[j]);
+		AddBranchLengthSuffStat(count,beta,submap[j],missingmap[j]);
 	}
 }
 
@@ -118,7 +118,8 @@ void ExpoConjugateGTRPhyloProcess::UpdateSiteProfileSuffStat()	{
 		}
 	}
 	for (int j=0; j<GetNbranch(); j++)	{
-		AddSiteProfileSuffStat(siteprofilesuffstatcount,siteprofilesuffstatbeta,submap[j],blarray[j], (j == 0));
+		// AddSiteProfileSuffStat(siteprofilesuffstatcount,siteprofilesuffstatbeta,submap[j],blarray[j], (j == 0));
+		AddSiteProfileSuffStat(siteprofilesuffstatcount,siteprofilesuffstatbeta,submap[j],blarray[j],missingmap[j]);
 	}
 }
 
@@ -133,7 +134,6 @@ void ExpoConjugateGTRPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 	MESSAGE signal = UPDATE_SPROFILE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	/*
 	int nalloc = GetMaxSiteNumber() * GetNstate();
 	int ivector[nalloc];
 	double dvector[nalloc];
@@ -162,7 +162,6 @@ void ExpoConjugateGTRPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 			}
 		}
 	}
-	*/
 
 	}
 	else	{
@@ -173,7 +172,6 @@ void ExpoConjugateGTRPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 void ExpoConjugateGTRPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 
 	UpdateSiteProfileSuffStat();
-	/*
 	int workload = (GetSiteMax() - GetSiteMin())*GetNstate();
 	int ivector[workload];
 	int k = 0;
@@ -197,7 +195,6 @@ void ExpoConjugateGTRPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 		}
 	}
 	MPI_Send(dvector,workload,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
-	*/
 
 }
 

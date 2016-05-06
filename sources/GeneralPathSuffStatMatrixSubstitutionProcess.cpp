@@ -22,22 +22,38 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 
-void GeneralPathSuffStatMatrixSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray)	{
+void GeneralPathSuffStatMatrixSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
+		// if (ActiveSite(i))	{
+		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 			patharray[i]->AddGeneralPathRateSuffStat(count,beta,GetRate(i),GetMatrix(i));
 		}
 	}
 }
 
-void GeneralPathSuffStatMatrixSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength)	{
+void GeneralPathSuffStatMatrixSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
+		// if (ActiveSite(i))	{
+		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 			patharray[i]->AddGeneralPathRateSuffStat(siteratesuffstatcount[i],siteratesuffstatbeta[i],branchlength,GetMatrix(i));
 		}
 	}
 }
 
+void GeneralPathSuffStatMatrixSubstitutionProcess::AddSiteProfileSuffStat(int* siterootstate, map<pair<int,int>, int>* sitepaircount, map<int,double>* sitewaitingtime, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			if (nonmissing[i] == 1)	{
+				patharray[i]->AddGeneralPathSuffStat(sitepaircount[i],sitewaitingtime[i],GetRate(i)*branchlength);
+			}
+			else if (nonmissing[i] == 2)	{
+				siterootstate[i] = patharray[i]->GetFinalState();
+			}
+		}
+	}
+}
+
+/*
 void GeneralPathSuffStatMatrixSubstitutionProcess::AddSiteProfileSuffStat(int* siterootstate, map<pair<int,int>, int>* sitepaircount, map<int,double>* sitewaitingtime, BranchSitePath** patharray, double branchlength, bool isroot)	{
 	if (!isroot)	{
 		// non root case
@@ -56,4 +72,4 @@ void GeneralPathSuffStatMatrixSubstitutionProcess::AddSiteProfileSuffStat(int* s
 		}
 	}
 }
-
+*/

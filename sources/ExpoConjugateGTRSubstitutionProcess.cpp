@@ -33,35 +33,54 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 
 
-void ExpoConjugateGTRSubstitutionProcess::AddRRSuffStat(int* rrsuffstatcount, double* rrsuffstatbeta, BranchSitePath** patharray, double branchlength)	{
+void ExpoConjugateGTRSubstitutionProcess::AddRRSuffStat(int* rrsuffstatcount, double* rrsuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
+		if (ActiveSite(i) && (nonmissing[i] == 1))	{
+		// if (ActiveSite(i))	{
 			patharray[i]->AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,GetRate(i)*branchlength,GetProfile(i),GetNstate(i));
 		}
 	}
 }
 
-void ExpoConjugateGTRSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength)	{
+void ExpoConjugateGTRSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
+		if (ActiveSite(i) && (nonmissing[i] == 1))	{
+		// if (ActiveSite(i))	{
 			patharray[i]->AddRateSuffStat(siteratesuffstatcount[i],siteratesuffstatbeta[i],branchlength,GetRR(),GetProfile(i),GetNstate(i));
 		}
 	}
 }
 
-void ExpoConjugateGTRSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray)	{
+void ExpoConjugateGTRSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
+		if (ActiveSite(i) && (nonmissing[i] == 1))	{
+		// if (ActiveSite(i))	{
 			patharray[i]->AddRateSuffStat(count,beta,GetRate(i),GetRR(),GetProfile(i),GetNstate(i));
 		}
 	}
 }
 
+void ExpoConjugateGTRSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofilesuffstatcount, double** siteprofilesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			if (nonmissing[i] == 1)	{
+				patharray[i]->AddProfileSuffStat(siteprofilesuffstatcount[i],siteprofilesuffstatbeta[i],GetRate(i)*branchlength,GetRR(),GetNstate(i));
+			}
+			else if (nonmissing[i] == 2)	{
+				siteprofilesuffstatcount[i][patharray[i]->GetFinalState()]++;
+			}
+		}
+	}
+}
+
+/*
 void ExpoConjugateGTRSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofilesuffstatcount, double** siteprofilesuffstatbeta, BranchSitePath** patharray, double branchlength, bool isroot)	{
 	if (!isroot)	{
 		// non root case
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{
+			// if (ActiveSite(i) && (nonmissing[i] == 1))	{
 				patharray[i]->AddProfileSuffStat(siteprofilesuffstatcount[i],siteprofilesuffstatbeta[i],GetRate(i)*branchlength,GetRR(),GetNstate(i));
 			}
 		}
@@ -75,5 +94,4 @@ void ExpoConjugateGTRSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofi
 		}
 	}
 }
-
-
+*/

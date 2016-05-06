@@ -192,7 +192,7 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 		return 1;
 	}
 
-	double AugemntedMove(double tuning = 1)	{
+	double AugmentedMove(double tuning = 1)	{
 
 		if (! FixBL())	{
 			GammaBranchProcess::Move(tuning,10);

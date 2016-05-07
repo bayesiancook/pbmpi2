@@ -62,6 +62,17 @@ void GTRProfileProcess::SampleRR()	{
 		rr[i] = rnd::GetRandom().sExpo();
 	}
 }
+
+double GTRProfileProcess::GlobalParametersMove()	{
+	if (! fixrr)	{
+		GlobalUpdateParameters();
+		GlobalUpdateSiteProfileSuffStat();
+		UpdateModeProfileSuffStat();
+		MoveRR();
+		GlobalUpdateParameters();
+	}
+}
+
 	
 double  GTRProfileProcess::MoveRR(double tuning, int n, int nrep)	{
 	GlobalUpdateRRSuffStat();

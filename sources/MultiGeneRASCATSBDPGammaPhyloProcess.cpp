@@ -267,6 +267,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 				GetProcess(gene)->meanalpha = meanalpha;
 				GetProcess(gene)->varalpha = varalpha;
 			}
+			GetProcess(gene)->SetBranchLengths(GetBranchLengths());
 			if (GlobalBranchLengths())	{
 				GetProcess(gene)->SetBranchLengths(GetBranchLengths());
 			}

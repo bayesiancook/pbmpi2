@@ -102,6 +102,9 @@ void RASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	MPI_Bcast(V,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 	MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
+	else	{
+		UpdateMatrices();
+	}
 }
 
 

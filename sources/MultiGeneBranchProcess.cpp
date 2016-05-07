@@ -387,7 +387,8 @@ void MultiGeneBranchProcess::SlaveGetMeanTotalLength() {
 	double tot = 0;
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			tot += GetBranchProcess(gene)->GetTotalLength();
+			double tmp = GetBranchProcess(gene)->GetTotalLength();
+			tot += tmp;
 		}
 	}
 	MPI_Send(&tot,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);

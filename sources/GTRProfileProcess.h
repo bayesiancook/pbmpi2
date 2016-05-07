@@ -124,14 +124,7 @@ class GTRProfileProcess : public virtual MatrixProfileProcess {
 		return 1;
 	}
 
-	virtual double GlobalParametersMove()	{
-		if (! fixrr)	{
-			GlobalUpdateParameters();
-			GlobalUpdateSiteProfileSuffStat();
-			UpdateModeProfileSuffStat();
-			MoveRR();
-		}
-	}
+	virtual double GlobalParametersMove();
 
 	int Nrr;
 	double* rr;

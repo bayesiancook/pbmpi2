@@ -19,6 +19,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Create()	{
 				if (! GlobalBranchLengths())	{
 					GetProcess(gene)->hierarchicallengthprior = 1;
 				}
+				GetProcess(gene)->SetFixRR(1);
 				process[gene]->New(0);
 			}
 		}
@@ -67,6 +68,10 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
 
 		MultiGeneRateProcess::Move(0.3*tuning,50);
 		MultiGeneRateProcess::Move(0.03*tuning,50);
+
+		GlobalUpdateParameters();
+
+		MoveRR();
 
 		GlobalUpdateParameters();
 

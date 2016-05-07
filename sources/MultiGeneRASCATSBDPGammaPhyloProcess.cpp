@@ -42,10 +42,16 @@ double MultiGeneRASCATSBDPGammaPhyloProcess::Move(double tuning)	{
 	chronototal.Start();
 	propchrono.Start();
 
-	BranchLengthMove(tuning);
-	BranchLengthMove(0.1 * tuning);
+	if (GlobalBranchLengths())	{
+		BranchLengthMove(tuning);
+		BranchLengthMove(0.1 * tuning);
+	}
 
 	if (! fixtopo)	{
+		if (! GlobalBranchLengths())	{
+			cerr << "error in multigene multibl move topo\n";
+			exit(1);
+		}
 		MoveTopo();
 	}
 
@@ -267,7 +273,6 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 				GetProcess(gene)->meanalpha = meanalpha;
 				GetProcess(gene)->varalpha = varalpha;
 			}
-			GetProcess(gene)->SetBranchLengths(GetBranchLengths());
 			if (GlobalBranchLengths())	{
 				GetProcess(gene)->SetBranchLengths(GetBranchLengths());
 			}

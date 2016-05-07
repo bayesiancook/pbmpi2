@@ -420,7 +420,7 @@ void MultiGeneBranchProcess::SlaveCollectGeneBranchLengths() {
 		if (genealloc[gene] == myid)	{
 			const double* bl = GetBranchProcess(gene)->GetBranchLengths();
 			for (int j=1; j<GetNbranch(); j++)	{
-				if (! bl[j])	{
+				if (isnan(bl[j]) || (! bl[j]))	{
 					cerr << "error in slave collect; null bl\n";
 					cerr << j << '\n';
 					for (int j=0; j<GetNbranch(); j++)	{

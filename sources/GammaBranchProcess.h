@@ -70,7 +70,7 @@ class GammaBranchProcess : public virtual BranchProcess	{
 	void FromStream(istream& is);
 
 	void SetHyperParameters(double* inmean, double* inrelvar)	{
-		for (int j=1; j<GetNbranch(); j++)	{
+		for (int j=0; j<GetNbranch(); j++)	{
 			branchmean[j] = inmean[j];
 			branchrelvar[j] = inrelvar[j];
 		}

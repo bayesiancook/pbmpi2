@@ -45,10 +45,16 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
 	chronototal.Start();
 	propchrono.Start();
 
-	BranchLengthMove(tuning);
-	BranchLengthMove(0.1 * tuning);
+	if (GlobalBranchLengths())	{
+		BranchLengthMove(tuning);
+		BranchLengthMove(0.1 * tuning);
+	}
 
 	if (! fixtopo)	{
+		if (! GlobalBranchLengths())	{
+			cerr << "error in multigene multibl move topo\n";
+			exit(1);
+		}
 		MoveTopo();
 	}
 

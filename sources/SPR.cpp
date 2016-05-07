@@ -425,7 +425,10 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		GlobalInactivateSumOverRateAllocations();
 		sumratealloc = 0;
 	}
-	// GlobalUpdateConditionalLikelihoods();
+
+	// is this important ?
+	GlobalUpdateConditionalLikelihoods();
+
 	return accepted;
 }
 
@@ -639,7 +642,9 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 		}
 	}
 
-	// GlobalUpdateConditionalLikelihoods();
+	// is this important ?
+	GlobalUpdateConditionalLikelihoods();
+
 	return accepted;
 }
 
@@ -737,7 +742,9 @@ int PhyloProcess::MPIGibbsSPR(int special)	{
 		exit(1);
 	}
 	GlobalAttach(down,up,i->first.first,i->first.second);
-	// GlobalUpdateConditionalLikelihoods();
+
+	// is this important ?
+	GlobalUpdateConditionalLikelihoods();
 
 	return accepted;
 }
@@ -817,7 +824,10 @@ double PhyloProcess::NonMPIGibbsSPR(int special)	{
 		exit(1);
 	}
 	GetTree()->Attach(down,up,i->first.first,i->first.second);
+
+	// is this important ?
 	UpdateConditionalLikelihoods();
+
 	return accepted;
 }
 
@@ -860,7 +870,9 @@ double PhyloProcess::MPIBPPSPR()	{
 	if (! accepted)	{
 		GlobalDetach(subtree,subtreeup);
 		GlobalAttach(subtree,subtreeup,fromdown,fromup);
-		// GlobalUpdateConditionalLikelihoods();
+
+		// is this important ?
+		GlobalUpdateConditionalLikelihoods();
 	}
 	return accepted;
 }
@@ -910,7 +922,8 @@ double PhyloProcess::MPITemperedBPPSPR(int nstep)	{
 		GlobalUpdateParameters();
 	}
 
-	// GlobalUpdateConditionalLikelihoods();
+	// is this important ?
+	GlobalUpdateConditionalLikelihoods();
 
 	return accepted;
 }

@@ -116,9 +116,11 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	Link* down = 0;
 
 	ofstream tos((name + ".topo").c_str(),ios_base::app);
-	tos << "tspr\t";
-	GetTree()->ToStreamStandardForm(tos);
-	tos << '\t';
+	if (tracktopo)	{
+		tos << "tspr\t";
+		GetTree()->ToStreamStandardForm(tos);
+		tos << '\t';
+	}
 
 	if (! FixedRoot())	{
 		GlobalRootAtRandom();
@@ -337,8 +339,10 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	// reverse probability of choosing subtree to be pruned and regrafted
 	GlobalAttach(down,up,todown,toup);
 
-	GetTree()->ToStreamStandardForm(tos);
-	tos << '\t';
+	if (tracktopo)	{
+		GetTree()->ToStreamStandardForm(tos);
+		tos << '\t';
+	}
 
 	double q2 = 1.0;
 	if ((! special) && lambda)	{
@@ -373,6 +377,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 
 	int accepted = (log(rnd::GetRandom().Uniform()) < logratio);
 
+	if (tracktopo)	{
 	if (accepted)	{
 		tos << "accept";
 	}
@@ -403,6 +408,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		tos << '\t' << logratio << '\t' << deltalogp << '\t' << logprev - logpfwd << '\t' << loghtemp;
 	}
 	tos << '\n';
+	}
 
 	if (! accepted)	{
 		GlobalDetach(down,up);
@@ -432,9 +438,11 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 	Link* down = 0;
 
 	ofstream tos((name + ".topo").c_str(),ios_base::app);
-	tos << "mhspr\t";
-	GetTree()->ToStreamStandardForm(tos);
-	tos << '\t';
+	if (tracktopo)	{
+		tos << "mhspr\t";
+		GetTree()->ToStreamStandardForm(tos);
+		tos << '\t';
+	}
 
 	if (! FixedRoot())	{
 		GlobalRootAtRandom();
@@ -588,8 +596,12 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 	}
 
 	GlobalAttach(down,up,todown,toup);
-	GetTree()->ToStreamStandardForm(tos);
-	tos << '\t';
+
+	if (tracktopo)	{
+		GetTree()->ToStreamStandardForm(tos);
+		tos << '\t';
+	}
+
 	// reverse probability of choosing subtree to be pruned and regrafted
 	double q2 = 1.0;
 	if ((! special) && lambda)	{
@@ -617,11 +629,14 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 		GlobalDetach(down,up);
 		GlobalAttach(down,up,fromdown,fromup);
 	}
-	if (accepted)	{
-		tos << "accept\n";
-	}
-	else	{
-		tos << "reject\n";
+
+	if (tracktopo)	{
+		if (accepted)	{
+			tos << "accept\n";
+		}
+		else	{
+			tos << "reject\n";
+		}
 	}
 
 	// GlobalUpdateConditionalLikelihoods();
@@ -632,6 +647,7 @@ int PhyloProcess::MPIGibbsSPR(int special)	{
 
 	Link* up = 0;
 	Link* down = 0;
+
 	if (! FixedRoot())	{
 		GlobalRootAtRandom();
 	}

@@ -57,6 +57,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	// default constructor: pointers set to nil
 	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0) {
 		empfreq = 0;
+		tracktopo = 0;
 		topoburnin = 0;
 		fixroot = 0;
 		spracc = sprtry = 0;
@@ -115,6 +116,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual double SimpleTopoMoveCycle(int nrep, double tuning);
 
 	double FastTopoMoveCycle(int nrep, double tuning);
+
+	void TrackTopo()	{
+		tracktopo = 1;
+	}
 
 	double MoveTopo();
 	double SPRMove(int nrep);
@@ -279,13 +284,14 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		}
 	}
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int insumratealloc,int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int insumratealloc,int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
 
 		datafile = indatafile;
 		treefile = intreefile;
 		iscodon = iniscodon;
 		codetype = incodetype;
 		fixtopo = infixtopo;
+		fixroot = infixroot;
 		topoburnin = intopoburnin;
 		NSPR = inNSPR;
 		NMHSPR = inNMHSPR;
@@ -346,6 +352,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		os << iscodon << '\n';
 		os << codetype << '\n';
 		os << fixtopo << '\n';
+		os << fixroot << '\n';
 		os << topoburnin << '\n';
 		os << NSPR << '\t' << NMHSPR << '\t' << NTSPR << '\n';
 		os << topolambda << '\t' << topomu << '\t' << toponstep << '\n';
@@ -379,6 +386,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		is >> iscodon;
 		is >> codetype;
 		is >> fixtopo;
+		is >> fixroot;
 		is >> topoburnin;
 		is >> NSPR >> NMHSPR >> NTSPR;
 		is >> topolambda >> topomu >> toponstep;
@@ -838,7 +846,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void SetSpecialSPR(string intax1, string intax2)	{
 		taxon1 = intax1;
 		taxon2 = intax2;
-		fixroot = 1;
 	}
 
 	int FixedRoot()	{
@@ -923,6 +930,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int fasttopo;
 	double fasttopofracmin;
 	int fasttoponstep;
+	int tracktopo;
 
 	SequenceAlignment* data;
 };

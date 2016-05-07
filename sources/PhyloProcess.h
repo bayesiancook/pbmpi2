@@ -57,6 +57,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	// default constructor: pointers set to nil
 	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0) {
 		empfreq = 0;
+		topoburnin = 0;
 		fixroot = 0;
 		spracc = sprtry = 0;
 		mhspracc = mhsprtry = 0;
@@ -278,13 +279,14 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		}
 	}
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int inNSPR, int inNMHSPR, int inNTSPR, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int insumratealloc,int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int insumratealloc,int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
 
 		datafile = indatafile;
 		treefile = intreefile;
 		iscodon = iniscodon;
 		codetype = incodetype;
 		fixtopo = infixtopo;
+		topoburnin = intopoburnin;
 		NSPR = inNSPR;
 		NMHSPR = inNMHSPR;
 		NTSPR = inNTSPR;
@@ -339,10 +341,12 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		os << version << '\n';
 		propchrono.ToStream(os);
 		chronototal.ToStream(os);
+		os << size << '\n';
 		os << datafile << '\n';
 		os << iscodon << '\n';
 		os << codetype << '\n';
 		os << fixtopo << '\n';
+		os << topoburnin << '\n';
 		os << NSPR << '\t' << NMHSPR << '\t' << NTSPR << '\n';
 		os << topolambda << '\t' << topomu << '\t' << toponstep << '\n';
 		os << NNNI << '\n';
@@ -370,10 +374,12 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		propchrono.FromStream(is);
 		chronototal.FromStream(is);
 		string indatafile;
+		is >> size;
 		is >> datafile;
 		is >> iscodon;
 		is >> codetype;
 		is >> fixtopo;
+		is >> topoburnin;
 		is >> NSPR >> NMHSPR >> NTSPR;
 		is >> topolambda >> topomu >> toponstep;
 		is >> NNNI;
@@ -846,6 +852,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int testsitemin;
 	int testsitemax;
 
+	int topoburnin;
 	int fixroot;
 	int fixtopo;
 	int NSPR;

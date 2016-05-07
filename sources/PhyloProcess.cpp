@@ -1234,6 +1234,10 @@ double PhyloProcess::NNIMove(int nrep, double tuning)	{
 
 double PhyloProcess::MoveTopo()	{
 
+	if (size < topoburnin)	{
+		return 0;
+	}
+
 	// all moves reroot the tree and make their own likelihood updates before starting
 	// but they don't leave with likelihoods updated
 	double success = 0;

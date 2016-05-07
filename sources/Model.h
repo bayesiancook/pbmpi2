@@ -58,7 +58,7 @@ class Model	{
 	int until;
 	int saveall;
 
-	Model(string datafile, string treefile, int multigene, int globalalpha, int globalbl, int modeltype, int nratecat, int mixturetype, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int fixtopo, int NSPR, int NMHSPR, int NTSPR, double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int sumratealloc, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
+	Model(string datafile, string treefile, int multigene, int globalalpha, int globalbl, int modeltype, int nratecat, int mixturetype, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int fixtopo, int topoburnin, int NSPR, int NMHSPR, int NTSPR, double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int sumratealloc, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
 
 		every = inevery;
 		until = inuntil;
@@ -235,7 +235,7 @@ class Model	{
 		}
 		}
 
-		process->SetParameters(datafile,treefile,iscodon,codetype,fixtopo,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
+		process->SetParameters(datafile,treefile,iscodon,codetype,fixtopo,topoburnin,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
 
 		process->SetName(name);
 

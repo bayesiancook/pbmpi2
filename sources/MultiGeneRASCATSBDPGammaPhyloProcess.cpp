@@ -10,7 +10,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == myid)	{
 				process[gene] = new RASCATSBDPGammaPhyloProcess(Ncat,kappaprior);
-				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,fixtopo,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
+				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,fixtopo,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
 				process[gene]->SetName(name);
 				process[gene]->SetMPI(0,1);
 				GetProcess(gene)->SetFixAlpha(GlobalAlpha());

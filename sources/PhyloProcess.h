@@ -57,6 +57,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	// default constructor: pointers set to nil
 	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0) {
 		empfreq = 0;
+		fixroot = 0;
 		spracc = sprtry = 0;
 		mhspracc = mhsprtry = 0;
 		tspracc = tsprtry = tsprtmp = tsprtot = 0;
@@ -74,11 +75,12 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		tbppspracc = tbppsprtry = 0;
 		specacc = spectry = 0;
 		tspecacc = tspectry = 0;
+		taxon1 = "None";
+		taxon2 = "None";
 		profacc = proftry = 0;
 		rracc = rrtry = 0;
 		fasttopoacc = fasttopotry = fasttopochange = 0;
 		ziptopoacc = ziptopotry = 0;
-		nprelim = 0;
 	}
 
 	virtual ~PhyloProcess() {}
@@ -276,7 +278,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		}
 	}
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int inNSPR, int inNMHSPR, int inNTSPR, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int insumratealloc,int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int inNSPR, int inNMHSPR, int inNTSPR, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int insumratealloc,int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
 
 		datafile = indatafile;
 		treefile = intreefile;
@@ -292,6 +294,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		NNNI = inNNNI;
 		nspec = innspec;
 		ntspec = inntspec;
+		SetSpecialSPR(intaxon1,intaxon2);
 		bpp = inbpp;
 		nbpp = innbpp;
 		ntbpp = inntbpp;
@@ -344,6 +347,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		os << topolambda << '\t' << topomu << '\t' << toponstep << '\n';
 		os << NNNI << '\n';
 		os << nspec << '\t' << ntspec << '\n';
+		os << taxon1 << '\t' << taxon2 << '\n';
 		os << bpp << '\t' << nbpp << '\t' << ntbpp << '\t' << bppnstep << '\t' << bppname << '\t' << bppcutoff << '\t' << bppbeta << '\n';
 		os << dc << '\n';
 		os << fixbl << '\n';
@@ -374,6 +378,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		is >> topolambda >> topomu >> toponstep;
 		is >> NNNI;
 		is >> nspec >> ntspec;
+		is >> taxon1 >> taxon2;
 		is >> bpp >> nbpp >> ntbpp >> bppnstep >> bppname >> bppcutoff >> bppbeta;
 		is >> dc;
 		is >> fixbl;
@@ -641,14 +646,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double LocalBranchLengthMove(const Link* from, double tuning);
 	double LocalNonMPIBranchLengthMove(const Link* from, double tuning);
 
-	double SpecialSPR(int nrep);
-	double NonMPISpecialSPR();
-	double MPISpecialSPR();
-
-	double TemperedSpecialSPR(int nrep, int nstep);
-	double NonMPITemperedSpecialSPR(int nstep);
-	double MPITemperedSpecialSPR(int nstep);
-
 	double BPPSPR(int nrep);
 	double NonMPIBPPSPR();
 	double MPIBPPSPR();
@@ -657,17 +654,17 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double NonMPITemperedBPPSPR(int nstep);
 	double MPITemperedBPPSPR(int nstep);
 
-	double TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep);
-	int MPITemperedGibbsSPR(double lambda, double mu, int nstep);
-	int NonMPITemperedGibbsSPR(double lambda, double mu, int nstep);
+	double TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special);
+	int MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special);
+	int NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special);
 
-	double GibbsSPR(int nrep);
-	int MPIGibbsSPR();
-	double NonMPIGibbsSPR();
+	double GibbsSPR(int nrep, int special);
+	int MPIGibbsSPR(int special);
+	double NonMPIGibbsSPR(int special);
 
-	double GibbsMHSPR(double lambda, int nrep);
-	int MPIGibbsMHSPR(double lambda);
-	int NonMPIGibbsMHSPR(double lambda);
+	double GibbsMHSPR(double lambda, int nrep, int special);
+	int MPIGibbsMHSPR(double lambda, int special);
+	int NonMPIGibbsMHSPR(double lambda, int special);
 
 	void GlobalGibbsSPRScan(Link* down, Link* up, double* loglarray);
 	void RecursiveGibbsSPRScan(Link* from, Link* fromup, Link* down, Link* up, double* loglarray, int& n);
@@ -832,6 +829,16 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	double GetNormFactor() {return GetNormalizationFactor();}
 
+	void SetSpecialSPR(string intax1, string intax2)	{
+		taxon1 = intax1;
+		taxon2 = intax2;
+		fixroot = 1;
+	}
+
+	int FixedRoot()	{
+		return fixroot;
+	}
+
 	double totaltime;
 
 	SequenceAlignment* testdata;
@@ -839,6 +846,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int testsitemin;
 	int testsitemax;
 
+	int fixroot;
 	int fixtopo;
 	int NSPR;
 	int NMHSPR;
@@ -862,6 +870,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	GeneticCodeType codetype;
 
 	int** observedarray;
+
+	string taxon1;
+	string taxon2;
 
 	double spracc;
 	double sprtry;
@@ -898,7 +909,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double ziptopotry;
 	double ziptopoacc;
 
-	int nprelim;
 	int currenttopo;
 	int sumovercomponents;
 	int sumratealloc;

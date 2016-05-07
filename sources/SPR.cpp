@@ -10,54 +10,54 @@ extern MPI_Datatype Propagate_arg;
 
 #include "TexTab.h"
 
-double PhyloProcess::GibbsSPR(int nrep)	{
+double PhyloProcess::GibbsSPR(int nrep, int special)	{
 
 	double naccepted = 0;
 
 	if (GetNprocs() > 1)	{
 		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += MPIGibbsSPR();
+			naccepted += MPIGibbsSPR(special);
 		}
 	}
 	else	{
 		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += NonMPIGibbsSPR();
+			naccepted += NonMPIGibbsSPR(special);
 		}
 	}
 
 	return naccepted / nrep;
 }
 
-double PhyloProcess::GibbsMHSPR(double lambda, int nrep)	{
+double PhyloProcess::GibbsMHSPR(double lambda, int nrep, int special)	{
 
 	double naccepted = 0;
 
 	if (GetNprocs() > 1)	{
 		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += MPIGibbsMHSPR(lambda);
+			naccepted += MPIGibbsMHSPR(lambda, special);
 		}
 	}
 	else	{
 		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += NonMPIGibbsMHSPR(lambda);
+			naccepted += NonMPIGibbsMHSPR(lambda, special);
 		}
 	}
 
 	return naccepted / nrep;
 }
 
-double PhyloProcess::TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep)	{
+double PhyloProcess::TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special)	{
 
 	double naccepted = 0;
 
 	if (GetNprocs() > 1)	{
 		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += MPITemperedGibbsSPR(lambda,mu,nstep);
+			naccepted += MPITemperedGibbsSPR(lambda,mu,nstep, special);
 		}
 	}
 	else	{
 		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += NonMPITemperedGibbsSPR(lambda,mu,nstep);
+			naccepted += NonMPITemperedGibbsSPR(lambda,mu,nstep, special);
 		}
 	}
 
@@ -100,53 +100,17 @@ double PhyloProcess::TemperedBPPSPR(int nrep, int nstep)	{
 	return naccepted / nrep;
 }
 
-double PhyloProcess::SpecialSPR(int nrep)	{
-
-	double naccepted = 0;
-
-	if (GetNprocs() > 1)	{
-		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += MPISpecialSPR();
-		}
-	}
-	else	{
-		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += NonMPISpecialSPR();
-		}
-	}
-
-	return naccepted / nrep;
-}
-
-double PhyloProcess::TemperedSpecialSPR(int nstep, int nrep)	{
-
-	double naccepted = 0;
-
-	if (GetNprocs() > 1)	{
-		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += MPITemperedSpecialSPR(nstep);
-		}
-	}
-	else	{
-		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += NonMPITemperedSpecialSPR(nstep);
-		}
-	}
-
-	return naccepted / nrep;
-}
-
 
 // MPI and Non MPI versions
 
-int PhyloProcess::NonMPITemperedGibbsSPR(double lambda, double mu, int nstep)	{
+int PhyloProcess::NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special)	{
 
 	cerr << "in PhyloProcess::NonMPITemperedGibbsSPR\n";
 	exit(1);
 	return 0;
 }
 
-int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep)	{
+int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special)	{
 
 	Link* up = 0;
 	Link* down = 0;
@@ -156,25 +120,33 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep)	{
 	GetTree()->ToStreamStandardForm(tos);
 	tos << '\t';
 
-	GlobalRootAtRandom();
+	if (! FixedRoot())	{
+		GlobalRootAtRandom();
+	}
 
 	Backup();
 
 	// choose subtree to be pruned and regrafted
 	// returns probability of choosing that subtree
 	double q1 = 1.0;
-	if (lambda)	{
-		if (BPP)	{
-			q1 = BPP->ProposeFragileSPR(GetTree(),down,up);
-		}
-		else	{
-			cerr << "weighted draw subtree\n";
-			exit(1);
-			q1 = WeightedDrawSubTree(lambda,down,up);
-		}
+	if (special)	{
+		down = GetTree()->GetLCA(taxon1,taxon2);
+		up = GetTree()->GetAncestor(down);
 	}
 	else	{
-		GetTree()->DrawSubTree(down,up);
+		if (lambda)	{
+			if (BPP)	{
+				q1 = BPP->ProposeFragileSPR(GetTree(),down,up);
+			}
+			else	{
+				cerr << "weighted draw subtree\n";
+				exit(1);
+				q1 = WeightedDrawSubTree(lambda,down,up);
+			}
+		}
+		else	{
+			GetTree()->DrawSubTree(down,up);
+		}
 	}
 
 	if (down->isRoot())	{
@@ -369,7 +341,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep)	{
 	tos << '\t';
 
 	double q2 = 1.0;
-	if (lambda)	{
+	if ((! special) && lambda)	{
 		if (BPP)	{
 			q2 = BPP->GetFragileSPRProposalProb(GetTree(),todown,toup);
 		}
@@ -451,10 +423,10 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep)	{
 	return accepted;
 }
 
-int PhyloProcess::NonMPIGibbsMHSPR(double lambda)	{
+int PhyloProcess::NonMPIGibbsMHSPR(double lambda, int special)	{
 }
 
-int PhyloProcess::MPIGibbsMHSPR(double lambda)	{
+int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 
 	Link* up = 0;
 	Link* down = 0;
@@ -464,20 +436,28 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda)	{
 	GetTree()->ToStreamStandardForm(tos);
 	tos << '\t';
 
-	GlobalRootAtRandom();
+	if (! FixedRoot())	{
+		GlobalRootAtRandom();
+	}
 	double q1 = 1.0;
-	if (lambda)	{
-		if (BPP)	{
-			q1 = BPP->ProposeFragileSPR(GetTree(),down,up);
-		}
-		else	{
-			cerr << "weighted draw subtree\n";
-			exit(1);
-			q1 = WeightedDrawSubTree(lambda,down,up);
-		}
+	if (special)	{
+		down = GetTree()->GetLCA(taxon1,taxon2);
+		up = GetTree()->GetAncestor(down);
 	}
 	else	{
-		GetTree()->DrawSubTree(down,up);
+		if (lambda)	{
+			if (BPP)	{
+				q1 = BPP->ProposeFragileSPR(GetTree(),down,up);
+			}
+			else	{
+				cerr << "weighted draw subtree\n";
+				exit(1);
+				q1 = WeightedDrawSubTree(lambda,down,up);
+			}
+		}
+		else	{
+			GetTree()->DrawSubTree(down,up);
+		}
 	}
 
 	if (down->isRoot())	{
@@ -612,7 +592,7 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda)	{
 	tos << '\t';
 	// reverse probability of choosing subtree to be pruned and regrafted
 	double q2 = 1.0;
-	if (lambda)	{
+	if ((! special) && lambda)	{
 		if (BPP)	{
 			q2 = BPP->GetFragileSPRProposalProb(GetTree(),todown,toup);
 		}
@@ -648,12 +628,20 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda)	{
 	return accepted;
 }
 
-int PhyloProcess::MPIGibbsSPR()	{
+int PhyloProcess::MPIGibbsSPR(int special)	{
 
 	Link* up = 0;
 	Link* down = 0;
-	GlobalRootAtRandom();
-	GetTree()->DrawSubTree(down,up);
+	if (! FixedRoot())	{
+		GlobalRootAtRandom();
+	}
+	if (special)	{
+		down = GetTree()->GetLCA(taxon1,taxon2);
+		up = GetTree()->GetAncestor(down);
+	}
+	else	{
+		GetTree()->DrawSubTree(down,up);
+	}
 
 	if (down->isRoot())	{
 		cerr << "down is root\n";
@@ -738,269 +726,22 @@ int PhyloProcess::MPIGibbsSPR()	{
 	return accepted;
 }
 
-double PhyloProcess::NonMPIBPPSPR()	{
+double PhyloProcess::NonMPIGibbsSPR(int special)	{
 
-	cerr << "in NonMPIBPPSPR\n";
-	exit(1);
-	return 0;
-
-}
-
-double PhyloProcess::MPIBPPSPR()	{
-
-	GlobalRootAtRandom();
-	// GlobalUpdateConditionalLikelihoods();
-
-	Link* subtree = 0;
-	Link* subtreeup = 0;
-	Link* fromdown = 0;
-	Link* fromup = 0;
-	Link* down = 0;
-	Link* up = 0;
-
-	double logp1 = logL;
-
-	double logh = BPP->ProposeFullGibbsSPR(tree,subtree,subtreeup,fromdown,fromup,down,up);
-
-	GlobalDetach(subtree,subtreeup);
-	GlobalAttach(subtree,subtreeup,down,up);
-
-	GlobalUpdateConditionalLikelihoods();
-	double logp2 = logL;
-
-	double logratio = logp2 - logp1 + logh;
-	
-	int accepted = (log(rnd::GetRandom().Uniform()) < logratio);
-
-	if (! accepted)	{
-		GlobalDetach(subtree,subtreeup);
-		GlobalAttach(subtree,subtreeup,fromdown,fromup);
-		// GlobalUpdateConditionalLikelihoods();
+	if (! FixedRoot())	{
+		GetTree()->RootAtRandom();
 	}
-	return accepted;
-}
-
-double PhyloProcess::NonMPITemperedBPPSPR(int nstep)	{
-
-	cerr << "in NonMPIBPPSPR\n";
-	exit(1);
-	return 0;
-
-}
-
-double PhyloProcess::MPITemperedBPPSPR(int nstep)	{
-
-	GlobalRootAtRandom();
-	Backup();
-
-	Link* subtree = 0;
-	Link* subtreeup = 0;
-	Link* fromdown = 0;
-	Link* fromup = 0;
-	Link* todown = 0;
-	Link* toup = 0;
-
-	double logh = BPP->ProposeFullGibbsSPR(tree,subtree,subtreeup,fromdown,fromup,todown,toup);
-
-	double deltalogprior = -LogBranchProcessPrior();
-
-	GlobalUpdateConditionalLikelihoods();
-
-	double deltalogp = GlobalTemperedTreeMoveLogProb(nstep,subtree,subtreeup,fromdown,fromup,todown,toup);
-
-	deltalogprior += LogBranchProcessPrior();
-
-	double logratio = logh + deltalogprior + deltalogp;
-	
-	int accepted = (log(rnd::GetRandom().Uniform()) < logratio);
-
-	if (accepted)	{
-		GlobalDetach(subtree,subtreeup);
-		GlobalAttach(subtree,subtreeup,todown,toup);
-	}
-	else	{
-		Restore();
-		GlobalUpdateParameters();
-	}
-
-	// GlobalUpdateConditionalLikelihoods();
-
-	return accepted;
-}
-
-double PhyloProcess::NonMPITemperedSpecialSPR(int nstep)	{
-
-	cerr << "in PhyloProcess::NonMPITemperedSpecialSPR\n";
-	exit(1);
-	return 0;
-}
-
-double PhyloProcess::NonMPISpecialSPR()	{
-
-	cerr << "in PhyloProcess::NonMPISpecialSPR\n";
-	exit(1);
-	return 0;
-}
-
-double PhyloProcess::MPISpecialSPR()	{
-
-	// GlobalUpdateConditionalLikelihoods();
-	// double deltalogp = -logL;
-	double deltalogp = - GlobalGetFullLogLikelihood();
-
-	string taxname = "Strongyloc";
-	Link* down = GetTree()->GetLCA(taxname,taxname);
-	Link* up = GetTree()->GetAncestor(down);
-	
-	string taxname2 = "Branchiost";
-	Link* down2 = GetTree()->GetLCA(taxname2,taxname2);
-	Link* up2 = GetTree()->GetAncestor(down);
-	
-	Link* fromdown = GlobalDetach(down,up);
-	Link* fromup = GetTree()->GetAncestor(fromdown);
-
-	Link* todown = 0;
-	Link* toup = 0;
-	if (down2 == fromdown)	{
-		currenttopo = 0;
-		todown = fromup;
-		toup = GetTree()->GetAncestor(todown);
-	}
-	else	{
-		currenttopo = 1;
-		todown = down2;
-		toup = GetTree()->GetAncestor(todown);
-	}
-
-	GlobalAttach(down,up,todown,toup);
-
-	// GlobalUpdateConditionalLikelihoods();
-	// deltalogp += logL;
-	deltalogp += GlobalGetFullLogLikelihood();
-
-	// MH log ratio
-	double logratio = deltalogp;
-
-	int accepted = (log(rnd::GetRandom().Uniform()) < logratio);
-
-	if (! accepted)	{
-		GlobalDetach(down,up);
-		GlobalAttach(down,up,fromdown,fromup);
-		Restore();
-		GlobalGetFullLogLikelihood();
-		// GlobalUpdateParameters();
-	}
-	GlobalUpdateConditionalLikelihoods();
-	return ((double) accepted);
-}
-
-double PhyloProcess::MPITemperedSpecialSPR(int nstep)	{
-
-	Backup();
-	GlobalGetFullLogLikelihood();
-	// GlobalUpdateConditionalLikelihoods();
-
-	string taxname = "Strongyloc";
-	Link* down = GetTree()->GetLCA(taxname,taxname);
-	Link* up = GetTree()->GetAncestor(down);
-
-	string taxname2 = "Branchiost";
-	Link* down2 = GetTree()->GetLCA(taxname2,taxname2);
-	Link* up2 = GetTree()->GetAncestor(down);
-	
-	Link* fromdown = GlobalDetach(down,up);
-	Link* fromup = GetTree()->GetAncestor(fromdown);
-
-	Link* todown = 0;
-	Link* toup = 0;
-	if (down2 == fromdown)	{
-		currenttopo = 0;
-		todown = fromup;
-		toup = GetTree()->GetAncestor(todown);
-	}
-	else	{
-		currenttopo = 1;
-		todown = down2;
-		toup = GetTree()->GetAncestor(todown);
-	}
-
-	GlobalAttach(down,up,fromdown,fromup);
-
-	double deltalogp = GlobalTemperedTreeMoveLogProb(nstep,down,up,fromdown,fromup,todown,toup);
-
-	int accepted = (log(rnd::GetRandom().Uniform()) < deltalogp);
-
-	if (accepted)	{
-		GlobalDetach(down,up);
-		GlobalAttach(down,up,todown,toup);
-	}
-	else	{
-		Restore();
-		GlobalUpdateParameters();
-	}
-	// GlobalUpdateConditionalLikelihoods();
-	GlobalGetFullLogLikelihood();
-
-	return ((double) accepted);
-}
-
-// Helper functions
-
-void PhyloProcess::RecursiveGibbsSPRScan(Link* from, Link* fromup, Link* down, Link* up, double* loglarray, int& n)	{
-
-	if (! from->isRoot())	{
-		GetTree()->Attach(down,up,from,fromup);
-		double*** aux = condlmap[0];
-		Reset(aux,false);
-		for (const Link* link=up->Next(); link!=up; link=link->Next())	{
-			if (link->isRoot())	{
-				cerr << "ROOT\n";
-				exit(1);
-			}
-			Multiply(GetConditionalLikelihoodVector(link),aux,false);
-		}
-		Propagate(aux,GetConditionalLikelihoodVector(up->Out()),GetLength(up->GetBranch()),false);
-		double logl = ComputeNodeLikelihood(up->Out(),0);
-		if (n >= GetNbranch())	{
-			cerr << "branch overflow\n";
-			exit(1);
-		}
-		loglarray[n] = logl;
-		n++;
-		Link* tmp1 = GetTree()->Detach(down,up);
-	}
-	Link* trailer = from;
-	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
-		RecursiveGibbsSPRScan(link->Out(),trailer,down,up,loglarray,n);
-		trailer = trailer->Next();
-	}
-}
-
-void PhyloProcess::RecursiveGibbsFillMap(Link* from, Link* fromup, map<pair<Link*,Link*>,double>& loglmap, double* loglarray, int& n)	{
-
-	if (! from->isRoot())	{
-		if (n >= GetNbranch())	{
-			cerr << "branch overflow\n";
-			exit(1);
-		}
-		loglmap[pair<Link*,Link*>(from,fromup)] = loglarray[n];
-		n++;
-	}
-	Link* trailer = from;
-	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
-		RecursiveGibbsFillMap(link->Out(),trailer,loglmap,loglarray,n);
-		trailer = trailer->Next();
-	}
-}
-
-double PhyloProcess::NonMPIGibbsSPR()	{
-
-	GetTree()->RootAtRandom();
 
 	Link* up = 0;
 	Link* down = 0;
 
-	GetTree()->DrawSubTree(down,up);
+	if (special)	{
+		down = GetTree()->GetLCA(taxon1,taxon2);
+		up = GetTree()->GetAncestor(down);
+	}
+	else	{
+		GetTree()->DrawSubTree(down,up);
+	}
 	
 	int sizebefore = GetTree()->GetSize();
 	int subtreesize = GetTree()->GetSize(down);
@@ -1062,6 +803,149 @@ double PhyloProcess::NonMPIGibbsSPR()	{
 	GetTree()->Attach(down,up,i->first.first,i->first.second);
 	UpdateConditionalLikelihoods();
 	return accepted;
+}
+
+double PhyloProcess::NonMPIBPPSPR()	{
+
+	cerr << "in NonMPIBPPSPR\n";
+	exit(1);
+	return 0;
+
+}
+
+double PhyloProcess::MPIBPPSPR()	{
+
+	if (! FixedRoot())	{
+		GlobalRootAtRandom();
+	}
+	// GlobalUpdateConditionalLikelihoods();
+
+	Link* subtree = 0;
+	Link* subtreeup = 0;
+	Link* fromdown = 0;
+	Link* fromup = 0;
+	Link* down = 0;
+	Link* up = 0;
+
+	double logp1 = logL;
+
+	double logh = BPP->ProposeFullGibbsSPR(tree,subtree,subtreeup,fromdown,fromup,down,up);
+
+	GlobalDetach(subtree,subtreeup);
+	GlobalAttach(subtree,subtreeup,down,up);
+
+	GlobalUpdateConditionalLikelihoods();
+	double logp2 = logL;
+
+	double logratio = logp2 - logp1 + logh;
+	
+	int accepted = (log(rnd::GetRandom().Uniform()) < logratio);
+
+	if (! accepted)	{
+		GlobalDetach(subtree,subtreeup);
+		GlobalAttach(subtree,subtreeup,fromdown,fromup);
+		// GlobalUpdateConditionalLikelihoods();
+	}
+	return accepted;
+}
+
+double PhyloProcess::NonMPITemperedBPPSPR(int nstep)	{
+
+	cerr << "in NonMPIBPPSPR\n";
+	exit(1);
+	return 0;
+
+}
+
+double PhyloProcess::MPITemperedBPPSPR(int nstep)	{
+
+	if (! FixedRoot())	{
+		GlobalRootAtRandom();
+	}
+	Backup();
+
+	Link* subtree = 0;
+	Link* subtreeup = 0;
+	Link* fromdown = 0;
+	Link* fromup = 0;
+	Link* todown = 0;
+	Link* toup = 0;
+
+	double logh = BPP->ProposeFullGibbsSPR(tree,subtree,subtreeup,fromdown,fromup,todown,toup);
+
+	double deltalogprior = -LogBranchProcessPrior();
+
+	GlobalUpdateConditionalLikelihoods();
+
+	double deltalogp = GlobalTemperedTreeMoveLogProb(nstep,subtree,subtreeup,fromdown,fromup,todown,toup);
+
+	deltalogprior += LogBranchProcessPrior();
+
+	double logratio = logh + deltalogprior + deltalogp;
+	
+	int accepted = (log(rnd::GetRandom().Uniform()) < logratio);
+
+	if (accepted)	{
+		GlobalDetach(subtree,subtreeup);
+		GlobalAttach(subtree,subtreeup,todown,toup);
+	}
+	else	{
+		Restore();
+		GlobalUpdateParameters();
+	}
+
+	// GlobalUpdateConditionalLikelihoods();
+
+	return accepted;
+}
+
+// Helper functions
+
+void PhyloProcess::RecursiveGibbsSPRScan(Link* from, Link* fromup, Link* down, Link* up, double* loglarray, int& n)	{
+
+	if (! from->isRoot())	{
+		GetTree()->Attach(down,up,from,fromup);
+		double*** aux = condlmap[0];
+		Reset(aux,false);
+		for (const Link* link=up->Next(); link!=up; link=link->Next())	{
+			if (link->isRoot())	{
+				cerr << "ROOT\n";
+				exit(1);
+			}
+			Multiply(GetConditionalLikelihoodVector(link),aux,false);
+		}
+		Propagate(aux,GetConditionalLikelihoodVector(up->Out()),GetLength(up->GetBranch()),false);
+		double logl = ComputeNodeLikelihood(up->Out(),0);
+		if (n >= GetNbranch())	{
+			cerr << "branch overflow\n";
+			exit(1);
+		}
+		loglarray[n] = logl;
+		n++;
+		Link* tmp1 = GetTree()->Detach(down,up);
+	}
+	Link* trailer = from;
+	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+		RecursiveGibbsSPRScan(link->Out(),trailer,down,up,loglarray,n);
+		trailer = trailer->Next();
+	}
+}
+
+void PhyloProcess::RecursiveGibbsFillMap(Link* from, Link* fromup, map<pair<Link*,Link*>,double>& loglmap, double* loglarray, int& n)	{
+
+	if (! from->isRoot())	{
+		if (n >= GetNbranch())	{
+			cerr << "branch overflow\n";
+			exit(1);
+		}
+		loglmap[pair<Link*,Link*>(from,fromup)] = loglarray[n];
+		n++;
+	}
+	Link* trailer = from;
+	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+		RecursiveGibbsFillMap(link->Out(),trailer,loglmap,loglarray,n);
+		trailer = trailer->Next();
+	}
 }
 
 void PhyloProcess::RecursiveNonMPIGibbsSPRScan(Link* from, Link* fromup, Link* down, Link* up, map<pair<Link*,Link*>,double>& loglmap)	{

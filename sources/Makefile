@@ -2,6 +2,7 @@ CC=mpic++
 CPPFLAGS= -w -O3 -c
 LDFLAGS= -O3
 SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp CodonSequenceAlignment.cpp \
+	NNI.cpp SPR.cpp CCP.cpp \
 	MultiGeneMPIModule.cpp MultiGeneRateProcess.cpp MultiGeneBranchProcess.cpp MultiGeneProfileProcess.cpp \
 	MultiGenePhyloProcess.cpp MultiGeneRASCATGTRSBDPGammaPhyloProcess.cpp MultiGeneRASCATSBDPGammaPhyloProcess.cpp \
 	StateSpace.cpp CodonStateSpace.cpp ZippedSequenceAlignment.cpp SubMatrix.cpp \
@@ -34,7 +35,6 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	AACodonMutSelSBDPPhyloProcess.cpp \
 	AASubSelSubMatrix.cpp AASubSelRASCATSBDPGammaPhyloProcess.cpp \
 	Bipartition.cpp BipartitionList.cpp Consensus.cpp TaxaParameters.cpp PBTree.cpp TreeList.cpp PolyNode.cpp correl.cpp correlation.cpp \
-	NNI.cpp SPR.cpp CCP.cpp \
 	BP2Stat.cpp BP2util.cpp
 
 

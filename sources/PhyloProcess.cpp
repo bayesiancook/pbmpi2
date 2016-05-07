@@ -1215,7 +1215,7 @@ double PhyloProcess::SimpleTopoMoveCycle(int nrep, double tuning)	{
 
 double PhyloProcess::SPRMove(int nrep)	{
 	sprchrono.Start();
-	double tmp = GibbsSPR(nrep);
+	double tmp = GibbsSPR(nrep,0);
 	spracc += tmp;
 	sprtry ++;
 	sprchrono.Stop();
@@ -1237,30 +1237,7 @@ double PhyloProcess::MoveTopo()	{
 	// all moves reroot the tree and make their own likelihood updates before starting
 	// but they don't leave with likelihoods updated
 	double success = 0;
-	if (NSPR)	{
-		sprchrono.Start();
-		double tmp = GibbsSPR(NSPR);
-		success += tmp;
-		spracc += tmp;
-		sprtry ++;
-		sprchrono.Stop();
-	}
-	if (NMHSPR)	{
-		sprchrono.Start();
-		double tmp = GibbsMHSPR(topolambda,NMHSPR);
-		success += tmp;
-		mhspracc += tmp;
-		mhsprtry ++;
-		sprchrono.Stop();
-	}
-	if (NTSPR)	{
-		tsprchrono.Start();
-		double tmp = TemperedGibbsSPR(topolambda,topomu,toponstep,NTSPR);
-		success += tmp;
-		tspracc += tmp;
-		tsprtry ++;
-		tsprchrono.Stop();
-	}
+
 	if (NNNI)	{
 		nnichrono.Start();
 		if (GetNprocs() == 1)	{
@@ -1276,44 +1253,75 @@ double PhyloProcess::MoveTopo()	{
 		nnichrono.Stop();
 	}
 
-	if (nspec && (nprelim >= 50))	{
-		double tmp = SpecialSPR(nspec);
+	if (NSPR)	{
+		sprchrono.Start();
+		double tmp = GibbsSPR(NSPR,0);
+		success += tmp;
+		spracc += tmp;
+		sprtry ++;
+		sprchrono.Stop();
+	}
+	if (NMHSPR)	{
+		sprchrono.Start();
+		double tmp = GibbsMHSPR(topolambda,NMHSPR,0);
+		success += tmp;
+		mhspracc += tmp;
+		mhsprtry ++;
+		sprchrono.Stop();
+	}
+	if (NTSPR)	{
+		tsprchrono.Start();
+		double tmp = TemperedGibbsSPR(topolambda,topomu,toponstep,NTSPR,0);
+		success += tmp;
+		tspracc += tmp;
+		tsprtry ++;
+		tsprchrono.Stop();
+	}
+	if (nspec)	{
+		sprchrono.Start();
+		double tmp = GibbsSPR(nspec,1);
+		// double tmp = GibbsMHSPR(topolambda,nspec,1);
+		sprchrono.Stop();
 		success += tmp;
 		specacc += tmp;
 		spectry ++;
 	}
 
-	if (ntspec && (nprelim >= 50))	{
-		double tmp = TemperedSpecialSPR(ntspec,toponstep);
+	if (ntspec)	{
+		sprchrono.Start();
+		double tmp = TemperedGibbsSPR(topolambda,topomu,toponstep,ntspec,1);
+		sprchrono.Stop();
 		success += tmp;
 		tspecacc += tmp;
 		tspectry ++;
 	}
 
-	nprelim++;
-
 	if (nbpp)	{
+		sprchrono.Start();
 		double tmp = 0;
 		if (bpp == 3)	{
-			tmp = GibbsMHSPR(bppbeta,nbpp);
+			tmp = GibbsMHSPR(bppbeta,nbpp,0);
 		}
 		else	{
 			tmp = BPPSPR(nbpp);
 		}
+		sprchrono.Stop();
 		success += tmp;
 		bppspracc += tmp;
 		bppsprtry ++;
 	}
 
 	if (ntbpp)	{
+		sprchrono.Start();
 		double tmp = 0;
 		if (bpp == 3)	{
-			tmp = TemperedGibbsSPR(bppbeta,topomu,toponstep,ntbpp);
-			tmp = GibbsMHSPR(bppbeta,nbpp);
+			tmp = TemperedGibbsSPR(bppbeta,topomu,toponstep,ntbpp,0);
+			tmp = GibbsMHSPR(bppbeta,nbpp,0);
 		}
 		else	{
 			tmp = TemperedBPPSPR(ntbpp,bppnstep);
 		}
+		sprchrono.Stop();
 		success += tmp;
 		tbppspracc += tmp;
 		tbppsprtry ++;

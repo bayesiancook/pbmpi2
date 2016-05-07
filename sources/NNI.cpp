@@ -38,7 +38,9 @@ double PhyloProcess::GibbsNNI(double tuning, int type){
 	if (!type)	{
 		tuning=0;
 	}
-	GlobalRootAtRandom();
+	if (! FixedRoot())	{
+		GlobalRootAtRandom();
+	}
 	GlobalUpdateConditionalLikelihoods();
 	int success =0;
 	int moves =0;

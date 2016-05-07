@@ -48,6 +48,7 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	Link* GetRoot2() {return tree2->GetRoot();}
 	const Link* GetRoot2() const {return tree2->GetRoot();}
 
+	/*
 	void GlobalSwapRoot();
 	virtual void SlaveSwapRoot()	{
 		SwapRoot();
@@ -56,6 +57,7 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	void SwapRoot()	{
 		swaproot = 1 - swaproot;
 	}
+	*/
 
 	string GetBranchName(const Link* link) const;
 	string GetNodeName(const Link* link) const;

@@ -1553,9 +1553,11 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 		MPI_Bcast(arg,2,MPI_INT,0,MPI_COMM_WORLD);
 		SlaveDetach2(arg[0],arg[1]);
 		break;
+	/*
 	case SWAP:
 		SlaveSwapRoot();
 		break;
+	*/
 	case MINMAX:
 		SlaveSetMinMax();
 		break;

@@ -504,17 +504,6 @@ void MultiGenePhyloProcess::SlaveGibbsSPRScan(int idown, int iup)	{
 	MPI_Send(loglarray,GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
-void MultiGenePhyloProcess::SlaveSetMinMax()	{
-
-	double minmax[2];
-	MPI_Bcast(minmax,2,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	for (int gene=0; gene<Ngene; gene++)	{
-		if (genealloc[gene] == myid)	{
-			process[gene]->SetMinMax(minmax[0],minmax[1]);
-		}
-	}
-}
-
 void MultiGenePhyloProcess::SlavePropagateOverABranch(int l)	{
 
 	for (int gene=0; gene<Ngene; gene++)	{
@@ -560,6 +549,18 @@ void MultiGenePhyloProcess::UpdateBranchLengthSuffStat() {
 				branchlengthsuffstatcount[i] += count[i];
 				branchlengthsuffstatbeta[i] += beta[i];
 			}
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveSetMinMax()	{
+
+	double minmax[2];
+	MPI_Bcast(minmax,2,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	SetMinMax(minmax[0],minmax[1]);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->SetMinMax(minmax[0],minmax[1]);
 		}
 	}
 }

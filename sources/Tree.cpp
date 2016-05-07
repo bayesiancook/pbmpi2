@@ -1022,6 +1022,7 @@ Link* Tree::ChooseLinkAtRandom()	{
 }
 
 void Tree::RootAt(Link* newrootnext)	{
+
 	if (newrootnext->GetNode() != GetRoot()->GetNode())	{
 		Link* prev = 0;
 		for (Link* link=root->Next(); link!= root; link=link->Next())	{

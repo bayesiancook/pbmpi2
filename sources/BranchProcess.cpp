@@ -205,6 +205,7 @@ double BranchProcess::LengthSuffStatLogProb()	{
 	return total;
 }
 
+/*
 void BranchProcess::GlobalSwapRoot()	{
 
 	if (GetNprocs() > 1)	{
@@ -213,6 +214,7 @@ void BranchProcess::GlobalSwapRoot()	{
 	}
 	SwapRoot();
 }
+*/
 
 void BranchProcess::GlobalKnit(Link* from)	{
 

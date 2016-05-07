@@ -542,6 +542,7 @@ void MultiGeneBranchProcess::SlaveAttach2(int n,int m,int p,int q) {
 	}
 }
 
+/*
 void MultiGeneBranchProcess::SlaveSwapRoot()	{
 
 	SwapRoot();
@@ -551,3 +552,4 @@ void MultiGeneBranchProcess::SlaveSwapRoot()	{
 		}
 	}
 }
+*/

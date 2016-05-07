@@ -106,6 +106,13 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		return TopoMoveCycle(nrep,tuning);
 	}
 
+	double GlobalTemperedTreeMoveLogProb(int nstep, Link* from, Link* up, Link* fromdown, Link* fromup, Link* todown, Link* toup);
+	double GlobalTemperedTreeMoveLogProb(int nstep);
+	virtual double GlobalRestrictedTemperedMove();	
+
+	void GlobalSetMinMax(double min, double max);
+	virtual void SlaveSetMinMax();
+
 	virtual double TopoMoveCycle(int nrep, double tuning)	{
 		if (fasttopo)	{
 			return FastTopoMoveCycle(nrep,tuning);
@@ -202,13 +209,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		PriorSampleLength();
 		PriorSampleProfile();
 	}
-
-	double GlobalTemperedTreeMoveLogProb(int nstep, Link* from, Link* up, Link* fromdown, Link* fromup, Link* todown, Link* toup);
-	double GlobalTemperedTreeMoveLogProb(int nstep);
-	double GlobalRestrictedTemperedMove();	
-
-	void GlobalSetMinMax(double min, double max);
-	virtual void SlaveSetMinMax();
 
 	// print out the first line (header) of the trace file
 	virtual void TraceHeader(ostream& os) = 0;

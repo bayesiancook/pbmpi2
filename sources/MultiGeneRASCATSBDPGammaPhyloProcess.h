@@ -192,6 +192,8 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 
 	double Move(double tuning = 1.0);
 
+	virtual double GlobalRestrictedTemperedMove();	
+
 	virtual double GlobalRestrictedMoveCycle(int nrep = 1, double tuning = 1.0)	{
 
 		cerr << "in multi gene: globalrestriced move\n";

@@ -372,8 +372,6 @@ void MultiGenePhyloProcess::SlaveComputeNodeLikelihood(int fromindex,int auxinde
 
 void MultiGenePhyloProcess::SlaveGetFullLogLikelihood()	{
 
-	cerr << "in multigenephyloprocess::slavegetfullloglikelihood\n";
-	exit(1);
 	double totlogl = 0;
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{

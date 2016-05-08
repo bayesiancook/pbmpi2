@@ -10,7 +10,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == myid)	{
 				process[gene] = new RASCATSBDPGammaPhyloProcess(Ncat,kappaprior);
-				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,fixtopo,fixroot,topoburnin,NSPR,NMHSPR,NTSPR,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
+				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,fixtopo,fixroot,topoburnin,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,sumratealloc,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
 				process[gene]->SetName(name);
 				process[gene]->SetMPI(0,1);
 				GetProcess(gene)->SetFixAlpha(GlobalAlpha());
@@ -38,6 +38,27 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Delete()	{
 	}
 	MultiGenePhyloProcess::Delete();
 	RASCATSBDPGammaPhyloProcess::Delete();
+}
+
+double MultiGeneRASCATSBDPGammaPhyloProcess::GlobalRestrictedTemperedMove()	{
+
+	double tuning = 1.0;
+
+	if (TemperedBL())	{
+		MultiGeneBranchProcess::Move(tuning,10);
+		GlobalUpdateParameters();
+	}
+
+	if (TemperedGene())	{
+		GlobalGeneMove();
+		GlobalUpdateParameters();
+	}
+
+	if (TemperedRate())	{
+		MultiGeneRateProcess::Move(0.3*tuning,50);
+		MultiGeneRateProcess::Move(0.03*tuning,50);
+		GlobalUpdateParameters();
+	}
 }
 
 double MultiGeneRASCATSBDPGammaPhyloProcess::Move(double tuning)	{

@@ -26,7 +26,9 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 
 	public:
 
-	MultiGenePhyloProcess() {}
+	MultiGenePhyloProcess() {
+	}
+
 	virtual ~MultiGenePhyloProcess() {}
 
 	virtual void Create();
@@ -100,7 +102,7 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 
 	void SlaveUpdateConditionalLikelihoods();
 	void SlaveComputeNodeLikelihood(int,int);
-	void SlaveGetFullLogLikelihood();
+	virtual void SlaveGetFullLogLikelihood();
 
 	void SlaveReset(int n, bool v);
 	void SlaveMultiply(int n, int m, bool v);
@@ -127,6 +129,7 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 
 	// in SMC.cpp
 	void SlaveSetMinMax();
+
 };
 
 #endif

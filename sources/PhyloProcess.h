@@ -56,6 +56,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	// default constructor: pointers set to nil
 	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0) {
+		temperedbl = 1;
+		temperedgene = 0;
+		temperedrate = 0;
 		empfreq = 0;
 		tracktopo = 0;
 		topoburnin = 0;
@@ -129,6 +132,31 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int TrackTopo()	{
 		return tracktopo;
 	}
+
+	void SetTemperedBL(int in)	{
+		temperedbl = in;
+	}
+
+	void SetTemperedGene(int in)	{
+		temperedgene = in;
+	}
+
+	void SetTemperedRate(int in)	{
+		temperedrate = in;
+	}
+
+	int TemperedBL()	{
+		return temperedbl;
+	}
+
+	int TemperedGene()	{
+		return temperedgene;
+	}
+
+	int TemperedRate()	{
+		return temperedrate;
+	}
+
 
 	double MoveTopo();
 	double SPRMove(int nrep);
@@ -280,7 +308,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		}
 	}
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int insumratealloc,int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int insumratealloc,int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
 
 		datafile = indatafile;
 		treefile = intreefile;
@@ -292,6 +320,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		NSPR = inNSPR;
 		NMHSPR = inNMHSPR;
 		NTSPR = inNTSPR;
+		temperedbl = intemperedbl;
+		temperedgene = intemperedgene;
+		temperedrate = intemperedrate;
 		topolambda = intopolambda;
 		topomu = intopomu;
 		toponstep = intoponstep;
@@ -351,6 +382,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		os << fixroot << '\n';
 		os << topoburnin << '\n';
 		os << NSPR << '\t' << NMHSPR << '\t' << NTSPR << '\n';
+		os << temperedbl << '\t' << temperedgene << '\t' << temperedrate << '\n';
 		os << topolambda << '\t' << topomu << '\t' << toponstep << '\n';
 		os << NNNI << '\n';
 		os << nspec << '\t' << ntspec << '\n';
@@ -385,6 +417,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		is >> fixroot;
 		is >> topoburnin;
 		is >> NSPR >> NMHSPR >> NTSPR;
+		is >> temperedbl >> temperedgene >> temperedrate;
 		is >> topolambda >> topomu >> toponstep;
 		is >> NNNI;
 		is >> nspec >> ntspec;
@@ -923,6 +956,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double fasttopofracmin;
 	int fasttoponstep;
 	int tracktopo;
+
+	int temperedbl;
+	int temperedgene;
+	int temperedrate;
 
 	SequenceAlignment* data;
 };

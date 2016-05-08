@@ -115,7 +115,8 @@ int PoissonPhyloProcess::RecursiveUpdateSiteProfileSuffStat(const Link* from, in
 			int tmp = RecursiveUpdateSiteProfileSuffStat(link->Out(),site);
 			if (tmp != -1)	{
 				if ((state != -1) && (state != tmp))	{
-					cerr << "error in PoissonPhyloProcess::RecursiveUpdateSiteProfileSuffStat: state should identical\n";
+					cerr << "error in PoissonPhyloProcess::RecursiveUpdateSiteProfileSuffStat: state should be identical\n";
+					cerr << state << '\t' << tmp << '\t' << GetZipSize(site) << '\t' << GetOrbitSize(site) << '\n';
 					exit(1);
 				}
 				state = tmp;

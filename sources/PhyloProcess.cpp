@@ -184,13 +184,17 @@ void PhyloProcess::BackwardFillMissingMap(const Link* from)	{
 
 	int index = GetBranchIndex(from->GetBranch());
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		missingmap[index][i] = 0;
+		if (ActiveSite(i))	{
+			missingmap[index][i] = 0;
+		}
 	}
 	if (from->isLeaf())	{
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			int state = GetData(from)[i];
-			if (state != -1)	{
-				missingmap[index][i] = 1;
+			if (ActiveSite(i))	{
+				int state = GetData(from)[i];
+				if (state != -1)	{
+					missingmap[index][i] = 1;
+				}
 			}
 		}
 	}
@@ -199,8 +203,10 @@ void PhyloProcess::BackwardFillMissingMap(const Link* from)	{
 			BackwardFillMissingMap(link->Out());
 			int j = GetBranchIndex(link->Out()->GetBranch());
 			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-				if (missingmap[j][i])	{
-					missingmap[index][i] ++;
+				if (ActiveSite(i))	{
+					if (missingmap[j][i])	{
+						missingmap[index][i] ++;
+					}
 				}
 			}
 		}
@@ -213,26 +219,30 @@ void PhyloProcess::ForwardFillMissingMap(const Link* from, const Link* up)	{
 	int upindex = GetBranchIndex(up->GetBranch());
 	if (from->isRoot())	{
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (missingmap[index][i] <= 1)	{
-				missingmap[index][i] = 0;
-			}
-			else	{
-				missingmap[index][i] = 2;
+			if (ActiveSite(i))	{
+				if (missingmap[index][i] <= 1)	{
+					missingmap[index][i] = 0;
+				}
+				else	{
+					missingmap[index][i] = 2;
+				}
 			}
 		}
 	}
 	else	{
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (missingmap[index][i] > 0)	{
-				if (missingmap[upindex][i])	{
-					missingmap[index][i] = 1;
-				}
-				else	{
-					if (missingmap[index][i] > 1)	{
-						missingmap[index][i] = 2;
+			if (ActiveSite(i))	{
+				if (missingmap[index][i] > 0)	{
+					if (missingmap[upindex][i])	{
+						missingmap[index][i] = 1;
 					}
 					else	{
-						missingmap[index][i] = 0;
+						if (missingmap[index][i] > 1)	{
+							missingmap[index][i] = 2;
+						}
+						else	{
+							missingmap[index][i] = 0;
+						}
 					}
 				}
 			}

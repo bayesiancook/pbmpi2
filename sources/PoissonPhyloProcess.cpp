@@ -77,6 +77,19 @@ void PoissonPhyloProcess::DeleteSuffStat()	{
 	PhyloProcess::DeleteSuffStat();
 }
 
+void PoissonPhyloProcess::Collapse()	{
+
+	if (sumratealloc)	{
+		DrawAllocations(0);
+		InactivateSumOverRateAllocations(ratealloc);
+	}
+	SampleNodeStates();
+	FillMissingMap();
+	SampleSubstitutionMappings(GetRoot());
+	PoissonUpdateSiteProfileSuffStat();
+	activesuffstat = true;
+}
+
 void PoissonPhyloProcess::UpdateBranchLengthSuffStat()	{
 
 	// double R = GetNactiveSite() * GetMeanRate();
@@ -140,6 +153,9 @@ int PoissonPhyloProcess::RecursiveUpdateSiteProfileSuffStat(const Link* from, in
 
 
 void PoissonPhyloProcess::UpdateSiteProfileSuffStat()	{
+}
+
+void PoissonPhyloProcess::PoissonUpdateSiteProfileSuffStat()	{
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{

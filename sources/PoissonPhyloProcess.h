@@ -32,6 +32,8 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 		PhyloProcess::Unfold();
 	}
 
+	void Collapse();
+
 	virtual void PrepareSiteLogLikelihood(int site) {
 		UpdateZip(site);
 	}
@@ -62,6 +64,7 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 
 	void UpdateSiteRateSuffStat();
 	void UpdateSiteProfileSuffStat();
+	void PoissonUpdateSiteProfileSuffStat();
 	void UpdateBranchLengthSuffStat();
 
 	int RecursiveUpdateSiteProfileSuffStat(const Link* from, int site);

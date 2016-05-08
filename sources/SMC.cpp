@@ -736,12 +736,25 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 		GlobalSetMinMax(fracmin,fracmax);
 
 		GlobalUnfold();
-		deltalogp -= logL;
+
+		if (sumovercomponents)	{
+			deltalogp -= GlobalGetFullLogLikelihood();
+		}
+		else	{
+			deltalogp -= logL;
+		}
 
 		GlobalSwapTree();
 
 		GlobalUpdateConditionalLikelihoods();
-		deltalogp += logL;
+
+		if (sumovercomponents)	{
+			deltalogp += GlobalGetFullLogLikelihood();
+		}
+		else	{
+			deltalogp += logL;
+		}
+
 		GlobalCollapse();
 
 		GlobalSwapTree();

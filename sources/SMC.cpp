@@ -639,15 +639,25 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 			GlobalSetMinMax(fracmin,fracmax);
 
 			GlobalUnfold();
-			deltalogp -= logL;
-			// deltalogp -= GlobalGetFullLogLikelihood();
+
+			if (sumovercomponents)	{
+				deltalogp -= GlobalGetFullLogLikelihood();
+			}
+			else	{
+				deltalogp -= logL;
+			}
 
 			GlobalDetach(down,up);
 			GlobalAttach(down,up,todown,toup);
 
 			GlobalUpdateConditionalLikelihoods();
-			deltalogp += logL;
-			// deltalogp += GlobalGetFullLogLikelihood();
+
+			if (sumovercomponents)	{
+				deltalogp += GlobalGetFullLogLikelihood();
+			}
+			else	{
+				deltalogp += logL;
+			}
 
 			GlobalCollapse();
 
@@ -671,15 +681,24 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 
 			GlobalUnfold();
 
-			deltalogp -= logL;
-			// deltalogp -= GlobalGetFullLogLikelihood();
+			if (sumovercomponents)	{
+				deltalogp -= GlobalGetFullLogLikelihood();
+			}
+			else	{
+				deltalogp -= logL;
+			}
 
 			GlobalDetach(down,up);
 			GlobalAttach(down,up,todown,toup);
 
 			GlobalUpdateConditionalLikelihoods();
-			deltalogp += logL;
-			// deltalogp += GlobalGetFullLogLikelihood();
+
+			if (sumovercomponents)	{
+				deltalogp += GlobalGetFullLogLikelihood();
+			}
+			else	{
+				deltalogp += logL;
+			}
 
 			GlobalCollapse();
 

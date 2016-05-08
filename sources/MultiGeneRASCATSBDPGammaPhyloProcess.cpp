@@ -18,6 +18,9 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
 				if (! GlobalBranchLengths())	{
 					GetProcess(gene)->hierarchicallengthprior = 1;
 				}
+				if (sumovercomponents)	{
+					GetProcess(gene)->SetNmodeMax(60);
+				}
 				process[gene]->New(0);
 			}
 		}

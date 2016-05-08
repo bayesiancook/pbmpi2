@@ -68,6 +68,10 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 	void SlaveComputeCVScore();
 	void SlaveComputeSiteLogL();
 
+	virtual double GlobalGetFullLogLikelihood();
+	virtual void SlaveGetFullLogLikelihood();
+	virtual double GetFullLogLikelihood();
+
 	void FromStream(istream& is)	{
 		GammaBranchProcess::FromStream(is);
 		DGamRateProcess::FromStream(is);

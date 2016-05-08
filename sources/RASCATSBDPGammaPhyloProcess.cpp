@@ -155,3 +155,122 @@ void RASCATSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
 
 }
 
+
+double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
+
+	double** modesitelogL = new double*[GetNsite()];
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			modesitelogL[i] = new double[GetNcomponent()];
+		}
+	}
+
+	double totlogL = 0;
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			RemoveSite(i,SBDPProfileProcess::alloc[i]);
+		}
+	}
+
+	for (int k=0; k<GetNcomponent(); k++)	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+				AddSite(i,k);
+				UpdateZip(i);
+			}
+		}
+		UpdateConditionalLikelihoods();
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+				modesitelogL[i][k] = sitelogL[i];
+			}
+		}
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+				RemoveSite(i,k);
+			}
+		}
+	}
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			double max = modesitelogL[i][0];
+			for (int k=1; k<GetNcomponent(); k++)	{
+				if (max < modesitelogL[i][k])	{
+					max = modesitelogL[i][k];
+				}
+			}
+			double total = 0;
+			double cumul[GetNcomponent()];
+			for (int k=0; k<GetNcomponent(); k++)	{
+				double tmp = weight[k] * exp(modesitelogL[i][k] - max);
+				total += tmp;
+				cumul[k] = total;
+			}
+
+			double u = total * rnd::GetRandom().Uniform();
+			int k = 0;
+			while ((k<GetNcomponent()) && (u>cumul[k]))	{
+				k++;
+			}
+
+			AddSite(i,k);
+			UpdateZip(i);
+
+			double sitetotlogL = log(total) + max;
+			totlogL += sitetotlogL;
+		}
+	}
+
+	// one last update so that cond likelihoods are in sync with new site allocations
+	// this will also update logL
+	UpdateConditionalLikelihoods();
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			delete[] modesitelogL[i];
+		}
+	}
+	delete[] modesitelogL;
+
+	return totlogL;
+}
+
+double RASCATSBDPGammaPhyloProcess::GlobalGetFullLogLikelihood()	{
+
+	double totlogL = PhyloProcess::GlobalGetFullLogLikelihood();
+	if (sumovercomponents && (Ncomponent > 1))	{
+		// receive allocs from slaves
+		MPI_Status stat;
+		int tmpalloc[GetNsite()];
+		for(int i=1; i<GetNprocs(); ++i) {
+			MPI_Recv(tmpalloc,GetNsite(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+			for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); ++j) {
+				if (ActiveSite(j))	{
+					SBDPProfileProcess::alloc[j] = tmpalloc[j];
+					if ((tmpalloc[j] < 0) || (tmpalloc[j] >= Ncomponent))	{
+						cerr << "in SMC add\n";
+						cerr << "alloc overflow\n";
+						cerr << tmpalloc[j] << '\n';
+						exit(1);
+					}
+				}
+			}
+		}
+		UpdateOccupancyNumbers();
+		/*
+		ResampleWeights();
+		*/
+	}
+	GlobalUpdateParameters();
+	return totlogL;
+}
+
+void RASCATSBDPGammaPhyloProcess::SlaveGetFullLogLikelihood()	{
+
+	PhyloProcess::SlaveGetFullLogLikelihood();
+	if (sumovercomponents && (Ncomponent > 1))	{
+		MPI_Send(SBDPProfileProcess::alloc,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	}
+}

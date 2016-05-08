@@ -51,6 +51,20 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 		MultiGenePhyloProcess::UpdateRateSuffStat();
 	}
 
+	virtual double GlobalGetFullLogLikelihood()	{
+		return PhyloProcess::GlobalGetFullLogLikelihood();
+	}
+
+	virtual void SlaveGetFullLogLikelihood()	{
+		MultiGenePhyloProcess::SlaveGetFullLogLikelihood();
+	}
+
+	virtual double GetFullLogLikelihood()	{
+		cerr << "error: in multi gene GeFullLogLikelihood\n";
+		exit(1);
+	}
+
+
 	double GlobalGetMeanNcomponent();
 	double GlobalGetMeanStatEnt();
 	double GlobalGetMeanStatAlpha();

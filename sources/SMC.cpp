@@ -630,91 +630,47 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 
 	GlobalCollapse();
 
-	if (rnd::GetRandom().Uniform() < 0.5)	{
-		for (int step=0; step<nstep; step++)	{
+	for (int step=0; step<nstep; step++)	{
 
-			double fracmin = ((double) step) / nstep;
-			double fracmax = ((double) step+1) / nstep;
+		double fracmin = ((double) step) / nstep;
+		double fracmax = ((double) step+1) / nstep;
 
-			GlobalSetMinMax(fracmin,fracmax);
+		GlobalSetMinMax(fracmin,fracmax);
 
-			GlobalUnfold();
+		GlobalUnfold();
 
-			if (sumovercomponents)	{
-				deltalogp -= GlobalGetFullLogLikelihood();
-			}
-			else	{
-				deltalogp -= logL;
-			}
-
-			GlobalDetach(down,up);
-			GlobalAttach(down,up,todown,toup);
-
-			GlobalUpdateConditionalLikelihoods();
-
-			if (sumovercomponents)	{
-				deltalogp += GlobalGetFullLogLikelihood();
-			}
-			else	{
-				deltalogp += logL;
-			}
-
-			GlobalCollapse();
-
-			GlobalDetach(down,up);
-			GlobalAttach(down,up,fromdown,fromup);
-
-			GlobalSetMinMax(0,1);
-
-			if (step < nstep-1)	{
-				GlobalRestrictedTemperedMove();
-			}
+		if (sumovercomponents)	{
+			deltalogp -= GlobalGetFullLogLikelihood();
 		}
-	}
-	else	{
-		for (int step=0; step<nstep; step++)	{
+		else	{
+			deltalogp -= logL;
+		}
 
-			double fracmin = ((double) (nstep - step - 1)) / nstep;
-			double fracmax = ((double) (nstep - step)) / nstep;
+		GlobalDetach(down,up);
+		GlobalAttach(down,up,todown,toup);
 
-			GlobalSetMinMax(fracmin,fracmax);
+		GlobalUpdateConditionalLikelihoods();
 
-			GlobalUnfold();
+		if (sumovercomponents)	{
+			deltalogp += GlobalGetFullLogLikelihood();
+		}
+		else	{
+			deltalogp += logL;
+		}
 
-			if (sumovercomponents)	{
-				deltalogp -= GlobalGetFullLogLikelihood();
-			}
-			else	{
-				deltalogp -= logL;
-			}
+		GlobalCollapse();
 
-			GlobalDetach(down,up);
-			GlobalAttach(down,up,todown,toup);
+		GlobalDetach(down,up);
+		GlobalAttach(down,up,fromdown,fromup);
 
-			GlobalUpdateConditionalLikelihoods();
+		GlobalSetMinMax(0,1);
 
-			if (sumovercomponents)	{
-				deltalogp += GlobalGetFullLogLikelihood();
-			}
-			else	{
-				deltalogp += logL;
-			}
-
-			GlobalCollapse();
-
-			GlobalDetach(down,up);
-			GlobalAttach(down,up,fromdown,fromup);
-
-			GlobalSetMinMax(0,1);
-
-			if (step < nstep-1)	{
-				GlobalRestrictedTemperedMove();
-			}
+		if (step < nstep-1)	{
+			GlobalRestrictedTemperedMove();
 		}
 	}
 
 	GlobalUnfold();
-	
 	return deltalogp;
 }
 

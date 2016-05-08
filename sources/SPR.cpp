@@ -112,6 +112,7 @@ int PhyloProcess::NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, in
 
 int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special)	{
 
+	int version = 1;
 	Link* up = 0;
 	Link* down = 0;
 
@@ -126,7 +127,15 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		GlobalRootAtRandom();
 	}
 
+	GlobalReshuffleSites();
+
 	Backup();
+
+	if (version == 2)	{
+		GlobalBackupTree();
+	}
+	
+	GlobalUpdateConditionalLikelihoods();
 
 	// choose subtree to be pruned and regrafted
 	// returns probability of choosing that subtree
@@ -251,12 +260,21 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	double ptempfwd = exp(-reldifffwd / mu);
 	int maketempmove = mu ? (rnd::GetRandom().Uniform() < ptempfwd) : 0;
 
+
 	tsprtot++;
 	if (maketempmove)	{
 
 		tsprtmp++;
 		// do the tempered move between the two topologies
-		GlobalAttach(down,up,fromdown,fromup);
+
+		if (version == 1)	{
+			GlobalAttach(down,up,fromdown,fromup);
+		}
+
+		if (version == 2)	{
+			GlobalAttach(down,up,todown,toup);
+			GlobalSwapTree();
+		}
 
 		if (! sumratealloc)	{
 			GlobalActivateSumOverRateAllocations();
@@ -273,8 +291,18 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		else	{
 
 			GlobalUpdateConditionalLikelihoods();
-			deltalogp = GlobalTemperedTreeMoveLogProb(nstep,down,up,fromdown,fromup,todown,toup);
 
+			if (version == 1)	{
+				deltalogp = GlobalTemperedTreeMoveLogProb(nstep,down,up,fromdown,fromup,todown,toup);
+			}
+
+			if (version == 2)	{
+				deltalogp = GlobalTemperedTreeMoveLogProb(nstep);
+			}
+		}
+
+		if (version == 2)	{
+			GlobalSwapTree();
 		}
 
 		// reverse probability 
@@ -337,6 +365,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	}
 
 	// reverse probability of choosing subtree to be pruned and regrafted
+
 	GlobalAttach(down,up,todown,toup);
 
 	if (TrackTopo())	{
@@ -411,8 +440,16 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	}
 
 	if (! accepted)	{
-		GlobalDetach(down,up);
-		GlobalAttach(down,up,fromdown,fromup);
+
+		if (version == 1)	{
+			GlobalDetach(down,up);
+			GlobalAttach(down,up,fromdown,fromup);
+		}
+
+		if (version == 1)	{
+			GlobalRestoreTree();
+		}
+
 		if (maketempmove)	{
 			Restore();
 			GlobalUpdateParameters();

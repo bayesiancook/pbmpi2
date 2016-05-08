@@ -124,18 +124,22 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	}
 
 	if (! FixedRoot())	{
+		// this does a global update condl which may not always be necessary
 		GlobalRootAtRandom();
 	}
 
 	GlobalReshuffleSites();
 
-	Backup();
+	if (version == 1)	{
+		Backup();
+	}
 
 	if (version == 2)	{
 		GlobalBackupTree();
 	}
 	
-	GlobalUpdateConditionalLikelihoods();
+	// not useful because we will detach a node and update condl afterwards
+	// GlobalUpdateConditionalLikelihoods();
 
 	// choose subtree to be pruned and regrafted
 	// returns probability of choosing that subtree
@@ -302,7 +306,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		}
 
 		if (version == 2)	{
-			GlobalSwapTree();
+			// GlobalSwapTree();
 		}
 
 		// reverse probability 
@@ -364,14 +368,14 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		}
 	}
 
-	// reverse probability of choosing subtree to be pruned and regrafted
-
 	GlobalAttach(down,up,todown,toup);
 
 	if (TrackTopo())	{
 		GetTree()->ToStreamStandardForm(tos);
 		tos << '\t';
 	}
+
+	// reverse probability of choosing subtree to be pruned and regrafted
 
 	double q2 = 1.0;
 	if ((! special) && lambda)	{
@@ -444,16 +448,16 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		if (version == 1)	{
 			GlobalDetach(down,up);
 			GlobalAttach(down,up,fromdown,fromup);
+			// if (maketempmove)	{
+				Restore();
+				GlobalUpdateParameters();
+			// }
 		}
 
-		if (version == 1)	{
+		if (version == 2)	{
 			GlobalRestoreTree();
 		}
 
-		if (maketempmove)	{
-			Restore();
-			GlobalUpdateParameters();
-		}
 	}
 	if (maketempmove &&  (! sumratealloc))	{
 		GlobalActivateSumOverRateAllocations();

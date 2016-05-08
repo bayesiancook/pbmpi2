@@ -628,6 +628,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 
 	double deltalogp = 0;
 
+	// under old topology (all sites)
 	GlobalCollapse();
 
 	for (int step=0; step<nstep; step++)	{
@@ -637,6 +638,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 
 		GlobalSetMinMax(fracmin,fracmax);
 
+		// under old topology (current fraction of sites)
 		GlobalUnfold();
 
 		if (sumovercomponents)	{
@@ -646,6 +648,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 			deltalogp -= logL;
 		}
 
+		// switch to new topology
 		GlobalDetach(down,up);
 		GlobalAttach(down,up,todown,toup);
 
@@ -658,18 +661,26 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 			deltalogp += logL;
 		}
 
+		// under new topology (current fraction of sites)
 		GlobalCollapse();
 
+		// switch back to old topology
 		GlobalDetach(down,up);
 		GlobalAttach(down,up,fromdown,fromup);
 
 		GlobalSetMinMax(0,1);
 
+		// for all sites
 		if (step < nstep-1)	{
 			GlobalRestrictedTemperedMove();
 		}
 	}
 
+	// switch to new topology
+	GlobalDetach(down,up);
+	GlobalAttach(down,up,todown,toup);
+
+	// under new topology (all sites)
 	GlobalUnfold();
 	return deltalogp;
 }
@@ -682,6 +693,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 
 	double deltalogp = 0;
 
+	// under old topology (all sites)
 	GlobalCollapse();
 
 	for (int step=0; step<nstep; step++)	{
@@ -691,6 +703,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 
 		GlobalSetMinMax(fracmin,fracmax);
 
+		// under old topology (current fraction of sites)
 		GlobalUnfold();
 
 		if (sumovercomponents)	{
@@ -711,17 +724,22 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 			deltalogp += logL;
 		}
 
+		// under new topology (current fraction of sites)
 		GlobalCollapse();
 
 		GlobalSwapTree();
 
 		GlobalSetMinMax(0,1);
 
+		// for all sites
 		if (step < nstep-1)	{
 			GlobalRestrictedTemperedMove();
 		}
 	}
 
+	GlobalSwapTree();
+
+	// under new topology (all sites)
 	GlobalUnfold();
 	
 	return deltalogp;

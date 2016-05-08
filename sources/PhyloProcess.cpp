@@ -1367,6 +1367,8 @@ void PhyloProcess::GlobalRootAtRandom()	{
 	}
 	GetTree()->RootAt(newroot);
 	GetTree2()->RootAt(GetCloneLink(newroot));
+	// this may not always be necessary
+	// should perhaps delegate this update to calling functions
 	GlobalUpdateConditionalLikelihoods();	
 }
 
@@ -1392,6 +1394,7 @@ void PhyloProcess::GlobalBackupTree()	{
 void PhyloProcess::SlaveBackupTree()	{
 	GetTree()->Backup();
 	GetTree2()->Backup();
+	Backup();
 }
 
 void PhyloProcess::GlobalRestoreTree()	{
@@ -1410,6 +1413,7 @@ void PhyloProcess::GlobalRestoreTree()	{
 void PhyloProcess::SlaveRestoreTree()	{
 	GetTree()->Restore();
 	GetTree2()->Restore();
+	Restore();
 }
 
 void PhyloProcess::GlobalSwapTree()	{

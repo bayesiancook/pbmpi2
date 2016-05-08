@@ -1293,7 +1293,7 @@ double PhyloProcess::MoveTopo()	{
 
 	if (ntspec)	{
 		sprchrono.Start();
-		double tmp = TemperedGibbsSPR(topolambda,topomu,toponstep,ntspec,1);
+		double tmp = TemperedGibbsSPR(0,topomu,toponstep,ntspec,1);
 		sprchrono.Stop();
 		success += tmp;
 		tspecacc += tmp;

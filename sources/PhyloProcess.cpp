@@ -1294,7 +1294,7 @@ double PhyloProcess::MoveTopo()	{
 	if (nspec)	{
 		sprchrono.Start();
 		double tmp = GibbsSPR(nspec,1);
-		// double tmp = GibbsMHSPR(topolambda,nspec,1);
+		//double tmp = GibbsMHSPR(topolambda,nspec,1);
 		sprchrono.Stop();
 		success += tmp;
 		spracc += tmp;

@@ -65,6 +65,9 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	virtual void GlobalGeneMove();
 	virtual void SlaveGeneMove();
 
+	virtual void GlobalReshuffleSites();
+	virtual void SlaveReshuffleSites();
+
 	// re-implement slave functions
 	// should dispatch job over all genes,
 	// collect results and send back to master

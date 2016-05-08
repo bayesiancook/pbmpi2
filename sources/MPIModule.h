@@ -136,9 +136,9 @@ class MPIModule {
 	}
 
 	void CreateMPI(int innsite);
-	void NonMPIReshuffleSites();
-	void GlobalReshuffleSites();
-	void SlaveReshuffleSites();
+	virtual void NonMPIReshuffleSites();
+	virtual void GlobalReshuffleSites();
+	virtual void SlaveReshuffleSites();
 
 	int myid;
 	int nprocs;

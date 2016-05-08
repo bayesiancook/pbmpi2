@@ -562,3 +562,20 @@ void MultiGenePhyloProcess::SlaveSetMinMax()	{
 		}
 	}
 }
+
+void MultiGenePhyloProcess::GlobalReshuffleSites()	{
+
+	MESSAGE signal = RESHUFFLE;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+}
+
+
+void MultiGenePhyloProcess::SlaveReshuffleSites()	{
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->NonMPIReshuffleSites();
+		}
+	}
+}
+

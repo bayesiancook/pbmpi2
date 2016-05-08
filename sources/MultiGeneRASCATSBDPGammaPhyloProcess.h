@@ -89,10 +89,11 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 
 	MultiGeneRASCATSBDPGammaPhyloProcess() {}
 
-	MultiGeneRASCATSBDPGammaPhyloProcess(int nratecat, int inkappaprior, int inglobalalpha, int inglobalbl)	{
+	MultiGeneRASCATSBDPGammaPhyloProcess(int nratecat, int inkappaprior, int innmodemax, int inglobalalpha, int inglobalbl)	{
 
 		Ncat = nratecat;
 		kappaprior = inkappaprior;
+		nmodemax = innmodemax;
 		globalalpha = inglobalalpha;
 		globalbl = inglobalbl;
 		if (! globalbl)	{
@@ -111,6 +112,7 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 		// specific
 		is >> Ncat;
 		is >> kappaprior;
+		is >> nmodemax;
 		is >> globalalpha;
 		is >> globalbl;
 		if (! globalbl)	{
@@ -129,6 +131,7 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 		PhyloProcess::ToStreamHeader(os);
 		os << Ncat << '\n';
 		os << kappaprior << '\n';
+		os << nmodemax << '\n';
 		os << globalalpha << '\n';
 		os << globalbl << '\n';
 	}
@@ -236,6 +239,7 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 		GlobalUpdateParameters();
 	}
 
+	int nmodemax;
 };
 
 #endif

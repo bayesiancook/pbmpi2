@@ -112,11 +112,12 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 
 	MultiGeneRASCATGTRSBDPGammaPhyloProcess() {}
 
-	MultiGeneRASCATGTRSBDPGammaPhyloProcess(int nratecat, string inrrtype, int inkappaprior, int inglobalalpha, int inglobalbl)	{
+	MultiGeneRASCATGTRSBDPGammaPhyloProcess(int nratecat, string inrrtype, int inkappaprior, int innmodemax, int inglobalalpha, int inglobalbl)	{
 
 		Ncat = nratecat;
 		rrtype = inrrtype;
 		kappaprior = inkappaprior;
+		nmodemax = innmodemax;
 		globalalpha = inglobalalpha;
 		globalbl = inglobalbl;
 		if (! globalbl)	{
@@ -135,6 +136,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		// specific
 		is >> Ncat;
 		is >> kappaprior;
+		is >> nmodemax;
 		is >> rrtype;
 		is >> globalalpha;
 		is >> globalbl;
@@ -154,6 +156,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		PhyloProcess::ToStreamHeader(os);
 		os << Ncat << '\n';
 		os << kappaprior << '\n';
+		os << nmodemax << '\n';
 		os << rrtype << '\n';
 		os << globalalpha << '\n';
 		os << globalbl << '\n';
@@ -275,6 +278,8 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 	void SlaveComputeCVScore();
 	void SlaveComputeSiteLogL();
 	*/
+
+	int nmodemax;
 };
 
 #endif

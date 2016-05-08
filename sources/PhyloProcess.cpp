@@ -1260,26 +1260,26 @@ double PhyloProcess::MoveTopo()	{
 	if (NSPR)	{
 		sprchrono.Start();
 		double tmp = GibbsSPR(NSPR,0);
+		sprchrono.Stop();
 		success += tmp;
 		spracc += tmp;
 		sprtry ++;
-		sprchrono.Stop();
 	}
 	if (NMHSPR)	{
 		sprchrono.Start();
 		double tmp = GibbsMHSPR(topolambda,NMHSPR,0);
+		sprchrono.Stop();
 		success += tmp;
 		mhspracc += tmp;
 		mhsprtry ++;
-		sprchrono.Stop();
 	}
 	if (NTSPR)	{
 		tsprchrono.Start();
 		double tmp = TemperedGibbsSPR(topolambda,topomu,toponstep,NTSPR,0);
+		tsprchrono.Stop();
 		success += tmp;
 		tspracc += tmp;
 		tsprtry ++;
-		tsprchrono.Stop();
 	}
 	if (nspec)	{
 		sprchrono.Start();
@@ -1287,17 +1287,17 @@ double PhyloProcess::MoveTopo()	{
 		// double tmp = GibbsMHSPR(topolambda,nspec,1);
 		sprchrono.Stop();
 		success += tmp;
-		specacc += tmp;
-		spectry ++;
+		spracc += tmp;
+		sprtry ++;
 	}
 
 	if (ntspec)	{
-		sprchrono.Start();
+		tsprchrono.Start();
 		double tmp = TemperedGibbsSPR(0,topomu,toponstep,ntspec,1);
-		sprchrono.Stop();
+		tsprchrono.Stop();
 		success += tmp;
-		tspecacc += tmp;
-		tspectry ++;
+		tspracc += tmp;
+		tsprtry ++;
 	}
 
 	if (nbpp)	{
@@ -1316,7 +1316,7 @@ double PhyloProcess::MoveTopo()	{
 	}
 
 	if (ntbpp)	{
-		sprchrono.Start();
+		tsprchrono.Start();
 		double tmp = 0;
 		if (bpp == 3)	{
 			tmp = TemperedGibbsSPR(bppbeta,topomu,toponstep,ntbpp,0);
@@ -1325,7 +1325,7 @@ double PhyloProcess::MoveTopo()	{
 		else	{
 			tmp = TemperedBPPSPR(ntbpp,bppnstep);
 		}
-		sprchrono.Stop();
+		tsprchrono.Stop();
 		success += tmp;
 		tbppspracc += tmp;
 		tbppsprtry ++;

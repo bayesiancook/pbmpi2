@@ -75,8 +75,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		nniacc = nnitry = 0;
 		bppspracc = bppsprtry = 0;
 		tbppspracc = tbppsprtry = 0;
-		specacc = spectry = 0;
-		tspecacc = tspectry = 0;
 		taxon1 = "None";
 		taxon2 = "None";
 		profacc = proftry = 0;
@@ -124,8 +122,12 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	double FastTopoMoveCycle(int nrep, double tuning);
 
-	void TrackTopo()	{
-		tracktopo = 1;
+	void SetTrackTopo(int in)	{
+		tracktopo = in;
+	}
+
+	int TrackTopo()	{
+		return tracktopo;
 	}
 
 	double MoveTopo();
@@ -238,12 +240,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		}
 		if (nnitry)	{
 			os << "nni " << '\t' << (100 * nniacc) / nnitry << '\n';
-		}
-		if (spectry)	{
-			os << "special spr : " << '\t' << (100 * specacc) / spectry << '\n';
-		}
-		if (tspectry)	{
-			os << "special tempered spr : " << '\t' << (100 * tspecacc) / tspectry << '\n';
 		}
 		if (bppsprtry)	{
 			os << "bppspr " << '\t' << (100 * bppspracc) / bppsprtry << '\n';
@@ -912,10 +908,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double bppspracc;
 	double tbppsprtry;
 	double tbppspracc;
-	double specacc;
-	double spectry;
-	double tspecacc;
-	double tspectry;
 	double fasttopoacc;
 	double fasttopotry;
 	double fasttopochange;

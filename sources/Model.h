@@ -239,7 +239,7 @@ class Model	{
 
 		process->SetName(name);
 
-		// process->TrackTopo();
+		process->SetTrackTopo(1);
 
 		process->SetMPI(myid,nprocs);
 		process->New();

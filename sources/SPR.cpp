@@ -116,7 +116,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	Link* down = 0;
 
 	ofstream tos((name + ".topo").c_str(),ios_base::app);
-	if (tracktopo)	{
+	if (TrackTopo())	{
 		tos << "tspr\t";
 		GetTree()->ToStreamStandardForm(tos);
 		tos << '\t';
@@ -339,7 +339,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	// reverse probability of choosing subtree to be pruned and regrafted
 	GlobalAttach(down,up,todown,toup);
 
-	if (tracktopo)	{
+	if (TrackTopo())	{
 		GetTree()->ToStreamStandardForm(tos);
 		tos << '\t';
 	}
@@ -377,7 +377,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 
 	int accepted = (log(rnd::GetRandom().Uniform()) < logratio);
 
-	if (tracktopo)	{
+	if (TrackTopo())	{
 	if (accepted)	{
 		tos << "accept";
 	}
@@ -441,7 +441,7 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 	Link* down = 0;
 
 	ofstream tos((name + ".topo").c_str(),ios_base::app);
-	if (tracktopo)	{
+	if (TrackTopo())	{
 		tos << "mhspr\t";
 		GetTree()->ToStreamStandardForm(tos);
 		tos << '\t';
@@ -600,7 +600,7 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 
 	GlobalAttach(down,up,todown,toup);
 
-	if (tracktopo)	{
+	if (TrackTopo())	{
 		GetTree()->ToStreamStandardForm(tos);
 		tos << '\t';
 	}
@@ -633,7 +633,7 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 		GlobalAttach(down,up,fromdown,fromup);
 	}
 
-	if (tracktopo)	{
+	if (TrackTopo())	{
 		if (accepted)	{
 			tos << "accept\n";
 		}

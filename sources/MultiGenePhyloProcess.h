@@ -114,7 +114,7 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	void SlavePropagate(int n, int m, bool v, double t);
 
 	void SlaveProposeMove(int n, double x);
-	void SlaveRestore(int n);
+	void SlaveRestoreBranch(int n);
 
 	void SlaveRoot(int n);
 

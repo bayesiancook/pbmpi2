@@ -436,11 +436,11 @@ void MultiGenePhyloProcess::SlaveProposeMove(int n,double x) {
 	}
 }
 
-void MultiGenePhyloProcess::SlaveRestore(int n) {
-	PhyloProcess::SlaveRestore(n);
+void MultiGenePhyloProcess::SlaveRestoreBranch(int n) {
+	PhyloProcess::SlaveRestoreBranch(n);
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->SlaveRestore(n);
+			process[gene]->SlaveRestoreBranch(n);
 		}
 	}
 }

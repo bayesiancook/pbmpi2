@@ -50,6 +50,14 @@ class DGamRateProcess : public virtual RateProcess {
 		return fixalpha;
 	}
 
+	virtual void BackupRate() {
+		bkalpha = alpha;
+	}
+
+	virtual void RestoreRate() {
+		SetAlpha(bkalpha);
+	}
+
 	double GetRate(int site, int cat = 0)	{
 		// cat should be == 0
 		if (SumOverRateAllocations())	{
@@ -145,6 +153,7 @@ class DGamRateProcess : public virtual RateProcess {
 	
 	double* rate;
 	double alpha;
+	double bkalpha;
 	int* alloc;
 	int* ratesuffstatcount;
 	double* ratesuffstatbeta;

@@ -117,9 +117,9 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		return blarray;
 	}
 
-	void Backup();
-	void Restore();
-	void Swap();
+	void BackupLength();
+	void RestoreLength();
+	// void SwapLength();
 
 	// Move functions
 
@@ -127,7 +127,7 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 
 	double ProposeMove(const Branch* branch, double tuning);
 	void MoveBranch(const Branch* branch, double factor);
-	void Restore(const Branch* branch);
+	void RestoreBranch(const Branch* branch);
 
 	virtual double GetNormFactor()	{
 		cerr << "in BranchProcess::GetNormFactor\n";

@@ -40,21 +40,22 @@ string BranchProcess::GetBranchName(const Link* link) const	{
 	}
 }	
 
-void BranchProcess::Backup()	{
+void BranchProcess::BackupLength()	{
 
 	for (int i=0; i<GetNbranch(); i++)	{
 		bk2array[i] = blarray[i];
 	}
 }
 
-void BranchProcess::Restore()	{
+void BranchProcess::RestoreLength()	{
 
 	for (int i=0; i<GetNbranch(); i++)	{
 		blarray[i] = bk2array[i];
 	}
 }
 
-void BranchProcess::Swap()	{
+/*
+void BranchProcess::SwapLength()	{
 
 	for (int i=0; i<GetNbranch(); i++)	{
 		double tmp = bkarray[i];
@@ -62,9 +63,10 @@ void BranchProcess::Swap()	{
 		bk2array[i] = tmp;
 	}
 }
+*/
 
 
-void BranchProcess::Restore(const Branch* branch)	{
+void BranchProcess::RestoreBranch(const Branch* branch)	{
 	if (! branch)	{
 		cerr << "error in branchprocess::Movebranch: null branch\n";
 		exit(1);

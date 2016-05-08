@@ -56,6 +56,16 @@ class RateProcess : public virtual MPIModule {
 		exit(1);
 	}
 
+	virtual void BackupRate() {
+		cerr << "in RateProcess::BackupRate\n";
+		exit(1);
+	}
+
+	virtual void RestoreRate() {
+		cerr << "in RateProcess::RestoreRate\n";
+		exit(1);
+	}
+
 	virtual double GetAlpha() {return 1;}
 
 	virtual void SiteActivateSumOverRateAllocation(int site)	{

@@ -1056,12 +1056,9 @@ double PhyloProcess::LocalBranchLengthMove(const Link* from, double tuning)	{
 	
 	int accepted = (log(rnd::GetRandom().Uniform()) < delta);
 	if (!accepted)	{
-		GlobalRestore(from->GetBranch());
-		// Restore(from->GetBranch());
+		GlobalRestoreBranch(from->GetBranch());
 		GlobalPropagate(0,from,GetLength(from->GetBranch()));
-		// Propagate(aux,GetConditionalLikelihoodVector(from),GetLength(from->GetBranch()));
 		GlobalComputeNodeLikelihood(from);
-		// ComputeNodeLikelihood(from);
 		// not useful: done by ComputeNodeLikelihood(from) just above
 		// logL = currentloglikelihood;
 	}
@@ -1136,7 +1133,7 @@ double PhyloProcess::LocalNonMPIBranchLengthMove(const Link* from, double tuning
 	
 	int accepted = (log(rnd::GetRandom().Uniform()) < delta);
 	if (!accepted)	{
-		Restore(from->GetBranch());
+		RestoreBranch(from->GetBranch());
 		Propagate(condlmap[0],GetConditionalLikelihoodVector(from),GetLength(from->GetBranch()),condflag);
 		ComputeNodeLikelihood(from,-1);
 		// not useful: done by ComputeNodeLikelihood(from) just above
@@ -1171,22 +1168,22 @@ void PhyloProcess::SlaveProposeMove(int n,double x) {
 	MoveBranch(br,x);	
 }
 
-void PhyloProcess::GlobalRestore(const Branch* branch)	{
+void PhyloProcess::GlobalRestoreBranch(const Branch* branch)	{
 
 	if (GetNprocs() > 1)	{
 		// MPI
 		// master and all slaves should all call RestoreBranch(branch)
-		MESSAGE signal = RESTORE;
+		MESSAGE signal = RESTOREBRANCH;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 		int n = branch->GetIndex();
 		MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
 	}
-	Restore(branch);
+	RestoreBranch(branch);
 }
 
-void PhyloProcess::SlaveRestore(int n) {
+void PhyloProcess::SlaveRestoreBranch(int n) {
 	const Branch* br = GetBranch(n);
-	Restore(br);
+	RestoreBranch(br);
 }
 
 //-------------------------------------------------------------------------
@@ -1425,10 +1422,6 @@ void PhyloProcess::GlobalSwapTree()	{
 	}
 	GetTree()->Swap();
 	GetTree2()->Swap();
-	/*
-	Swap();
-	GlobalUpdateParameters();
-	*/
 }
 
 void PhyloProcess::SlaveSwapTree()	{
@@ -1514,9 +1507,9 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 	case SWAPTREE:
 		SlaveSwapTree();
 		break;
-	case RESTORE:
+	case RESTOREBRANCH:
 		MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
-		SlaveRestore(n);
+		SlaveRestoreBranch(n);
 		break;
 	case RESET:
 		MPI_Bcast(arg,2,MPI_INT,0,MPI_COMM_WORLD);

@@ -54,6 +54,20 @@ class ProfileProcess : public virtual MPIModule {
 
 	virtual StateSpace* GetStateSpace() = 0;
 
+	virtual void BackupProfile()	{
+		/*
+		cerr << "in ProfileProcess::BackupProfile\n";
+		exit(1);
+		*/
+	}
+
+	virtual void RestoreProfile()	{
+		/*
+		cerr << "in ProfileProcess::RestoreProfile\n";
+		exit(1);
+		*/
+	}
+
 	// profile associated with given site
 	virtual double* GetProfile(int site)	{
 		cerr << "in ProfileProcess::GetProfile()\n";

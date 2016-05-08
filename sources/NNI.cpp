@@ -180,7 +180,7 @@ int PhyloProcess::GlobalNNI(Link* from, double tuning, int type)	{
 	if (type)	{
 		if (! success)	{
 			for(int i=0; i<n; ++i){
-				Restore(branches[i]->GetBranch());
+				RestoreBranch(branches[i]->GetBranch());
 			}
 		}
 		delete[] branches;
@@ -348,7 +348,7 @@ void PhyloProcess::LocalFinalizeNNI(int n, int* br, int choice, int mimick)	{
 		if (choice == 0)	{
 			for(int i=0; i<n; ++i){
 				Link* link = GetLinkForGibbs(br[i]);
-				Restore(link->GetBranch());
+				RestoreBranch(link->GetBranch());
 				if ((link!=up) && (!mimick))	{
 					PropagateOverABranch(link);
 				}

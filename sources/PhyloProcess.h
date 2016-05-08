@@ -45,7 +45,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void LocalGibbsSPRScan(int,int);
 
 	virtual void SlaveProposeMove(int,double);
-	virtual void SlaveRestore(int);
+	virtual void SlaveRestoreBranch(int);
 	virtual void SlaveReset(int,bool);
 	virtual void SlaveMultiplyByStationaries(int,bool);
 	virtual void SlaveMultiply(int,int,bool);
@@ -159,6 +159,27 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double MoveTopo();
 	double SPRMove(int nrep);
 	double NNIMove(int nrep, double tuning);
+
+	virtual void Backup()	{
+		BackupLength();
+		BackupRate();
+		BackupProfile();
+	}
+
+	virtual void Restore()	{
+		RestoreLength();
+		RestoreRate();
+		RestoreProfile();
+	}
+
+	virtual void GlobalBackup()	{
+		Backup();
+	}
+
+	virtual void GlobalRestore()	{
+		Restore();
+		GlobalUpdateParameters();
+	}
 
 	void GlobalBackupTree();
 	void GlobalRestoreTree();
@@ -630,7 +651,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	void GlobalPropagate(const Link* from, const Link* to, double time, bool condalloc = false);
 	double GlobalProposeMove(const Branch* branch, double tuning);
-	void GlobalRestore(const Branch* branch);
+	void GlobalRestoreBranch(const Branch* branch);
 
 	void GlobalRootAtRandom();
 

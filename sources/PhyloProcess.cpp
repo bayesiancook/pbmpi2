@@ -68,15 +68,17 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 	CreateMPI(GetData()->GetNsite());
 
 	tree = new Tree(GetData()->GetTaxonSet());
-	if (GetMyid() == 0)	{
-		cerr << "tree\n";
-		cerr << treestring << '\n';
-		istringstream s(treestring);
-		tree->ReadFromStream(s);
-		GlobalBroadcastTree();
-	}
-	else	{
-		SlaveBroadcastTree();
+	if (unfold)	{
+		if (GetMyid() == 0)	{
+			cerr << "tree\n";
+			cerr << treestring << '\n';
+			istringstream s(treestring);
+			tree->ReadFromStream(s);
+			GlobalBroadcastTree();
+		}
+		else	{
+			SlaveBroadcastTree();
+		}
 	}
 	tree->RegisterWith(GetData()->GetTaxonSet());
 	CloneTree();
@@ -85,11 +87,23 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 	Create();
 
 	if (GetMyid() == 0)	{
-		FromStream(is);
 		if (unfold)	{
+			FromStream(is);
 			GlobalUnfold();
 		}
 	}
+}
+
+void PhyloProcess::PostOpen()	{
+
+	ReadData(datafile);
+	SetProfileDim();
+	CreateMPI(GetData()->GetNsite());
+
+	tree = new Tree(GetData()->GetTaxonSet());
+	tree->RegisterWith(GetData()->GetTaxonSet());
+	CloneTree();
+	tree2->RegisterWith(GetData()->GetTaxonSet());
 }
 
 void PhyloProcess::MakeObservedArray()	{

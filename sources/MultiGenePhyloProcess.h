@@ -43,6 +43,8 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 
 	virtual void New(int unfold = 1);
 	virtual void Open(istream& is, int unfold = 1);
+	void SlavePostNew();
+	void SlavePostOpen();
 
 	protected:
 

@@ -21,12 +21,12 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
 				if (nmodemax)	{
 					GetProcess(gene)->SetNmodeMax(nmodemax);
 				}
-				process[gene]->New(0);
+				// process[gene]->New(0);
 			}
 		}
 	}
 }
-	
+
 void MultiGeneRASCATSBDPGammaPhyloProcess::Delete()	{
 	if (GetMyid())	{
 		for (int gene=0; gene<Ngene; gene++)	{

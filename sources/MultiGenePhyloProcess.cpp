@@ -32,6 +32,10 @@ void MultiGenePhyloProcess::New(int unfold)	{
 
 	Create();
 
+	if (GetMyid())	{
+		SlavePostNew();
+	}
+
 	if (! GetMyid())	{
 		GlobalBroadcastTree();
 		Sample();
@@ -62,23 +66,48 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 		GlobalBroadcastTree();
 	}
 	else	{
-		SlaveBroadcastTree();
+		PhyloProcess::SlaveBroadcastTree();
 	}
 	tree->RegisterWith(GetData()->GetTaxonSet());
 	CloneTree();
 	tree2->RegisterWith(GetData()->GetTaxonSet());
 
-
+	cerr << "create\n";
 	Create();
+	cerr << "create ok\n";
 
 	if (! GetMyid())	{
+		cerr << "from stream\n";
 		FromStream(is);
+		cerr << "global update\n";
 		GlobalUpdateParameters();
+		cerr << "global unfold\n";
 		GlobalUnfold();
+		cerr << "ok\n";
+	}
+	else	{
+		cerr << "post open\n";
+		SlavePostOpen();
 	}
 
 	if (BPP)	{
 		BPP->RegisterWithTaxonSet(GetData()->GetTaxonSet());
+	}
+}
+
+void MultiGenePhyloProcess::SlavePostNew()	{
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->New(0);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlavePostOpen()	{
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->PostOpen();
+		}
 	}
 }
 

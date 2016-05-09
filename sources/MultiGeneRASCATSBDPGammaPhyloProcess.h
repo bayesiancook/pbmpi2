@@ -119,7 +119,7 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 			hierarchicallengthprior = 1;
 		}
 
-		Open(is);
+		Open(is,0);
 
 	}
 

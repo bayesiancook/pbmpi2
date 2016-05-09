@@ -266,6 +266,9 @@ class Model	{
 		else if (type == "CATSBDP")	{
 			process = new RASCATSBDPGammaPhyloProcess(is,myid,nprocs); 
 		}
+		else if (type == "MULTIGENECATSBDP")	{
+			process = new MultiGeneRASCATSBDPGammaPhyloProcess(is,myid,nprocs); 
+		}
 		else if (type == "CATFINITE")	{
 			process = new RASCATFiniteGammaPhyloProcess(is,myid,nprocs); 
 		}
@@ -274,6 +277,9 @@ class Model	{
 		}
 		else if (type == "CATGTRSBDP")	{
 			process = new RASCATGTRSBDPGammaPhyloProcess(is,myid,nprocs); 
+		}
+		else if (type == "MULTIGENECATGTRSBDP")	{
+			process = new MultiGeneRASCATGTRSBDPGammaPhyloProcess(is,myid,nprocs); 
 		}
 		else if (type == "ZIPCATGTRSBDP")	{
 			process = new ZipRASCATGTRSBDPGammaPhyloProcess(is,myid,nprocs); 

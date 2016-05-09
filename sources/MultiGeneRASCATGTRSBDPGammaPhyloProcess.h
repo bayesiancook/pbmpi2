@@ -144,7 +144,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 			hierarchicallengthprior = 1;
 		}
 
-		Open(is);
+		Open(is,0);
 
 	}
 

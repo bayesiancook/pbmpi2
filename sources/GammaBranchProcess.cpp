@@ -40,6 +40,12 @@ void GammaBranchProcess::ToStream(ostream& os)	{
 
 	SetNamesFromLengths();
 	tree->ToStream(os);
+	// if hierarchical prior, the hyperparameters are already saved to stream by the multi gene branch process
+	if (!hierarchicallengthprior)	{
+		os << branchalpha << '\n';
+		os << branchbeta << '\n';
+	}
+	/*
 	if (hierarchicallengthprior)	{
 		for (int j=0; j<GetNbranch(); j++)	{
 			os << branchmean[j] << '\t';
@@ -54,6 +60,7 @@ void GammaBranchProcess::ToStream(ostream& os)	{
 		os << branchalpha << '\n';
 		os << branchbeta << '\n';
 	}
+	*/
 }
 
 void GammaBranchProcess::ToStreamWithLengths(ostream& os, const Link* from)	{
@@ -81,6 +88,11 @@ void GammaBranchProcess::FromStream(istream& is)	{
 
 	tree->ReadFromStream(is);
 	SetLengthsFromNames();
+	if (! hierarchicallengthprior)	{
+		is >> branchalpha;
+		is >> branchbeta;
+	}
+	/*
 	if (hierarchicallengthprior)	{
 		for (int j=0; j<GetNbranch(); j++)	{
 			is >> branchmean[j];
@@ -93,6 +105,7 @@ void GammaBranchProcess::FromStream(istream& is)	{
 		is >> branchalpha;
 		is >> branchbeta;
 	}
+	*/
 }
 
 void GammaBranchProcess::SampleBranchLength(const Branch* branch)	{

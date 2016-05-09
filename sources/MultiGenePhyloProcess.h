@@ -34,8 +34,10 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	virtual void Create();
 	virtual void Delete();
 
-	virtual void ToStream(ostream& os) {}
-	virtual void FromStream(istream& is) {}
+	virtual void ToStream(ostream& os);
+	virtual void FromStream(istream& is);
+	void SlaveToStream();
+	void SlaveFromStream();
 
 	void AllocateAlignments(string datafile, string treefile);
 

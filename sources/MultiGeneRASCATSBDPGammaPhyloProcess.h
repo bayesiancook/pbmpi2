@@ -227,18 +227,11 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 	}
 
 	void ToStream(ostream& os)	{
-		GammaBranchProcess::ToStream(os);
-		DGamRateProcess::ToStream(os);
-		// ExpoConjugateGTRProfileProcess::ToStream(os);
-		// ExpoConjugateGTRSBDPProfileProcess::ToStream(os);
+		MultiGenePhyloProcess::ToStream(os);
 	}
 
 	void FromStream(istream& is)	{
-		GammaBranchProcess::FromStream(is);
-		DGamRateProcess::FromStream(is);
-		// ExpoConjugateGTRProfileProcess::FromStream(is);
-		// ExpoConjugateGTRSBDPProfileProcess::FromStream(is);
-		GlobalUpdateParameters();
+		MultiGenePhyloProcess::FromStream(is);
 	}
 
 	int nmodemax;

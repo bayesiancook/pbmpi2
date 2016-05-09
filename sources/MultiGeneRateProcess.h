@@ -30,6 +30,9 @@ class MultiGeneRateProcess : public virtual DGamRateProcess, public virtual Mult
 	virtual void Create();
 	virtual void Delete();
 
+	virtual void ToStream(ostream& os);
+	virtual void FromStream(istream& is);
+
 	virtual void SlaveUpdateSiteRateSuffStat();
 	virtual void UpdateRateSuffStat();
 

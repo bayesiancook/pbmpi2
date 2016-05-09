@@ -553,3 +553,41 @@ void MultiGeneBranchProcess::SlaveSwapRoot()	{
 	}
 }
 */
+
+void MultiGeneBranchProcess::ToStream(ostream& os)	{
+
+	GammaBranchProcess::ToStream(os);
+	if (!GlobalBranchLengths())	{
+		for (int j=0; j<GetNbranch(); j++)	{
+			os << branchmean[j] << '\t';
+		}
+		os << '\n';
+		for (int j=0; j<GetNbranch(); j++)	{
+			os << branchrelvar[j] << '\t';
+		}
+		os << '\n';
+
+		os << meanbranchmean << '\n';
+		os << relvarbranchmean << '\n';
+		os << meanbranchrelvar << '\n';
+		os << relvarbranchrelvar << '\n';
+	}
+}
+
+void MultiGeneBranchProcess::FromStream(istream& is)	{
+
+	GammaBranchProcess::FromStream(is);
+	if (!GlobalBranchLengths())	{
+		for (int j=0; j<GetNbranch(); j++)	{
+			is >> branchmean[j];
+		}
+		for (int j=0; j<GetNbranch(); j++)	{
+			is >>  branchrelvar[j];
+		}
+
+		is >> meanbranchmean;
+		is >> relvarbranchmean;
+		is >> meanbranchrelvar;
+		is >> relvarbranchrelvar;
+	}
+}

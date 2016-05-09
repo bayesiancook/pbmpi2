@@ -41,6 +41,28 @@ void MultiGeneRateProcess::Delete()	{
 	DGamRateProcess::Delete();
 }
 
+void MultiGeneRateProcess::ToStream(ostream& os)	{
+
+	if (GlobalAlpha())	{
+		DGamRateProcess::ToStream(os);
+	}
+	else	{
+		os << meanalpha << '\n';
+		os << varalpha << '\n';
+	}
+}
+
+void MultiGeneRateProcess::FromStream(istream& is)	{
+
+	if (GlobalAlpha())	{
+		DGamRateProcess::FromStream(is);
+	}
+	else	{
+		is >> meanalpha;
+		is >> varalpha;
+	}
+}
+
 void MultiGeneRateProcess::SampleRate()	{
 	if (GlobalAlpha())	{
 		DGamRateProcess::SampleRate();

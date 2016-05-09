@@ -208,9 +208,172 @@ void MultiGenePhyloProcess::AllocateAlignments(string datafile, string treefile)
 	delete[] geneweight;
 }
 
+void MultiGenePhyloProcess::ToStream(ostream& os)	{
+
+	MESSAGE signal = TOSTREAM;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	MultiGeneBranchProcess::ToStream(os);
+	MultiGeneRateProcess::ToStream(os);
+
+	string* geneparam = new string[Ngene];
+	int* geneparamsize = new int[Ngene];
+	int paramtotsize = 0;
+
+	MPI_Status stat;
+	for(int i=1; i<GetNprocs(); i++) {
+		MPI_Recv(&paramtotsize,1,MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+		MPI_Recv(geneparamsize,Ngene,MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+		char* c = new char[paramtotsize];
+		MPI_Recv(c,paramtotsize,MPI_CHAR,i,TAG1,MPI_COMM_WORLD,&stat);
+		int index = 0;
+		for (int gene=0; gene<Ngene; gene++)	{
+			if (genealloc[gene] == i)	{
+				ostringstream os;
+				for (int j=0; j<geneparamsize[gene]; j++)	{
+					os << c[index++];
+				}
+				geneparam[gene] = os.str();
+			}
+		}
+		if (index != paramtotsize)	{
+			cerr << "error in MultiGenePhyloProcess::ToStream: non matching total size : " << index << '\t' << paramtotsize << '\n';
+			exit(1);
+		}
+		delete[] c;
+	}
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		os << "GENE" << gene << '\n';
+		os << geneparam[gene];
+		os << "===\n";
+	}
+
+	delete[] geneparamsize;
+	delete[] geneparam;
+}
+
+void MultiGenePhyloProcess::SlaveToStream()	{
+
+	string* geneparam = new string[Ngene];
+	int* geneparamsize = new int[Ngene];
+	int paramtotsize = 0;
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			ostringstream os;
+			os.precision(20);
+			process[gene]->ToStream(os);
+			geneparam[gene] = os.str();
+			geneparamsize[gene] = geneparam[gene].size();
+		}
+		else	{
+			geneparamsize[gene] = 0;
+		}
+		paramtotsize += geneparamsize[gene];
+	}	
+	char* c = new char[paramtotsize];
+	int index = 0;
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			for (int j=0; j<geneparamsize[gene]; j++)	{
+				c[index++] = geneparam[gene][j];
+			}
+		}
+	}
+	MPI_Send(&paramtotsize,1,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(geneparamsize,Ngene,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(c,paramtotsize,MPI_CHAR,0,TAG1,MPI_COMM_WORLD);
+
+	delete[] c;
+	delete[] geneparamsize;
+	delete[] geneparam;
+}
+
+void MultiGenePhyloProcess::FromStream(istream& is)	{
+
+	MESSAGE signal = FROMSTREAM;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	MultiGeneBranchProcess::FromStream(is);
+	MultiGeneRateProcess::FromStream(is);
+
+	string* geneparam = new string[Ngene];
+	int* geneparamsize = new int[Ngene];
+	int paramtotsize = 0;
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		is >> geneparam[gene];
+		geneparamsize[gene] = geneparam[gene].size();
+		paramtotsize += geneparamsize[gene];
+	}
+
+	char* c = new char[paramtotsize];
+	int index = 0;
+	for (int gene=0; gene<Ngene; gene++)	{
+		for (int j=0; j<geneparamsize[gene]; j++)	{
+			c[index++] = geneparam[gene][j];
+		}
+	}
+
+	MPI_Bcast(&paramtotsize,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(geneparamsize,Ngene,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(c,paramtotsize,MPI_CHAR,0,MPI_COMM_WORLD);
+
+	delete[] c;
+	delete[] geneparamsize;
+	delete[] geneparam;
+}
+
+void MultiGenePhyloProcess::SlaveFromStream()	{
+
+	string* geneparam = new string[Ngene];
+	int* geneparamsize = new int[Ngene];
+	int paramtotsize = 0;
+
+	MPI_Bcast(&paramtotsize,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(geneparamsize,Ngene,MPI_INT,0,MPI_COMM_WORLD);
+	char* c = new char[paramtotsize];
+	MPI_Bcast(c,paramtotsize,MPI_CHAR,0,MPI_COMM_WORLD);
+
+	int index = 0;
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			
+			ostringstream os;
+			for (int j=0; j<geneparamsize[gene]; j++)	{
+				os << c[index++];
+			}
+			string s = os.str();
+			if (s.size() != geneparamsize[gene])	{
+				cerr << "error in slave update params\n";
+				cerr << geneparamsize[gene] << '\t' << s.size() << '\n';
+				exit(1);
+			}
+			istringstream is(s);
+			process[gene]->FromStream(is);
+		}
+		else	{
+			index += geneparamsize[gene];
+		}
+	}
+
+	delete[] c;
+	delete[] geneparamsize;
+	delete[] geneparam;
+}
+
 int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{
 
 	switch(signal) {
+	case TOSTREAM:
+		SlaveToStream();
+		return 1;
+		break;
+	case FROMSTREAM:
+		SlaveFromStream();
+		return 1;
+		break;
 	case SAMPLE:
 		SlaveSample();
 		return 1;

@@ -29,6 +29,9 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 	virtual void Create();
 	virtual void Delete();
 
+	virtual void ToStream(ostream& os);
+	virtual void FromStream(istream& is);
+
 	void SetGlobalBranchLengths(int in)	{
 		globalbl = in;
 		if (! in)	{

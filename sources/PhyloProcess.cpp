@@ -79,6 +79,8 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 		SlaveBroadcastTree();
 	}
 	tree->RegisterWith(GetData()->GetTaxonSet());
+	CloneTree();
+	tree2->RegisterWith(GetData()->GetTaxonSet());
 
 	Create();
 

@@ -65,6 +65,8 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 		SlaveBroadcastTree();
 	}
 	tree->RegisterWith(GetData()->GetTaxonSet());
+	CloneTree();
+	tree2->RegisterWith(GetData()->GetTaxonSet());
 
 
 	Create();
@@ -275,9 +277,7 @@ void MultiGenePhyloProcess::ToStream(ostream& os)	{
 	}
 
 	for (int gene=0; gene<Ngene; gene++)	{
-		os << "GENE" << gene << '\n';
 		os << geneparam[gene];
-		os << "===\n";
 	}
 
 	delete[] geneparamsize;

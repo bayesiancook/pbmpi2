@@ -57,6 +57,39 @@ void PhyloProcess::New(int unfold)	{
 	}
 }
 
+//-------------------------------------------------------------------------
+//	* Open
+//-------------------------------------------------------------------------
+
+void PhyloProcess::Open(istream& is, int unfold)	{
+
+	ReadData(datafile);
+	SetProfileDim();
+	CreateMPI(GetData()->GetNsite());
+
+	tree = new Tree(GetData()->GetTaxonSet());
+	if (GetMyid() == 0)	{
+		cerr << "tree\n";
+		cerr << treestring << '\n';
+		istringstream s(treestring);
+		tree->ReadFromStream(s);
+		GlobalBroadcastTree();
+	}
+	else	{
+		SlaveBroadcastTree();
+	}
+	tree->RegisterWith(GetData()->GetTaxonSet());
+
+	Create();
+
+	if (GetMyid() == 0)	{
+		FromStream(is);
+		if (unfold)	{
+			GlobalUnfold();
+		}
+	}
+}
+
 void PhyloProcess::MakeObservedArray()	{
 
 	observedarray = new int*[data->GetNsite()];
@@ -73,35 +106,6 @@ void PhyloProcess::MakeObservedArray()	{
 			}
 		}
 	}	
-}
-
-//-------------------------------------------------------------------------
-//	* Open
-//-------------------------------------------------------------------------
-
-void PhyloProcess::Open(istream& is)	{
-
-	ReadData(datafile);
-	SetProfileDim();
-	CreateMPI(GetData()->GetNsite());
-
-	tree = new Tree(GetData()->GetTaxonSet());
-	if (GetMyid() == 0)	{
-		istringstream s(treestring);
-		tree->ReadFromStream(s);
-		GlobalBroadcastTree();
-	}
-	else	{
-		SlaveBroadcastTree();
-	}
-	tree->RegisterWith(GetData()->GetTaxonSet());
-
-	Create();
-
-	if (GetMyid() == 0)	{
-		FromStream(is);
-		GlobalUnfold();
-	}
 }
 
 //-------------------------------------------------------------------------

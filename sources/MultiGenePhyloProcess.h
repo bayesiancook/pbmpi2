@@ -42,6 +42,7 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	void AllocateAlignments(string datafile, string treefile);
 
 	virtual void New(int unfold = 1);
+	virtual void Open(istream& is, int unfold = 1);
 
 	protected:
 

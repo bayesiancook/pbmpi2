@@ -48,6 +48,37 @@ void MultiGenePhyloProcess::New(int unfold)	{
 	}
 }
 
+void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
+
+	CreateMPI(0);
+	// SetMPI(myid,nprocs);
+	AllocateAlignments(datafile,treefile);
+	SetProfileDim();
+
+	tree = new Tree(GetData()->GetTaxonSet());
+	if (GetMyid() == 0)	{
+		istringstream s(treestring);
+		tree->ReadFromStream(s);
+		GlobalBroadcastTree();
+	}
+	else	{
+		SlaveBroadcastTree();
+	}
+	tree->RegisterWith(GetData()->GetTaxonSet());
+
+
+	Create();
+
+	if (! GetMyid())	{
+		FromStream(is);
+		GlobalUpdateParameters();
+		GlobalUnfold();
+	}
+
+	if (BPP)	{
+		BPP->RegisterWithTaxonSet(GetData()->GetTaxonSet());
+	}
+}
 
 void MultiGenePhyloProcess::Create()	{
 
@@ -262,7 +293,6 @@ void MultiGenePhyloProcess::SlaveToStream()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			ostringstream os;
-			os.precision(20);
 			process[gene]->ToStream(os);
 			geneparam[gene] = os.str();
 			geneparamsize[gene] = geneparam[gene].size();

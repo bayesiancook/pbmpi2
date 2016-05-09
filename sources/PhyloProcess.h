@@ -841,8 +841,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	}
 
 	virtual void New(int unfold = 1);
-
-	void Open(istream& is);
+	virtual void Open(istream& is, int unfold = 1);
 
 	virtual double GetObservedCompositionalHeterogeneity()	{
 		return GetData()->CompositionalHeterogeneity(0);

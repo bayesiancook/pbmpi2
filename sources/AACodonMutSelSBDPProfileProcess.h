@@ -18,10 +18,10 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define AACODONMUTSELSBDPPROFILE_H
 
 #include "SBDPProfileProcess.h"
-#include "AACodonMutSelProfileProcess.h"
+#include "SingleOmegaAACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixMixtureProfileProcess.h"
 
-class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
+class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual SingleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
 
 	// implementer les fonctions create matrix et delete matrix
 	// ainsi que CreateComponent(int k) and DeleteComponent(k)
@@ -36,7 +36,7 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	protected:
 
 	void Create()	{
-		AACodonMutSelProfileProcess::Create();
+		SingleOmegaAACodonMutSelProfileProcess::Create();
 		SBDPProfileProcess::Create();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
 	}
@@ -44,7 +44,7 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	void Delete()	{
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Delete();
 		SBDPProfileProcess::Delete();
-		AACodonMutSelProfileProcess::Delete();
+		SingleOmegaAACodonMutSelProfileProcess::Delete();
 	}
 
 	void ToStream(ostream& os)	{
@@ -125,10 +125,6 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 		}
 		matrixarray[k] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[k],omega,true);
 	}
-
-	int fixcodonprofile;
-	int fixomega;
-
 };
 
 #endif

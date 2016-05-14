@@ -17,25 +17,25 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef AACODONMUTSELMVNSSPROFILE_H
 #define AACODONMUTSELMVNSSPROFILE_H
 
-#include "AACodonMutSelProfileProcess.h"
+#include "SingleOmegaAACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess.h"
 
-class AACodonMutSelMVNSiteSpecificProfileProcess : public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess	{
+class AACodonMutSelMVNSiteSpecificProfileProcess : public virtual SingleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess	{
 
 	public:
 
-	AACodonMutSelMVNSiteSpecificProfileProcess() : fixcodonprofile(0), fixomega(0) {}
+	AACodonMutSelMVNSiteSpecificProfileProcess() {}
 	virtual ~AACodonMutSelMVNSiteSpecificProfileProcess() {}
 
 	protected:
 
 	void Create()	{
 		GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess::Create();
-		AACodonMutSelProfileProcess::Create();
+		SingleOmegaAACodonMutSelProfileProcess::Create();
 	}
 	
 	void Delete()	{
-		AACodonMutSelProfileProcess::Delete();
+		SingleOmegaAACodonMutSelProfileProcess::Delete();
 		GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess::Delete();
 	}
 
@@ -115,8 +115,6 @@ class AACodonMutSelMVNSiteSpecificProfileProcess : public virtual AACodonMutSelP
 		matrixarray[k] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[k],omega,true);
 	}
 
-	int fixcodonprofile;
-	int fixomega;
 };
 
 #endif

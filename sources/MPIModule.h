@@ -17,6 +17,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef MPIMODULE_H
 #define MPIMODULE_H
 
+#include <string>
+using namespace std;
+
 class MPIModule {
 
 	public:

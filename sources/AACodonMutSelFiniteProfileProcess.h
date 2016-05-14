@@ -18,10 +18,10 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define AACODONMUTSELFINITEPROFILE_H
 
 #include "FiniteProfileProcess.h"
-#include "AACodonMutSelProfileProcess.h"
+#include "SingleOmegaAACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixMixtureProfileProcess.h"
 
-class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
+class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, public virtual SingleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
 
 	// implementer les fonctions create matrix et delete matrix
 	// ainsi que CreateComponent(int k) and DeleteComponent(k)
@@ -30,13 +30,13 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 
 	public:
 
-	AACodonMutSelFiniteProfileProcess() : fixcodonprofile(0), fixomega(0) {}
+	AACodonMutSelFiniteProfileProcess() {}
 	virtual ~AACodonMutSelFiniteProfileProcess() {}
 
 	protected:
 
 	void Create()	{
-		AACodonMutSelProfileProcess::Create();
+		SingleOmegaAACodonMutSelProfileProcess::Create();
 		FiniteProfileProcess::Create();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
 	}
@@ -44,7 +44,7 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 	void Delete()	{
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Delete();
 		FiniteProfileProcess::Delete();
-		AACodonMutSelProfileProcess::Delete();
+		SingleOmegaAACodonMutSelProfileProcess::Delete();
 	}
 
 	void ToStream(ostream& os) {
@@ -122,9 +122,6 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 		}
 		matrixarray[k] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[k],omega,true);
 	}
-
-	int fixcodonprofile;
-	int fixomega;
 };
 
 #endif

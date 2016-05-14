@@ -26,17 +26,15 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 void AACodonMutSelProfileProcess::Create()	{
 	
-	if ( (!nucrr) && (!nucstat) && (!codonprofile) && (!omega) )	{
+	if ( (!nucrr) && (!nucstat) && (!codonprofile) )	{
 		ProfileProcess::Create();
 		Nnucrr = Nnuc * (Nnuc-1) / 2;
 		nucrr = new double[Nnucrr];
 		nucstat = new double[Nnuc];
 		codonprofile = new double[GetNcodon()];
-		omega = new double;
 		SampleNucRR();
 		SampleNucStat();
 		SampleCodonProfile();
-		SampleOmega();
 	}
 	else	{
 		cerr << "Create of AAMutSelProfileProcess, nucrr and/or nucstat and/or codonprofile are/is not 0.\n";
@@ -51,11 +49,9 @@ void AACodonMutSelProfileProcess::Delete()	{
 		delete[] nucrr;
 		delete[] nucstat;
 		delete[] codonprofile;
-		delete omega;
 		nucrr = 0;
 		nucstat = 0;
 		codonprofile = 0;
-		omega = 0;
 		ProfileProcess::Delete();
 	}
 	else	{
@@ -139,35 +135,6 @@ void AACodonMutSelProfileProcess::SampleCodonProfile()	{
 	}
 }
 
-double AACodonMutSelProfileProcess::LogOmegaPrior()        {
-
-	// flat
-	//return 0;
-
-	// exponential
-	// return - *omega;
-	
-	// jeffreys
-	// return -log(*omega);
-
-	if (omegaprior == 0)	{
-		// ratio of exponential random variables
-		return -2 * log(1 + *omega);
-	}
-	else	{	
-		// jeffreys
-		return -log(*omega);
-	}
-}
-
-void AACodonMutSelProfileProcess::SampleOmega()        {
-
-	//double rv1 = -log(Random::Uniform());
-	//double rv2 = -log(Random::Uniform());
-	//*omega = rv1/rv2;
-	*omega = 1.0;
-}
-
 double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 
 	double tuning = 1.0;
@@ -201,43 +168,6 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 		MoveOmega(tuning);
 		MoveOmega(tuning*0.3);
 	}
-}
-
-double AACodonMutSelProfileProcess::MoveOmega(double tuning)        {
-
-	int naccepted = 0;
-	double bkomega = *omega;
-	double deltalogprob = -ProfileSuffStatLogProb();
-	//double deltalogprob = 0;
-	deltalogprob -= LogOmegaPrior();
-
-	double h = tuning * (rnd::GetRandom().Uniform() -0.5);
-	double e = exp(h);
-	*omega *= e;
-
-
-	UpdateMatrices();
-	deltalogprob += h;
-	deltalogprob += LogOmegaPrior();
-	//cerr << "before calling ProfileSuffStatLogProb()\t";
-	//cerr.flush();
-
-	deltalogprob += ProfileSuffStatLogProb();
-
-	//cerr << "in move, omega is " << *omega << "\n";
-	//cerr.flush();
-	//cerr << "deltalobprob is : " << deltalogprob << "\n";
-	//cerr.flush();
-
-	int accepted = (rnd::GetRandom().Uniform() < exp(deltalogprob));
-	if (accepted)	{
-		naccepted++;	
-	}
-	else	{
-		*omega = bkomega;
-		UpdateMatrices();
-	}
-	return naccepted;	
 }
 
 double AACodonMutSelProfileProcess::MoveNucRR(double tuning)	{

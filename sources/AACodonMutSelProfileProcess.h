@@ -17,11 +17,12 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef AACODONMUTSEL_H
 #define AACODONMUTSEL_H
 
+#include "OmegaProcess.h"
 #include "CodonSubMatrix.h"
 #include "CodonSequenceAlignment.h"
 #include "GeneralPathSuffStatMatrixProfileProcess.h"
 
-class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProfileProcess	{
+class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProfileProcess, public virtual OmegaProcess	{
 
 	// y mettre les variables globales (taux de mutation essentiellement)
 
@@ -29,7 +30,7 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 
 	public:
 
-	AACodonMutSelProfileProcess() : nucrr(0), nucstat(0), codonprofile(0), omega(0){}
+	AACodonMutSelProfileProcess() : nucrr(0), nucstat(0), codonprofile(0) {}
 	virtual ~AACodonMutSelProfileProcess() {}
 
 	int GetNnucrr()	{
@@ -78,10 +79,6 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 
 	double GetCodonProfileEntropy();
 
-	double GetOmega()	{
-		return *omega;
-	}
-
 	protected:
 
 	CodonSequenceAlignment* GetCodonData()	{
@@ -118,10 +115,6 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 	virtual double LogCodonProfilePrior();
 	virtual void SampleCodonProfile();
 
-	// omega
-	virtual double LogOmegaPrior();
-	virtual void SampleOmega();
-
 	virtual double GlobalParametersMove();
 
 	// moves on global parameters
@@ -130,17 +123,13 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 	double MoveNucStat(double tuning, int n);
 	double MoveCodonProfile(double tuning, int n, int nrep=1);
 	double MoveNucStatCodonProfile(double tuning, int n, int nrep=1);
-	double MoveOmega(double tuning); 
 	
 	int Nnucrr;
 	double* nucrr;
 	double* nucstat;
 	double* codonprofile;
-	double* omega;
-	int omegaprior;
 
 	int fixcodonprofile;
-	int fixomega;
 
 };
 

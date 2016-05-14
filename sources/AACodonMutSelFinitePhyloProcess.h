@@ -171,9 +171,6 @@ class AACodonMutSelFinitePhyloProcess : public virtual AACodonMutSelFiniteSubsti
 		GammaBranchProcess::Delete();
 	}
 
-	int fixcodonprofile;
-	int fixomega;
-
 	Chrono chronopruning;
 	Chrono chronosuffstat;
 	Chrono chronototal;

@@ -18,10 +18,10 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define AACODONMUTSELSITESBDPPROFILE_H
 
 #include "SBDPProfileProcess.h"
-#include "AACodonMutSelProfileProcess.h"
+#include "SingleOmegaAACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatSiteMatrixMixtureProfileProcess.h"
 
-class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatSiteMatrixMixtureProfileProcess	{
+class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual SingleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatSiteMatrixMixtureProfileProcess	{
 
 	// implementer les fonctions create matrix et delete matrix
 	// ainsi que CreateComponent(int k) and DeleteComponent(k)
@@ -36,7 +36,7 @@ class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, p
 	protected:
 
 	void Create()	{
-		AACodonMutSelProfileProcess::Create();
+		SingleOmegaAACodonMutSelProfileProcess::Create();
 		SBDPProfileProcess::Create();
 		GeneralPathSuffStatSiteMatrixMixtureProfileProcess::Create();
 	}
@@ -44,7 +44,7 @@ class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, p
 	void Delete()	{
 		GeneralPathSuffStatSiteMatrixMixtureProfileProcess::Delete();
 		SBDPProfileProcess::Delete();
-		AACodonMutSelProfileProcess::Delete();
+		SingleOmegaAACodonMutSelProfileProcess::Delete();
 	}
 
 	void ToStream(ostream& os)	{
@@ -125,10 +125,6 @@ class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, p
 		}
 		matrixarray[site] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,GetProfile(site),omega,true);
 	}
-
-	int fixcodonprofile;
-	int fixomega;
-
 };
 
 #endif

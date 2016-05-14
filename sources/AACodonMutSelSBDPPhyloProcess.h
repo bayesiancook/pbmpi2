@@ -180,9 +180,6 @@ class AACodonMutSelSBDPPhyloProcess : public virtual AACodonMutSelSBDPSubstituti
 		SetDim(20);
 	}
 
-	int fixcodonprofile;
-	int fixomega;
-
 	Chrono chronopruning;
 	Chrono chronosuffstat;
 	Chrono chronototal;

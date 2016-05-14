@@ -172,8 +172,7 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 
 	double tuning = 1.0;
 	int n = 1;
-	if (0)	{
-	// if (! fixcodonprofile)	{
+	if (! fixcodonprofile)	{
 		MoveCodonProfile(tuning,30,10);
 		MoveNucStatCodonProfile(tuning,30,10);
 		MoveNucRR(tuning,2);
@@ -198,8 +197,7 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 		MoveNucStat(tuning*0.1,2);
 	}
 
-	if (1)	{
-	// if (! fixomega)	{
+	if (! fixomega)	{
 		MoveOmega(tuning);
 		MoveOmega(tuning*0.3);
 	}

@@ -138,6 +138,10 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 	double* codonprofile;
 	double* omega;
 	int omegaprior;
+
+	int fixcodonprofile;
+	int fixomega;
+
 };
 
 #endif

@@ -32,6 +32,12 @@ void AACodonMutSelProfileProcess::Create()	{
 		nucrr = new double[Nnucrr];
 		nucstat = new double[Nnuc];
 		codonprofile = new double[GetNcodon()];
+
+		nucstatsuffstatcount = new int[Nnuc];
+		nucstatsuffstatbeta = new double[Nnuc];
+		nucrrsuffstatcount = new int[Nnucrr];
+		nucrrsuffstatbeta = new double[Nnucrr];
+
 		SampleNucRR();
 		SampleNucStat();
 		SampleCodonProfile();
@@ -52,6 +58,12 @@ void AACodonMutSelProfileProcess::Delete()	{
 		nucrr = 0;
 		nucstat = 0;
 		codonprofile = 0;
+
+		delete[] nucstatsuffstatcount;
+		delete[] nucstatsuffstatbeta;
+		delete[] nucrrsuffstatcount;
+		delete[] nucrrsuffstatbeta;
+
 		ProfileProcess::Delete();
 	}
 	else	{
@@ -137,6 +149,9 @@ void AACodonMutSelProfileProcess::SampleCodonProfile()	{
 
 double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 
+	GlobalUpdateParameters();
+	GlobalUpdateSiteProfileSuffStat();
+	UpdateModeProfileSuffStat();
 	double tuning = 1.0;
 	int n = 1;
 	if (! fixcodonprofile)	{

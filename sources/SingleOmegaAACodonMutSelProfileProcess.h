@@ -28,11 +28,14 @@ class SingleOmegaAACodonMutSelProfileProcess : public virtual AACodonMutSelProfi
 
 	virtual double OmegaSuffStatLogProb()	{
 		return ProfileSuffStatLogProb();
+		// return omegasuffstatcount * log(*omega) - omegasuffstatbeta * *omega;
 	}
 
 	virtual void UpdateOmega()	{
 		UpdateMatrices();
 	}
+
+	// virtual void UpdateOmegaSuffStat() = 0;
 
 	protected:
 
@@ -47,6 +50,8 @@ class SingleOmegaAACodonMutSelProfileProcess : public virtual AACodonMutSelProfi
 		SingleOmegaProcess::Delete();
 	}
 
+	int omegasuffstatcount;
+	double omegasuffstatbeta;
 };
 
 

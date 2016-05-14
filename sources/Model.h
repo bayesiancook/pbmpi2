@@ -26,6 +26,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.h"
 #include "AACodonMutSelFinitePhyloProcess.h"
 #include "AACodonMutSelSBDPPhyloProcess.h"
+#include "AACodonMutSelSiteSBDPPhyloProcess.h"
 #include "AACodonMutSelMVNSiteSpecificPhyloProcess.h"
 #include "CodonMutSelFinitePhyloProcess.h"
 #include "CodonMutSelSBDPPhyloProcess.h"
@@ -197,8 +198,14 @@ class Model	{
 				process = new AACodonMutSelFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,fixomega,omegaprior);
 			}
 			else if (mixturetype == 3)	{
-				type = "AACODONMUTSELSBDP";
-				process = new AACodonMutSelSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
+				if (suffstat == 2)	{
+					type = "AACODONMUTSELSITESBDP";
+					process = new AACodonMutSelSiteSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
+				}
+				else	{
+					type = "AACODONMUTSELSBDP";
+					process = new AACodonMutSelSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
+				}
 			}
 			else if (mixturetype == 5)	{
 				type = "AACODONMUTSELMVNSS";

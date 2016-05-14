@@ -392,6 +392,9 @@ int main(int argc, char* argv[])	{
 			else if (s == "-genpath")	{
 				suffstat = 0;
 			}
+			else if (s == "-sitegenpath")	{
+				suffstat = 2;
+			}
 			else if (s == "-olddp")	{
 				mixturetype = 2;
 			}

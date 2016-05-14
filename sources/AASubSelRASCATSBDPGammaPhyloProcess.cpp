@@ -149,7 +149,7 @@ void AASubSelRASCATSBDPGammaPhyloProcess::SlaveUpdateParameters()	{
 	// 
 	// note that CreateMatrices() in fact creates only those that are not yet allocated
 	// and also deletes those that are now obsolete
-	CreateMatrices();
+	// CreateMatrices();
 	UpdateMatrices();
 }
 

@@ -34,6 +34,7 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	virtual ~AACodonMutSelSBDPProfileProcess() {}
 
 	/*
+	// still to be implemented
 	virtual void UpdateNucStatSuffStat();
 	virtual void UpdateNucRRSuffStat();
 	virtual void UpdateOmegaSuffStat();

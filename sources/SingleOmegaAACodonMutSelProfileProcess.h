@@ -50,8 +50,10 @@ class SingleOmegaAACodonMutSelProfileProcess : public virtual AACodonMutSelProfi
 		SingleOmegaProcess::Delete();
 	}
 
+	/*
 	int omegasuffstatcount;
 	double omegasuffstatbeta;
+	*/
 };
 
 

@@ -137,10 +137,12 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 	double* nucstat;
 	double* codonprofile;
 
+	/*
 	int* nucstatsuffstatcount;
 	double* nucstatsuffstatbeta;
 	int* nucrrsuffstatcount;
 	double* nucrrsuffstatbeta;
+	*/
 
 	int fixcodonprofile;
 

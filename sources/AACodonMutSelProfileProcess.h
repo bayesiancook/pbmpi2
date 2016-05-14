@@ -79,6 +79,14 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 
 	double GetCodonProfileEntropy();
 
+	/*
+	virtual void UpdateNucStatSuffStat() = 0;
+	virtual void UpdateNucRRSuffStat() = 0;
+
+	double NucStatSuffStatLogProb();
+	double NuxRRSuffStatLogProb();
+	*/
+
 	protected:
 
 	CodonSequenceAlignment* GetCodonData()	{
@@ -128,6 +136,11 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 	double* nucrr;
 	double* nucstat;
 	double* codonprofile;
+
+	int* nucstatsuffstatcount;
+	double* nucstatsuffstatbeta;
+	int* nucrrsuffstatcount;
+	double* nucrrsuffstatbeta;
 
 	int fixcodonprofile;
 

@@ -36,15 +36,15 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	protected:
 
 	void Create()	{
+		AACodonMutSelProfileProcess::Create();
 		SBDPProfileProcess::Create();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
-		AACodonMutSelProfileProcess::Create();
 	}
 	
 	void Delete()	{
-		AACodonMutSelProfileProcess::Delete();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Delete();
 		SBDPProfileProcess::Delete();
+		AACodonMutSelProfileProcess::Delete();
 	}
 
 	void ToStream(ostream& os)	{

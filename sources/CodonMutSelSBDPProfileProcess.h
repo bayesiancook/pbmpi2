@@ -36,9 +36,9 @@ class CodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, public 
 	protected:
 
 	void Create()	{
+		CodonMutSelProfileProcess::Create();
 		SBDPProfileProcess::Create();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
-		CodonMutSelProfileProcess::Create();
 	}
 	
 	void Delete()	{

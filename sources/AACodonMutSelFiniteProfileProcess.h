@@ -36,15 +36,15 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 	protected:
 
 	void Create()	{
+		AACodonMutSelProfileProcess::Create();
 		FiniteProfileProcess::Create();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
-		AACodonMutSelProfileProcess::Create();
 	}
 	
 	void Delete()	{
-		AACodonMutSelProfileProcess::Delete();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Delete();
 		FiniteProfileProcess::Delete();
+		AACodonMutSelProfileProcess::Delete();
 	}
 
 	void ToStream(ostream& os) {

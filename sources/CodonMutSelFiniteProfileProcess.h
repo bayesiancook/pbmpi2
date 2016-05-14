@@ -36,9 +36,9 @@ class CodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, pub
 	protected:
 
 	void Create()	{
+		CodonMutSelProfileProcess::Create();
 		FiniteProfileProcess::Create();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
-		CodonMutSelProfileProcess::Create();
 	}
 	
 	void Delete()	{

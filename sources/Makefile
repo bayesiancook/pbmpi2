@@ -12,14 +12,14 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	CovMatrix.cpp MVNProfileProcess.cpp MVNSiteSpecificProfileProcess.cpp AACodonMutSelMVNSiteSpecificPhyloProcess.cpp \
 	GTRProfileProcess.cpp GTRDPProfileProcess.cpp GTRSBDPProfileProcess.cpp GTRFiniteProfileProcess.cpp ExpoConjugateGTRProfileProcess.cpp \
 	MixtureProfileProcess.cpp ZipMatrixProfileProcess.cpp \
-	PoissonMixtureProfileProcess.cpp MatrixMixtureProfileProcess.cpp \
+	PoissonMixtureProfileProcess.cpp MatrixMixtureProfileProcess.cpp MultipleMatrixMixtureProfileProcess.cpp \
 	GTRMixtureProfileProcess.cpp ExpoConjugateGTRMixtureProfileProcess.cpp \
-	GeneralPathSuffStatMatrixMixtureProfileProcess.cpp \
+	GeneralPathSuffStatMatrixMixtureProfileProcess.cpp GeneralPathSuffStatMultipleMatrixMixtureProfileProcess.cpp \
 	DPProfileProcess.cpp SBDPProfileProcess.cpp \
 	PoissonDPProfileProcess.cpp PoissonSBDPProfileProcess.cpp \
 	FiniteProfileProcess.cpp PoissonFiniteProfileProcess.cpp \
 	CodonMutSelProfileProcess.cpp \
-	GeneralPathSuffStatSiteMatrixMixtureProfileProcess.cpp AACodonMutSelSiteSBDPPhyloProcess.cpp \
+	GeneralPathSuffStatSiteMatrixMixtureProfileProcess.cpp AACodonMutSelSiteSBDPPhyloProcess.cpp MultipleOmegaAACodonMutSelSBDPPhyloProcess.cpp \
 	OmegaProcess.cpp AACodonMutSelProfileProcess.cpp \
 	SubstitutionProcess.cpp Propagate.cpp \
 	PoissonSubstitutionProcess.cpp MatrixSubstitutionProcess.cpp \

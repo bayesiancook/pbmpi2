@@ -13,18 +13,18 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-#ifndef SOAACODONMUTSELPROFILE_H
-#define SOAACODONMUTSELPROFILE_H
+#ifndef MULOMEGAAACODONMUTSELPROFILE_H
+#define MULOMEGAAACODONMUTSELPROFILE_H
 
 #include "OmegaProcess.h"
 #include "AACodonMutSelProfileProcess.h"
 
-class SingleOmegaAACodonMutSelProfileProcess : public virtual AACodonMutSelProfileProcess, public virtual SingleOmegaProcess {
+class MultipleOmegaAACodonMutSelProfileProcess : public virtual AACodonMutSelProfileProcess, public virtual MultipleOmegaProcess {
 
 	public:
 
-	SingleOmegaAACodonMutSelProfileProcess() {}
-	virtual ~ SingleOmegaAACodonMutSelProfileProcess() {}
+	MultipleOmegaAACodonMutSelProfileProcess() {}
+	virtual ~ MultipleOmegaAACodonMutSelProfileProcess() {}
 
 	virtual double OmegaSuffStatLogProb()	{
 		return ProfileSuffStatLogProb();
@@ -37,14 +37,14 @@ class SingleOmegaAACodonMutSelProfileProcess : public virtual AACodonMutSelProfi
 	protected:
 
 	virtual void Create()	{
-		SingleOmegaProcess::Create();
+		MultipleOmegaProcess::Create();
 		AACodonMutSelProfileProcess::Create();
 		SampleOmega();
 	}
 
 	virtual void Delete()	{
 		AACodonMutSelProfileProcess::Delete();
-		SingleOmegaProcess::Delete();
+		MultipleOmegaProcess::Delete();
 	}
 
 };

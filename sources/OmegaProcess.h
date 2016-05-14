@@ -27,7 +27,7 @@ class OmegaProcess : public virtual MPIModule	{
 
 	public:
 
-	OmegaProcess() : fixomega(0) {}
+	OmegaProcess() : fixomega(0), omegaprior(0) {}
 	virtual ~OmegaProcess() {}
 
 	protected:
@@ -59,6 +59,7 @@ class OmegaProcess : public virtual MPIModule	{
 	}
 
 	int fixomega;
+	int omegaprior;
 };
 
 
@@ -66,7 +67,7 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 
 	public:
 
-	SingleOmegaProcess() : omega(0), omegaprior(0)	{}
+	SingleOmegaProcess() : omega(0)	{}
 	virtual ~SingleOmegaProcess() {}
 
 	double GetOmega()	{
@@ -94,7 +95,85 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 	}
 
 	double* omega;
-	int omegaprior;
+};
+
+class MultipleOmegaProcess : public virtual OmegaProcess	{
+
+	public: 
+	MultipleOmegaProcess() : omega(0) {}
+
+	virtual ~MultipleOmegaProcess() {}
+
+	int GetNomega() {return Nomega;}
+
+	double GetOmega(int k)	{
+		return omega[k];
+	}
+
+	double GetMeanOmega()	{
+		double tot = 0;
+		for (int i=0; i<GetNsite(); i++)	{
+			tot += GetOmega(i);
+		}
+		return tot / GetNsite();
+	}
+
+	double* GetOmegaPointer(int k)	{
+		return &omega[k];
+	}
+
+	double GetSiteOmega(int site)	{
+		return omega[omegaalloc[site]];
+	}
+
+	int GetOmegaSiteAlloc(int site)	{
+		return omegaalloc[site];
+	}
+
+	// still to be implemented
+	virtual void SampleOmega()	{
+	}
+
+	// still to be implemented
+	virtual double LogOmegaPrior()	{
+		return 0;
+	}
+
+	virtual double OmegaSuffStatLogProb()	{
+
+		double total = 0;
+		for (int l=0; l<Nomega; l++)	{
+			total += OmegaSuffStatLogProb(l);
+		}
+		return total;
+	}
+
+	// still to be implemented
+	virtual double OmegaSuffStatLogProb(int l)	{
+		return 0;
+	}
+
+	protected:
+
+	virtual void Create()	{
+		if (! omega)	{
+			omega = new double[Nomega];
+			omegaalloc = new int[GetNsite()];
+			SampleOmega();
+		}
+	}
+
+	virtual void Delete()	{
+		if (omega)	{
+			delete[] omega;
+			delete[] omegaalloc;
+			omega = 0;
+		}
+	}
+
+	double* omega;
+	int* omegaalloc;
+	int Nomega;
 };
 
 #endif

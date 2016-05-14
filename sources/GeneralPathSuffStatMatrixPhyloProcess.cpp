@@ -34,7 +34,7 @@ void GeneralPathSuffStatMatrixPhyloProcess::Unfold()	{
 		InactivateSumOverRateAllocations(ratealloc);
 	}
 	// this will in fact create only the matrices that did not already exist
-	CreateMatrices();
+	// CreateMatrices();
 	// this one is important
 	UpdateMatrices();
 	// CreateConditionalLikelihoods();
@@ -61,7 +61,7 @@ void GeneralPathSuffStatMatrixPhyloProcess::GlobalUnfold()	{
 	if (GetNprocs() > 1)	{
 		GlobalUpdateParameters();
 
-		CreateMatrices();
+		// CreateMatrices();
 
 		MESSAGE signal = UNFOLD;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -69,7 +69,7 @@ void GeneralPathSuffStatMatrixPhyloProcess::GlobalUnfold()	{
 		GlobalUpdateConditionalLikelihoods();
 	}
 	else	{
-		CreateMatrices();
+		// CreateMatrices();
 		Unfold();
 		UpdateConditionalLikelihoods();
 	}

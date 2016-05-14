@@ -35,8 +35,8 @@ void GTRMixtureProfileProcess::Delete() {
 
 void GTRMixtureProfileProcess::CreateMatrix(int k)	{
 	if (matrixarray[k])	{
-		cerr << "error in gen path suff stat gtr dp profile process: matrixarray is not 0\n";
-		cerr << matrixarray[k]->GetNstate() << '\n';
+		cerr << "error matrixarray is not 0\n";
+		cerr << k << '\t' << GetNmodeMax() << '\t' << matrixarray[k]->GetNstate() << '\n';
 		exit(1);
 	}
 	matrixarray[k] = new GTRSubMatrix(GetDim(),rr,profile[k],false);

@@ -41,12 +41,12 @@ class GeneralPathSuffStatMatrixMixtureProfileProcess : public virtual MatrixMixt
 			profilerootcount[k].clear();
 			profilewaitingtime[k].clear();
 		}
-		CreateMatrix(k);
+		// CreateMatrix(k);
 		UpdateMatrix(k);
 	}
 
 	virtual void DeleteComponent(int k)	{
-		DeleteMatrix(k);
+		// DeleteMatrix(k);
 	}
 
 	// necessary to keep track of componentwise sufficient statistics 

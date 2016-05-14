@@ -41,7 +41,6 @@ void GTRProfileProcess::Create()	{
 
 void GTRProfileProcess::Delete()	{
 	if (rr)	{
-		DeleteMatrices();
 		delete[] rr;
 		rr = 0;
 		ProfileProcess::Delete();

@@ -249,7 +249,8 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		/*
 		int cat = ExpoConjugateGTRSBDPProfileProcess::alloc[site];
 		if (! matrixarray[cat])	{
-			CreateMatrix(cat);
+			cerr << "error in prepare site log likelihood: matrix is not allocated\n";
+			exit(1);
 		}
 		UpdateMatrix(cat);
 		*/

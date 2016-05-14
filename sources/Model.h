@@ -133,8 +133,8 @@ class Model	{
 					process = new RASCATGTRFiniteGammaPhyloProcess(nratecat,ncat,fixncomp,empmix,mixtype,rrtype);
 				}
 				else	{
-					cerr << "gpss deprecated\n";
-					exit(1);
+					type = "GPSSCATGTRFINITE";
+					process = new GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess(nratecat,ncat,fixncomp,empmix,mixtype,rrtype);
 				}
 			}
 			else if (mixturetype == 2)	{
@@ -158,8 +158,8 @@ class Model	{
 						process = new RASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior);
 					}
 					else	{
-						cerr << "gpss deprecated\n";
-						exit(1);
+						type = "GPSSCATGTRSBDP";
+						process = new GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior);
 					}
 				}
 			}

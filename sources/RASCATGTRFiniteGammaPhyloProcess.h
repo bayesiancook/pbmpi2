@@ -234,7 +234,9 @@ class RASCATGTRFiniteGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloPro
 	virtual void PrepareSiteLogLikelihood(int site) {
 		int cat = ExpoConjugateGTRFiniteProfileProcess::alloc[site];
 		if (! matrixarray[cat])	{
-			CreateMatrix(cat);
+			cerr << "error in prepare site log likelihood: matrix is not allocated\n";
+			exit(1);
+			// CreateMatrix(cat);
 		}
 		UpdateMatrix(cat);
 	}

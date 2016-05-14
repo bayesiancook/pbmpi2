@@ -101,6 +101,7 @@ void PhyloProcess::PostOpen()	{
 	CreateMPI(GetData()->GetNsite());
 
 	tree = new Tree(GetData()->GetTaxonSet());
+	tree->MakeRandomTree();
 	tree->RegisterWith(GetData()->GetTaxonSet());
 	CloneTree();
 	tree2->RegisterWith(GetData()->GetTaxonSet());

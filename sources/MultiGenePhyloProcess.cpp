@@ -32,9 +32,11 @@ void MultiGenePhyloProcess::New(int unfold)	{
 
 	Create();
 
+	/*
 	if (GetMyid())	{
 		SlavePostNew();
 	}
+	*/
 
 	if (! GetMyid())	{
 		GlobalBroadcastTree();
@@ -72,21 +74,18 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 	CloneTree();
 	tree2->RegisterWith(GetData()->GetTaxonSet());
 
-	cerr << "create\n";
 	Create();
-	cerr << "create ok\n";
 
 	if (! GetMyid())	{
-		cerr << "from stream\n";
+		cerr << "from strem\n";
 		FromStream(is);
-		cerr << "global update\n";
+		cerr << "global update params\n";
 		GlobalUpdateParameters();
 		cerr << "global unfold\n";
 		GlobalUnfold();
 		cerr << "ok\n";
 	}
 	else	{
-		cerr << "post open\n";
 		SlavePostOpen();
 	}
 

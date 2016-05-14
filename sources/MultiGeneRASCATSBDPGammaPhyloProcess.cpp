@@ -6,6 +6,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
 
 	RASCATSBDPGammaPhyloProcess::Create();
 	MultiGenePhyloProcess::Create();
+	treefile = "None";
 	if (GetMyid())	{
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == myid)	{
@@ -21,7 +22,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
 				if (nmodemax)	{
 					GetProcess(gene)->SetNmodeMax(nmodemax);
 				}
-				// process[gene]->New(0);
+				process[gene]->New(0);
 			}
 		}
 	}

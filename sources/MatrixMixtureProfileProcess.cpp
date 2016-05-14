@@ -29,8 +29,8 @@ void MatrixMixtureProfileProcess::Create()	{
 	if (! matrixarray)	{
 		MixtureProfileProcess::Create();
 		matrixarray = new SubMatrix*[GetNmodeMax()];
-		for (int i=0; i<GetNmodeMax(); i++)	{
-			matrixarray[i] = 0;
+		for (int k=0; k<GetNmodeMax(); k++)	{
+			matrixarray[k] = 0;
 		}
 		CreateMatrices();
 	}
@@ -38,9 +38,7 @@ void MatrixMixtureProfileProcess::Create()	{
 
 void MatrixMixtureProfileProcess::Delete() {
 	if (matrixarray)	{
-		for (int i=0; i<GetNmodeMax(); i++)	{
-			delete matrixarray[i];
-		}
+		DeleteMatrices();
 		delete[] matrixarray;
 		matrixarray = 0;
 		MixtureProfileProcess::Delete();

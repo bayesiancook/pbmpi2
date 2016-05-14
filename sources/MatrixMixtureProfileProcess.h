@@ -52,28 +52,12 @@ class MatrixMixtureProfileProcess : public virtual MatrixProfileProcess, public 
 
 	virtual void CreateMatrices()	{
 		for (int k=0; k<GetNmodeMax(); k++)	{
-			if (! matrixarray[k])	{
-				CreateMatrix(k);
-			}
+			CreateMatrix(k);
 		}
-		/*
-		for (int k=0; k<GetNcomponent(); k++)	{
-			if (! matrixarray[k])	{
-				CreateMatrix(k);
-			}
-		}
-		for (int k=GetNcomponent(); k<GetNmodeMax(); k++)	{
-			if (matrixarray[k])	{
-				DeleteMatrix(k);
-			}
-			matrixarray[k] = 0;
-		}
-		*/
 	}
 
 	virtual void DeleteMatrices()	{
 		for (int k=0; k<GetNmodeMax(); k++)	{
-		// for (int k=0; k<GetNcomponent(); k++)	{
 			DeleteMatrix(k);
 		}
 	}

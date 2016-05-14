@@ -204,9 +204,8 @@ void AACodonMutSelSBDPPhyloProcess::SlaveComputeCVScore()	{
 	for (int k=0; k<GetNcomponent(); k++)	{
 		for (int i=sitemin; i<sitemax; i++)	{
 			AACodonMutSelSBDPProfileProcess::alloc[i] = k;
-			//UpdateMatrix(i);
 		}
-		UpdateMatrix(k);
+		UpdateComponent(k);
 		UpdateConditionalLikelihoods();
 		for (int i=sitemin; i<sitemax; i++)	{
 			sitelogl[i][k] = sitelogL[i];

@@ -30,7 +30,7 @@ void ExpoConjugateGTRPhyloProcess::CreateSuffStat()	{
 		cerr << "error in ExpoConjugateGTRPhyloProcess::CreateSuffStat\n";
 		exit(1);
 	}
-	if (!GetMyid())	{
+	if ((! GetMyid()) && sitesuffstat)	{
 		allocsiteprofilesuffstatcount = new int[GetNsite()*GetDim()];
 		allocsiteprofilesuffstatbeta = new double[GetNsite()*GetDim()];
 		siteprofilesuffstatcount = new int*[GetNsite()];

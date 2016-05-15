@@ -76,6 +76,10 @@ class ExpoConjugateGTRMixtureProfileProcess : public virtual GTRMixtureProfilePr
 	double** profilesuffstatbeta;
 	int* allocprofilesuffstatcount;
 	double* allocprofilesuffstatbeta;
+	int** tmpprofilesuffstatcount;
+	double** tmpprofilesuffstatbeta;
+	int* alloctmpprofilesuffstatcount;
+	double* alloctmpprofilesuffstatbeta;
 
 	double PoissonDiffLogSampling(int cat, int site);
 };

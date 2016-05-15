@@ -33,6 +33,7 @@ class MPIModule {
 	MPIModule() : sitemin(0), sitemax(0), myid(0), nprocs(0), nsite(0), fmin(0), fmax(1), bkfmin(0), bkfmax(1) {
 		version = "2.0";
 		name = "noname";
+		sitesuffstat = 0;
 	}
 
 	virtual ~MPIModule()  {
@@ -42,6 +43,10 @@ class MPIModule {
 		sitemax = 0;
 		delete[] globalrank;
 		// delete[] localrank;
+	}
+
+	void SetSiteSuffStat(int in)	{
+		sitesuffstat = in;
 	}
 
 	string GetVersion() {return version;}
@@ -158,6 +163,8 @@ class MPIModule {
 	double fmax;
 	double bkfmin;
 	double bkfmax;
+
+	int sitesuffstat;
 
 	string version;
 	string name;

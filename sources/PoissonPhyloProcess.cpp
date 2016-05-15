@@ -50,7 +50,7 @@ void PoissonPhyloProcess::CreateSuffStat()	{
 		cerr << "error in PoissonPhyloProcess::CreateSuffStat\n";
 		exit(1);
 	}
-	if (! GetMyid())	{
+	if ((! GetMyid()) && sitesuffstat)	{
 		allocsiteprofilesuffstatcount = new int[GetNsite()*GetDim()];
 		siteprofilesuffstatcount = new int*[GetNsite()];
 		for (int i=0; i<GetNsite(); i++)	{
@@ -175,31 +175,29 @@ void PoissonPhyloProcess::PoissonUpdateSiteProfileSuffStat()	{
 void PoissonPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 
 	if (GetNprocs() > 1)	{
-	// MPI2
-	// ask slaves to update siteprofilesuffstats
-	// slaves should call : UpdateSiteProfileSuffStat
-	// then collect all suff stats
-	MPI_Status stat;
-	MESSAGE signal = UPDATE_SPROFILE;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	// each slave computes its array for sitemin <= site < sitemax
-	// thus, one just needs to gather all arrays into the big master array 0 <= site < Nsite
-	// (gather)
-	int nalloc = GetMaxSiteNumber() * GetDim();
-	int ivector[nalloc];
-	for(int i=1; i<GetNprocs(); ++i) {
-		MPI_Recv(ivector,GetProcSiteNumber(i)*GetDim(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
-		int l = 0;
-		for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); j++) {
-			if (ActiveSite(j))	{
-				for(int k=0; k<GetDim(); ++k) {
-					siteprofilesuffstatcount[j][k] = ivector[l];
-					l++;
+		MPI_Status stat;
+		MESSAGE signal = UPDATE_SPROFILE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+		if (sitesuffstat)	{
+			// thus, one just needs to gather all arrays into the big master array 0 <= site < Nsite
+			// (gather)
+			int nalloc = GetMaxSiteNumber() * GetDim();
+			int ivector[nalloc];
+			for(int i=1; i<GetNprocs(); ++i) {
+				MPI_Recv(ivector,GetProcSiteNumber(i)*GetDim(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+				int l = 0;
+				for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); j++) {
+					if (ActiveSite(j))	{
+						for(int k=0; k<GetDim(); ++k) {
+							siteprofilesuffstatcount[j][k] = ivector[l];
+							l++;
+						}
+					}
 				}
 			}
 		}
-	}
 	}
 	else	{
 		UpdateSiteProfileSuffStat();
@@ -209,18 +207,20 @@ void PoissonPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 void PoissonPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 
 	UpdateSiteProfileSuffStat();
-	int workload = (GetSiteMax() - GetSiteMin())*GetDim();
-	int ivector[workload];
-	int k = 0;
-	for(int i=GetSiteMin(); i<GetSiteMax(); i++) {
-		if (ActiveSite(i))	{
-			for(int j=0; j<GetDim(); j++) {
-				ivector[k] = siteprofilesuffstatcount[i][j];
-				k++;
+	if (sitesuffstat)	{
+		int workload = (GetSiteMax() - GetSiteMin())*GetDim();
+		int ivector[workload];
+		int k = 0;
+		for(int i=GetSiteMin(); i<GetSiteMax(); i++) {
+			if (ActiveSite(i))	{
+				for(int j=0; j<GetDim(); j++) {
+					ivector[k] = siteprofilesuffstatcount[i][j];
+					k++;
+				}
 			}
 		}
+		MPI_Send(ivector,workload,MPI_INT,0,TAG1,MPI_COMM_WORLD);
 	}
-	MPI_Send(ivector,workload,MPI_INT,0,TAG1,MPI_COMM_WORLD);
 }
 
 

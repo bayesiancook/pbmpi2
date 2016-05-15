@@ -85,16 +85,25 @@ void GeneralPathSuffStatMatrixPhyloProcess::CreateSuffStat()	{
 		cerr << "error in PhyloProcess::CreateSuffStat\n";
 		exit(1);
 	}
-	siterootstate = new int[GetNsite()];
-	sitepaircount = new map<pair<int,int>, int>[GetNsite()];
-	sitewaitingtime = new map<int,double>[GetNsite()];
+	if ((! GetMyid()) && sitesuffstat)	{
+		siterootstate = new int[GetNsite()];
+		sitepaircount = new map<pair<int,int>, int>[GetNsite()];
+		sitewaitingtime = new map<int,double>[GetNsite()];
+	}
+	else	{
+		siterootstate = new int[GetNsite()];
+		sitepaircount = new map<pair<int,int>, int>[GetNsite()];
+		sitewaitingtime = new map<int,double>[GetNsite()];
+	}
 }
 
 void GeneralPathSuffStatMatrixPhyloProcess::DeleteSuffStat()	{
 
-	delete[] siterootstate;
-	delete[] sitepaircount;
-	delete[] sitewaitingtime;
+	if (sitepaircount)	{
+		delete[] siterootstate;
+		delete[] sitepaircount;
+		delete[] sitewaitingtime;
+	}
 	siterootstate = 0;
 	sitepaircount = 0;
 	sitewaitingtime = 0;

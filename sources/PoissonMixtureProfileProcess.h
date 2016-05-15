@@ -107,6 +107,8 @@ class PoissonMixtureProfileProcess: public virtual PoissonProfileProcess, public
 	// private:
 	int** profilesuffstatcount;
 	int* allocprofilesuffstatcount;
+	int** tmpprofilesuffstatcount;
+	int* alloctmpprofilesuffstatcount;
 };
 
 #endif

@@ -44,14 +44,14 @@ double PoissonFiniteProfileProcess::MPIMove(double tuning, int n, int nrep)	{
 		if (Ncomponent > 1)	{
 			GlobalUpdateParameters();
 			GlobalUpdateSiteProfileSuffStat();
-			UpdateModeProfileSuffStat();
+			GlobalUpdateModeProfileSuffStat();
 			GlobalIncrementalFiniteMove(1);
 		}
 
 		if (! empmix)	{
 			GlobalUpdateParameters();
 			GlobalUpdateSiteProfileSuffStat();
-			UpdateModeProfileSuffStat();
+			GlobalUpdateModeProfileSuffStat();
 			MoveProfile();
 			GlobalUpdateParameters();
 			GlobalUpdateSiteProfileSuffStat();
@@ -167,7 +167,7 @@ double PoissonFiniteProfileProcess::GlobalIncrementalFiniteMove(int nrep)	{
 	
 	// final cleanup
 	UpdateOccupancyNumbers();
-	UpdateModeProfileSuffStat();
+	// UpdateModeProfileSuffStat();
 
 	return 1;
 }

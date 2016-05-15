@@ -185,7 +185,7 @@ double FiniteProfileProcess::GlobalIncrementalFiniteMove(int nrep)	{
 	
 	// final cleanup
 	UpdateOccupancyNumbers();
-	UpdateModeProfileSuffStat();
+	// UpdateModeProfileSuffStat();
 
 	// CHECK that: might be useful depending on the exact submodel
 	// ResampleWeights();
@@ -323,7 +323,7 @@ double FiniteProfileProcess::IncrementalFiniteMove(int nrep)	{
 	
 	delete[] cumul;
 	delete[] mLogSamplingArray;
-	UpdateModeProfileSuffStat();
+	// UpdateModeProfileSuffStat();
 	return ((double) NAccepted) / GetNsite() / nrep;
 }
 

@@ -1936,35 +1936,9 @@ void PhyloProcess::SlaveUpdateBranchLengthSuffStat()	{
 void PhyloProcess::GlobalUpdateSiteRateSuffStat()	{
 
 	if (GetNprocs() > 1)	{
-	MPI_Status stat;
-	MESSAGE signal = UPDATE_SRATE;
-
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-
-	/*
-	int ivector[GetMaxSiteNumber()];
-	for(int i=1; i<GetNprocs(); i++) {
-		MPI_Recv(ivector,GetProcSiteNumber(i),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
-		int k = 0;
-		for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); j++) {
-			if (ActiveSite(j))	{
-				siteratesuffstatcount[j] = ivector[k];
-				k++;
-			}
-		}
-	}
-	double dvector[GetMaxSiteNumber()];
-	for(int i=1; i<GetNprocs(); i++) {
-		MPI_Recv(dvector,GetProcSiteNumber(i),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
-		int k = 0;
-		for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); j++) {
-			if (ActiveSite(j))	{
-				siteratesuffstatbeta[j] = dvector[k];
-				k++;
-			}
-		}
-	}
-	*/
+		MPI_Status stat;
+		MESSAGE signal = UPDATE_SRATE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	}
 	else	{
 		UpdateSiteRateSuffStat();
@@ -1974,28 +1948,6 @@ void PhyloProcess::GlobalUpdateSiteRateSuffStat()	{
 void PhyloProcess::SlaveUpdateSiteRateSuffStat()	{
 
 	UpdateSiteRateSuffStat();
-
-	/*
-	int ivector[GetSiteMax() - GetSiteMin()];
-	int j = 0;
-	for(int i=GetSiteMin(); i<GetSiteMax(); i++) {
-		if (ActiveSite(i))	{
-			ivector[j] = siteratesuffstatcount[i];
-			j++;
-		}
-	}
-	MPI_Send(siteratesuffstatcount,GetSiteMax() - GetSiteMin(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
-
-	double dvector[GetSiteMax() - GetSiteMin()];
-	j = 0;
-	for(int i=GetSiteMin(); i<GetSiteMax(); i++) {
-		if (ActiveSite(i))	{
-			dvector[j] = siteratesuffstatbeta[i]; 
-			j++;
-		}
-	}
-	MPI_Send(siteratesuffstatbeta,GetSiteMax() - GetSiteMin(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
-	*/
 }
 
 

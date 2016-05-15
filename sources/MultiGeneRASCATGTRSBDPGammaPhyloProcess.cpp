@@ -23,7 +23,6 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Create()	{
 				if (nmodemax)	{
 					GetProcess(gene)->SetNmodeMax(nmodemax);
 				}
-				process[gene]->New(0);
 			}
 		}
 	}

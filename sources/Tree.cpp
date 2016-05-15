@@ -459,7 +459,8 @@ void Tree::RegisterWith(const TaxonSet* intaxset)	{
 	int tot = 0;
 	if(!RegisterWith(taxset,GetRoot(),tot)){
 		cout << "There is no match between the tree and the sequences.\n";
-		cerr << "problem with : " << taxset->GetNtaxa () << '\n';
+		cerr << "number of taxa in sequence: " << taxset->GetNtaxa () << '\n';
+		cerr << "tree:\n";
 		ToStream(cerr);
 		exit(1);
 	}

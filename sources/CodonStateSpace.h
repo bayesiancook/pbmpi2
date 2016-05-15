@@ -120,6 +120,11 @@ class CodonStateSpace : public StateSpace	{
 	const int* GetStopPos3()	{
 		return StopPos3;
 	}
+	
+	// an array of size Nstate (say, 61) by 9, containing the list
+	// of codons that differ by single nucleotide
+	// stops nearest neighbors are indicated as -1
+	int** CodonNearestNeighbors; 
 
 	private:
 
@@ -145,6 +150,7 @@ class CodonStateSpace : public StateSpace	{
 	int* StopPos3;
 
 	map<int,int> degeneracy;
+
 
 };
 

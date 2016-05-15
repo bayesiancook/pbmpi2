@@ -110,6 +110,8 @@ void AACodonMutSelSBDPPhyloProcess::SlaveExecute(MESSAGE signal)	{
 		case NONSYNMAPPING:
 			SlaveNonSynMapping();
 			break;
+		case UPDATE_OMEGA:
+			SlaveUpdateOmegaSuffStat();
 		default:
 			PhyloProcess::SlaveExecute(signal);
 	}

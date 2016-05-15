@@ -33,6 +33,22 @@ class OmegaProcess : public virtual MPIModule	{
 	protected:
 
 	// omega
+
+	virtual void UpdateOmegaSuffStat()	{
+		cerr << "in OmegaProcess::UpdateOmegaSuffStat\n";
+		exit(1);
+	}
+
+	virtual void GlobalUpdateOmegaSuffStat()	{
+		cerr << "in OmegaProcess::GlobalUpdateOmegaSuffStat\n";
+		exit(1);
+	}
+
+	virtual void SlaveUpdateOmegaSuffStat()	{
+		cerr << "in OmegaProcess::SlaveUpdateOmegaSuffStat\n";
+		exit(1);
+	}	
+
 	virtual double LogOmegaPrior()	{
 		cerr << "in OmegaProcess::LogOmegaPrior\n";
 		exit(1);
@@ -73,6 +89,11 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 	double GetOmega()	{
 		return *omega;
 	}
+	
+	virtual double OmegaSuffStatLogProb()	{
+		//return ProfileSuffStatLogProb();
+		return omegasuffstatcount * log(*omega) - omegasuffstatbeta * *omega;
+	}
 
 	// omega
 	virtual double LogOmegaPrior();
@@ -95,6 +116,9 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 	}
 
 	double* omega;
+	int omegasuffstatcount;
+	double omegasuffstatbeta;
+	
 };
 
 class MultipleOmegaProcess : public virtual OmegaProcess	{

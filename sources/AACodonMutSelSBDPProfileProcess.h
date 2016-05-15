@@ -17,6 +17,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef AACODONMUTSELSBDPPROFILE_H
 #define AACODONMUTSELSBDPPROFILE_H
 
+#include "Parallel.h"
 #include "SBDPProfileProcess.h"
 #include "SingleOmegaAACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixMixtureProfileProcess.h"
@@ -37,8 +38,72 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	// still to be implemented
 	virtual void UpdateNucStatSuffStat();
 	virtual void UpdateNucRRSuffStat();
-	virtual void UpdateOmegaSuffStat();
+	virtual void UpdateOmegaSuffStat(); check
 	*/
+	
+	virtual void UpdateOmegaSuffStat()	{
+		omegasuffstatbeta = 0;
+		omegasuffstatcount = 0;
+	
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+
+			if (ActiveSite(i))	{
+		
+				map<pair<int,int>, int>& paircount = GetSitePairCount(i);
+				map<int,double>& waitingtime = GetSiteWaitingTime(i);
+				int cat = alloc[i];
+				CodonSubMatrix* codonmatrix = dynamic_cast<CodonSubMatrix*>(matrixarray[cat]);
+				for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
+					omegasuffstatbeta += i->second * codonmatrix->RateAwayNonsyn(i->first) / *omega;
+				}
+
+				for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
+					if (! codonmatrix->Synonymous(i->first.first,i->first.second) )	{
+						omegasuffstatcount += i->second;
+					}
+				}
+			}
+		}
+	}
+
+	void GlobalUpdateOmegaSuffStat()	{
+
+		if (GetNprocs() > 1)	{
+			// MPI2
+			// should ask the slaves to call their UpdateRateSuffStat
+			// and then gather the statistics;
+			MPI_Status stat;
+			MESSAGE signal = UPDATE_OMEGA;
+			MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+			omegasuffstatcount = 0;
+			omegasuffstatbeta = 0;	
+
+			int ivalue;
+			double dvalue;
+			for(int i=1; i<GetNprocs(); i++) {
+	                	MPI_Recv(&ivalue,1,MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+				omegasuffstatcount += ivalue;
+			}
+        		MPI_Barrier(MPI_COMM_WORLD);
+			for(int i=1; i<GetNprocs(); i++) {
+				MPI_Recv(&dvalue,1,MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+				omegasuffstatbeta += dvalue;
+        		}
+		}
+		else	{
+			UpdateOmegaSuffStat();	
+		}
+	}
+
+	void SlaveUpdateOmegaSuffStat()	{
+		UpdateOmegaSuffStat();
+		
+		MPI_Send(&omegasuffstatcount,1,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+		MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Send(&omegasuffstatbeta,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+	}
+			
 
 	protected:
 
@@ -132,6 +197,7 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 		}
 		matrixarray[k] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[k],omega,true);
 	}
+
 };
 
 #endif

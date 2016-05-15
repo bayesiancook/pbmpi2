@@ -36,8 +36,18 @@ class CodonSubMatrix : public SubMatrix	{
 	bool Synonymous(int codon1, int codon2) {return statespace->Synonymous(codon1,codon2);}
 	int GetCodonPosition(int pos, int codon) {return statespace->GetCodonPosition(pos,codon);}
 	int GetDifferingPosition(int codon1, int codon2) {return statespace->GetDifferingPosition(codon1,codon2);}
-	int GetNucRRIndex(int i, int j)	{return (i<j) ? (2 * Nnuc - i - 1) * i / 2 + j - i - 1 : (2 * Nnuc - j - 1) * j / 2 + i - j - 1 ;}			
+	int GetNucRRIndex(int i, int j)	{return (i<j) ? (2 * Nnuc - i - 1) * i / 2 + j - i - 1 : (2 * Nnuc - j - 1) * j / 2 + i - j - 1 ;}
+	int GetCodonNearestNeighbors(int i, int j) {
+		if (j> (Nnuc-1)*statespace->Npos)	{
+			cerr << "error in NearestNeighbors call\n";
+			exit(1);	
+		}
+		return statespace->CodonNearestNeighbors[i][j];
+	}
 
+	double RateAwaySyn(int i);
+	double RateAwayNonsyn(int i);
+	
 	protected:
 
 	void ComputeArray(int state);

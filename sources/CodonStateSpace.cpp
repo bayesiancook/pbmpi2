@@ -124,6 +124,22 @@ CodonStateSpace::CodonStateSpace(GeneticCodeType type)	{
 		exit(1);
 	}
 
+	CodonNearestNeighbors = new int*[Nstate];
+	for (int i=0; i<Nstate; i++)	{
+		CodonNearestNeighbors[i] = new int[(Nnuc-1)*Npos];
+		int countNeighbors = 0;
+		for (int j=0; j<Nstate; j++)	{
+			if ((i!=j) && (!GetDifferingPosition(i,j) < 3))	{
+				CodonNearestNeighbors[i][countNeighbors] = j;
+				countNeighbors++;
+			}	
+		}
+		while (countNeighbors < (Nnuc-1)*Npos)	{
+			CodonNearestNeighbors[i][countNeighbors] = -1;
+			countNeighbors++;	
+		}
+	}
+
 }
 
 CodonStateSpace::~CodonStateSpace()	{

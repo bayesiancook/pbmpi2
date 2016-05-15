@@ -155,7 +155,7 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 
 	GlobalUpdateParameters();
 	GlobalUpdateSiteProfileSuffStat();
-	UpdateModeProfileSuffStat();
+	GlobalUpdateModeProfileSuffStat();
 	double tuning = 1.0;
 	int n = 1;
 	if (! fixcodonprofile)	{
@@ -184,6 +184,10 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 	}
 
 	if (! fixomega)	{
+		GlobalUpdateParameters();
+		GlobalUpdateSiteProfileSuffStat(); // verify if this is really needed.
+		GlobalUpdateOmegaSuffStat();
+
 		MoveOmega(tuning);
 		MoveOmega(tuning*0.3);
 	}

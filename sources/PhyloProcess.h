@@ -78,6 +78,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		tbppspracc = tbppsprtry = 0;
 		taxon1 = "None";
 		taxon2 = "None";
+		taxon3 = "None";
+		taxon4 = "None";
 		profacc = proftry = 0;
 		rracc = rrtry = 0;
 		fasttopoacc = fasttopotry = fasttopochange = 0;
@@ -267,7 +269,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void Monitor(ostream& os);
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
 
 	void SetMPI(int inmyid, int innprocs)	{
 		myid = inmyid;
@@ -667,7 +669,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void New(int unfold = 1);
 	virtual void Open(istream& is, int unfold = 1);
-	void PostOpen();
 
 	virtual double GetObservedCompositionalHeterogeneity()	{
 		return GetData()->CompositionalHeterogeneity(0);
@@ -716,9 +717,11 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	double GetNormFactor() {return GetNormalizationFactor();}
 
-	void SetSpecialSPR(string intax1, string intax2)	{
+	void SetSpecialSPR(string intax1, string intax2, string intax3, string intax4)	{
 		taxon1 = intax1;
 		taxon2 = intax2;
+		taxon3 = intax3;
+		taxon4 = intax4;
 	}
 
 	int FixedRoot()	{
@@ -760,6 +763,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	string taxon1;
 	string taxon2;
+	string taxon3;
+	string taxon4;
 
 	double spracc;
 	double sprtry;

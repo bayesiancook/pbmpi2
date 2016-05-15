@@ -25,18 +25,11 @@ void MultiGenePhyloProcess::New(int unfold)	{
 
 
 	CreateMPI(0);
-	// SetMPI(myid,nprocs);
 	AllocateAlignments(datafile,treefile);
 	SetProfileDim();
 	SetTree(treefile);
 
 	Create();
-
-	/*
-	if (GetMyid())	{
-		SlavePostNew();
-	}
-	*/
 
 	if (! GetMyid())	{
 		GlobalBroadcastTree();
@@ -46,6 +39,7 @@ void MultiGenePhyloProcess::New(int unfold)	{
 		GlobalUnfold();
 	}
 	else	{
+		SlavePostNew();
 		SlaveBroadcastTree();
 	}
 
@@ -57,7 +51,6 @@ void MultiGenePhyloProcess::New(int unfold)	{
 void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 
 	CreateMPI(0);
-	// SetMPI(myid,nprocs);
 	AllocateAlignments(datafile,treefile);
 	SetProfileDim();
 
@@ -77,13 +70,9 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 	Create();
 
 	if (! GetMyid())	{
-		cerr << "from strem\n";
 		FromStream(is);
-		cerr << "global update params\n";
 		GlobalUpdateParameters();
-		cerr << "global unfold\n";
 		GlobalUnfold();
-		cerr << "ok\n";
 	}
 	else	{
 		SlavePostOpen();
@@ -105,7 +94,9 @@ void MultiGenePhyloProcess::SlavePostNew()	{
 void MultiGenePhyloProcess::SlavePostOpen()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->PostOpen();
+			string s = "dummy";
+			istringstream is(s);
+			process[gene]->Open(is,0);
 		}
 	}
 }
@@ -278,18 +269,22 @@ void MultiGenePhyloProcess::ToStream(ostream& os)	{
 	MultiGeneRateProcess::ToStream(os);
 
 	string* geneparam = new string[Ngene];
+	int* fullgeneparamsize = new int[Ngene];
 	int* geneparamsize = new int[Ngene];
+	int fullparamtotsize = 0;
 	int paramtotsize = 0;
 
 	MPI_Status stat;
 	for(int i=1; i<GetNprocs(); i++) {
 		MPI_Recv(&paramtotsize,1,MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+		fullparamtotsize += paramtotsize;
 		MPI_Recv(geneparamsize,Ngene,MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
 		char* c = new char[paramtotsize];
 		MPI_Recv(c,paramtotsize,MPI_CHAR,i,TAG1,MPI_COMM_WORLD,&stat);
 		int index = 0;
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == i)	{
+				fullgeneparamsize[gene] = geneparamsize[gene];
 				ostringstream os;
 				for (int j=0; j<geneparamsize[gene]; j++)	{
 					os << c[index++];
@@ -305,9 +300,12 @@ void MultiGenePhyloProcess::ToStream(ostream& os)	{
 	}
 
 	for (int gene=0; gene<Ngene; gene++)	{
+		os << fullgeneparamsize[gene] << '\n';
 		os << geneparam[gene];
+		os << '\n';
 	}
 
+	delete[] fullgeneparamsize;
 	delete[] geneparamsize;
 	delete[] geneparam;
 }
@@ -361,9 +359,11 @@ void MultiGenePhyloProcess::FromStream(istream& is)	{
 	int paramtotsize = 0;
 
 	for (int gene=0; gene<Ngene; gene++)	{
-		is >> geneparam[gene];
-		geneparamsize[gene] = geneparam[gene].size();
+		is >> geneparamsize[gene];
 		paramtotsize += geneparamsize[gene];
+
+		geneparam[gene].resize(geneparamsize[gene]);
+		is.read(&geneparam[gene][0],geneparamsize[gene]);
 	}
 
 	char* c = new char[paramtotsize];
@@ -390,6 +390,7 @@ void MultiGenePhyloProcess::SlaveFromStream()	{
 	int paramtotsize = 0;
 
 	MPI_Bcast(&paramtotsize,1,MPI_INT,0,MPI_COMM_WORLD);
+
 	MPI_Bcast(geneparamsize,Ngene,MPI_INT,0,MPI_COMM_WORLD);
 	char* c = new char[paramtotsize];
 	MPI_Bcast(c,paramtotsize,MPI_CHAR,0,MPI_COMM_WORLD);
@@ -419,6 +420,7 @@ void MultiGenePhyloProcess::SlaveFromStream()	{
 	delete[] c;
 	delete[] geneparamsize;
 	delete[] geneparam;
+
 }
 
 int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{

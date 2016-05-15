@@ -156,7 +156,7 @@ void PhyloProcess::Monitor(ostream& os)  {
 	}
 }
 
-void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
+void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
 
 	datafile = indatafile;
 	treefile = intreefile;
@@ -177,7 +177,7 @@ void PhyloProcess::SetParameters(string indatafile, string intreefile, int inisc
 	NNNI = inNNNI;
 	nspec = innspec;
 	ntspec = inntspec;
-	SetSpecialSPR(intaxon1,intaxon2);
+	SetSpecialSPR(intaxon1,intaxon2,intaxon3,intaxon4);
 	bpp = inbpp;
 	nbpp = innbpp;
 	ntbpp = inntbpp;
@@ -229,7 +229,7 @@ void PhyloProcess::ToStreamHeader(ostream& os)	{
 	os << topolambda << '\t' << topomu << '\t' << toponstep << '\n';
 	os << NNNI << '\n';
 	os << nspec << '\t' << ntspec << '\n';
-	os << taxon1 << '\t' << taxon2 << '\n';
+	os << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
 	os << bpp << '\t' << nbpp << '\t' << ntbpp << '\t' << bppnstep << '\t' << bppname << '\t' << bppcutoff << '\t' << bppbeta << '\n';
 	os << dc << '\n';
 	os << fixbl << '\n';
@@ -265,7 +265,7 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
 	is >> topolambda >> topomu >> toponstep;
 	is >> NNNI;
 	is >> nspec >> ntspec;
-	is >> taxon1 >> taxon2;
+	is >> taxon1 >> taxon2 >> taxon3 >> taxon4;
 	is >> bpp >> nbpp >> ntbpp >> bppnstep >> bppname >> bppcutoff >> bppbeta;
 	is >> dc;
 	is >> fixbl;

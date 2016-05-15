@@ -212,51 +212,64 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		}
 	}
 
-	// compute total prob mass
+	// store values of target position
+	Link* todown = 0;
+	Link* toup = 0;
+	double logp2 = 0;
 	double total1 = 0;
-	int nchoice = 0;
-	for (map<pair<Link*,Link*>,double>::iterator i=loglmap.begin(); i!=loglmap.end(); i++)	{
-		if (i->first.first != fromdown)	{
-			nchoice++;
-			double tmp = exp(i->second - max1);
-			total1 += tmp;
-		}
-		if (isinf(total1))	{
-			cerr << "error in gibbs: inf\n";
-			cerr << "total1\n";
-			exit(1);
-		}
-		if (isnan(total1))	{
-			cerr << "error in gibbs: nan\n";
-		}
-	}
-	if (! nchoice)	{
-		cerr << "error in gibbs: no possible choice\n";
-		exit(1);
-	}
 
-	// randomly choose final position, duly excluding current position
-	double u = total1 * rnd::GetRandom().Uniform();
-	map<pair<Link*,Link*>, double>::iterator i = loglmap.begin();
-	double cumul = 0;
-	if (i->first.first != fromdown)	{
-		cumul += exp(i->second-max1);
+	if (taxon3 != "None")	{
+		todown = GetTree()->GetLCA(taxon3,taxon4);
+		toup = GetTree()->GetAncestor(down);
+		logp2 = loglmap[pair<Link*,Link*>(todown,toup)];
 	}
-	while ((i!=loglmap.end()) && (cumul < u))	{
-		i++;
-		if (i == loglmap.end())	{
-			cerr << "error in gibbs spr: overflow\n";
+	else	{
+
+		// compute total prob mass
+		int nchoice = 0;
+		for (map<pair<Link*,Link*>,double>::iterator i=loglmap.begin(); i!=loglmap.end(); i++)	{
+			if (i->first.first != fromdown)	{
+				nchoice++;
+				double tmp = exp(i->second - max1);
+				total1 += tmp;
+			}
+			if (isinf(total1))	{
+				cerr << "error in gibbs: inf\n";
+				cerr << "total1\n";
+				exit(1);
+			}
+			if (isnan(total1))	{
+				cerr << "error in gibbs: nan\n";
+			}
+		}
+		if (! nchoice)	{
+			cerr << "error in gibbs: no possible choice\n";
 			exit(1);
 		}
+
+		// randomly choose final position, duly excluding current position
+		double u = total1 * rnd::GetRandom().Uniform();
+		map<pair<Link*,Link*>, double>::iterator i = loglmap.begin();
+		double cumul = 0;
 		if (i->first.first != fromdown)	{
 			cumul += exp(i->second-max1);
 		}
+		while ((i!=loglmap.end()) && (cumul < u))	{
+			i++;
+			if (i == loglmap.end())	{
+				cerr << "error in gibbs spr: overflow\n";
+				exit(1);
+			}
+			if (i->first.first != fromdown)	{
+				cumul += exp(i->second-max1);
+			}
+		}
+		
+		// store values of target position
+		todown = i->first.first;
+		toup = i->first.second;
+		logp2 = i->second;
 	}
-	
-	// store values of target position
-	Link* todown = i->first.first;
-	Link* toup = i->first.second;
-	double logp2 = i->second;
 
 	double deltalogp = 0;
 
@@ -378,34 +391,40 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	}
 
 	// reverse probability of choosing subtree to be pruned and regrafted
-
-	double q2 = 1.0;
-	if ((! special) && lambda)	{
-		if (BPP)	{
-			q2 = BPP->GetFragileSPRProposalProb(GetTree(),todown,toup);
-		}
-		else	{
-			q2 = GetSubTreeWeight(lambda,todown,toup);
-		}
-	}
-
-	double reldiffrev = 2 * fabs(logp1 - prologp2) / fabs(logp1 + prologp2);
-	double ptemprev = exp(-reldiffrev / mu);
-	if (! maketempmove)	{
-		if (fabs(ptemprev - ptempfwd) > 1e-6)	{
-			cerr << "error: fwd rev move should have same probability of being tempered if tempered move was not chosen\n";
-			exit(1);
-		}
-	}
+	double logh = 0;
 	double loghtemp = 0;
-	if (maketempmove)	{
-		loghtemp = log(ptemprev) - log(ptempfwd);
-	}
+	double logpfwd = 0;
+	double logprev = 0;
+	double q2 = 1.0;
 
-	// hastings log ratio
-	double logpfwd = logp2 - max1 - log(total1);
-	double logprev = logp1 - max2 - log(total2);
-	double logh = logprev - logpfwd + log(q2/q1) + loghtemp;
+	if (taxon3 == "None")	{
+		if ((! special) && lambda)	{
+			if (BPP)	{
+				q2 = BPP->GetFragileSPRProposalProb(GetTree(),todown,toup);
+			}
+			else	{
+				q2 = GetSubTreeWeight(lambda,todown,toup);
+			}
+		}
+
+		double reldiffrev = 2 * fabs(logp1 - prologp2) / fabs(logp1 + prologp2);
+		double ptemprev = exp(-reldiffrev / mu);
+		if (! maketempmove)	{
+			if (fabs(ptemprev - ptempfwd) > 1e-6)	{
+				cerr << "error: fwd rev move should have same probability of being tempered if tempered move was not chosen\n";
+				exit(1);
+			}
+		}
+		loghtemp = 0;
+		if (maketempmove)	{
+			loghtemp = log(ptemprev) - log(ptempfwd);
+		}
+
+		// hastings log ratio
+		logpfwd = logp2 - max1 - log(total1);
+		logprev = logp1 - max2 - log(total2);
+		logh = logprev - logpfwd + log(q2/q1) + loghtemp;
+	}
 
 	// MH log ratio
 	double logratio = logh + deltalogp;
@@ -573,51 +592,66 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 		}
 	}
 
-	// compute total prob mass
+	// store values of target position
+	Link* todown = 0;
+	Link* toup = 0;
+	double logp2 = 0;
 	double total1 = 0;
-	int nchoice = 0;
-	for (map<pair<Link*,Link*>,double>::iterator i=loglmap.begin(); i!=loglmap.end(); i++)	{
-		if (i->first.first != fromdown)	{
-			nchoice++;
-			double tmp = exp(i->second - max1);
-			total1 += tmp;
-		}
-		if (isinf(total1))	{
-			cerr << "error in gibbs: inf\n";
-			cerr << "total1\n";
-			exit(1);
-		}
-		if (isnan(total1))	{
-			cerr << "error in gibbs: nan\n";
-		}
-	}
-	if (! nchoice)	{
-		cerr << "error in gibbs: no possible choice\n";
-		exit(1);
-	}
 
-	// randomly choose final position, duly excluding current position
-	double u = total1 * rnd::GetRandom().Uniform();
-	map<pair<Link*,Link*>, double>::iterator i = loglmap.begin();
-	double cumul = 0;
-	if (i->first.first != fromdown)	{
-		cumul += exp(i->second-max1);
+	if (taxon3 != "None")	{
+
+		todown = GetTree()->GetLCA(taxon3,taxon4);
+		toup = GetTree()->GetAncestor(down);
+		logp2 = loglmap[pair<Link*,Link*>(todown,toup)];
+
 	}
-	while ((i!=loglmap.end()) && (cumul < u))	{
-		i++;
-		if (i == loglmap.end())	{
-			cerr << "error in gibbs spr: overflow\n";
+	else	{
+
+		// compute total prob mass
+		int nchoice = 0;
+		for (map<pair<Link*,Link*>,double>::iterator i=loglmap.begin(); i!=loglmap.end(); i++)	{
+			if (i->first.first != fromdown)	{
+				nchoice++;
+				double tmp = exp(i->second - max1);
+				total1 += tmp;
+			}
+			if (isinf(total1))	{
+				cerr << "error in gibbs: inf\n";
+				cerr << "total1\n";
+				exit(1);
+			}
+			if (isnan(total1))	{
+				cerr << "error in gibbs: nan\n";
+			}
+		}
+		if (! nchoice)	{
+			cerr << "error in gibbs: no possible choice\n";
 			exit(1);
 		}
+
+		// randomly choose final position, duly excluding current position
+		double u = total1 * rnd::GetRandom().Uniform();
+		map<pair<Link*,Link*>, double>::iterator i = loglmap.begin();
+		double cumul = 0;
 		if (i->first.first != fromdown)	{
 			cumul += exp(i->second-max1);
 		}
+		while ((i!=loglmap.end()) && (cumul < u))	{
+			i++;
+			if (i == loglmap.end())	{
+				cerr << "error in gibbs spr: overflow\n";
+				exit(1);
+			}
+			if (i->first.first != fromdown)	{
+				cumul += exp(i->second-max1);
+			}
+		}
+		
+		// store values of target position
+		todown = i->first.first;
+		toup = i->first.second;
+		logp2 = i->second;
 	}
-	
-	// store values of target position
-	Link* todown = i->first.first;
-	Link* toup = i->first.second;
-	double logp2 = i->second;
 
 	// calculate probability of reverse move
 	double max2 = 0;
@@ -651,20 +685,26 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 	}
 
 	// reverse probability of choosing subtree to be pruned and regrafted
+	double logh = 0;
+	double logpfwd = 0;
+	double logprev = 0;
 	double q2 = 1.0;
-	if ((! special) && lambda)	{
-		if (BPP)	{
-			q2 = BPP->GetFragileSPRProposalProb(GetTree(),todown,toup);
-		}
-		else	{
-			q2 = GetSubTreeWeight(lambda,todown,toup);
-		}
-	}
 
-	// hastings log ratio
-	double logpfwd = logp2 - max1 - log(total1);
-	double logprev = logp1 - max2 - log(total2);
-	double logh = logprev - logpfwd + log(q2 / q1);
+	if (taxon3 == "None")	{
+		if ((! special) && lambda)	{
+			if (BPP)	{
+				q2 = BPP->GetFragileSPRProposalProb(GetTree(),todown,toup);
+			}
+			else	{
+				q2 = GetSubTreeWeight(lambda,todown,toup);
+			}
+		}
+
+		// hastings log ratio
+		logpfwd = logp2 - max1 - log(total1);
+		logprev = logp1 - max2 - log(total2);
+		logh = logprev - logpfwd + log(q2 / q1);
+	}
 
 	// MH log ratio
 	double logratio = logh + logp2 - logp1;

@@ -71,6 +71,8 @@ int main(int argc, char* argv[])	{
 	int NNNI = 0;
 	string taxon1 = "None";
 	string taxon2 = "None";
+	string taxon3 = "None";
+	string taxon4 = "None";
 	int nspec = 0;
 	int ntspec = 0;
 	int fixbl = 0;
@@ -305,6 +307,36 @@ int main(int argc, char* argv[])	{
 				taxon1 = argv[i];
 				i++;
 				taxon2 = argv[i];
+				fixroot = 1;
+			}
+			else if (s == "-binspr")	{
+				i++;
+				nspec = atoi(argv[i]);
+				i++;
+				taxon1 = argv[i];
+				i++;
+				taxon2 = argv[i];
+				i++;
+				taxon3 = argv[i];
+				i++;
+				taxon4 = argv[i];
+				fixroot = 1;
+			}
+			else if (s == "-tbinspr")	{
+				i++;
+				ntspec = atoi(argv[i]);
+				i++;
+				topomu = atof(argv[i]);
+				i++;
+				toponstep = atoi(argv[i]);
+				i++;
+				taxon1 = argv[i];
+				i++;
+				taxon2 = argv[i];
+				i++;
+				taxon3 = argv[i];
+				i++;
+				taxon4 = argv[i];
 				fixroot = 1;
 			}
 			else if (s == "-temperedbl")	{
@@ -795,7 +827,7 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,fixtopo,fixroot,topoburnin,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs,sitesuffstat);
+		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,fixtopo,fixroot,topoburnin,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs,sitesuffstat);
 
 		if (! myid)	{
 			cerr << '\n';

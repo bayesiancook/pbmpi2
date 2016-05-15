@@ -29,10 +29,12 @@ void GeneralPathSuffStatMatrixPhyloProcess::Unfold()	{
 
 	DeleteMappings();
 	ActivateSumOverRateAllocations();
+	/*
 	if (!sumratealloc)	{
 		DrawAllocations(0);
 		InactivateSumOverRateAllocations(ratealloc);
 	}
+	*/
 	// this will in fact create only the matrices that did not already exist
 	// CreateMatrices();
 	// this one is important
@@ -44,10 +46,10 @@ void GeneralPathSuffStatMatrixPhyloProcess::Unfold()	{
 
 void GeneralPathSuffStatMatrixPhyloProcess::Collapse()	{
 
-	if (sumratealloc)	{
-		DrawAllocations(0);
-		InactivateSumOverRateAllocations(ratealloc);
-	}
+	// if (sumratealloc)	{
+	DrawAllocations(0);
+	InactivateSumOverRateAllocations(ratealloc);
+	// }
 	SampleNodeStates();
 	// DeleteConditionalLikelihoods();
 	FillMissingMap();

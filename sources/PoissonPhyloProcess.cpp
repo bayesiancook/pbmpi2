@@ -79,10 +79,10 @@ void PoissonPhyloProcess::DeleteSuffStat()	{
 
 void PoissonPhyloProcess::Collapse()	{
 
-	if (sumratealloc)	{
-		DrawAllocations(0);
-		InactivateSumOverRateAllocations(ratealloc);
-	}
+	// if (sumratealloc)	{
+	DrawAllocations(0);
+	InactivateSumOverRateAllocations(ratealloc);
+	// }
 	SampleNodeStates();
 	FillMissingMap();
 	SampleSubstitutionMappings(GetRoot());

@@ -31,20 +31,22 @@ void MatrixPhyloProcess::Unfold()	{
 	UpdateMatrices();
 	// CreateConditionalLikelihoods();
 	UpdateConditionalLikelihoods();
+	/*
 	if (!sumratealloc)	{
 		DrawAllocations(0);
 		InactivateSumOverRateAllocations(ratealloc);
 	}
+	*/
 	activesuffstat = false;
 }
 
 void MatrixPhyloProcess::Collapse()	{
 
 	// UpdateConditionalLikelihoods();
-	if (sumratealloc)	{
-		DrawAllocations(0);
-		InactivateSumOverRateAllocations(ratealloc);
-	}
+	// if (sumratealloc)	{
+	DrawAllocations(0);
+	InactivateSumOverRateAllocations(ratealloc);
+	// }
 	SampleNodeStates();
 	// DeleteConditionalLikelihoods();
 	FillMissingMap();

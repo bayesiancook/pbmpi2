@@ -125,6 +125,196 @@ void PhyloProcess::MakeObservedArray()	{
 	}	
 }
 
+void PhyloProcess::Monitor(ostream& os)  {
+	os << "matrix uni" << '\t' << SubMatrix::GetUniSubCount() << '\n';
+	os << "inf prob  " << '\t' << GetInfProbCount() << '\n';
+	os << "stat inf  " << '\t' << GetStatInfCount() << '\n';
+	if (sprtry)	{
+		os << "spr " << '\t' << (100 * spracc) / sprtry << '\n';
+	}
+	if (mhsprtry)	{
+		os << "mhspr " << '\t' << (100 * mhspracc) / mhsprtry << '\n';
+	}
+	if (tsprtry)	{
+		os << "tspr " << '\t' << (100 * tspracc) / tsprtry << '\n';
+		os << "fraction of temperedmoves: " << (100 * tsprtmp) / tsprtot << '\n';
+		if (tsprtmp)	{
+			os << "10" << '\t' << (100 * tsprtmpacc10) / tsprtmp << '\n';
+			os << "01" << '\t' << (100 * tsprtmpacc01) / tsprtmp << '\n';
+			os << "11" << '\t' << (100 * tsprtmpacc11) / tsprtmp << '\n';
+			os << "00" << '\t' << (100 * tsprtmpacc00) / tsprtmp << '\n';
+		}
+	}
+	if (nnitry)	{
+		os << "nni " << '\t' << (100 * nniacc) / nnitry << '\n';
+	}
+	if (bppsprtry)	{
+		os << "bppspr " << '\t' << (100 * bppspracc) / bppsprtry << '\n';
+	}
+	if (tbppsprtry)	{
+		os << "tbppspr " << '\t' << (100 * tbppspracc) / tbppsprtry << '\n';
+	}
+	if (proftry)	{
+		os << "profile moves " << '\t' << (100 * profacc) / proftry << '\n';
+	}
+	if (rrtry)	{
+		os << "rr moves " << '\t' << (100 * rracc) / rrtry << '\n';
+	}
+	if (ziptopotry)	{
+		os << "zip topo : " << '\t' << (100 * ziptopoacc) / ziptopotry << '\n';
+	}
+	if (fasttopotry)	{
+		os << "fast topo moves: \n";
+		os << "topo changed : " << '\t' << (100 * fasttopochange) / fasttopotry << '\n';
+		if (fasttopochange)	{
+			os << "accepted     : " << '\t' << (100 * fasttopoacc) / fasttopochange << '\n';
+		}
+		if (anntot)	{
+			os << "tempered fraction: " << '\t' << (100 * anntmp) / anntot << '\n';
+			if (anntmp)	{
+				os << "10" << '\t' << (100 * anntmpacc10) / anntmp << '\n';
+				os << "01" << '\t' << (100 * anntmpacc01) / anntmp << '\n';
+				os << "11" << '\t' << (100 * anntmpacc11) / anntmp << '\n';
+				os << "00" << '\t' << (100 * anntmpacc00) / anntmp << '\n';
+			}
+		}
+	}
+	if (! fixtopo)	{
+		double totaltime = nnichrono.GetTime() + sprchrono.GetTime() + tsprchrono.GetTime();
+		os << "nni  time : " << nnichrono.GetTime() / totaltime << '\n';
+		os << "spr  time : " << sprchrono.GetTime() / totaltime << '\n';
+		os << "tspr time : " << tsprchrono.GetTime() / totaltime << '\n';
+	}
+}
+
+void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
+
+	datafile = indatafile;
+	treefile = intreefile;
+	iscodon = iniscodon;
+	codetype = incodetype;
+	fixtopo = infixtopo;
+	fixroot = infixroot;
+	topoburnin = intopoburnin;
+	NSPR = inNSPR;
+	NMHSPR = inNMHSPR;
+	NTSPR = inNTSPR;
+	temperedbl = intemperedbl;
+	temperedgene = intemperedgene;
+	temperedrate = intemperedrate;
+	topolambda = intopolambda;
+	topomu = intopomu;
+	toponstep = intoponstep;
+	NNNI = inNNNI;
+	nspec = innspec;
+	ntspec = inntspec;
+	SetSpecialSPR(intaxon1,intaxon2);
+	bpp = inbpp;
+	nbpp = innbpp;
+	ntbpp = inntbpp;
+	bppnstep = inbppnstep;
+	bppname = inbppname;
+	bppcutoff = inbppcutoff;
+	bppbeta = inbppbeta;
+	
+	BPP = 0;
+	if (bpp == 1)	{
+		cerr << "make new BPP\n";
+		BPP = new UnrootedBPP(bppname,bppcutoff,bppbeta);
+	}
+	else if (bpp == 2)	{
+		cerr << "make new CCP\n";
+		BPP = new UnrootedCCP(bppname,bppcutoff,bppbeta);
+	}
+	else if (bpp == 3)	{
+		cerr << "make new CCP\n";
+		BPP = new UnrootedCCP(bppname,bppcutoff,bppbeta);
+	}
+
+	profilepriortype = inprofilepriortype;
+	dc = indc;
+	fixbl = infixbl;
+	sumovercomponents = insumovercomponents;
+	proposemode = inproposemode;
+	allocmode = inallocmode;
+	// sumratealloc = insumratealloc;
+	fasttopo = infasttopo;
+	fasttopofracmin = infasttopofracmin;
+	fasttoponstep = infasttoponstep;
+	fastcondrate = infastcondrate;
+}
+
+void PhyloProcess::ToStreamHeader(ostream& os)	{
+	os << version << '\n';
+	propchrono.ToStream(os);
+	chronototal.ToStream(os);
+	os << size << '\n';
+	os << datafile << '\n';
+	os << iscodon << '\n';
+	os << codetype << '\n';
+	os << fixtopo << '\n';
+	os << fixroot << '\n';
+	os << topoburnin << '\n';
+	os << NSPR << '\t' << NMHSPR << '\t' << NTSPR << '\n';
+	os << temperedbl << '\t' << temperedgene << '\t' << temperedrate << '\n';
+	os << topolambda << '\t' << topomu << '\t' << toponstep << '\n';
+	os << NNNI << '\n';
+	os << nspec << '\t' << ntspec << '\n';
+	os << taxon1 << '\t' << taxon2 << '\n';
+	os << bpp << '\t' << nbpp << '\t' << ntbpp << '\t' << bppnstep << '\t' << bppname << '\t' << bppcutoff << '\t' << bppbeta << '\n';
+	os << dc << '\n';
+	os << fixbl << '\n';
+	os << proposemode << '\n';
+	os << allocmode << '\n';
+	// os << sumratealloc << '\n';
+	os << fasttopo << '\t' << fasttopofracmin << '\t' << fasttoponstep << '\n';
+	os << fastcondrate << '\n';
+	os << sumovercomponents << '\n';
+	SetNamesFromLengths();
+	GetTree()->ToStream(os);
+	os << 1 << '\n';
+}
+
+void PhyloProcess::FromStreamHeader(istream& is)	{
+	is >> version;
+	if (atof(version.substr(0,3).c_str()) < 1.2)	{
+		cerr << "error: version is too old : " << version << '\n';
+		exit(1);
+	}
+	propchrono.FromStream(is);
+	chronototal.FromStream(is);
+	string indatafile;
+	is >> size;
+	is >> datafile;
+	is >> iscodon;
+	is >> codetype;
+	is >> fixtopo;
+	is >> fixroot;
+	is >> topoburnin;
+	is >> NSPR >> NMHSPR >> NTSPR;
+	is >> temperedbl >> temperedgene >> temperedrate;
+	is >> topolambda >> topomu >> toponstep;
+	is >> NNNI;
+	is >> nspec >> ntspec;
+	is >> taxon1 >> taxon2;
+	is >> bpp >> nbpp >> ntbpp >> bppnstep >> bppname >> bppcutoff >> bppbeta;
+	is >> dc;
+	is >> fixbl;
+	is >> proposemode;
+	is >> allocmode;
+	// is >> sumratealloc;
+	is >> fasttopo >> fasttopofracmin >> fasttoponstep;
+	is >> fastcondrate;
+	is >> sumovercomponents;
+	is >> treestring;
+	int check;
+	is >> check;
+	if (! check)	{
+		cerr << "error when reading stream header \n";
+		exit(1);
+	}
+}
+
 //-------------------------------------------------------------------------
 //	* Create / Delete
 //-------------------------------------------------------------------------
@@ -457,10 +647,12 @@ void PhyloProcess::Unfold()	{
 	DeleteMappings();
 	ActivateSumOverRateAllocations();
 	UpdateConditionalLikelihoods();
+	/*
 	if (!sumratealloc)	{
 		DrawAllocations(0);
 		InactivateSumOverRateAllocations(ratealloc);
 	}
+	*/
 	activesuffstat = false;
 }
 
@@ -490,10 +682,10 @@ void PhyloProcess::SlaveUnfold()	{
 
 void PhyloProcess::Collapse()	{
 
-	if (sumratealloc)	{
-		DrawAllocations(0);
-		InactivateSumOverRateAllocations(ratealloc);
-	}
+	// if (sumratealloc)	{
+	DrawAllocations(0);
+	InactivateSumOverRateAllocations(ratealloc);
+	// }
 	SampleNodeStates();
 	FillMissingMap();
 	SampleSubstitutionMappings(GetRoot());
@@ -533,7 +725,7 @@ void PhyloProcess::GlobalActivateSumOverRateAllocations()	{
 
 void PhyloProcess::SlaveActivateSumOverRateAllocations()	{
 	ActivateSumOverRateAllocations();
-	sumratealloc = 1;
+	// sumratealloc = 1;
 }
 
 void PhyloProcess::GlobalInactivateSumOverRateAllocations()	{
@@ -552,7 +744,7 @@ void PhyloProcess::GlobalInactivateSumOverRateAllocations()	{
 void PhyloProcess::SlaveInactivateSumOverRateAllocations()	{
 	DrawAllocations(0);
 	InactivateSumOverRateAllocations(ratealloc);
-	sumratealloc = 0;
+	// sumratealloc = 0;
 }
 
 //-------------------------------------------------------------------------

@@ -280,6 +280,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 			GlobalSwapTree();
 		}
 
+		/*
 		if (! sumratealloc)	{
 			GlobalActivateSumOverRateAllocations();
 
@@ -293,17 +294,18 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 			sumratealloc = 0;
 		}
 		else	{
+		*/
 
-			GlobalUpdateConditionalLikelihoods();
+		GlobalUpdateConditionalLikelihoods();
 
-			if (version == 1)	{
-				deltalogp = GlobalTemperedTreeMoveLogProb(nstep,down,up,fromdown,fromup,todown,toup);
-			}
-
-			if (version == 2)	{
-				deltalogp = GlobalTemperedTreeMoveLogProb(nstep);
-			}
+		if (version == 1)	{
+			deltalogp = GlobalTemperedTreeMoveLogProb(nstep,down,up,fromdown,fromup,todown,toup);
 		}
+
+		if (version == 2)	{
+			deltalogp = GlobalTemperedTreeMoveLogProb(nstep);
+		}
+		// }
 
 		if (version == 2)	{
 			// GlobalSwapTree();
@@ -459,6 +461,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		}
 
 	}
+	/*
 	if (maketempmove &&  (! sumratealloc))	{
 		GlobalActivateSumOverRateAllocations();
 		sumratealloc = 1;
@@ -466,6 +469,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		GlobalInactivateSumOverRateAllocations();
 		sumratealloc = 0;
 	}
+	*/
 
 	// is this important ?
 	GlobalUpdateConditionalLikelihoods();

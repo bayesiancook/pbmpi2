@@ -540,20 +540,20 @@ void MultiGenePhyloProcess::SlaveActivateSumOverRateAllocations()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			process[gene]->ActivateSumOverRateAllocations();
-			process[gene]->sumratealloc = 1;
+			// process[gene]->sumratealloc = 1;
 		}
 	}
-	sumratealloc = 1;
+	// sumratealloc = 1;
 }
 
 void MultiGenePhyloProcess::SlaveInactivateSumOverRateAllocations()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			process[gene]->InactivateSumOverRateAllocations(process[gene]->ratealloc);
-			process[gene]->sumratealloc = 0;
+			// process[gene]->sumratealloc = 0;
 		}
 	}
-	sumratealloc = 0;
+	// sumratealloc = 0;
 }
 
 void MultiGenePhyloProcess::SlaveActivateZip()	{

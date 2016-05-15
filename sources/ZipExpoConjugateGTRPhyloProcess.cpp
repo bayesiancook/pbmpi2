@@ -9,10 +9,12 @@ void ZipExpoConjugateGTRPhyloProcess::Unfold()	{
 	CreateMatrices();
 	// ActivateZip();
 	UpdateConditionalLikelihoods();
+	/*
 	if (!sumratealloc)	{
 		DrawAllocations(0);
 		InactivateSumOverRateAllocations(ratealloc);
 	}
+	*/
 	activesuffstat = false;
 }
 
@@ -20,10 +22,10 @@ void ZipExpoConjugateGTRPhyloProcess::Collapse()	{
 
 	// InactivateZip();
 	UpdateConditionalLikelihoods();
-	if (sumratealloc)	{
-		DrawAllocations(0);
-		InactivateSumOverRateAllocations(ratealloc);
-	}
+	// if (sumratealloc)	{
+	DrawAllocations(0);
+	InactivateSumOverRateAllocations(ratealloc);
+	// }
 	SampleNodeStates();
 	FillMissingMap();
 	SampleSubstitutionMappings(GetRoot());

@@ -543,9 +543,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double NonMPITemperedBPPSPR(int nstep);
 	double MPITemperedBPPSPR(int nstep);
 
-	double TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special);
-	int MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special);
-	int NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special);
+	double TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special, double& logBF);
+	int MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& logBF);
+	int NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& logBF);
 
 	double GibbsSPR(int nrep, int special);
 	int MPIGibbsSPR(int special);

@@ -46,18 +46,18 @@ double PhyloProcess::GibbsMHSPR(double lambda, int nrep, int special)	{
 	return naccepted / nrep;
 }
 
-double PhyloProcess::TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special)	{
+double PhyloProcess::TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special, double& logBF)	{
 
 	double naccepted = 0;
 
 	if (GetNprocs() > 1)	{
 		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += MPITemperedGibbsSPR(lambda,mu,nstep, special);
+			naccepted += MPITemperedGibbsSPR(lambda,mu,nstep, special, logBF);
 		}
 	}
 	else	{
 		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += NonMPITemperedGibbsSPR(lambda,mu,nstep, special);
+			naccepted += NonMPITemperedGibbsSPR(lambda,mu,nstep, special, logBF);
 		}
 	}
 
@@ -103,14 +103,14 @@ double PhyloProcess::TemperedBPPSPR(int nrep, int nstep)	{
 
 // MPI and Non MPI versions
 
-int PhyloProcess::NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special)	{
+int PhyloProcess::NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& logBF)	{
 
 	cerr << "in PhyloProcess::NonMPITemperedGibbsSPR\n";
 	exit(1);
 	return 0;
 }
 
-int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special)	{
+int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& logBF)	{
 
 	int version = 1;
 	Link* up = 0;
@@ -277,6 +277,9 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	double ptempfwd = exp(-reldifffwd / mu);
 	int maketempmove = mu ? (rnd::GetRandom().Uniform() < ptempfwd) : 0;
 
+	if (special == 2)	{
+		maketempmove = 1;
+	}
 
 	tsprtot++;
 	if (maketempmove)	{
@@ -430,6 +433,11 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	double logratio = logh + deltalogp;
 
 	int accepted = (log(rnd::GetRandom().Uniform()) < logratio);
+
+	if (special == 2)	{
+		accepted = 0;
+	}
+	logBF = deltalogp;
 
 	if (TrackTopo())	{
 	if (accepted)	{

@@ -27,7 +27,7 @@ class RateProcess : public virtual MPIModule {
 
 	public:
 
-	RateProcess() : condflag(false) {}
+	RateProcess() : condflag(false), ratealloc(0) {}
 	virtual ~RateProcess() {}
 
 	virtual int GetNrate() {return 1;}

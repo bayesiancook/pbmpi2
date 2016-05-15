@@ -34,7 +34,7 @@ void MatrixPhyloProcess::Unfold()	{
 	/*
 	if (!sumratealloc)	{
 		DrawAllocations(0);
-		InactivateSumOverRateAllocations(ratealloc);
+		InactivateSumOverRateAllocations();
 	}
 	*/
 	activesuffstat = false;
@@ -45,7 +45,7 @@ void MatrixPhyloProcess::Collapse()	{
 	// UpdateConditionalLikelihoods();
 	// if (sumratealloc)	{
 	DrawAllocations(0);
-	InactivateSumOverRateAllocations(ratealloc);
+	InactivateSumOverRateAllocations();
 	// }
 	SampleNodeStates();
 	// DeleteConditionalLikelihoods();

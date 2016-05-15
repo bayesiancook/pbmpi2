@@ -72,7 +72,7 @@ class RateProcess : public virtual MPIModule {
 		cerr << "in RateProcess::SiteActivateSumOverRateAlloc\n";
 		exit(1);
 	}
-	virtual void SiteInactivateSumOverRateAllocation(int site, int ratealloc)	{
+	virtual void SiteInactivateSumOverRateAllocation(int site)	{
 		cerr << "in RateProcess::SiteINactivateSumOverRateAlloc\n";
 		exit(1);
 	}
@@ -80,7 +80,7 @@ class RateProcess : public virtual MPIModule {
 		cerr << "in RateProcess::ActivateSumOverRateAlloc\n";
 		exit(1);
 	}
-	virtual void InactivateSumOverRateAllocations(int* ratealloc)	{
+	virtual void InactivateSumOverRateAllocations()	{
 		cerr << "in RateProcess::InactivateSumOverRateAlloc\n";
 		exit(1);
 	}
@@ -132,9 +132,22 @@ class RateProcess : public virtual MPIModule {
 		exit(1);
 	}
 
-	void Create() {}
-	void Delete() {}
+	void Create() {
+		if (! ratealloc)	{
+			ratealloc = new int[GetNsite()];
+			meansiterate = new double[GetNsite()];
+		}
+	}
+	void Delete() {
+		if (ratealloc)	{
+			delete[] ratealloc;
+			delete[] meansiterate;
+			ratealloc = 0;
+		}
+	}
 
+	int* ratealloc;
+	double* meansiterate;
 	bool condflag;
 
 	Chrono chronorate;

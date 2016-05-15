@@ -650,7 +650,7 @@ void PhyloProcess::Unfold()	{
 	/*
 	if (!sumratealloc)	{
 		DrawAllocations(0);
-		InactivateSumOverRateAllocations(ratealloc);
+		InactivateSumOverRateAllocations();
 	}
 	*/
 	activesuffstat = false;
@@ -684,7 +684,7 @@ void PhyloProcess::Collapse()	{
 
 	// if (sumratealloc)	{
 	DrawAllocations(0);
-	InactivateSumOverRateAllocations(ratealloc);
+	InactivateSumOverRateAllocations();
 	// }
 	SampleNodeStates();
 	FillMissingMap();
@@ -737,13 +737,13 @@ void PhyloProcess::GlobalInactivateSumOverRateAllocations()	{
 	}
 	else	{
 		DrawAllocations(0);
-		InactivateSumOverRateAllocations(ratealloc);
+		InactivateSumOverRateAllocations();
 	}
 }
 
 void PhyloProcess::SlaveInactivateSumOverRateAllocations()	{
 	DrawAllocations(0);
-	InactivateSumOverRateAllocations(ratealloc);
+	InactivateSumOverRateAllocations();
 	// sumratealloc = 0;
 }
 

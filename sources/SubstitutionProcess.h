@@ -66,7 +66,7 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 
 	public:
 
-	SubstitutionProcess() : condsitelogL(0), sitelogL(0), meansiterate(0), ratealloc(0), infprobcount(0), suboverflowcount(0) {}
+	SubstitutionProcess() : condsitelogL(0), sitelogL(0), infprobcount(0), suboverflowcount(0) {}
 	virtual ~SubstitutionProcess() {}
 
 	// those two accessors are abstract: what they return depends on whether we use recoded Poisson or GTR substitution processes
@@ -79,8 +79,6 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 	}
 
 	int GetInfProbCount() {return infprobcount;}
-
-	int* ratealloc;
 
 	virtual void ActivateZip() {}
 	virtual void InactivateZip() {}
@@ -186,7 +184,6 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 
 	double** condsitelogL;
 	double* sitelogL;
-	double* meansiterate;
 	double logL;
 
 	int infprobcount;

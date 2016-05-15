@@ -549,7 +549,7 @@ void MultiGenePhyloProcess::SlaveActivateSumOverRateAllocations()	{
 void MultiGenePhyloProcess::SlaveInactivateSumOverRateAllocations()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-			process[gene]->InactivateSumOverRateAllocations(process[gene]->ratealloc);
+			process[gene]->InactivateSumOverRateAllocations();
 			// process[gene]->sumratealloc = 0;
 		}
 	}

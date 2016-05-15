@@ -36,7 +36,6 @@ void DGamRateProcess::Create()	{
 		}
 		RateProcess::Create();
 		rate = new double[GetNcat()];
-		alloc = new int[GetNsite()];
 		ratesuffstatcount = new int[GetNcat()];
 		ratesuffstatbeta = new double[GetNcat()];
 	}
@@ -45,11 +44,9 @@ void DGamRateProcess::Create()	{
 
 void DGamRateProcess::Delete() 	{
 	delete[] rate;
-	delete[] alloc;
 	delete[] ratesuffstatcount;
 	delete[] ratesuffstatbeta;
 	rate = 0;
-	alloc = 0;
 	ratesuffstatcount = 0;
 	ratesuffstatbeta = 0;
 	RateProcess::Delete();
@@ -205,8 +202,8 @@ void DGamRateProcess::UpdateRateSuffStat()	{
 	}
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
-			ratesuffstatcount[alloc[i]] += GetSiteRateSuffStatCount(i);
-			ratesuffstatbeta[alloc[i]] += GetSiteRateSuffStatBeta(i);
+			ratesuffstatcount[ratealloc[i]] += GetSiteRateSuffStatCount(i);
+			ratesuffstatbeta[ratealloc[i]] += GetSiteRateSuffStatBeta(i);
 		}
 	}
 

@@ -81,7 +81,7 @@ void PoissonPhyloProcess::Collapse()	{
 
 	// if (sumratealloc)	{
 	DrawAllocations(0);
-	InactivateSumOverRateAllocations(ratealloc);
+	InactivateSumOverRateAllocations();
 	// }
 	SampleNodeStates();
 	FillMissingMap();

@@ -237,7 +237,7 @@ void PhyloProcess::SampleSiteMapping(int site)	{
 
 	SiteDrawAllocations(site,0);
 	SampleSiteNodeStates(site);
-	SiteInactivateSumOverRateAllocation(site,ratealloc[site]);
+	SiteInactivateSumOverRateAllocation(site);
 	SampleSiteSubstitutionMapping(site,GetRoot());
 }
 

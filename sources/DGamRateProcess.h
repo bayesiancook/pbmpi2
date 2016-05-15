@@ -63,7 +63,7 @@ class DGamRateProcess : public virtual RateProcess {
 		if (SumOverRateAllocations())	{
 			return rate[cat];
 		}
-		return rate[alloc[site]];
+		return rate[ratealloc[site]];
 	}
 
 	double GetRateWeight(int site, int cat)	{
@@ -77,12 +77,7 @@ class DGamRateProcess : public virtual RateProcess {
 		condflag = false;
 	}
 
-	void InactivateSumOverRateAllocations(int* ratealloc) {
-		for (int i=0; i<GetNsite(); i++)	{
-			if (ActiveSite(i))	{
-				alloc[i] = ratealloc[i];
-			}
-		}
+	void InactivateSumOverRateAllocations()	{
 		condflag = true;
 	}
 
@@ -90,8 +85,7 @@ class DGamRateProcess : public virtual RateProcess {
 		condflag = false;
 	}
 
-	void SiteInactivateSumOverRateAllocation(int site, int ratealloc) {
-		alloc[site] = ratealloc;
+	void SiteInactivateSumOverRateAllocation(int site)	{
 		condflag = true;
 	}
 
@@ -154,7 +148,6 @@ class DGamRateProcess : public virtual RateProcess {
 	double* rate;
 	double alpha;
 	double bkalpha;
-	int* alloc;
 	int* ratesuffstatcount;
 	double* ratesuffstatbeta;
 

@@ -33,20 +33,13 @@ using namespace std;
 //-------------------------------------------------------------------------
 
 void SubstitutionProcess::Create()	{
-	if (! ratealloc)	{
-		RateProcess::Create();
-		ProfileProcess::Create();
-		ratealloc = new int[GetNsite()];
-	}
+	RateProcess::Create();
+	ProfileProcess::Create();
 }
 
 void SubstitutionProcess::Delete() {
-	if (ratealloc)	{
-		delete[] ratealloc;
-		ratealloc = 0;
-		ProfileProcess::Delete();
-		RateProcess::Delete();
-	}
+	ProfileProcess::Delete();
+	RateProcess::Delete();
 };
 
 void SubstitutionProcess::CreateCondSiteLogL()	{
@@ -55,7 +48,6 @@ void SubstitutionProcess::CreateCondSiteLogL()	{
 		exit(1);
 	}
 	sitelogL = new double[GetNsite()];
-	meansiterate = new double[GetNsite()];
 	condsitelogL = new double*[GetNsite()];
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		condsitelogL[i] = new double[GetNrate(i)];
@@ -69,7 +61,6 @@ void SubstitutionProcess::DeleteCondSiteLogL()	{
 		}
 		delete[] condsitelogL;
 		delete[] sitelogL;
-		delete[] meansiterate;
 		condsitelogL = 0;
 		sitelogL = 0;
 	}

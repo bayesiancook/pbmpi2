@@ -36,7 +36,7 @@ class UniformRateProcess : public virtual RateProcess {
 		condflag = false;
 	}
 
-	void SiteInactivateSumOverRateAllocation(int site, int ratealloc) {
+	void SiteInactivateSumOverRateAllocation(int site)	{
 		condflag = true;
 	}
 
@@ -44,7 +44,7 @@ class UniformRateProcess : public virtual RateProcess {
 		condflag = false;
 	}
 
-	void InactivateSumOverRateAllocations(int* ratealloc) {
+	void InactivateSumOverRateAllocations()	{
 		condflag = true;
 	}
 

@@ -57,8 +57,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		tree = 0;
 		treestring = "None";
 		temperedbl = 1;
-		temperedgene = 0;
 		temperedrate = 0;
+		// temperedprofile = 0;
+		temperedgene = 0;
 		empfreq = 0;
 		tracktopo = 0;
 		topoburnin = 0;
@@ -139,24 +140,36 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		temperedbl = in;
 	}
 
-	void SetTemperedGene(int in)	{
-		temperedgene = in;
-	}
-
 	void SetTemperedRate(int in)	{
 		temperedrate = in;
+	}
+
+	/*
+	void SetTemperedProfile(int in)	{
+		temperedprofile = in;
+	}
+	*/
+
+	void SetTemperedGene(int in)	{
+		temperedgene = in;
 	}
 
 	int TemperedBL()	{
 		return temperedbl;
 	}
 
-	int TemperedGene()	{
-		return temperedgene;
-	}
-
 	int TemperedRate()	{
 		return temperedrate;
+	}
+
+	/*
+	int TemperedProfile()	{
+		return temperedprofile;
+	}
+	*/
+
+	int TemperedGene()	{
+		return temperedgene;
 	}
 
 
@@ -271,7 +284,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void Monitor(ostream& os);
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
 
 	void SetMPI(int inmyid, int innprocs)	{
 		myid = inmyid;
@@ -848,8 +861,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int tracktopo;
 
 	int temperedbl;
-	int temperedgene;
 	int temperedrate;
+	// int temperedprofile;
+	int temperedgene;
 
 	SequenceAlignment* data;
 

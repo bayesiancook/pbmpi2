@@ -53,7 +53,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void SlavePropagate(int,int,bool,double);
 
 	// default constructor: pointers set to nil
-	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0) {
+	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
 		temperedbl = 1;
 		temperedgene = 0;
 		temperedrate = 0;
@@ -427,8 +427,17 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void Read(string name, int burnin, int every, int until);
 	virtual void ReadSiteLogL(string name, int burnin, int every, int until);
 	virtual void ReadCV(string testdatafile, string name, int burnin, int every, int until, int iscodon = 0, GeneticCodeType codetype = Universal);
-	virtual void PostPred(int ppredtype, string name, int burnin, int every, int until);
+	virtual void PostPred(int ppredtype, string name, int burnin, int every, int until, int rateprior, int profileprior, int rootprior);
 
+	void GlobalSetRatePrior(int inrateprior);
+	void SlaveSetRatePrior();
+	
+	void GlobalSetProfilePrior(int inprofileprior);
+	void SlaveSetProfilePrior();
+	
+	void GlobalSetRootPrior(int inrootprior);
+	void SlaveSetRootPrior();
+	
 	void ReadSiteRates(string name, int burnin, int every, int until);
 
 	// The following methids are here to write the mappings.
@@ -670,12 +679,12 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void New(int unfold = 1);
 	virtual void Open(istream& is, int unfold = 1);
 
-	virtual double GetObservedCompositionalHeterogeneity()	{
-		return GetData()->CompositionalHeterogeneity(0);
+	virtual double GetObservedCompositionalHeterogeneity(double* taxstat, double& meandist)	{
+		return data->CompositionalHeterogeneity(taxstat,0,meandist);
 	}
 
-	virtual double GetCompositionalHeterogeneity()	{
-		return GetData()->CompositionalHeterogeneity(0);
+	virtual double GetCompositionalHeterogeneity(double* taxstat, double& meandist)	{
+		return data->CompositionalHeterogeneity(taxstat,0,meandist);
 	}
 
 	void CreateMissingMap();
@@ -811,6 +820,11 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int temperedrate;
 
 	SequenceAlignment* data;
+
+	int dataclamped;
+	int rateprior;
+	int profileprior;
+	int rootprior;
 };
 
 

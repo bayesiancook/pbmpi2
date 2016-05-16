@@ -257,6 +257,10 @@ void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int mapstats = 0;
 	string testdatafile = "";
 
+	int rateprior = 0;
+	int profileprior = 0;
+	int rootprior = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -282,6 +286,20 @@ void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 			}
 			else if (s == "-ppred")	{
 				ppred = 1;
+			}
+			else if (s == "-ppredrate")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					rateprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					rateprior = 0;
+				}
+				else	{
+					cerr << "error after ppredrate: should be prior or posterior\n";
+					throw(0);
+				}
 			}
 			else if (s == "-div")	{
 				ppred = 2;
@@ -341,7 +359,7 @@ void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 		ReadMapStats(name,burnin,every,until);
 	}
 	else if (ppred)	{
-		PostPred(ppred,name,burnin,every,until);
+		PostPred(ppred,name,burnin,every,until,rateprior,profileprior,rootprior);
 	}
 	else	{
 		Read(name,burnin,every,until);

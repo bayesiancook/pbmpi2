@@ -91,11 +91,11 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 
 		propchrono.Stop();
 
-		GlobalCollapse();
-
-		AugmentedMove(tuning);
-
-		GlobalUnfold();
+		for (int rep=0; rep<5; rep++)	{
+			GlobalCollapse();
+			AugmentedMove(tuning);
+			GlobalUnfold();
+		}
 		chronototal.Stop();
 
 		return 1;
@@ -107,12 +107,14 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 		// important to start with that one
 		// if marginal suff stat move is done before that in a multi gene context
 		GammaBranchProcess::Move(tuning,10);
+		GammaBranchProcess::Move(0.1*tuning,10);
 
 		GlobalUpdateParameters();
+		DGamRateProcess::Move(tuning,10);
 		DGamRateProcess::Move(0.3*tuning,10);
 		DGamRateProcess::Move(0.03*tuning,10);
 
-		PoissonSBDPProfileProcess::Move(1,1,5);
+		PoissonSBDPProfileProcess::Move(1,1,1);
 		if (iscodon)	{
 			PoissonSBDPProfileProcess::Move(0.1,1,15);
 			PoissonSBDPProfileProcess::Move(0.01,1,15);

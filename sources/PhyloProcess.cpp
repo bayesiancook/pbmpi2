@@ -1644,6 +1644,15 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 	switch(signal) {
 
+	case SETRATEPRIOR:
+		SlaveSetRatePrior();
+		break;
+	case SETPROFILEPRIOR:
+		SlaveSetProfilePrior();
+		break;
+	case SETROOTPRIOR:
+		SlaveSetRootPrior();
+		break;
 	case RESHUFFLE:
 		SlaveReshuffleSites();
 		break;

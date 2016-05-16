@@ -46,20 +46,34 @@ double PhyloProcess::GibbsMHSPR(double lambda, int nrep, int special)	{
 	return naccepted / nrep;
 }
 
-double PhyloProcess::TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special, double& logBF)	{
+double PhyloProcess::TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special, double& deltalogp, double& logBF)	{
 
 	double naccepted = 0;
 
+	deltalogp = 0;
+	logBF = 0;
+
 	if (GetNprocs() > 1)	{
 		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += MPITemperedGibbsSPR(lambda,mu,nstep, special, logBF);
+			double tmpdeltalogp = 0;
+			double tmplogBF = 0;
+			naccepted += MPITemperedGibbsSPR(lambda,mu,nstep, special, tmpdeltalogp, tmplogBF);
+			deltalogp += tmpdeltalogp;
+			logBF += tmplogBF;
 		}
 	}
 	else	{
 		for (int rep=0; rep<nrep; rep++)	{
-			naccepted += NonMPITemperedGibbsSPR(lambda,mu,nstep, special, logBF);
+			double tmpdeltalogp = 0;
+			double tmplogBF = 0;
+			naccepted += NonMPITemperedGibbsSPR(lambda,mu,nstep, special, tmpdeltalogp, tmplogBF);
+			deltalogp += tmpdeltalogp;
+			logBF += tmplogBF;
 		}
 	}
+
+	logBF /= nrep;
+	deltalogp /= nrep;
 
 	return naccepted / nrep;
 }
@@ -103,21 +117,21 @@ double PhyloProcess::TemperedBPPSPR(int nrep, int nstep)	{
 
 // MPI and Non MPI versions
 
-int PhyloProcess::NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& logBF)	{
+int PhyloProcess::NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& retdeltalogp, double& logBF)	{
 
 	cerr << "in PhyloProcess::NonMPITemperedGibbsSPR\n";
 	exit(1);
 	return 0;
 }
 
-int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& logBF)	{
+int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& retdeltalogp, double& logBF)	{
 
 	int version = 1;
 	Link* up = 0;
 	Link* down = 0;
 
 	ofstream tos((name + ".topo").c_str(),ios_base::app);
-	if (TrackTopo())	{
+	if ((special != 2) && TrackTopo())	{
 		tos << "tspr\t";
 		GetTree()->ToStreamStandardForm(tos);
 		tos << '\t';
@@ -147,6 +161,11 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	if (special)	{
 		down = GetTree()->GetLCA(taxon1,taxon2);
 		up = GetTree()->GetAncestor(down);
+		cerr << "found down and up\n";
+		GetTree()->ToStream(cerr,down);
+		cerr << '\n';
+		GetTree()->ToStream(cerr,up);
+		cerr << '\n';
 	}
 	else	{
 		if (lambda)	{
@@ -173,7 +192,9 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		return 0;
 	}
 
+	cerr << "detach\n";
 	Link* fromdown = GlobalDetach(down,up);
+	cerr << "detach ok\n";
 	
 	GlobalUpdateConditionalLikelihoods();
 	
@@ -220,7 +241,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 
 	if (taxon3 != "None")	{
 		todown = GetTree()->GetLCA(taxon3,taxon4);
-		toup = GetTree()->GetAncestor(down);
+		toup = GetTree()->GetAncestor(todown);
 		logp2 = loglmap[pair<Link*,Link*>(todown,toup)];
 	}
 	else	{
@@ -288,7 +309,9 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		// do the tempered move between the two topologies
 
 		if (version == 1)	{
+			cerr << "attach before tempering\n";
 			GlobalAttach(down,up,fromdown,fromup);
+			cerr << "attach before tempering ok\n";
 		}
 
 		if (version == 2)	{
@@ -328,7 +351,9 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		}
 
 		// reverse probability 
+		cerr << "detach after tempering\n";
 		GlobalDetach(down,up);
+		cerr << "detach after tempering ok\n";
 		GlobalUpdateConditionalLikelihoods();
 
 		GlobalGibbsSPRScan(down,up,loglarray);
@@ -386,9 +411,11 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		}
 	}
 
+	cerr << "attach final tree\n";
 	GlobalAttach(down,up,todown,toup);
+	cerr << "attach final tree ok\n";
 
-	if (TrackTopo())	{
+	if ((special != 2) && TrackTopo())	{
 		GetTree()->ToStreamStandardForm(tos);
 		tos << '\t';
 	}
@@ -438,8 +465,9 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		accepted = 0;
 	}
 	logBF = deltalogp;
+	retdeltalogp = logp2 - prologp1;
 
-	if (TrackTopo())	{
+	if ((special != 2) && TrackTopo())	{
 	if (accepted)	{
 		tos << "accept";
 	}
@@ -475,12 +503,14 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	if (! accepted)	{
 
 		if (version == 1)	{
+			cerr << "restore\n";
 			GlobalDetach(down,up);
 			GlobalAttach(down,up,fromdown,fromup);
 			// if (maketempmove)	{
 				Restore();
 				GlobalUpdateParameters();
 			// }
+			cerr << "restore ok\n";
 		}
 
 		if (version == 2)	{
@@ -513,7 +543,7 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 	Link* down = 0;
 
 	ofstream tos((name + ".topo").c_str(),ios_base::app);
-	if (TrackTopo())	{
+	if ((special != 2) && TrackTopo())	{
 		tos << "mhspr\t";
 		GetTree()->ToStreamStandardForm(tos);
 		tos << '\t';
@@ -609,7 +639,7 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 	if (taxon3 != "None")	{
 
 		todown = GetTree()->GetLCA(taxon3,taxon4);
-		toup = GetTree()->GetAncestor(down);
+		toup = GetTree()->GetAncestor(todown);
 		logp2 = loglmap[pair<Link*,Link*>(todown,toup)];
 
 	}
@@ -687,7 +717,7 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 
 	GlobalAttach(down,up,todown,toup);
 
-	if (TrackTopo())	{
+	if ((special != 2) && TrackTopo())	{
 		GetTree()->ToStreamStandardForm(tos);
 		tos << '\t';
 	}
@@ -726,7 +756,7 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 		GlobalAttach(down,up,fromdown,fromup);
 	}
 
-	if (TrackTopo())	{
+	if ((special != 2) && TrackTopo())	{
 		if (accepted)	{
 			tos << "accept\n";
 		}

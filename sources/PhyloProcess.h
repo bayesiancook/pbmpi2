@@ -425,6 +425,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void ReadPB(int argc, char* argv[]);
 	virtual void Read(string name, int burnin, int every, int until);
+	virtual void ReadTopoBF(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nstep);
 	virtual void ReadSiteLogL(string name, int burnin, int every, int until);
 	virtual void ReadCV(string testdatafile, string name, int burnin, int every, int until, int iscodon = 0, GeneticCodeType codetype = Universal);
 	virtual void PostPred(int ppredtype, string name, int burnin, int every, int until, int rateprior, int profileprior, int rootprior);
@@ -552,9 +553,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double NonMPITemperedBPPSPR(int nstep);
 	double MPITemperedBPPSPR(int nstep);
 
-	double TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special, double& logBF);
-	int MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& logBF);
-	int NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& logBF);
+	double TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special, double& deltalogp, double& logBF);
+	int MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& deltalogp, double& logBF);
+	int NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& deltalogp, double& logBF);
 
 	double GibbsSPR(int nrep, int special);
 	int MPIGibbsSPR(int special);

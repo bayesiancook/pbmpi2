@@ -295,6 +295,13 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int profileprior = 0;
 	int rootprior = 0;
 
+	string taxon1 = "None";
+	string taxon2 = "None";
+	string taxon3 = "None";
+	string taxon4 = "None";
+	int toponstep = 100;
+	int bf = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -326,6 +333,19 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 					cerr << "error after ppredrate: should be prior or posterior\n";
 					throw(0);
 				}
+			}
+			else if (s == "-bf")	{
+				bf = 1;
+				i++;
+				taxon1 = argv[i];
+				i++;
+				taxon2 = argv[i];
+				i++;
+				taxon3 = argv[i];
+				i++;
+				taxon4 = argv[i];
+				i++;
+				toponstep = atoi(argv[i]);
 			}
 			else if (s == "-sitelogl")	{
 				sitelogl = 1;
@@ -394,6 +414,9 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 
 	if (cv)	{
 		ReadCV(testdatafile,name,burnin,every,until);
+	}
+	else if (bf)	{
+		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponstep);
 	}
 	else if (sitelogl)	{
 		ReadSiteLogL(name,burnin,every,until);

@@ -334,6 +334,106 @@ void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	
 
 }
 
+void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int nstep)	{
+
+	SetSpecialSPR(intaxon1,intaxon2,intaxon3,intaxon4);
+	fixroot = 1;
+	
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	vector<double> deltalogp;
+	vector<double> logbf;
+	double meandeltalogp = 0;
+	double vardeltalogp = 0;
+	double meanlogbf = 0;
+	double varlogbf = 0;
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		QuickUpdate();
+
+		double tmpdeltalogp = 0;
+		double tmplogbf = 0;
+		TemperedGibbsSPR(0,0,nstep,1,2,tmpdeltalogp,tmplogbf);
+		deltalogp.push_back(tmpdeltalogp);
+		logbf.push_back(tmplogbf);
+		meandeltalogp += tmpdeltalogp;
+		vardeltalogp += tmpdeltalogp * tmpdeltalogp;
+		meanlogbf += tmplogbf;
+		varlogbf += tmplogbf * tmplogbf;
+
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+
+	meandeltalogp /= samplesize;
+	vardeltalogp /= samplesize;
+	vardeltalogp -= meandeltalogp * meandeltalogp;
+	meanlogbf /= samplesize;
+	varlogbf /= samplesize;
+	varlogbf -= meanlogbf * meanlogbf;
+
+	if (logbf.size() != samplesize)	{
+		cerr << "error in read bf: non matching size\n";
+		exit(1);
+	}
+
+	double max = logbf[0];
+	for (int i=1; i<samplesize; i++)	{
+		if (max < logbf[i])	{
+			max = logbf[i];
+		}
+	}
+	double mean = 0;
+	double var = 0;
+	for (int i=0; i<samplesize; i++)	{
+		double tmp = exp(logbf[i] - max);
+		mean += tmp;
+		var += tmp*tmp;
+	}
+	mean /= samplesize;
+	var /= samplesize;
+	var -= mean*mean;
+	double effsize = mean*mean / var;
+	cout << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
+	cout << "logbf1: " << log(mean) + max << '\t' << effsize << '\n';
+	cout << "logbf2: " << meanlogbf << '\t' << varlogbf << '\n';
+	cout << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
+
+	ofstream os((name + ".logbf").c_str());
+	os << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
+	os << "logbf1: " << log(mean) + max << '\t' << effsize << '\n';
+	os << "logbf2: " << meanlogbf << '\t' << varlogbf << '\n';
+	os << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
+	os << '\n';
+	for (int i=0; i<samplesize; i++)	{
+		os << logbf[i] << '\t' << deltalogp[i] << '\n';
+	}
+}
+
 void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, int until, int inrateprior, int inprofileprior, int inrootprior)	{
 
 	GlobalSetRatePrior(inrateprior);

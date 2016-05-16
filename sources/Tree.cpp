@@ -828,6 +828,7 @@ Link* Tree::GetAncestor(const Link* target)	{
 	Link* ret = RecursiveGetAncestor(GetRoot(),target);
 	if (! ret)	{
 		cerr << "in Tree::GetAncestor: did not find ancestor\n";
+		ToStream(cerr,target);
 		exit(1);
 	}
 	return ret;

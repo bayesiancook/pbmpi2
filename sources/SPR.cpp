@@ -161,11 +161,6 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	if (special)	{
 		down = GetTree()->GetLCA(taxon1,taxon2);
 		up = GetTree()->GetAncestor(down);
-		cerr << "found down and up\n";
-		GetTree()->ToStream(cerr,down);
-		cerr << '\n';
-		GetTree()->ToStream(cerr,up);
-		cerr << '\n';
 	}
 	else	{
 		if (lambda)	{
@@ -192,9 +187,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		return 0;
 	}
 
-	cerr << "detach\n";
 	Link* fromdown = GlobalDetach(down,up);
-	cerr << "detach ok\n";
 	
 	GlobalUpdateConditionalLikelihoods();
 	
@@ -309,9 +302,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		// do the tempered move between the two topologies
 
 		if (version == 1)	{
-			cerr << "attach before tempering\n";
 			GlobalAttach(down,up,fromdown,fromup);
-			cerr << "attach before tempering ok\n";
 		}
 
 		if (version == 2)	{
@@ -351,9 +342,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		}
 
 		// reverse probability 
-		cerr << "detach after tempering\n";
 		GlobalDetach(down,up);
-		cerr << "detach after tempering ok\n";
 		GlobalUpdateConditionalLikelihoods();
 
 		GlobalGibbsSPRScan(down,up,loglarray);
@@ -411,9 +400,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		}
 	}
 
-	cerr << "attach final tree\n";
 	GlobalAttach(down,up,todown,toup);
-	cerr << "attach final tree ok\n";
 
 	if ((special != 2) && TrackTopo())	{
 		GetTree()->ToStreamStandardForm(tos);
@@ -503,14 +490,12 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	if (! accepted)	{
 
 		if (version == 1)	{
-			cerr << "restore\n";
 			GlobalDetach(down,up);
 			GlobalAttach(down,up,fromdown,fromup);
 			// if (maketempmove)	{
 				Restore();
 				GlobalUpdateParameters();
 			// }
-			cerr << "restore ok\n";
 		}
 
 		if (version == 2)	{

@@ -232,6 +232,67 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	double logp2 = 0;
 	double total1 = 0;
 
+	Link* newlca = 0;
+	if (taxon3 != "None")	{
+		newlca = GetTree()->GetLCA(taxon3,taxon4);
+	}
+	// compute total prob mass
+	int nchoice = 0;
+	for (map<pair<Link*,Link*>,double>::iterator i=loglmap.begin(); i!=loglmap.end(); i++)	{
+		if (i->first.first != fromdown)	{
+			nchoice++;
+			double tmp = exp(i->second - max1);
+			total1 += tmp;
+
+			if (taxon3 != "None")	{
+				if (i->first.first == newlca)	{
+					todown = i->first.first;
+					toup = i->first.second;
+					logp2 = i->second;
+					Link* newlcaup = GetTree()->GetAncestor(newlca);
+				}
+			}
+		}
+		if (isinf(total1))	{
+			cerr << "error in gibbs: inf\n";
+			cerr << "total1\n";
+			exit(1);
+		}
+		if (isnan(total1))	{
+			cerr << "error in gibbs: nan\n";
+		}
+	}
+	if (! nchoice)	{
+		cerr << "error in gibbs: no possible choice\n";
+		exit(1);
+	}
+
+	if (taxon3 == "None")	{
+		// randomly choose final position, duly excluding current position
+		double u = total1 * rnd::GetRandom().Uniform();
+		map<pair<Link*,Link*>, double>::iterator i = loglmap.begin();
+		double cumul = 0;
+		if (i->first.first != fromdown)	{
+			cumul += exp(i->second-max1);
+		}
+		while ((i!=loglmap.end()) && (cumul < u))	{
+			i++;
+			if (i == loglmap.end())	{
+				cerr << "error in gibbs spr: overflow\n";
+				exit(1);
+			}
+			if (i->first.first != fromdown)	{
+				cumul += exp(i->second-max1);
+			}
+		}
+		
+		// store values of target position
+		todown = i->first.first;
+		toup = i->first.second;
+		logp2 = i->second;
+	}
+
+	/*
 	if (taxon3 != "None")	{
 		todown = GetTree()->GetLCA(taxon3,taxon4);
 		toup = GetTree()->GetAncestor(todown);
@@ -284,6 +345,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		toup = i->first.second;
 		logp2 = i->second;
 	}
+	*/
 
 	double deltalogp = 0;
 
@@ -621,6 +683,66 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 	double logp2 = 0;
 	double total1 = 0;
 
+	Link* newlca = 0;
+	if (taxon3 != "None")	{
+		newlca = GetTree()->GetLCA(taxon3,taxon4);
+	}
+	// compute total prob mass
+	int nchoice = 0;
+	for (map<pair<Link*,Link*>,double>::iterator i=loglmap.begin(); i!=loglmap.end(); i++)	{
+		if (i->first.first != fromdown)	{
+			nchoice++;
+			double tmp = exp(i->second - max1);
+			total1 += tmp;
+
+			if (taxon3 != "None")	{
+				if (i->first.first == newlca)	{
+					todown = i->first.first;
+					toup = i->first.second;
+					logp2 = i->second;
+					Link* newlcaup = GetTree()->GetAncestor(newlca);
+				}
+			}
+		}
+		if (isinf(total1))	{
+			cerr << "error in gibbs: inf\n";
+			cerr << "total1\n";
+			exit(1);
+		}
+		if (isnan(total1))	{
+			cerr << "error in gibbs: nan\n";
+		}
+	}
+	if (! nchoice)	{
+		cerr << "error in gibbs: no possible choice\n";
+		exit(1);
+	}
+
+	if (taxon3 == "None")	{
+		// randomly choose final position, duly excluding current position
+		double u = total1 * rnd::GetRandom().Uniform();
+		map<pair<Link*,Link*>, double>::iterator i = loglmap.begin();
+		double cumul = 0;
+		if (i->first.first != fromdown)	{
+			cumul += exp(i->second-max1);
+		}
+		while ((i!=loglmap.end()) && (cumul < u))	{
+			i++;
+			if (i == loglmap.end())	{
+				cerr << "error in gibbs spr: overflow\n";
+				exit(1);
+			}
+			if (i->first.first != fromdown)	{
+				cumul += exp(i->second-max1);
+			}
+		}
+		
+		// store values of target position
+		todown = i->first.first;
+		toup = i->first.second;
+		logp2 = i->second;
+	}
+	/*
 	if (taxon3 != "None")	{
 
 		todown = GetTree()->GetLCA(taxon3,taxon4);
@@ -675,6 +797,7 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 		toup = i->first.second;
 		logp2 = i->second;
 	}
+	*/
 
 	// calculate probability of reverse move
 	double max2 = 0;

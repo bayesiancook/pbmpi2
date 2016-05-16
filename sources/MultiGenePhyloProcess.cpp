@@ -70,12 +70,14 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 	Create();
 
 	if (! GetMyid())	{
+		GlobalBroadcastTree();
 		FromStream(is);
 		GlobalUpdateParameters();
 		GlobalUnfold();
 	}
 	else	{
 		SlavePostOpen();
+		SlaveBroadcastTree();
 	}
 
 	if (BPP)	{

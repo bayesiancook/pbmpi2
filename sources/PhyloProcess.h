@@ -54,6 +54,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	// default constructor: pointers set to nil
 	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
+		tree = 0;
+		treestring = "None";
 		temperedbl = 1;
 		temperedgene = 0;
 		temperedrate = 0;
@@ -654,7 +656,36 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	void MakeObservedArray();
 
+
+	virtual void SetTreeFromString(string treestring)	{
+		if (tree)	{
+			cerr << "error in SetTreeFromString: tree already exists\n";
+			exit(1);
+		}
+		tree = new Tree(GetData()->GetTaxonSet());
+		if (GetMyid() == 0)	{
+			if (treestring == "None")	{
+				tree->MakeRandomTree();
+			}
+			else	{
+				istringstream s(treestring);
+				tree->ReadFromStream(s);
+			}
+			GlobalBroadcastTree();
+		}
+		else	{
+			SlaveBroadcastTree();
+		}
+		tree->RegisterWith(GetData()->GetTaxonSet());
+		CloneTree();
+		tree2->RegisterWith(GetData()->GetTaxonSet());
+	}
+
 	virtual void SetTree(string treefile)	{
+		if (tree)	{
+			cerr << "error in SetTree: tree already exists\n";
+			exit(1);
+		}
 		if (treefile == "None")	{
 			tree = new Tree(GetData()->GetTaxonSet());
 			if (GetMyid() == 0)	{

@@ -67,12 +67,14 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 	SetProfileDim();
 	CreateMPI(GetData()->GetNsite());
 
-	SetTree("None");
+	SetTreeFromString(treestring);
 	Create();
 
-	if ((! GetMyid()) && unfold)	{
-		FromStream(is);
-		GlobalUnfold();
+	if (unfold)	{
+		if (! GetMyid()) {
+			FromStream(is);
+			GlobalUnfold();
+		}
 	}
 }
 

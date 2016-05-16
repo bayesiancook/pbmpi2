@@ -468,36 +468,36 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	retdeltalogp = logp2 - prologp1;
 
 	if ((special != 2) && TrackTopo())	{
-	if (accepted)	{
-		tos << "accept";
-	}
-	else	{
-		tos << "reject";
-	}
+		if (accepted)	{
+			tos << "accept";
+		}
+		else	{
+			tos << "reject";
+		}
 
-	if (maketempmove)	{
-		tos << "\ttempered";
-		tos << '\t' << logratio << '\t' << deltalogp << '\t' << logp2 - prologp1 << '\t' << logprev - logpfwd << '\t' << loghtemp;
-		double pseudologratio = logprev - logpfwd + log(q2/q1) + logp2 - prologp1;
-		tos << '\t' << pseudologratio;
-		double l1 = (logratio < 0) ? logratio : 0;
-		double l2 = (pseudologratio < 0) ? pseudologratio : 0;
-		double p1 = exp(l1);
-		double p2 = exp(l2);
-		tsprtmpacc00 += (1-p1) * (1-p2);
-		tsprtmpacc01 += (1-p1) * p2;
-		tsprtmpacc10 += p1 * (1-p2);
-		tsprtmpacc11 += p1 * p2;
-		
-		ofstream os((name + ".temperedmove").c_str(),ios_base::app);
-		os << logratio << '\t' << logp2 - prologp1 << '\t' << prologp2 - prologp1 << '\t' << logp1 - prologp2 << '\t' << logp1 - logp2 << '\t' << accepted << '\n';
-		os.close();
-	}
-	else	{
-		tos << "\tdirect";
-		tos << '\t' << logratio << '\t' << deltalogp << '\t' << logprev - logpfwd << '\t' << loghtemp;
-	}
-	tos << '\n';
+		if (maketempmove)	{
+			tos << "\ttempered";
+			tos << '\t' << logratio << '\t' << deltalogp << '\t' << logp2 - prologp1 << '\t' << logprev - logpfwd << '\t' << loghtemp;
+			double pseudologratio = logprev - logpfwd + log(q2/q1) + logp2 - prologp1;
+			tos << '\t' << pseudologratio;
+			double l1 = (logratio < 0) ? logratio : 0;
+			double l2 = (pseudologratio < 0) ? pseudologratio : 0;
+			double p1 = exp(l1);
+			double p2 = exp(l2);
+			tsprtmpacc00 += (1-p1) * (1-p2);
+			tsprtmpacc01 += (1-p1) * p2;
+			tsprtmpacc10 += p1 * (1-p2);
+			tsprtmpacc11 += p1 * p2;
+			
+			ofstream os((name + ".temperedmove").c_str(),ios_base::app);
+			os << logratio << '\t' << logp2 - prologp1 << '\t' << prologp2 - prologp1 << '\t' << logp1 - prologp2 << '\t' << logp1 - logp2 << '\t' << accepted << '\n';
+			os.close();
+		}
+		else	{
+			tos << "\tdirect";
+			tos << '\t' << logratio << '\t' << deltalogp << '\t' << logprev - logpfwd << '\t' << loghtemp;
+		}
+		tos << '\n';
 	}
 
 	if (! accepted)	{

@@ -326,8 +326,6 @@ int main(int argc, char* argv[])	{
 				i++;
 				ntspec = atoi(argv[i]);
 				i++;
-				topomu = atof(argv[i]);
-				i++;
 				toponstep = atoi(argv[i]);
 				i++;
 				taxon1 = argv[i];

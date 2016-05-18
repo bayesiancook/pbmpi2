@@ -4,6 +4,45 @@
 #include "StringStreamUtils.h"
 #include "TexTab.h"
 
+void PhyloProcess::GlobalSetRatePrior(int inrateprior)	{
+
+	rateprior = inrateprior;
+	MESSAGE signal = SETRATEPRIOR;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&rateprior,1,MPI_INT,0,MPI_COMM_WORLD);
+}
+
+void PhyloProcess::SlaveSetRatePrior()	{
+
+	MPI_Bcast(&rateprior,1,MPI_INT,0,MPI_COMM_WORLD);
+}
+
+void PhyloProcess::GlobalSetProfilePrior(int inprofileprior)	{
+
+	profileprior = inprofileprior;
+	MESSAGE signal = SETPROFILEPRIOR;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&profileprior,1,MPI_INT,0,MPI_COMM_WORLD);
+}
+
+void PhyloProcess::SlaveSetProfilePrior()	{
+
+	MPI_Bcast(&profileprior,1,MPI_INT,0,MPI_COMM_WORLD);
+}
+
+void PhyloProcess::GlobalSetRootPrior(int inrootprior)	{
+
+	rootprior = inrootprior;
+	MESSAGE signal = SETROOTPRIOR;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&rootprior,1,MPI_INT,0,MPI_COMM_WORLD);
+}
+
+void PhyloProcess::SlaveSetRootPrior()	{
+
+	MPI_Bcast(&rootprior,1,MPI_INT,0,MPI_COMM_WORLD);
+}
+
 void PhyloProcess::GlobalGetMeanSiteRate()	{
 
 	if (GetNprocs() > 1)	{
@@ -38,6 +77,10 @@ void PhyloProcess::ReadPB(int argc, char* argv[])	{
 	int cv = 0;
 	int sitelogl = 0;
 	string testdatafile = "";
+	int rateprior = 0;
+	int profileprior = 0;
+	int rootprior = 0;
+
 	// 1 : plain ppred (outputs simulated data)
 	// 2 : diversity statistic
 	// 3 : compositional statistic
@@ -62,6 +105,48 @@ void PhyloProcess::ReadPB(int argc, char* argv[])	{
 			}
 			else if (s == "-ppred")	{
 				ppred = 1;
+			}
+			else if (s == "-ppredrate")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					rateprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					rateprior = 0;
+				}
+				else	{
+					cerr << "error after ppredrate: should be prior or posterior\n";
+					throw(0);
+				}
+			}
+			else if (s == "-ppredprofile")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					profileprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					profileprior = 0;
+				}
+				else	{
+					cerr << "error after ppredprofile: should be prior or posterior\n";
+					throw(0);
+				}
+			}
+			else if (s == "-ppredroot")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					rootprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					rootprior = 0;
+				}
+				else	{
+					cerr << "error after ppredroot: should be prior or posterior\n";
+					throw(0);
+				}
 			}
 			else if (s == "-cv")	{
 				cv = 1;
@@ -120,7 +205,7 @@ void PhyloProcess::ReadPB(int argc, char* argv[])	{
 	}
 
 	if (ppred)	{
-		PostPred(ppred,name,burnin,every,until);
+		PostPred(ppred,name,burnin,every,until,rateprior,profileprior,rootprior);
 	}
 	else if (cv)	{
 		ReadCV(testdatafile,name,burnin,every,until);
@@ -132,7 +217,6 @@ void PhyloProcess::ReadPB(int argc, char* argv[])	{
 		Read(name,burnin,every,until);
 	}
 }
-
 
 void PhyloProcess::Read(string name, int burnin, int every, int until)	{
 
@@ -250,7 +334,111 @@ void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	
 
 }
 
-void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, int until)	{
+void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int nstep)	{
+
+	SetSpecialSPR(intaxon1,intaxon2,intaxon3,intaxon4);
+	fixroot = 1;
+	
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	vector<double> deltalogp;
+	vector<double> logbf;
+	double meandeltalogp = 0;
+	double vardeltalogp = 0;
+	double meanlogbf = 0;
+	double varlogbf = 0;
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		QuickUpdate();
+
+		double tmpdeltalogp = 0;
+		double tmplogbf = 0;
+		TemperedGibbsSPR(0,0,nstep,1,2,tmpdeltalogp,tmplogbf);
+		deltalogp.push_back(tmpdeltalogp);
+		logbf.push_back(tmplogbf);
+		meandeltalogp += tmpdeltalogp;
+		vardeltalogp += tmpdeltalogp * tmpdeltalogp;
+		meanlogbf += tmplogbf;
+		varlogbf += tmplogbf * tmplogbf;
+
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+
+	meandeltalogp /= samplesize;
+	vardeltalogp /= samplesize;
+	vardeltalogp -= meandeltalogp * meandeltalogp;
+	meanlogbf /= samplesize;
+	varlogbf /= samplesize;
+	varlogbf -= meanlogbf * meanlogbf;
+
+	if (logbf.size() != samplesize)	{
+		cerr << "error in read bf: non matching size\n";
+		exit(1);
+	}
+
+	double max = logbf[0];
+	for (int i=1; i<samplesize; i++)	{
+		if (max < logbf[i])	{
+			max = logbf[i];
+		}
+	}
+	double mean = 0;
+	double var = 0;
+	for (int i=0; i<samplesize; i++)	{
+		double tmp = exp(logbf[i] - max);
+		mean += tmp;
+		var += tmp*tmp;
+	}
+	mean /= samplesize;
+	var /= samplesize;
+	var -= mean*mean;
+	double effsize = mean*mean / var;
+	cout << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
+	cout << "logbf1: " << log(mean) + max << '\t' << effsize << '\n';
+	cout << "logbf2: " << meanlogbf << '\t' << varlogbf << '\n';
+	cout << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
+
+	ofstream os((name + ".logbf").c_str());
+	os << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
+	os << "logbf1: " << log(mean) + max << '\t' << effsize << '\n';
+	os << "logbf2: " << meanlogbf << '\t' << varlogbf << '\n';
+	os << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
+	os << '\n';
+	for (int i=0; i<samplesize; i++)	{
+		os << logbf[i] << '\t' << deltalogp[i] << '\n';
+	}
+}
+
+void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, int until, int inrateprior, int inprofileprior, int inrootprior)	{
+
+	GlobalSetRatePrior(inrateprior);
+	GlobalSetProfilePrior(inprofileprior);
+	GlobalSetRootPrior(inrootprior);
 
 	ifstream is((name + ".chain").c_str());
 	if (!is)	{
@@ -258,14 +446,16 @@ void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, i
 		exit(1);
 	}
 
+	double* obstaxstat = new double[GetNtaxa()];
 	SequenceAlignment* datacopy  = new SequenceAlignment(GetData());
 	double obs = 0;
+	double obs2 = 0;
 	if (ppredtype == 2)	{
-		obs = GetData()->GetMeanDiversity();
+		obs = data->GetMeanDiversity();
 		// obs = GlobalGetMeanDiversity();
 	}
 	else if (ppredtype == 3)	{
-		obs = GetObservedCompositionalHeterogeneity();
+		obs = GetObservedCompositionalHeterogeneity(obstaxstat,obs2);
 	}
 
 	cerr << "burnin: " << burnin << '\n';
@@ -280,46 +470,68 @@ void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, i
 	double meanstat = 0;
 	double varstat = 0;
 	double ppstat = 0;
+	double meanstat2 = 0;
+	double varstat2 = 0;
+	double ppstat2 = 0;
+	double* meantaxstat = new double[GetNtaxa()];
+	double* vartaxstat = new double[GetNtaxa()];
+	double* pptaxstat = new double[GetNtaxa()];
+	double* taxstat = new double[GetNtaxa()];
+	for (int j=0; j<GetNtaxa(); j++)	{
+		meantaxstat[j] = 0;
+		vartaxstat[j] = 0;
+		pptaxstat[j] = 0;
+	}
 	while (i < until)	{
 		cerr << ".";
 		samplesize++;
 		FromStream(is);
 		i++;
 
-		QuickUpdate();
-		/*
+		// output tree
+		ostringstream s;
+		s << name << "_ppred" << samplesize << ".tree";
+		ofstream os(s.str().c_str());
+		SetNamesFromLengths();
+		RenormalizeBranchLengths();
+		GetTree()->ToStream(os);
+		DenormalizeBranchLengths();
+		os.close();
+
 		MPI_Status stat;
 		MESSAGE signal = BCAST_TREE;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 		GlobalBroadcastTree();
-		
 		GlobalUpdateConditionalLikelihoods();
-		*/
 		GlobalUnclamp();
-		// GlobalUpdateConditionalLikelihoods();
 		GlobalCollapse();
-
-		/*
-		GlobalUnfold();
-		GlobalCollapse();
-		*/
-
 		GlobalSetDataFromLeaves();
-		
-		// Trace(cerr);
+
 		if (ppredtype > 1)	{
 			double stat = 0;
+			double stat2 = 0;
 			if (ppredtype == 2)	{
-				stat = GetData()->GetMeanDiversity();
-				// stat = GlobalGetMeanDiversity();
+				stat = data->GetMeanDiversity();
 			}
 			else if (ppredtype == 3)	{
-				stat = GetCompositionalHeterogeneity();
+				stat = GetCompositionalHeterogeneity(taxstat,stat2);
+				for (int j=0; j<GetNtaxa(); j++)	{
+					meantaxstat[j] += taxstat[j];
+					vartaxstat[j] += taxstat[j] * taxstat[j];
+					if (taxstat[j] > obstaxstat[j])	{
+						pptaxstat[j] ++;
+					}
+				}
 			}
 			meanstat += stat;
 			varstat += stat * stat;
 			if (stat < obs)	{
 				ppstat++;
+			}
+			meanstat2 += stat2;
+			varstat2 += stat2 * stat2;
+			if (stat2 < obs2)	{
+				ppstat2++;
 			}
 		}
 		else	{
@@ -327,7 +539,7 @@ void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, i
 			ostringstream s;
 			s << name << "_ppred" << samplesize << ".ali";
 			ofstream os(s.str().c_str());
-			GetData()->ToStream(os);
+			data->ToStream(os);
 			os.close();
 		}
 
@@ -348,6 +560,11 @@ void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, i
 		varstat /= samplesize;
 		varstat -= meanstat * meanstat;
 		ppstat /= samplesize;
+
+		meanstat2 /= samplesize;
+		varstat2 /= samplesize;
+		varstat2 -= meanstat2 * meanstat2;
+		ppstat2 /= samplesize;
 	}
 
 	if (ppredtype == 1)	{
@@ -365,10 +582,30 @@ void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, i
 	else if (ppredtype == 3)	{
 		ofstream os((name + ".comp").c_str());
 		os << "compositional homogeneity test\n";
+
+		os << '\n';
+		os << "max heterogeneity across taxa\n";
 		os << "obs comp : " << obs << '\n';
 		os << "mean comp: " << meanstat << " +/- " << sqrt(varstat) << '\n';
 		os << "z-score : " << (obs - meanstat) / sqrt(varstat) << '\n';
 		os << "pp      : " << (1 - ppstat) << '\n';
+
+		os << '\n';
+		os << "mean squared heterogeneity across taxa\n";
+		os << "obs comp : " << obs2 << '\n';
+		os << "mean comp: " << meanstat2 << " +/- " << sqrt(varstat2) << '\n';
+		os << "z-score : " << (obs2 - meanstat2) / sqrt(varstat2) << '\n';
+		os << "pp      : " << (1 - ppstat2) << '\n';
+
+		os << '\n';
+		os << "taxonname\tobs\tmean pred\tz-score\tpp\n";
+		for (int j=0; j<GetNtaxa(); j++)	{
+			meantaxstat[j] /= samplesize;
+			vartaxstat[j] /= samplesize;
+			pptaxstat[j] /= samplesize;
+			vartaxstat[j] -= meantaxstat[j] * meantaxstat[j];
+			os << GetTaxonSet()->GetTaxon(j) << '\t' << obstaxstat[j] << '\t' << meantaxstat[j] << '\t' << (obstaxstat[j] - meantaxstat[j])/sqrt(vartaxstat[j]) << '\t' << pptaxstat[j] << '\n';
+		}
 		cerr << "result of compositional homogeneity test in " << name << ".comp\n";
 	}
 	cerr << '\n';
@@ -516,10 +753,7 @@ void PhyloProcess::ReadSiteLogL(string name, int burnin, int every, int until)	{
 		samplesize++;
 		FromStream(is);
 		i++;
-		cerr << "quick update\n";
 		QuickUpdate();
-		cerr << "quick update ok\n";
-		// Trace(cerr);
 		MPI_Status stat;
 		MESSAGE signal = SITELOGL;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);

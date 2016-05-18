@@ -636,6 +636,11 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 		double fracmin = ((double) step) / nstep;
 		double fracmax = ((double) step+1) / nstep;
 
+		// resampling mappings for sites still under the current topology
+		GlobalSetMinMax(0,fracmin);
+		GlobalUnfold();
+		GlobalCollapse();
+
 		GlobalSetMinMax(fracmin,fracmax);
 
 		// under old topology (current fraction of sites)
@@ -662,6 +667,11 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 		}
 
 		// under new topology (current fraction of sites)
+		GlobalCollapse();
+
+		// resampling mappings for sites already under the new topology
+		GlobalSetMinMax(fracmax,1);
+		GlobalUnfold();
 		GlobalCollapse();
 
 		// switch back to old topology

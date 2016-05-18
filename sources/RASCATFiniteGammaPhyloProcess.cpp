@@ -19,6 +19,33 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "Parallel.h"
 #include <string>
 
+double RASCATFiniteGammaPhyloProcess::GlobalRestrictedTemperedMove()	{
+
+	double tuning = 1.0;
+	// important to start with that one
+	// if marginal suff stat move is done before that in a multi gene context
+
+	if (TemperedBL())	{
+		GammaBranchProcess::Move(tuning,10);
+		GammaBranchProcess::Move(0.1*tuning,10);
+		GlobalUpdateParameters();
+	}
+
+	if (TemperedRate())	{
+		DGamRateProcess::Move(tuning,10);
+		DGamRateProcess::Move(0.3*tuning,10);
+		DGamRateProcess::Move(0.03*tuning,10);
+		GlobalUpdateParameters();
+	}
+
+	if (TemperedGene())	{
+	// if (TemperedProfile())	{
+		PoissonFiniteProfileProcess::Move(1,1,1);
+		GlobalUpdateParameters();
+	}
+}
+
+
 void RASCATFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	if (GetNprocs() > 1)	{
 	// MPI2
@@ -291,6 +318,20 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int rates = 0;
 	string testdatafile = "";
 
+	int rateprior = 0;
+	int profileprior = 0;
+	int rootprior = 0;
+
+	string taxon1 = "None";
+	string taxon2 = "None";
+	string taxon3 = "None";
+	string taxon4 = "None";
+	int toponstep = 100;
+	int bf = 0;
+	int temperedbl = 1;
+	int temperedgene = 0;
+	int temperedrate = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -308,6 +349,51 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 			}
 			else if (s == "-ppred")	{
 				ppred = 1;
+			}
+			else if (s == "-ppredrate")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					rateprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					rateprior = 0;
+				}
+				else	{
+					cerr << "error after ppredrate: should be prior or posterior\n";
+					throw(0);
+				}
+			}
+			else if (s == "-bf")	{
+				bf = 1;
+				i++;
+				taxon1 = argv[i];
+				i++;
+				taxon2 = argv[i];
+				i++;
+				taxon3 = argv[i];
+				i++;
+				taxon4 = argv[i];
+				i++;
+				toponstep = atoi(argv[i]);
+			}
+			else if (s == "+tmpbl")	{
+				temperedbl = 1;
+			}
+			else if (s == "-tmpbl")	{
+				temperedbl = 0;
+			}
+			else if (s == "+tmprate")	{
+				temperedrate = 1;
+			}
+			else if (s == "-tmprate")	{
+				temperedrate = 0;
+			}
+			else if (s == "+tmpprofile")	{
+				temperedgene = 1;
+			}
+			else if (s == "-tmpprofile")	{
+				temperedgene = 0;
 			}
 			else if (s == "-sitelogl")	{
 				sitelogl = 1;
@@ -377,6 +463,12 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	if (cv)	{
 		ReadCV(testdatafile,name,burnin,every,until);
 	}
+	else if (bf)	{
+		SetTemperedBL(temperedbl);
+		SetTemperedGene(temperedgene);
+		SetTemperedRate(temperedrate);
+		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponstep);
+	}
 	else if (sitelogl)	{
 		ReadSiteLogL(name,burnin,every,until);
 	}
@@ -384,7 +476,7 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		ReadSiteRates(name,burnin,every,until);
 	}
 	else if (ppred)	{
-		PostPred(ppred,name,burnin,every,until);
+		PostPred(ppred,name,burnin,every,until,rateprior,profileprior,rootprior);
 	}
 	else if (map)	{
 		ReadMap(name,burnin,every,until);

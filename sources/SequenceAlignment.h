@@ -550,7 +550,7 @@ class SequenceAlignment	{
 		return GetTotalDiversity(0,GetNsite()) / GetNsite();
 	}
 
-	double CompositionalHeterogeneity(ostream* os)	{
+	double CompositionalHeterogeneity(double* taxstat, ostream* os, double& meandist)	{
 
 		int Nstate = GetNstate();
 		double** taxfreq = new double*[Ntaxa];
@@ -604,18 +604,22 @@ class SequenceAlignment	{
 			(*os) << '\n';
 		}
 
-		// compute max distance
+		// compute max and mean squared distance
 		double maxdist = 0;
+		meandist = 0;
 		for (int j=0; j<Ntaxa; j++)	{
 			double dist = 0;
 			for (int k=0; k<Nstate; k++)	{
 				double tmp = (taxfreq[j][k] - globalfreq[k]);
 				dist += tmp * tmp;
 			}
+			taxstat[j] = dist;
 			if (maxdist < dist)	{
 				maxdist = dist;
 			}
+			meandist += dist;
 		}
+		meandist /= Ntaxa;
 
 		delete[] globalfreq;
 		for (int j=0; j<Ntaxa; j++)	{

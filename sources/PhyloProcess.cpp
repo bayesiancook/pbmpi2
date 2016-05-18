@@ -67,12 +67,14 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 	SetProfileDim();
 	CreateMPI(GetData()->GetNsite());
 
-	SetTree("None");
+	SetTreeFromString(treestring);
 	Create();
 
-	if ((! GetMyid()) && unfold)	{
-		FromStream(is);
-		GlobalUnfold();
+	if (unfold)	{
+		if (! GetMyid()) {
+			FromStream(is);
+			GlobalUnfold();
+		}
 	}
 }
 
@@ -1464,7 +1466,9 @@ double PhyloProcess::MoveTopo()	{
 	}
 	if (NTSPR)	{
 		tsprchrono.Start();
-		double tmp = TemperedGibbsSPR(topolambda,topomu,toponstep,NTSPR,0);
+		double logbf = 0;
+		double deltalogp = 0;
+		double tmp = TemperedGibbsSPR(topolambda,topomu,toponstep,1,2,deltalogp,logbf);
 		tsprchrono.Stop();
 		success += tmp;
 		tspracc += tmp;
@@ -1482,7 +1486,9 @@ double PhyloProcess::MoveTopo()	{
 
 	if (ntspec)	{
 		tsprchrono.Start();
-		double tmp = TemperedGibbsSPR(0,topomu,toponstep,ntspec,1);
+		double logbf;
+		double deltalogp = 0;
+		double tmp = TemperedGibbsSPR(0,topomu,toponstep,ntspec,1,deltalogp,logbf);
 		tsprchrono.Stop();
 		success += tmp;
 		tspracc += tmp;
@@ -1508,8 +1514,9 @@ double PhyloProcess::MoveTopo()	{
 		tsprchrono.Start();
 		double tmp = 0;
 		if (bpp == 3)	{
-			tmp = TemperedGibbsSPR(bppbeta,topomu,toponstep,ntbpp,0);
-			tmp = GibbsMHSPR(bppbeta,nbpp,0);
+			double logbf = 0;
+			double deltalogp = 0;
+			tmp = TemperedGibbsSPR(bppbeta,topomu,toponstep,ntbpp,0,deltalogp,logbf);
 		}
 		else	{
 			tmp = TemperedBPPSPR(ntbpp,bppnstep);
@@ -1642,6 +1649,15 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 	switch(signal) {
 
+	case SETRATEPRIOR:
+		SlaveSetRatePrior();
+		break;
+	case SETPROFILEPRIOR:
+		SlaveSetProfilePrior();
+		break;
+	case SETROOTPRIOR:
+		SlaveSetRootPrior();
+		break;
 	case RESHUFFLE:
 		SlaveReshuffleSites();
 		break;

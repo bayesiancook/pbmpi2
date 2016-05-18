@@ -53,10 +53,13 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void SlavePropagate(int,int,bool,double);
 
 	// default constructor: pointers set to nil
-	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0) {
+	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
+		tree = 0;
+		treestring = "None";
 		temperedbl = 1;
-		temperedgene = 0;
 		temperedrate = 0;
+		// temperedprofile = 0;
+		temperedgene = 0;
 		empfreq = 0;
 		tracktopo = 0;
 		topoburnin = 0;
@@ -137,24 +140,36 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		temperedbl = in;
 	}
 
-	void SetTemperedGene(int in)	{
-		temperedgene = in;
-	}
-
 	void SetTemperedRate(int in)	{
 		temperedrate = in;
+	}
+
+	/*
+	void SetTemperedProfile(int in)	{
+		temperedprofile = in;
+	}
+	*/
+
+	void SetTemperedGene(int in)	{
+		temperedgene = in;
 	}
 
 	int TemperedBL()	{
 		return temperedbl;
 	}
 
-	int TemperedGene()	{
-		return temperedgene;
-	}
-
 	int TemperedRate()	{
 		return temperedrate;
+	}
+
+	/*
+	int TemperedProfile()	{
+		return temperedprofile;
+	}
+	*/
+
+	int TemperedGene()	{
+		return temperedgene;
 	}
 
 
@@ -269,7 +284,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void Monitor(ostream& os);
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
 
 	void SetMPI(int inmyid, int innprocs)	{
 		myid = inmyid;
@@ -425,10 +440,20 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void ReadPB(int argc, char* argv[]);
 	virtual void Read(string name, int burnin, int every, int until);
+	virtual void ReadTopoBF(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nstep);
 	virtual void ReadSiteLogL(string name, int burnin, int every, int until);
 	virtual void ReadCV(string testdatafile, string name, int burnin, int every, int until, int iscodon = 0, GeneticCodeType codetype = Universal);
-	virtual void PostPred(int ppredtype, string name, int burnin, int every, int until);
+	virtual void PostPred(int ppredtype, string name, int burnin, int every, int until, int rateprior, int profileprior, int rootprior);
 
+	void GlobalSetRatePrior(int inrateprior);
+	void SlaveSetRatePrior();
+	
+	void GlobalSetProfilePrior(int inprofileprior);
+	void SlaveSetProfilePrior();
+	
+	void GlobalSetRootPrior(int inrootprior);
+	void SlaveSetRootPrior();
+	
 	void ReadSiteRates(string name, int burnin, int every, int until);
 
 	// The following methids are here to write the mappings.
@@ -543,9 +568,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double NonMPITemperedBPPSPR(int nstep);
 	double MPITemperedBPPSPR(int nstep);
 
-	double TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special);
-	int MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special);
-	int NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special);
+	double TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special, double& deltalogp, double& logBF);
+	int MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& deltalogp, double& logBF);
+	int NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& deltalogp, double& logBF);
 
 	double GibbsSPR(int nrep, int special);
 	int MPIGibbsSPR(int special);
@@ -644,7 +669,36 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	void MakeObservedArray();
 
+
+	virtual void SetTreeFromString(string treestring)	{
+		if (tree)	{
+			cerr << "error in SetTreeFromString: tree already exists\n";
+			exit(1);
+		}
+		tree = new Tree(GetData()->GetTaxonSet());
+		if (GetMyid() == 0)	{
+			if (treestring == "None")	{
+				tree->MakeRandomTree();
+			}
+			else	{
+				istringstream s(treestring);
+				tree->ReadFromStream(s);
+			}
+			GlobalBroadcastTree();
+		}
+		else	{
+			SlaveBroadcastTree();
+		}
+		tree->RegisterWith(GetData()->GetTaxonSet());
+		CloneTree();
+		tree2->RegisterWith(GetData()->GetTaxonSet());
+	}
+
 	virtual void SetTree(string treefile)	{
+		if (tree)	{
+			cerr << "error in SetTree: tree already exists\n";
+			exit(1);
+		}
 		if (treefile == "None")	{
 			tree = new Tree(GetData()->GetTaxonSet());
 			if (GetMyid() == 0)	{
@@ -670,12 +724,12 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void New(int unfold = 1);
 	virtual void Open(istream& is, int unfold = 1);
 
-	virtual double GetObservedCompositionalHeterogeneity()	{
-		return GetData()->CompositionalHeterogeneity(0);
+	virtual double GetObservedCompositionalHeterogeneity(double* taxstat, double& meandist)	{
+		return data->CompositionalHeterogeneity(taxstat,0,meandist);
 	}
 
-	virtual double GetCompositionalHeterogeneity()	{
-		return GetData()->CompositionalHeterogeneity(0);
+	virtual double GetCompositionalHeterogeneity(double* taxstat, double& meandist)	{
+		return data->CompositionalHeterogeneity(taxstat,0,meandist);
 	}
 
 	void CreateMissingMap();
@@ -807,10 +861,16 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int tracktopo;
 
 	int temperedbl;
-	int temperedgene;
 	int temperedrate;
+	// int temperedprofile;
+	int temperedgene;
 
 	SequenceAlignment* data;
+
+	int dataclamped;
+	int rateprior;
+	int profileprior;
+	int rootprior;
 };
 
 

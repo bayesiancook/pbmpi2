@@ -135,6 +135,8 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 
 		GlobalCollapse();
 
+		AugmentedMove(tuning);
+		/*
 		GammaBranchProcess::Move(tuning,10);
 
 		// this one is important 
@@ -150,6 +152,7 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		// GlobalUpdateParameters();
 
 		PoissonFiniteProfileProcess::Move(1,1,5);
+		*/
 
 		GlobalUnfold();
 		chronototal.Stop();
@@ -159,6 +162,29 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		return 1;
 	
 	}
+
+	virtual double AugmentedMove(double tuning = 1.0)	{
+
+		// important to start with that one
+		// if marginal suff stat move is done before that in a multi gene context
+		GammaBranchProcess::Move(tuning,10);
+		GammaBranchProcess::Move(0.1*tuning,10);
+
+		GlobalUpdateParameters();
+		DGamRateProcess::Move(tuning,10);
+		DGamRateProcess::Move(0.3*tuning,10);
+		DGamRateProcess::Move(0.03*tuning,10);
+
+		PoissonFiniteProfileProcess::Move(1,1,5);
+		/*
+		if (iscodon)	{
+			PoissonFiniteProfileProcess::Move(0.1,1,15);
+			PoissonFiniteProfileProcess::Move(0.01,1,15);
+		}
+		*/
+	}
+
+	virtual double GlobalRestrictedTemperedMove();
 
 	virtual double GlobalGetFullLogLikelihood();
 	virtual void SlaveGetFullLogLikelihood();

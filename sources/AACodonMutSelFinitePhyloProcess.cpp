@@ -239,6 +239,10 @@ void AACodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[])	{
 	int map = 0;
 	string testdatafile = "";
 
+	int rateprior = 0;
+	int profileprior = 0;
+	int rootprior = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -259,9 +263,23 @@ void AACodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[])	{
 				i++;
 				testdatafile = argv[i];
 			}
-			//else if (s == "-ppred")	{
-			//	ppred = 1;
-			//}
+			else if (s == "-ppred")	{
+				ppred = 1;
+			}
+			else if (s == "-ppredrate")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					rateprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					rateprior = 0;
+				}
+				else	{
+					cerr << "error after ppredrate: should be prior or posterior\n";
+					throw(0);
+				}
+			}
 			else if ( (s == "-x") || (s == "-extract") )	{
 				i++;
 				if (i == argc) throw(0);

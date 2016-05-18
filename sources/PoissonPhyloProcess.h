@@ -81,8 +81,8 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 
 	void SampleTrueNodeStates(const Link* from);
 
-	virtual double GetObservedCompositionalHeterogeneity()	{
-		return truedata->CompositionalHeterogeneity(0);
+	virtual double GetObservedCompositionalHeterogeneity(double* taxstat, double& meandist)	{
+		return truedata->CompositionalHeterogeneity(taxstat,0,meandist);
 	}
 
 	void RecursiveUnzipBranchSitePath(const Link* from);

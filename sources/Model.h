@@ -256,6 +256,7 @@ class Model	{
 
 		process->SetMPI(myid,nprocs);
 		process->New();
+
 	}
 
 	Model(string inname, int myid, int nprocs)	{

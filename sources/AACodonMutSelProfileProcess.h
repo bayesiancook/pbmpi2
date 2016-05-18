@@ -84,8 +84,28 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 	virtual void UpdateNucRRSuffStat() = 0;
 
 	double NucStatSuffStatLogProb();
-	double NuxRRSuffStatLogProb();
+	double NucRRSuffStatLogProb();
 	*/
+
+	virtual void UpdateSiteOmegaSuffStat()	{
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+	
+				map<pair<int,int>, int>& paircount = GetSitePairCount(i);
+				map<int,double>& waitingtime = GetSiteWaitingTime(i);
+				CodonSubMatrix* codonmatrix = dynamic_cast<CodonSubMatrix*>(GetMatrix(i));
+				for (map<int,double>::iterator j = waitingtime.begin(); j!= waitingtime.end(); j++)	{
+					siteomegasuffstatbeta[i] += j->second * codonmatrix->RateAwayNonsyn(j->first) / GetSiteOmega(i);
+				}
+
+				for (map<pair<int,int>, int>::iterator j = paircount.begin(); j!= paircount.end(); j++)	{
+					if (! codonmatrix->Synonymous(j->first.first,j->first.second) )	{
+						siteomegasuffstatcount[i] += j->second;
+					}
+				}
+			}
+		}
+	}
 
 	protected:
 

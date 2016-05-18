@@ -29,6 +29,7 @@ class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaA
 		fixcodonprofile = infixcodonprofile;
 		Nomega = inNomega;
 		fixomega = infixomega;
+		omegaweightalpha = 1.0;
 		omegaprior = inomegaprior;
 
 		kappaprior = inkappaprior;

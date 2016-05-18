@@ -39,7 +39,7 @@ class CodonSubMatrix : public SubMatrix	{
 	int GetNucRRIndex(int i, int j)	{return (i<j) ? (2 * Nnuc - i - 1) * i / 2 + j - i - 1 : (2 * Nnuc - j - 1) * j / 2 + i - j - 1 ;}
 	int GetCodonNearestNeighbors(int i, int j) {
 		if (j> (Nnuc-1)*statespace->Npos)	{
-			cerr << "error in NearestNeighbors call\n";
+			cerr << "error in GetNearestNeighbors call; cannot have more than " << (Nnuc-1)*statespace->Npos << " nearest neighbors.\n";
 			exit(1);	
 		}
 		return statespace->CodonNearestNeighbors[i][j];

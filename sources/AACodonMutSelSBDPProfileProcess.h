@@ -38,7 +38,7 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	// still to be implemented
 	virtual void UpdateNucStatSuffStat();
 	virtual void UpdateNucRRSuffStat();
-	virtual void UpdateOmegaSuffStat(); check
+	virtual void UpdateOmegaSuffStat(); done
 	*/
 	
 	virtual void UpdateOmegaSuffStat()	{
@@ -51,15 +51,14 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 		
 				map<pair<int,int>, int>& paircount = GetSitePairCount(i);
 				map<int,double>& waitingtime = GetSiteWaitingTime(i);
-				int cat = alloc[i];
-				CodonSubMatrix* codonmatrix = dynamic_cast<CodonSubMatrix*>(matrixarray[cat]);
-				for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
-					omegasuffstatbeta += i->second * codonmatrix->RateAwayNonsyn(i->first) / *omega;
+				CodonSubMatrix* codonmatrix = dynamic_cast<CodonSubMatrix*>(GetMatrix(i));
+				for (map<int,double>::iterator j = waitingtime.begin(); j!= waitingtime.end(); j++)	{
+					omegasuffstatbeta += j->second * codonmatrix->RateAwayNonsyn(j->first) / *omega;
 				}
 
-				for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
-					if (! codonmatrix->Synonymous(i->first.first,i->first.second) )	{
-						omegasuffstatcount += i->second;
+				for (map<pair<int,int>, int>::iterator j = paircount.begin(); j!= paircount.end(); j++)	{
+					if (! codonmatrix->Synonymous(j->first.first,j->first.second) )	{
+						omegasuffstatcount += j->second;
 					}
 				}
 			}
@@ -98,7 +97,6 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 
 	void SlaveUpdateOmegaSuffStat()	{
 		UpdateOmegaSuffStat();
-		
 		MPI_Send(&omegasuffstatcount,1,MPI_INT,0,TAG1,MPI_COMM_WORLD);
 		MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Send(&omegasuffstatbeta,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);

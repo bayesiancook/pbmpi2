@@ -45,7 +45,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= pb_mpi ccpmcmc readpb_mpi tracecomp bpcomp bpcomp2
+ALL= pb_mpi ccpmcmc readpb_mpi tracecomp bpcomp bpcomp2 diversity
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean
@@ -72,6 +72,9 @@ endif
 
 $(PROGSDIR)/ccpmcmc: CCPMCMC.o $(OBJS)
 	$(CC) CCPMCMC.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+
+$(PROGSDIR)/diversity: Diversity.o $(OBJS)
+	$(CC) Diversity.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 $(PROGSDIR)/missfrac: MissingFractionPerGene.o $(OBJS)
 	$(CC) MissingFractionPerGene.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@

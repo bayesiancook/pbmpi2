@@ -361,6 +361,10 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 	double meanlogbf = 0;
 	double varlogbf = 0;
 
+	int b = 100;
+
+	ofstream logos((name + ".logbflog").c_str());
+
 	while (i < until)	{
 		cerr << ".";
 		cerr.flush();
@@ -369,6 +373,15 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 		i++;
 
 		QuickUpdate();
+
+		logos << i << '\n';
+		Trace(logos);
+		for (int k=0; k<b; k++)	{
+			Move(1.0);
+			Trace(logos);
+		}
+		logos << '\n';
+		logos.flush();
 
 		double tmpdeltalogp = 0;
 		double tmplogbf = 0;
@@ -379,6 +392,9 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 		vardeltalogp += tmpdeltalogp * tmpdeltalogp;
 		meanlogbf += tmplogbf;
 		varlogbf += tmplogbf * tmplogbf;
+
+		logos << tmplogbf << '\n' << '\n';
+		logos.flush();
 
 		int nrep = 1;
 		while ((i<until) && (nrep < every))	{

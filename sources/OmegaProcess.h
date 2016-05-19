@@ -171,6 +171,7 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 	}
 
 	virtual void SampleOmega();
+	virtual void SampleOmegaWeights();
 	virtual double LogOmegaPrior();
 	double MoveOmega(double tuning); 
 	double MoveOmegaValues(double tuning); 

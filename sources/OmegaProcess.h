@@ -22,6 +22,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 
 #include "MPIModule.h"
+#include "Random.h"
 
 class OmegaProcess : public virtual MPIModule	{
 
@@ -74,8 +75,19 @@ class OmegaProcess : public virtual MPIModule	{
 		exit(1);
 	}
 
+	virtual double GetSiteOmega(int site)	{
+		cerr << "in OmegaProcess::GetSiteOmega\n";
+		exit(1);
+	}
+
+	virtual void UpdateSiteOmegaSuffStat()	{
+		cerr << "in OmegaProcess::UpdateSiteOmegaSuffStat\n";
+	}
+
 	int fixomega;
 	int omegaprior;
+	double* siteomegasuffstatbeta;
+	int* siteomegasuffstatcount;
 };
 
 
@@ -88,6 +100,10 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 
 	double GetOmega()	{
 		return *omega;
+	}
+
+	double GetSiteOmega(int site)	{
+		GetOmega();
 	}
 	
 	virtual double OmegaSuffStatLogProb()	{
@@ -154,15 +170,16 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 		return omegaalloc[site];
 	}
 
-	// still to be implemented
-	virtual void SampleOmega()	{
-	}
-
-	// still to be implemented
-	virtual double LogOmegaPrior()	{
-		return 0;
-	}
-
+	virtual void SampleOmega();
+	virtual double LogOmegaPrior();
+	double MoveOmega(double tuning); 
+	double MoveOmegaValues(double tuning); 
+	void ResampleOmegaWeights();
+	double GlobalOmegaIncrementalFiniteMove(int nrep);
+	double SlaveOmegaIncrementalFiniteMove();
+	void UpdateOmegaSuffStat();
+	void GlobalUpdateOmegaSuffStat();
+	void SlaveUpdateOmegaSuffStat();
 	virtual double OmegaSuffStatLogProb()	{
 
 		double total = 0;
@@ -172,10 +189,14 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 		return total;
 	}
 
-	// still to be implemented
 	virtual double OmegaSuffStatLogProb(int l)	{
-		return 0;
+		return omegasuffstatcount[l] * log(omega[l]) - omegasuffstatbeta[l] * *omega;
 	}
+
+	double OmegaLogStatProb(int site, int omegaalloc)	{
+		return siteomegasuffstatcount[site] * log(omega[omegaalloc]) - siteomegasuffstatbeta[site] * omega[omegaalloc];
+	}
+
 
 	protected:
 
@@ -183,6 +204,17 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 		if (! omega)	{
 			omega = new double[Nomega];
 			omegaalloc = new int[GetNsite()];
+			omegasuffstatbeta = new double[Nomega];
+			omegasuffstatcount = new int[Nomega];
+			siteomegasuffstatbeta = new double[GetNsite()];
+			siteomegasuffstatcount = new int[GetNsite()];
+			//siteomegasuffstatbeta = new double*[GetNsite()];
+			//siteomegasuffstatcount = new int*[GetNsite()];
+			omegaweight = new double[Nomega];
+			//for (int i=0; i<GetNsite(); i++)	{
+			//	siteomegasuffstatbeta[i] = new double[Nomega];
+			//	siteomegasuffstatcount[i] = new int[Nomega];
+			//}
 			SampleOmega();
 		}
 	}
@@ -191,6 +223,11 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 		if (omega)	{
 			delete[] omega;
 			delete[] omegaalloc;
+			delete[] omegasuffstatbeta;
+			delete[] omegasuffstatcount;
+			delete[] siteomegasuffstatbeta;
+			delete[] siteomegasuffstatcount;
+			delete[] omegaweight;
 			omega = 0;
 		}
 	}
@@ -198,6 +235,10 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 	double* omega;
 	int* omegaalloc;
 	int Nomega;
+	double* omegasuffstatbeta;
+	int* omegasuffstatcount;
+	double* omegaweight;
+	double omegaweightalpha;
 };
 
 #endif

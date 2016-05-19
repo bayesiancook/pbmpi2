@@ -112,6 +112,7 @@ void AACodonMutSelSBDPPhyloProcess::SlaveExecute(MESSAGE signal)	{
 			break;
 		case UPDATE_OMEGA:
 			SlaveUpdateOmegaSuffStat();
+			break;
 		default:
 			PhyloProcess::SlaveExecute(signal);
 	}

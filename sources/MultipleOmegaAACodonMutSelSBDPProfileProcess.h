@@ -17,6 +17,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef MULOMEGAAACODONMUTSELSBDPPROFILE_H
 #define MULOMEGAAACODONMUTSELSBDPPROFILE_H
 
+#include "Parallel.h"
 #include "SBDPProfileProcess.h"
 #include "MultipleOmegaAACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMultipleMatrixMixtureProfileProcess.h"
@@ -40,7 +41,7 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 	int GetSubAlloc(int site)	{
 		return GetOmegaSiteAlloc(site);
 	}
-
+	
 	protected:
 
 	void Create()	{
@@ -72,7 +73,6 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 		}
 		os << '\n';
 		os << '\n';
-		os << *omega << '\n';
 
 		os << kappa << '\n';
 		os << Ncomponent << '\n';
@@ -87,13 +87,22 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 			}
 			os << '\n';
 		}
+		os << Nomega << '\n';
+		for (int i=0; i<Nomega; i++)	{
+			os << omega[i] << '\t'; 	
+		}
+
+		os << '\n';
+		os << '\n';
 		for (int i=0; i<GetNsite(); i++)	{
 			if (ActiveSite(i))	{
 				os << alloc[i] << '\t';
+				os << omegaalloc[i] << '\t';
 			}
 		}
 		os << '\n';
-
+		os << '\n';
+		
 	}
 	void FromStream(istream& is)	{
 		for (int i=0; i<Nnuc; i++)	{
@@ -106,7 +115,6 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 			is >> codonprofile[i];
 		}
 
-		is >> *omega;
 		is >> kappa;
 		is >> Ncomponent;
 		for (int j=0; j<GetDim(); j++)	{
@@ -117,12 +125,18 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 				is >> profile[i][j];
 			}
 		}
+		is >> Nomega;
+		for (int i=0; i<Nomega; i++)	{
+			is >> omega[i]; 	
+		}
 		for (int i=0; i<GetNsite(); i++)	{
 			if (ActiveSite(i))	{
 				is >> alloc[i];
+				is >> omegaalloc[i];
 			}
 		}
 		ResampleWeights();
+		ResampleOmegaWeights();
 	}
 
 

@@ -37,6 +37,11 @@ class SingleOmegaAACodonMutSelProfileProcess : public virtual AACodonMutSelProfi
 		exit(1);
 	}
 
+	//double OmegaSuffStatLogProb()	{
+	//	//return ProfileSuffStatLogProb();
+	//	return omegasuffstatcount * log(*omega) - omegasuffstatbeta * *omega;
+	//}
+
 
 	protected:
 

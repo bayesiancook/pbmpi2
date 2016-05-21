@@ -162,8 +162,14 @@ double GammaBranchProcess::LogLengthHyperPrior()	{
 
 double GammaBranchProcess::Move(double tuning, int nrep)	{
 
-	double total = MPIMoveBranchLengths();
+	double total = 0;
 	if (nrep && (! hierarchicallengthprior))	{
+		total += MoveLengthHyperParameters(tuning,nrep);
+		total += MoveLengthHyperParameters(tuning,0.1*nrep);
+	}
+	total += MPIMoveBranchLengths();
+	if (nrep && (! hierarchicallengthprior))	{
+		total += MoveLengthHyperParameters(tuning,0.1*nrep);
 		total += MoveLengthHyperParameters(tuning,nrep);
 	}
 	return total;

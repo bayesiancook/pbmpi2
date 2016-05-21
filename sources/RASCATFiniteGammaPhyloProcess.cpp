@@ -26,8 +26,8 @@ double RASCATFiniteGammaPhyloProcess::GlobalRestrictedTemperedMove()	{
 	// if marginal suff stat move is done before that in a multi gene context
 
 	if (TemperedBL())	{
-		GammaBranchProcess::Move(tuning,10);
-		GammaBranchProcess::Move(0.1*tuning,10);
+		// GammaBranchProcess::Move(tuning,0);
+		GammaBranchProcess::Move(tuning,50);
 		GlobalUpdateParameters();
 	}
 
@@ -35,6 +35,8 @@ double RASCATFiniteGammaPhyloProcess::GlobalRestrictedTemperedMove()	{
 		DGamRateProcess::Move(tuning,10);
 		DGamRateProcess::Move(0.3*tuning,10);
 		DGamRateProcess::Move(0.03*tuning,10);
+		DGamRateProcess::Move(0.3*tuning,10);
+		DGamRateProcess::Move(tuning,10);
 		GlobalUpdateParameters();
 	}
 
@@ -326,7 +328,8 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	string taxon2 = "None";
 	string taxon3 = "None";
 	string taxon4 = "None";
-	int toponstep = 100;
+	int toponfrac = 100;
+	int toponstep = 10;
 	int bf = 0;
 	int temperedbl = 1;
 	int temperedgene = 0;
@@ -374,6 +377,8 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				taxon3 = argv[i];
 				i++;
 				taxon4 = argv[i];
+				i++;
+				toponfrac= atoi(argv[i]);
 				i++;
 				toponstep = atoi(argv[i]);
 			}
@@ -467,7 +472,7 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		SetTemperedBL(temperedbl);
 		SetTemperedGene(temperedgene);
 		SetTemperedRate(temperedrate);
-		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponstep);
+		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponfrac,toponstep);
 	}
 	else if (sitelogl)	{
 		ReadSiteLogL(name,burnin,every,until);

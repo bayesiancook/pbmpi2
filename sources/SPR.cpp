@@ -46,7 +46,7 @@ double PhyloProcess::GibbsMHSPR(double lambda, int nrep, int special)	{
 	return naccepted / nrep;
 }
 
-double PhyloProcess::TemperedGibbsSPR(double lambda, double mu, int nstep, int nrep, int special, double& deltalogp, double& logBF)	{
+double PhyloProcess::TemperedGibbsSPR(double lambda, double mu, int nfrac, int nrep, int special, double& deltalogp, double& logBF, int nstep)	{
 
 	double naccepted = 0;
 
@@ -57,7 +57,7 @@ double PhyloProcess::TemperedGibbsSPR(double lambda, double mu, int nstep, int n
 		for (int rep=0; rep<nrep; rep++)	{
 			double tmpdeltalogp = 0;
 			double tmplogBF = 0;
-			naccepted += MPITemperedGibbsSPR(lambda,mu,nstep, special, tmpdeltalogp, tmplogBF);
+			naccepted += MPITemperedGibbsSPR(lambda,mu,nfrac, special, tmpdeltalogp, tmplogBF, nstep);
 			deltalogp += tmpdeltalogp;
 			logBF += tmplogBF;
 		}
@@ -66,7 +66,7 @@ double PhyloProcess::TemperedGibbsSPR(double lambda, double mu, int nstep, int n
 		for (int rep=0; rep<nrep; rep++)	{
 			double tmpdeltalogp = 0;
 			double tmplogBF = 0;
-			naccepted += NonMPITemperedGibbsSPR(lambda,mu,nstep, special, tmpdeltalogp, tmplogBF);
+			naccepted += NonMPITemperedGibbsSPR(lambda,mu,nfrac, special, tmpdeltalogp, tmplogBF);
 			deltalogp += tmpdeltalogp;
 			logBF += tmplogBF;
 		}
@@ -124,13 +124,14 @@ int PhyloProcess::NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, in
 	return 0;
 }
 
-int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int special, double& retdeltalogp, double& logBF)	{
+int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int special, double& retdeltalogp, double& logBF, int nstep)	{
 
 	int version = 1;
 	Link* up = 0;
 	Link* down = 0;
 
 	ofstream tos((name + ".topo").c_str(),ios_base::app);
+	tos.precision(10);
 	if ((special != 2) && TrackTopo())	{
 		tos << "tspr\t";
 		GetTree()->ToStreamStandardForm(tos);
@@ -151,7 +152,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	if (version == 2)	{
 		GlobalBackupTree();
 	}
-	
+
 	// not useful because we will detach a node and update condl afterwards
 	// GlobalUpdateConditionalLikelihoods();
 
@@ -292,61 +293,6 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		logp2 = i->second;
 	}
 
-	/*
-	if (taxon3 != "None")	{
-		todown = GetTree()->GetLCA(taxon3,taxon4);
-		toup = GetTree()->GetAncestor(todown);
-		logp2 = loglmap[pair<Link*,Link*>(todown,toup)];
-	}
-	else	{
-
-		// compute total prob mass
-		int nchoice = 0;
-		for (map<pair<Link*,Link*>,double>::iterator i=loglmap.begin(); i!=loglmap.end(); i++)	{
-			if (i->first.first != fromdown)	{
-				nchoice++;
-				double tmp = exp(i->second - max1);
-				total1 += tmp;
-			}
-			if (isinf(total1))	{
-				cerr << "error in gibbs: inf\n";
-				cerr << "total1\n";
-				exit(1);
-			}
-			if (isnan(total1))	{
-				cerr << "error in gibbs: nan\n";
-			}
-		}
-		if (! nchoice)	{
-			cerr << "error in gibbs: no possible choice\n";
-			exit(1);
-		}
-
-		// randomly choose final position, duly excluding current position
-		double u = total1 * rnd::GetRandom().Uniform();
-		map<pair<Link*,Link*>, double>::iterator i = loglmap.begin();
-		double cumul = 0;
-		if (i->first.first != fromdown)	{
-			cumul += exp(i->second-max1);
-		}
-		while ((i!=loglmap.end()) && (cumul < u))	{
-			i++;
-			if (i == loglmap.end())	{
-				cerr << "error in gibbs spr: overflow\n";
-				exit(1);
-			}
-			if (i->first.first != fromdown)	{
-				cumul += exp(i->second-max1);
-			}
-		}
-		
-		// store values of target position
-		todown = i->first.first;
-		toup = i->first.second;
-		logp2 = i->second;
-	}
-	*/
-
 	double deltalogp = 0;
 
 	double reldifffwd = 2 * fabs(logp2 - prologp1) / fabs(logp2 + prologp1);
@@ -372,32 +318,26 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 			GlobalSwapTree();
 		}
 
-		/*
-		if (! sumratealloc)	{
-			GlobalActivateSumOverRateAllocations();
-
-			sumratealloc = 1;
-
-			GlobalUpdateConditionalLikelihoods();
-			deltalogp = GlobalTemperedTreeMoveLogProb(nstep,down,up,fromdown,fromup,todown,toup);
-
-			GlobalInactivateSumOverRateAllocations();
-
-			sumratealloc = 0;
-		}
-		else	{
-		*/
-
 		GlobalUpdateConditionalLikelihoods();
 
 		if (version == 1)	{
-			deltalogp = GlobalTemperedTreeMoveLogProb(nstep,down,up,fromdown,fromup,todown,toup);
+			if (nstep > 1)	{
+				deltalogp = GlobalTreeSteppingStone(nfrac,nstep,down,up,fromdown,fromup,todown,toup);
+			}
+			else	{
+				deltalogp = GlobalTemperedTreeMoveLogProb(nfrac,down,up,fromdown,fromup,todown,toup);
+			}
 		}
 
 		if (version == 2)	{
-			deltalogp = GlobalTemperedTreeMoveLogProb(nstep);
+			if (nstep > 1)	{
+				cerr << "stepping stong version 2 not yet implemented\n";
+				exit(1);
+			}
+			else	{
+				deltalogp = GlobalTemperedTreeMoveLogProb(nfrac);
+			}
 		}
-		// }
 
 		if (version == 2)	{
 			// GlobalSwapTree();
@@ -463,6 +403,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 	}
 
 	GlobalAttach(down,up,todown,toup);
+	GlobalUpdateConditionalLikelihoods();
 
 	if ((special != 2) && TrackTopo())	{
 		GetTree()->ToStreamStandardForm(tos);
@@ -565,15 +506,6 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nstep, int s
 		}
 
 	}
-	/*
-	if (maketempmove &&  (! sumratealloc))	{
-		GlobalActivateSumOverRateAllocations();
-		sumratealloc = 1;
-		GlobalUpdateConditionalLikelihoods();
-		GlobalInactivateSumOverRateAllocations();
-		sumratealloc = 0;
-	}
-	*/
 
 	// is this important ?
 	GlobalUpdateConditionalLikelihoods();

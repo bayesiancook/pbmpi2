@@ -334,7 +334,7 @@ void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	
 
 }
 
-void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int nstep)	{
+void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int nfrac, int nstep)	{
 
 	SetSpecialSPR(intaxon1,intaxon2,intaxon3,intaxon4);
 	fixroot = 1;
@@ -361,8 +361,7 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 	double meanlogbf = 0;
 	double varlogbf = 0;
 
-	int b = 100;
-
+	ofstream os((name + ".logbf").c_str());
 	ofstream logos((name + ".logbflog").c_str());
 
 	while (i < until)	{
@@ -376,8 +375,11 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 
 		logos << i << '\n';
 		Trace(logos);
-		for (int k=0; k<b; k++)	{
-			Move(1.0);
+		for (int k=0; k<nstep; k++)	{
+			GlobalCollapse();
+			GlobalRestrictedTemperedMove();
+			GlobalUnfold();
+			// Move(1.0);
 			Trace(logos);
 		}
 		logos << '\n';
@@ -385,7 +387,7 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 
 		double tmpdeltalogp = 0;
 		double tmplogbf = 0;
-		TemperedGibbsSPR(0,0,nstep,1,2,tmpdeltalogp,tmplogbf);
+		TemperedGibbsSPR(0,0,nfrac,1,2,tmpdeltalogp,tmplogbf,nstep);
 		deltalogp.push_back(tmpdeltalogp);
 		logbf.push_back(tmplogbf);
 		meandeltalogp += tmpdeltalogp;
@@ -393,8 +395,7 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 		meanlogbf += tmplogbf;
 		varlogbf += tmplogbf * tmplogbf;
 
-		logos << tmplogbf << '\n' << '\n';
-		logos.flush();
+		os << tmplogbf << '\t' << tmpdeltalogp << '\n';
 
 		int nrep = 1;
 		while ((i<until) && (nrep < every))	{
@@ -404,6 +405,7 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 		}
 	}
 	cerr << '\n';
+	os << '\n';
 
 	meandeltalogp /= samplesize;
 	vardeltalogp /= samplesize;
@@ -439,15 +441,16 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 	cout << "logbf2: " << meanlogbf << '\t' << varlogbf << '\n';
 	cout << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
 
-	ofstream os((name + ".logbf").c_str());
 	os << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
 	os << "logbf1: " << log(mean) + max << '\t' << effsize << '\n';
 	os << "logbf2: " << meanlogbf << '\t' << varlogbf << '\n';
 	os << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
 	os << '\n';
+	/*
 	for (int i=0; i<samplesize; i++)	{
 		os << logbf[i] << '\t' << deltalogp[i] << '\n';
 	}
+	*/
 }
 
 void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, int until, int inrateprior, int inprofileprior, int inrootprior)	{

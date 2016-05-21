@@ -622,12 +622,121 @@ double PhyloProcess::AnnealedTopoMoveCycle(int nrep, double tuning, double frac0
 }
 */
 
+double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep, Link* down, Link* up, Link* fromdown, Link* fromup, Link* todown, Link* toup)	{
+
+	// assumes the two trees have already been set up
+
+	double deltalogp = 0;
+
+	ofstream os((name + ".tempered").c_str());
+	// under old topology (all sites)
+	GlobalCollapse();
+
+	for (int frac=0; frac<nfrac; frac++)	{
+
+		double fracmin = ((double) frac) / nfrac;
+		double fracmax = ((double) frac+1) / nfrac;
+
+		for (int rep=0; rep<nstep; rep++)	{
+			GlobalRestrictedTemperedMove();
+		}
+
+		double delta = 0;
+
+		for (int rep=0; rep<nstep; rep++)	{
+
+			GlobalRestrictedTemperedMove();
+
+			// resampling mappings for sites still under the current topology
+			GlobalSetMinMax(0,fracmin);
+			GlobalUnfold();
+			GlobalCollapse();
+
+			GlobalSetMinMax(fracmin,fracmax);
+
+			// under old topology (current fraction of sites)
+			GlobalUnfold();
+
+			if (sumovercomponents)	{
+				delta -= GlobalGetFullLogLikelihood();
+			}
+			else	{
+				delta -= logL;
+			}
+
+			// switch to new topology
+			GlobalDetach(down,up);
+			GlobalAttach(down,up,todown,toup);
+
+			GlobalUpdateConditionalLikelihoods();
+
+			if (sumovercomponents)	{
+				delta += GlobalGetFullLogLikelihood();
+			}
+			else	{
+				delta += logL;
+			}
+
+			if (frac < nfrac-1)	{
+				// first switch back to old topology
+				GlobalDetach(down,up);
+				GlobalAttach(down,up,fromdown,fromup);
+				GlobalUpdateConditionalLikelihoods();
+				// then collapse state
+				GlobalCollapse();
+			}
+
+			else	{
+				// first collapse state
+				GlobalCollapse();
+				// then switch back to old topology
+				GlobalDetach(down,up);
+				GlobalAttach(down,up,fromdown,fromup);
+			}
+
+			// again switch to new topology
+			GlobalDetach(down,up);
+			GlobalAttach(down,up,todown,toup);
+			// resampling mappings for sites already under the new topology
+			GlobalSetMinMax(fracmax,1);
+			GlobalUnfold();
+			GlobalCollapse();
+			// finally switch back to old topology
+			GlobalDetach(down,up);
+			GlobalAttach(down,up,fromdown,fromup);
+
+			// for all sites
+			GlobalSetMinMax(0,1);
+			GlobalRestrictedTemperedMove();
+		}
+
+		deltalogp += delta/nstep;
+		double f = 0.5 * (fracmin + fracmax);
+		os << f << '\t' << 1-f << '\t' << delta << '\t' << deltalogp << '\n';
+		os.flush();
+
+		for (int rep=0; rep<nstep; rep++)	{
+			GlobalRestrictedTemperedMove();
+		}
+	}
+
+	os.close();
+	// switch to new topology
+	GlobalDetach(down,up);
+	GlobalAttach(down,up,todown,toup);
+
+	// under new topology (all sites)
+	GlobalUnfold();
+	return deltalogp;
+}
+
 double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* up, Link* fromdown, Link* fromup, Link* todown, Link* toup)	{
 
 	// assumes the two trees have already been set up
 
 	double deltalogp = 0;
 
+	ofstream os((name + ".tempered").c_str());
 	// under old topology (all sites)
 	GlobalCollapse();
 
@@ -646,11 +755,12 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 		// under old topology (current fraction of sites)
 		GlobalUnfold();
 
+		double delta = 0;
 		if (sumovercomponents)	{
-			deltalogp -= GlobalGetFullLogLikelihood();
+			delta -= GlobalGetFullLogLikelihood();
 		}
 		else	{
-			deltalogp -= logL;
+			delta -= logL;
 		}
 
 		// switch to new topology
@@ -660,11 +770,16 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 		GlobalUpdateConditionalLikelihoods();
 
 		if (sumovercomponents)	{
-			deltalogp += GlobalGetFullLogLikelihood();
+			delta += GlobalGetFullLogLikelihood();
 		}
 		else	{
-			deltalogp += logL;
+			delta += logL;
 		}
+
+		deltalogp += delta;
+		double f = 0.5 * (fracmin + fracmax);
+		os << f << '\t' << 1-f << '\t' << delta << '\t' << deltalogp << '\n';
+		os.flush();
 
 		// under new topology (current fraction of sites)
 		GlobalCollapse();
@@ -686,6 +801,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 		}
 	}
 
+	os.close();
 	// switch to new topology
 	GlobalDetach(down,up);
 	GlobalAttach(down,up,todown,toup);
@@ -702,6 +818,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 	// backup
 
 	double deltalogp = 0;
+	ofstream os((name + ".tempered").c_str());
 
 	// under old topology (all sites)
 	GlobalCollapse();
@@ -711,16 +828,22 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 		double fracmin = ((double) step) / nstep;
 		double fracmax = ((double) step+1) / nstep;
 
+		// resampling mappings for sites still under the current topology
+		GlobalSetMinMax(0,fracmin);
+		GlobalUnfold();
+		GlobalCollapse();
+
 		GlobalSetMinMax(fracmin,fracmax);
 
 		// under old topology (current fraction of sites)
 		GlobalUnfold();
 
+		double delta = 0;
 		if (sumovercomponents)	{
-			deltalogp -= GlobalGetFullLogLikelihood();
+			delta -= GlobalGetFullLogLikelihood();
 		}
 		else	{
-			deltalogp -= logL;
+			delta -= logL;
 		}
 
 		GlobalSwapTree();
@@ -728,13 +851,23 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 		GlobalUpdateConditionalLikelihoods();
 
 		if (sumovercomponents)	{
-			deltalogp += GlobalGetFullLogLikelihood();
+			delta += GlobalGetFullLogLikelihood();
 		}
 		else	{
-			deltalogp += logL;
+			delta += logL;
 		}
 
+		deltalogp += delta;
+		double f = 0.5 * (fracmin + fracmax);
+		os << f << '\t' << 1-f << '\t' << delta << '\t' << deltalogp << '\n';
+		os.flush();
+
 		// under new topology (current fraction of sites)
+		GlobalCollapse();
+
+		// resampling mappings for sites already under the new topology
+		GlobalSetMinMax(fracmax,1);
+		GlobalUnfold();
 		GlobalCollapse();
 
 		GlobalSwapTree();
@@ -747,6 +880,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 		}
 	}
 
+	os.close();
 	GlobalSwapTree();
 
 	// under new topology (all sites)

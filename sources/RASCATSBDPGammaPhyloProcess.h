@@ -80,8 +80,10 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 	}
 
 	virtual double Move(double tuning = 1.0)	{
+
 		chronototal.Start();
 		propchrono.Start();
+
 		BranchLengthMove(tuning);
 		BranchLengthMove(0.1 * tuning);
 
@@ -115,11 +117,16 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 		DGamRateProcess::Move(0.03*tuning,10);
 
 		PoissonSBDPProfileProcess::Move(1,1,1);
+		GlobalUpdateParameters();
+		/*
 		if (iscodon)	{
 			PoissonSBDPProfileProcess::Move(0.1,1,15);
 			PoissonSBDPProfileProcess::Move(0.01,1,15);
 		}
+		*/
 	}
+
+	virtual double GlobalRestrictedTemperedMove();
 
 	virtual double GlobalRestrictedMoveCycle(int nrep = 1, double tuning = 1.0)	{
 

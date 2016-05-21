@@ -52,6 +52,22 @@ class GammaBranchProcess : public virtual BranchProcess	{
 	double MPIMoveBranchLengths();
 	double NonMPIMoveBranchLengths();
 
+	void BackupLength()	{
+		BranchProcess::BackupLength();
+		if (! hierarchicallengthprior)	{
+			bkbranchalpha = branchalpha;
+			bkbranchbeta = branchbeta;
+		}
+	}
+
+	void RestoreLength()	{
+		BranchProcess::RestoreLength();
+		if (! hierarchicallengthprior)	{
+			branchalpha = bkbranchalpha;
+			branchbeta = bkbranchbeta;
+		}
+	}
+	
 	double GetMeanLengthRelVar()	{
 
 		if (! hierarchicallengthprior)	{
@@ -78,6 +94,8 @@ class GammaBranchProcess : public virtual BranchProcess	{
 
 	double branchalpha;
 	double branchbeta;
+	double bkbranchalpha;
+	double bkbranchbeta;
 	double* branchmean;
 	double* branchrelvar;
 

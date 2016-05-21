@@ -18,6 +18,34 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "Parallel.h"
 #include <string>
 
+double RASCATSBDPGammaPhyloProcess::GlobalRestrictedTemperedMove()	{
+
+	double tuning = 1.0;
+	// important to start with that one
+	// if marginal suff stat move is done before that in a multi gene context
+
+	if (TemperedBL())	{
+		// GammaBranchProcess::Move(tuning,0);
+		GammaBranchProcess::Move(tuning,50);
+		GlobalUpdateParameters();
+	}
+
+	if (TemperedRate())	{
+		DGamRateProcess::Move(tuning,10);
+		DGamRateProcess::Move(0.3*tuning,10);
+		DGamRateProcess::Move(0.03*tuning,10);
+		DGamRateProcess::Move(0.3*tuning,10);
+		DGamRateProcess::Move(tuning,10);
+		GlobalUpdateParameters();
+	}
+
+	if (TemperedGene())	{
+	// if (TemperedProfile())	{
+		PoissonSBDPProfileProcess::Move(1,1,1);
+		GlobalUpdateParameters();
+	}
+}
+
 void RASCATSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 
 	if (GetNprocs() > 1)	{

@@ -711,6 +711,17 @@ void FiniteProfileProcess::ReadStatFix(string filename)	{
 			empweight[i] = 1.0 / WLSR5N;
 		}
 	}
+	else if (filename == "empfreq")	{
+		Nfixcomp = 1;
+		statfix = new double*[Nfixcomp];
+		empweight = new double[Nfixcomp];
+		double* freq = GetEmpiricalFreq();
+		statfix[0] = new double[Nstate];
+		for (int k=0; k<Nstate; k++)	{
+			statfix[0][k] = freq[k];
+		}
+		empweight[0] = 1.0;
+	}
 	else if ((filename == "CG6") || (filename == "cg6") || (filename == "c6") || (filename == "C6"))	{
 		if (Nstate != 20)	{
 			cerr << "error: CG6 is for aminoacids\n";

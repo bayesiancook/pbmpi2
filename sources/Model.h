@@ -334,6 +334,7 @@ class Model	{
 		}
 
 		process->SetSize(size);
+		process->SetName(name);
 	}
 
 	void ToStream(ostream& os, bool header)	{

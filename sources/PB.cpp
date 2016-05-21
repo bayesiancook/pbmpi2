@@ -210,8 +210,12 @@ int main(int argc, char* argv[])	{
 			else if (s == "-fastcondrate")	{
 				fastcondrate = 1;
 			}
+			else if (s == "-fullsumcomp")	{
+				sumovercomponents = -1;
+			}
 			else if (s == "-sumcomp")	{
-				sumovercomponents = 1;
+				i++;
+				sumovercomponents = atoi(argv[i]);
 			}
 			else if (s == "-nmodemax")	{
 				i++;

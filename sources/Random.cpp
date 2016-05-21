@@ -268,6 +268,34 @@ void Random::DrawFromUrn (int* tab , int n, int N)	{	// draw n out of N
 	delete[] index;
 }
 
+void Random::DrawFromUrn (int* tab , int n, int N, double* probarray, double* chosenprobs)	{	// draw n out of N
+
+	for (int i=0; i<n; i++)	{
+		tab[i] =0;
+	}
+	double tot = 0;
+	for (int k=0; k<N; k++)	{
+		tot += probarray[k];
+	}
+	for (int i=0; i<n; i++)	{
+		double u = tot * Uniform();
+		double tmp = probarray[0];
+		int k = 0;
+		while ((k<N) && (u>tmp))	{
+			k++;
+			if (k==N)	{
+				cerr << "error in DrawFromUrn: overflow\n";
+				exit(1);
+			}
+			tmp += probarray[k];
+		}
+		tab[i] = k;
+		chosenprobs[i] = probarray[k];
+		tot -= probarray[k];
+		probarray[k] = 0;
+	}
+}
+
 /* Should be a better function *Raphael Poujol*
 
 void Random::DrawFromUrn (int* tab , int n, int N)      {       // draw n out of N

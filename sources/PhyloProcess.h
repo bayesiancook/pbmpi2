@@ -53,7 +53,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void SlavePropagate(int,int,bool,double);
 
 	// default constructor: pointers set to nil
-	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), sumovercomponents(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
+	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
 		tree = 0;
 		treestring = "None";
 		temperedbl = 1;
@@ -853,7 +853,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double ziptopoacc;
 
 	int currenttopo;
-	int sumovercomponents;
+	// int sumovercomponents;
 	// int sumratealloc;
 
 	int fasttopo;

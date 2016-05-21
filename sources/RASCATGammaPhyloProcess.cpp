@@ -170,6 +170,17 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int profileprior = 0;
 	int rootprior = 0;
 
+	string taxon1 = "None";
+	string taxon2 = "None";
+	string taxon3 = "None";
+	string taxon4 = "None";
+	int toponfrac = 100;
+	int toponstep = 10;
+	int bf = 0;
+	int temperedbl = 1;
+	int temperedgene = 0;
+	int temperedrate = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -201,6 +212,39 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 					cerr << "error after ppredrate: should be prior or posterior\n";
 					throw(0);
 				}
+			}
+			else if (s == "-bf")	{
+				bf = 1;
+				i++;
+				taxon1 = argv[i];
+				i++;
+				taxon2 = argv[i];
+				i++;
+				taxon3 = argv[i];
+				i++;
+				taxon4 = argv[i];
+				i++;
+				toponfrac= atoi(argv[i]);
+				i++;
+				toponstep = atoi(argv[i]);
+			}
+			else if (s == "+tmpbl")	{
+				temperedbl = 1;
+			}
+			else if (s == "-tmpbl")	{
+				temperedbl = 0;
+			}
+			else if (s == "+tmprate")	{
+				temperedrate = 1;
+			}
+			else if (s == "-tmprate")	{
+				temperedrate = 0;
+			}
+			else if (s == "+tmpprofile")	{
+				temperedgene = 1;
+			}
+			else if (s == "-tmpprofile")	{
+				temperedgene = 0;
 			}
 			else if (s == "-sitelogl")	{
 				sitelogl = 1;
@@ -278,6 +322,12 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	}
 	else if (cv)	{
 		ReadCV(testdatafile,name,burnin,every,until);
+	}
+	else if (bf)	{
+		SetTemperedBL(temperedbl);
+		SetTemperedGene(temperedgene);
+		SetTemperedRate(temperedrate);
+		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponfrac,toponstep);
 	}
 	else if (sitelogl)	{
 		ReadSiteLogL(name,burnin,every,until);

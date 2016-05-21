@@ -25,7 +25,7 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 
 	public:
 
-	MixtureProfileProcess() : profile(0), nmodemax(5000) {}
+	MixtureProfileProcess() : profile(0), nmodemax(5000), mtryalloc(0) {}
 	virtual ~MixtureProfileProcess(){}
 
 	double* GetProfile(int site)	{
@@ -52,6 +52,10 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	// for allocation purpose
 	virtual int GetNmodeMax() {return GetNsite() > nmodemax ? nmodemax : GetNsite();}
 	virtual void SetNmodeMax(int n) {nmodemax = n;}
+
+	void GlobalChooseMultipleTryAlloc();
+	void SlaveChooseMultipleTryAlloc();
+	void ChooseMultipleTryAlloc();
 
 	double GetStatEnt();
 
@@ -165,6 +169,10 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	int Ncomponent;
 	double* logstatprior;
 	double* profilesuffstatlogprob;
+
+	// sumovercomponents
+	int** mtryalloc;
+	double** mtryweight;
 
 	int nmodemax;
 

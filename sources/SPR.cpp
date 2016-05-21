@@ -212,8 +212,8 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 	// choose among all target positions different from current position
 	double max1 = 0;
 	int notfound = 1;
-	Link* fromup = 0;
 	double prologp1 = 0;
+	Link* fromup = 0;
 	for (map<pair<Link*,Link*>,double>::iterator i=loglmap.begin(); i!=loglmap.end(); i++)	{
 		// grep values of current position
 		if (i->first.first == fromdown)	{
@@ -403,6 +403,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 	}
 
 	GlobalAttach(down,up,todown,toup);
+	// useful?
 	GlobalUpdateConditionalLikelihoods();
 
 	if ((special != 2) && TrackTopo())	{
@@ -674,62 +675,6 @@ int PhyloProcess::MPIGibbsMHSPR(double lambda, int special)	{
 		toup = i->first.second;
 		logp2 = i->second;
 	}
-	/*
-	if (taxon3 != "None")	{
-
-		todown = GetTree()->GetLCA(taxon3,taxon4);
-		toup = GetTree()->GetAncestor(todown);
-		logp2 = loglmap[pair<Link*,Link*>(todown,toup)];
-
-	}
-	else	{
-
-		// compute total prob mass
-		int nchoice = 0;
-		for (map<pair<Link*,Link*>,double>::iterator i=loglmap.begin(); i!=loglmap.end(); i++)	{
-			if (i->first.first != fromdown)	{
-				nchoice++;
-				double tmp = exp(i->second - max1);
-				total1 += tmp;
-			}
-			if (isinf(total1))	{
-				cerr << "error in gibbs: inf\n";
-				cerr << "total1\n";
-				exit(1);
-			}
-			if (isnan(total1))	{
-				cerr << "error in gibbs: nan\n";
-			}
-		}
-		if (! nchoice)	{
-			cerr << "error in gibbs: no possible choice\n";
-			exit(1);
-		}
-
-		// randomly choose final position, duly excluding current position
-		double u = total1 * rnd::GetRandom().Uniform();
-		map<pair<Link*,Link*>, double>::iterator i = loglmap.begin();
-		double cumul = 0;
-		if (i->first.first != fromdown)	{
-			cumul += exp(i->second-max1);
-		}
-		while ((i!=loglmap.end()) && (cumul < u))	{
-			i++;
-			if (i == loglmap.end())	{
-				cerr << "error in gibbs spr: overflow\n";
-				exit(1);
-			}
-			if (i->first.first != fromdown)	{
-				cumul += exp(i->second-max1);
-			}
-		}
-		
-		// store values of target position
-		todown = i->first.first;
-		toup = i->first.second;
-		logp2 = i->second;
-	}
-	*/
 
 	// calculate probability of reverse move
 	double max2 = 0;

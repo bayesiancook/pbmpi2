@@ -75,6 +75,9 @@ void RASCATSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 	case UPDATE_RATE:
 		SlaveUpdateRateSuffStat();
 		break;
+	case MTRYALLOC:
+		SlaveChooseMultipleTryAlloc();
+		break;
 	default:
 		PhyloProcess::SlaveExecute(signal);
 	}

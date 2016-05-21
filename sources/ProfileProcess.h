@@ -40,7 +40,7 @@ class ProfileProcess : public virtual MPIModule {
 
 	public:
 
-	ProfileProcess() : dim(0), activesuffstat(false), statinfcount(0), totstatcount(0), profilepriortype(0), proposemode(0), allocmode(0) {}
+	ProfileProcess() : dim(0), activesuffstat(false), statinfcount(0), totstatcount(0), profilepriortype(0), sumovercomponents(0), proposemode(0), allocmode(0) {}
 	virtual ~ProfileProcess() {}
 
 	//------
@@ -113,6 +113,21 @@ class ProfileProcess : public virtual MPIModule {
 		cerr << "in ProfileProcess::GetMinStat\n";
 		exit(1);
 		return 0;
+	}
+
+	virtual void GlobalChooseMultipleTryAlloc()	{
+		cerr << "error: in ProfileProcess::GlobalChooseMultipleTryAlloc\n";
+		exit(1);
+	}
+
+	virtual void SlaveChooseMultipleTryAlloc()	{
+		cerr << "error: in ProfileProcess::SlaveChooseMultipleTryAlloc\n";
+		exit(1);
+	}
+
+	virtual void ChooseMultipleTryAlloc()	{
+		cerr << "error: in ProfileProcess::ChooseMultipleTryAlloc\n";
+		exit(1);
 	}
 
 
@@ -312,6 +327,7 @@ class ProfileProcess : public virtual MPIModule {
 	int totstatcount;
 
 	int profilepriortype;
+	int sumovercomponents;
 
 	int proposemode;
 	double profacc;

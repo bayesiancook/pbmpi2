@@ -123,9 +123,14 @@ void RASCATFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 
 	double** modesitelogL = new double*[GetNsite()];
+	int ncomp = GetNcomponent();
+	if ((sumovercomponents > 0) && (sumovercomponents < GetNcomponent()))	{
+		ncomp = sumovercomponents;
+	}
+
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
-			modesitelogL[i] = new double[GetNcomponent()];
+			modesitelogL[i] = new double[ncomp];
 		}
 	}
 
@@ -137,10 +142,15 @@ double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 		}
 	}
 
-	for (int k=0; k<GetNcomponent(); k++)	{
+	for (int k=0; k<ncomp; k++)	{
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{
-				AddSite(i,k);
+				if (ncomp == GetNcomponent())	{
+					AddSite(i,k);
+				}
+				else	{
+					AddSite(i,mtryalloc[i][k]);
+				}
 				UpdateZip(i);
 			}
 		}
@@ -152,7 +162,12 @@ double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 		}
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{
-				RemoveSite(i,k);
+				if (ncomp == GetNcomponent())	{
+					RemoveSite(i,k);
+				}
+				else	{
+					RemoveSite(i,mtryalloc[i][k]);
+				}
 			}
 		}
 	}
@@ -160,26 +175,38 @@ double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
 			double max = modesitelogL[i][0];
-			for (int k=1; k<GetNcomponent(); k++)	{
+			for (int k=1; k<ncomp; k++)	{
 				if (max < modesitelogL[i][k])	{
 					max = modesitelogL[i][k];
 				}
 			}
 			double total = 0;
-			double cumul[GetNcomponent()];
-			for (int k=0; k<GetNcomponent(); k++)	{
-				double tmp = weight[k] * exp(modesitelogL[i][k] - max);
+			double cumul[ncomp];
+			for (int k=0; k<ncomp; k++)	{
+				double w = 0;
+				if (ncomp == GetNcomponent())	{
+					w = weight[k];
+				}
+				else	{
+					w = weight[mtryalloc[i][k]] / mtryweight[i][k];
+				}
+				double tmp = w * exp(modesitelogL[i][k] - max);
 				total += tmp;
 				cumul[k] = total;
 			}
 
 			double u = total * rnd::GetRandom().Uniform();
 			int k = 0;
-			while ((k<GetNcomponent()) && (u>cumul[k]))	{
+			while ((k<ncomp) && (u>cumul[k]))	{
 				k++;
 			}
 
-			AddSite(i,k);
+			if (ncomp == GetNcomponent())	{
+				AddSite(i,k);
+			}
+			else	{
+				AddSite(i,mtryalloc[i][k]);
+			}
 			UpdateZip(i);
 
 			double sitetotlogL = log(total) + max;
@@ -251,6 +278,9 @@ void RASCATFiniteGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 		break;
 	case STATFIX:
 		SlaveGetStatFix();
+		break;
+	case MTRYALLOC:
+		SlaveChooseMultipleTryAlloc();
 		break;
 	default:
 		PhyloProcess::SlaveExecute(signal);

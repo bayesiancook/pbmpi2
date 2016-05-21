@@ -68,6 +68,7 @@ class Random {
  	int Choose(int);
 	int FiniteDiscrete(int n, const double* probarray);
   	void DrawFromUrn(int*, int n, int N);
+  	void DrawFromUrn(int*, int n, int N, double* probarray, double* chosenprobs);
 	int DrawFromDiscreteDistribution(double* p, int n);
 	int DrawFromLogDiscreteDistribution(double* ll, int n);
 

@@ -41,11 +41,34 @@ void MixtureProfileProcess::Create()	{
 		occupancy = new int[GetNmodeMax()];
 		logstatprior = new double[GetNmodeMax()];
 		profilesuffstatlogprob = new double[GetNmodeMax()];
+		if (sumovercomponents > 0)	{
+			if (mtryalloc)	{
+				cerr << "error: mtryalloc already allocated\n";
+				exit(1);
+			}
+			mtryalloc = new int*[GetNsite()];
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				mtryalloc[i] = new int[sumovercomponents];
+			}
+			mtryweight = new double*[GetNsite()];
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				mtryweight[i] = new double[sumovercomponents];
+			}
+		}
 	}
 }
 
 void MixtureProfileProcess::Delete()	{
 	if (profile)	{
+		if (mtryalloc)	{
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				delete[] mtryalloc[i];
+				delete[] mtryweight[i];
+			}
+			delete[] mtryalloc;
+			delete[] mtryweight;
+			mtryalloc = 0;
+		}
 		delete[] profilesuffstatlogprob;
 		delete[] logstatprior;
 		delete[] allocprofile;
@@ -55,6 +78,34 @@ void MixtureProfileProcess::Delete()	{
 		profile = 0;
 		ProfileProcess::Delete();
 	}
+}
+
+void MixtureProfileProcess::ChooseMultipleTryAlloc()	{
+
+	int n = sumovercomponents;
+	if (n > GetNcomponent())	{
+		n = GetNcomponent();
+	}
+	double* probarray = new double[GetNcomponent()];
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		for (int k=0; k<GetNcomponent(); k++)	{
+			probarray[k] = GetMinStat(profile[k],i);
+		}
+		rnd::GetRandom().DrawFromUrn(mtryalloc[i],n,GetNcomponent(),probarray,mtryweight[i]);
+	}
+}
+
+void MixtureProfileProcess::GlobalChooseMultipleTryAlloc()	{
+
+	MESSAGE signal = MTRYALLOC;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&sumovercomponents,1,MPI_INT,0,MPI_COMM_WORLD);
+}
+
+void MixtureProfileProcess::SlaveChooseMultipleTryAlloc()	{
+
+	MPI_Bcast(&sumovercomponents,1,MPI_INT,0,MPI_COMM_WORLD);
+	ChooseMultipleTryAlloc();
 }
 
 double MixtureProfileProcess::GetStatEnt()	{

@@ -626,6 +626,10 @@ double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep, Link* down, L
 
 	// assumes the two trees have already been set up
 
+	if (sumovercomponents > 0)	{
+		GlobalChooseMultipleTryAlloc();
+	}
+
 	double deltalogp = 0;
 
 	ofstream os((name + ".tempered").c_str());

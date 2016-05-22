@@ -72,6 +72,8 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 	virtual void SlaveGetFullLogLikelihood();
 	virtual double GetFullLogLikelihood();
 
+	void ReadStatMin(string name, int burnin, int every, int until);
+
 	void FromStream(istream& is)	{
 		GammaBranchProcess::FromStream(is);
 		DGamRateProcess::FromStream(is);
@@ -116,7 +118,7 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 		DGamRateProcess::Move(0.3*tuning,10);
 		DGamRateProcess::Move(0.03*tuning,10);
 
-		PoissonSBDPProfileProcess::Move(1,1,1);
+		PoissonSBDPProfileProcess::Move(1,5,1,1);
 		GlobalUpdateParameters();
 		/*
 		if (iscodon)	{

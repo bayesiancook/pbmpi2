@@ -362,7 +362,8 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 	double varlogbf = 0;
 
 	ofstream os((name + ".logbf").c_str());
-	ofstream logos((name + ".logbflog").c_str());
+	ofstream logos((name + ".logbflist").c_str());
+	logos << "#logbf\tDlogL\n";
 
 	while (i < until)	{
 		cerr << ".";
@@ -373,17 +374,22 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 
 		QuickUpdate();
 
+		/*
 		logos << i << '\n';
 		Trace(logos);
-		for (int k=0; k<nstep; k++)	{
+		*/
+		// for (int k=0; k<nstep; k++)	{
+		for (int k=0; k<nfrac; k++)	{
 			GlobalCollapse();
 			GlobalRestrictedTemperedMove();
 			GlobalUnfold();
 			// Move(1.0);
-			Trace(logos);
+			// Trace(logos);
 		}
+		/*
 		logos << '\n';
 		logos.flush();
+		*/
 
 		double tmpdeltalogp = 0;
 		double tmplogbf = 0;
@@ -395,7 +401,8 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 		meanlogbf += tmplogbf;
 		varlogbf += tmplogbf * tmplogbf;
 
-		os << tmplogbf << '\t' << tmpdeltalogp << '\n';
+		logos << tmplogbf << '\t' << tmpdeltalogp << '\n';
+		logos.flush();
 
 		int nrep = 1;
 		while ((i<until) && (nrep < every))	{
@@ -426,16 +433,15 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 		}
 	}
 	double mean = 0;
-	double var = 0;
+	double m2 = 0;
 	for (int i=0; i<samplesize; i++)	{
 		double tmp = exp(logbf[i] - max);
 		mean += tmp;
-		var += tmp*tmp;
+		m2 += tmp*tmp;
 	}
 	mean /= samplesize;
-	var /= samplesize;
-	var -= mean*mean;
-	double effsize = mean*mean / var;
+	m2 /= samplesize;
+	double effsize = mean*mean / m2;
 	cout << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
 	cout << "logbf1: " << log(mean) + max << '\t' << effsize << '\n';
 	cout << "logbf2: " << meanlogbf << '\t' << varlogbf << '\n';
@@ -446,6 +452,7 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 	os << "logbf2: " << meanlogbf << '\t' << varlogbf << '\n';
 	os << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
 	os << '\n';
+	os.close();
 	/*
 	for (int i=0; i<samplesize; i++)	{
 		os << logbf[i] << '\t' << deltalogp[i] << '\n';

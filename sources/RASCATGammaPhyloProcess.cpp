@@ -181,6 +181,10 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int temperedgene = 0;
 	int temperedrate = 0;
 
+	int sumcomp = 0;
+
+	int statmin = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -213,6 +217,9 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 					throw(0);
 				}
 			}
+			else if (s == "-statmin")	{
+				statmin = 1;
+			}
 			else if (s == "-bf")	{
 				bf = 1;
 				i++;
@@ -227,6 +234,13 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				toponfrac= atoi(argv[i]);
 				i++;
 				toponstep = atoi(argv[i]);
+			}
+			else if (s == "-sumcomp")	{
+				i++;
+				sumcomp = atoi(argv[i]);
+			}
+			else if (s == "-fullsumcomp")	{
+				sumcomp = -1;
 			}
 			else if (s == "+tmpbl")	{
 				temperedbl = 1;
@@ -317,6 +331,9 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	if (ss)	{
 		ReadSiteProfiles(name,burnin,every,until);
 	}
+	else if (statmin)	{
+		ReadStatMin(name,burnin,every,until);
+	}
 	else if (map)	{
 		ReadMap(name,burnin,every,until);
 	}
@@ -327,6 +344,10 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		SetTemperedBL(temperedbl);
 		SetTemperedGene(temperedgene);
 		SetTemperedRate(temperedrate);
+		sumovercomponents = sumcomp;
+		if (sumcomp > 0)	{
+			GlobalActivateSumOverComponents();
+		}
 		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponfrac,toponstep);
 	}
 	else if (sitelogl)	{
@@ -342,6 +363,13 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		Read(name,burnin,every,until);
 	}
 }
+
+void RASCATGammaPhyloProcess::ReadStatMin(string name, int burnin, int every, int until)	{
+
+	cerr << "in RASCATGammaPhyloProcess::ReadStatMin\n";
+	exit(1);
+}
+
 
 void RASCATGammaPhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int until)	{
 

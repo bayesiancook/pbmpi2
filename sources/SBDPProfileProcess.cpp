@@ -45,19 +45,19 @@ void SBDPProfileProcess::Delete()	{
 	}
 }
 
-double SBDPProfileProcess::Move(double tuning, int n, int nrep, int nalloc)	{
+double SBDPProfileProcess::Move(double tuning, int nmix, int nrep, int nalloc)	{
 
 	double ret = 0;
 	if (GetNprocs() > 1)	{
-		ret = MPIMove(tuning,n,nrep,nalloc);
+		ret = MPIMove(tuning,nmix,nrep,nalloc);
 	}
 	else	{
-		ret = NonMPIMove(tuning,n,nrep,nalloc);
+		ret = NonMPIMove(tuning,nmix,nrep,nalloc);
 	}
 	return ret;
 }
 
-double SBDPProfileProcess::MPIMove(double tuning, int n, int nrep, int nalloc)	{
+double SBDPProfileProcess::MPIMove(double tuning, int nmix, int nrep, int nalloc)	{
 
 	totchrono.Start();
 
@@ -82,18 +82,18 @@ double SBDPProfileProcess::MPIMove(double tuning, int n, int nrep, int nalloc)	{
 
 		if (proposemode)	{
 			if (allocmode)	{
-				profacc += GlobalMixMove(5,nalloc,0.1,40);
+				profacc += GlobalMixMove(nmix,nalloc,0.1,40);
 			}
 			else	{
-				profacc += GlobalMixMove(5,nalloc,0.001,40);
+				profacc += GlobalMixMove(nmix,nalloc,0.001,40);
 			}
 		}
 		else	{
 			if (allocmode)	{
-				profacc += GlobalMixMove(5,nalloc,0.1,40);
+				profacc += GlobalMixMove(nmix,nalloc,0.1,40);
 			}
 			else	{
-				profacc += GlobalMixMove(5,nalloc,0.001,40);
+				profacc += GlobalMixMove(nmix,nalloc,0.001,40);
 			}
 		}
 
@@ -113,7 +113,7 @@ double SBDPProfileProcess::MPIMove(double tuning, int n, int nrep, int nalloc)	{
 	return 1;
 }
 
-double SBDPProfileProcess::NonMPIMove(double tuning, int n, int nrep, int nalloc)	{
+double SBDPProfileProcess::NonMPIMove(double tuning, int nmix, int nrep, int nalloc)	{
 
 	totchrono.Start();
 
@@ -132,7 +132,7 @@ double SBDPProfileProcess::NonMPIMove(double tuning, int n, int nrep, int nalloc
 			UpdateModeProfileSuffStat();
 		}
 
-		profacc += MixMove(5,nalloc,0.001,40);
+		profacc += MixMove(nmix,nalloc,0.001,40);
 		proftry ++;
 
 		MoveOccupiedCompAlloc(5);

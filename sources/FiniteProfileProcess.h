@@ -97,6 +97,10 @@ class FiniteProfileProcess: public virtual DirichletMixtureProfileProcess	{
 	double LogWeightPrior();
 	double LogStatAlphaPrior();
 
+	virtual double GetWeight(int cat)	{
+		return weight[cat];
+	}
+
 	double GetWeightedStationaryEntropy()	{
 		double total = 0;
 		for (int k=0; k<Ncomponent; k++)	{

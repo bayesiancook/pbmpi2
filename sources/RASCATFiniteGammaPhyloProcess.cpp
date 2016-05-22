@@ -209,6 +209,9 @@ double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 			}
 			UpdateZip(i);
 
+			if (ncomp < GetNcomponent())	{
+				total /= ncomp;
+			}
 			double sitetotlogL = log(total) + max;
 			totlogL += sitetotlogL;
 		}
@@ -224,7 +227,6 @@ double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 		}
 	}
 	delete[] modesitelogL;
-
 	return totlogL;
 }
 
@@ -261,7 +263,7 @@ double RASCATFiniteGammaPhyloProcess::GlobalGetFullLogLikelihood()	{
 void RASCATFiniteGammaPhyloProcess::SlaveGetFullLogLikelihood()	{
 
 	PhyloProcess::SlaveGetFullLogLikelihood();
-	if (sumovercomponents && (Ncomponent > 1))	{
+	if (Ncomponent > 1)	{
 		MPI_Send(FiniteProfileProcess::alloc,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
 	}
 }
@@ -278,6 +280,9 @@ void RASCATFiniteGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 		break;
 	case STATFIX:
 		SlaveGetStatFix();
+		break;
+	case ACTIVATEMTRY:
+		SlaveActivateSumOverComponents();
 		break;
 	case MTRYALLOC:
 		SlaveChooseMultipleTryAlloc();
@@ -365,6 +370,8 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int temperedgene = 0;
 	int temperedrate = 0;
 
+	int sumcomp = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -411,6 +418,13 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				toponfrac= atoi(argv[i]);
 				i++;
 				toponstep = atoi(argv[i]);
+			}
+			else if (s == "-sumcomp")	{
+				i++;
+				sumcomp = atoi(argv[i]);
+			}
+			else if (s == "-fullsumcomp")	{
+				sumcomp = -1;
 			}
 			else if (s == "+tmpbl")	{
 				temperedbl = 1;
@@ -502,6 +516,10 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		SetTemperedBL(temperedbl);
 		SetTemperedGene(temperedgene);
 		SetTemperedRate(temperedrate);
+		sumovercomponents = sumcomp;
+		if (sumcomp > 0)	{
+			GlobalActivateSumOverComponents();
+		}
 		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponfrac,toponstep);
 	}
 	else if (sitelogl)	{

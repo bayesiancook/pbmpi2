@@ -57,6 +57,10 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	void SlaveChooseMultipleTryAlloc();
 	void ChooseMultipleTryAlloc();
 
+	void GlobalActivateSumOverComponents();
+	void SlaveActivateSumOverComponents();
+	void ActivateSumOverComponents();
+
 	double GetStatEnt();
 
 	protected:
@@ -132,6 +136,12 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	}
 	virtual void RemoveSite(int site, int cat)	{
 		occupancy[cat]--;
+	}
+
+	virtual double GetWeight(int cat)	{
+		cerr << "in MixtureProfileProcess::GetWeight\n";
+		exit(1);
+		return 1;
 	}
 
 	virtual void SwapComponents(int cat1, int cat2);

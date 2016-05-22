@@ -632,7 +632,7 @@ double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep, Link* down, L
 
 	double deltalogp = 0;
 
-	ofstream os((name + ".tempered").c_str());
+	// ofstream os((name + ".tempered").c_str());
 	// under old topology (all sites)
 	GlobalCollapse();
 
@@ -643,11 +643,15 @@ double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep, Link* down, L
 
 		for (int rep=0; rep<nstep; rep++)	{
 			GlobalRestrictedTemperedMove();
+			GlobalUnfold();
+			GlobalCollapse();
 		}
 
-		double delta = 0;
+		double delta[nstep];
 
 		for (int rep=0; rep<nstep; rep++)	{
+
+			delta[rep] = 0;
 
 			GlobalRestrictedTemperedMove();
 
@@ -662,10 +666,10 @@ double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep, Link* down, L
 			GlobalUnfold();
 
 			if (sumovercomponents)	{
-				delta -= GlobalGetFullLogLikelihood();
+				delta[rep] -= GlobalGetFullLogLikelihood();
 			}
 			else	{
-				delta -= logL;
+				delta[rep] -= logL;
 			}
 
 			// switch to new topology
@@ -675,10 +679,10 @@ double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep, Link* down, L
 			GlobalUpdateConditionalLikelihoods();
 
 			if (sumovercomponents)	{
-				delta += GlobalGetFullLogLikelihood();
+				delta[rep] += GlobalGetFullLogLikelihood();
 			}
 			else	{
-				delta += logL;
+				delta[rep] += logL;
 			}
 
 			if (frac < nfrac-1)	{
@@ -714,17 +718,31 @@ double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep, Link* down, L
 			GlobalRestrictedTemperedMove();
 		}
 
-		deltalogp += delta/nstep;
-		double f = 0.5 * (fracmin + fracmax);
-		os << f << '\t' << 1-f << '\t' << delta << '\t' << deltalogp << '\n';
-		os.flush();
+		double max = delta[0];
+		for (int rep=1; rep<nstep; rep++)	{
+			if (max < delta[rep])	{
+				max = delta[rep];
+			}
+		}
+		double tot = 0;
+		for (int rep=0; rep<nstep; rep++)	{
+			tot += exp(delta[rep] - max);
+		}
+		tot /= nstep;
+		
+		deltalogp += log(tot) + max;
+		// double f = 0.5 * (fracmin + fracmax);
+		// os << f << '\t' << 1-f << '\t' << delta << '\t' << deltalogp << '\n';
+		// os.flush();
 
+		/*
 		for (int rep=0; rep<nstep; rep++)	{
 			GlobalRestrictedTemperedMove();
 		}
+		*/
 	}
 
-	os.close();
+	// os.close();
 	// switch to new topology
 	GlobalDetach(down,up);
 	GlobalAttach(down,up,todown,toup);
@@ -740,7 +758,14 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 
 	double deltalogp = 0;
 
-	ofstream os((name + ".tempered").c_str());
+	/*
+	if (sumovercomponents > 0)	{
+		GlobalChooseMultipleTryAlloc();
+	}
+	*/
+
+
+	// ofstream os((name + ".tempered").c_str());
 	// under old topology (all sites)
 	GlobalCollapse();
 
@@ -758,6 +783,10 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 
 		// under old topology (current fraction of sites)
 		GlobalUnfold();
+
+		if (sumovercomponents > 0)	{
+			GlobalChooseMultipleTryAlloc();
+		}
 
 		double delta = 0;
 		if (sumovercomponents)	{
@@ -781,9 +810,10 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 		}
 
 		deltalogp += delta;
-		double f = 0.5 * (fracmin + fracmax);
-		os << f << '\t' << 1-f << '\t' << delta << '\t' << deltalogp << '\n';
-		os.flush();
+		// double f = 0.5 * (fracmin + fracmax);
+		// os << f << '\t' << 1-f << '\t' << delta << '\t' << deltalogp << '\n';
+		// cerr << f << '\t' << 1-f << '\t' << delta << '\t' << deltalogp << '\n';
+		// os.flush();
 
 		// under new topology (current fraction of sites)
 		GlobalCollapse();
@@ -805,7 +835,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 		}
 	}
 
-	os.close();
+	// os.close();
 	// switch to new topology
 	GlobalDetach(down,up);
 	GlobalAttach(down,up,todown,toup);
@@ -822,7 +852,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 	// backup
 
 	double deltalogp = 0;
-	ofstream os((name + ".tempered").c_str());
+	// ofstream os((name + ".tempered").c_str());
 
 	// under old topology (all sites)
 	GlobalCollapse();
@@ -862,9 +892,9 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 		}
 
 		deltalogp += delta;
-		double f = 0.5 * (fracmin + fracmax);
-		os << f << '\t' << 1-f << '\t' << delta << '\t' << deltalogp << '\n';
-		os.flush();
+		// double f = 0.5 * (fracmin + fracmax);
+		// os << f << '\t' << 1-f << '\t' << delta << '\t' << deltalogp << '\n';
+		// os.flush();
 
 		// under new topology (current fraction of sites)
 		GlobalCollapse();
@@ -884,7 +914,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 		}
 	}
 
-	os.close();
+	// os.close();
 	GlobalSwapTree();
 
 	// under new topology (all sites)

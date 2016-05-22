@@ -228,7 +228,7 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 			GlobalUpdateParameters();
 			DGamRateProcess::Move(0.3*tuning,10);
 			DGamRateProcess::Move(0.03*tuning,10);
-			ExpoConjugateGTRSBDPProfileProcess::Move(1,1,1);
+			ExpoConjugateGTRSBDPProfileProcess::Move(1,5,1,1);
 		}
 		return 1;
 	}

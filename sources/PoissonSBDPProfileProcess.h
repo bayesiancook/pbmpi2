@@ -31,8 +31,8 @@ class PoissonSBDPProfileProcess: public virtual PoissonDPProfileProcess, public 
 		return DiffLogSampling(cat,site);
 	}
 
-	virtual double Move(double tuning = 1, int n = 1, int nrep = 1)	{
-		return SBDPProfileProcess::Move(tuning,n,nrep);
+	virtual double Move(double tuning = 1, int nmix = 5, int nrep = 1, int nallocrep = 1)	{
+		return SBDPProfileProcess::Move(tuning,nmix,nrep,nallocrep);
 	}
 
 	protected:

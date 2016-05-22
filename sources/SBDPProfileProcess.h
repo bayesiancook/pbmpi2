@@ -30,7 +30,7 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 	SBDPProfileProcess() : DPProfileProcess(), V(0), maxweighterror(0), InitIncremental(0) {}
 	virtual ~SBDPProfileProcess(){}
 
-	virtual double Move(double tuning = 1, int n = 1, int nrep = 1, int nalloc = 1);
+	virtual double Move(double tuning = 1, int nmix = 5, int nrep = 1, int nalloc = 1);
 
 	int GetNDisplayedComponent()	{
 		return GetNOccupiedComponent();
@@ -44,8 +44,8 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 	virtual void Create();
 	virtual void Delete();
 
-	virtual double MPIMove(double tuning = 1, int n = 1, int nrep = 1, int nalloc = 1);
-	virtual double NonMPIMove(double tuning = 1, int n = 1, int nrep = 1, int nalloc = 1);
+	virtual double MPIMove(double tuning = 1, int nmix = 1, int nrep = 1, int nalloc = 1);
+	virtual double NonMPIMove(double tuning = 1, int nmix = 1, int nrep = 1, int nalloc = 1);
 
 	virtual double GlobalSMCAddSites();
 	virtual double SMCAddSites();
@@ -86,6 +86,10 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 	}
 		
 	virtual void SwapComponents(int cat1, int cat2);
+
+	virtual double GetWeight(int cat)	{
+		return weight[cat];
+	}
 
 	// double LogAllocPrior();
 	double LogIntegratedAllocProb();

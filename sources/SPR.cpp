@@ -126,7 +126,7 @@ int PhyloProcess::NonMPITemperedGibbsSPR(double lambda, double mu, int nstep, in
 
 int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int special, double& retdeltalogp, double& logBF, int nstep)	{
 
-	int version = 1;
+	int version = 2;
 	Link* up = 0;
 	Link* down = 0;
 
@@ -331,8 +331,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 
 		if (version == 2)	{
 			if (nstep > 1)	{
-				cerr << "stepping stong version 2 not yet implemented\n";
-				exit(1);
+				deltalogp = GlobalTreeSteppingStone(nfrac,nstep);
 			}
 			else	{
 				deltalogp = GlobalTemperedTreeMoveLogProb(nfrac);

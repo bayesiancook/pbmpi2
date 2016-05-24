@@ -111,6 +111,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	}
 
 	double GlobalTreeSteppingStone(int nfrac, int nstep, Link* from, Link* up, Link* fromdown, Link* fromup, Link* todown, Link* toup);
+	double GlobalTreeSteppingStone(int nfrac, int nstep);
 	double GlobalTemperedTreeMoveLogProb(int nstep, Link* from, Link* up, Link* fromdown, Link* fromup, Link* todown, Link* toup);
 	double GlobalTemperedTreeMoveLogProb(int nstep);
 	virtual double GlobalRestrictedTemperedMove();	

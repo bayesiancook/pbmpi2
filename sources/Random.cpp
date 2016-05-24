@@ -34,8 +34,8 @@ class random_init	{
 	public:
 	random_init()	{
 		//cerr << "initialising random. Non-random\n";
-		rnd::init(1,3621);
-		// rnd::init(1);
+		// rnd::init(1,3621);
+		rnd::init(1);
 	}
 
 };

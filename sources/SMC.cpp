@@ -643,8 +643,10 @@ double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep, Link* down, L
 
 		for (int rep=0; rep<nstep; rep++)	{
 			GlobalRestrictedTemperedMove();
+			/*
 			GlobalUnfold();
 			GlobalCollapse();
+			*/
 		}
 
 		double delta[nstep];
@@ -768,13 +770,13 @@ double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep)	{
 
 	for (int frac=0; frac<nfrac; frac++)	{
 
-		/*
 		for (int rep=0; rep<nstep; rep++)	{
 			GlobalRestrictedTemperedMove();
+			/*
 			GlobalUnfold();
 			GlobalCollapse();
+			*/
 		}
-		*/
 
 		double fracmin = ((double) frac) / nfrac;
 		double fracmax = ((double) frac+1) / nfrac;

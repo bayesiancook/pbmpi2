@@ -379,6 +379,7 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 		Trace(logos);
 		*/
 		// for (int k=0; k<nstep; k++)	{
+		/*
 		for (int k=0; k<nfrac; k++)	{
 			GlobalCollapse();
 			GlobalRestrictedTemperedMove();
@@ -386,6 +387,7 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 			// Move(1.0);
 			// Trace(logos);
 		}
+		*/
 		/*
 		logos << '\n';
 		logos.flush();
@@ -393,7 +395,10 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 
 		double tmpdeltalogp = 0;
 		double tmplogbf = 0;
+		Chrono chrono;
+		chrono.Start();
 		TemperedGibbsSPR(0,0,nfrac,1,2,tmpdeltalogp,tmplogbf,nstep);
+		chrono.Stop();
 		deltalogp.push_back(tmpdeltalogp);
 		logbf.push_back(tmplogbf);
 		meandeltalogp += tmpdeltalogp;
@@ -401,7 +406,7 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 		meanlogbf += tmplogbf;
 		varlogbf += tmplogbf * tmplogbf;
 
-		logos << tmplogbf << '\t' << tmpdeltalogp << '\n';
+		logos << tmplogbf << '\t' << tmpdeltalogp << '\t' << chrono.GetTime() / 1000 << '\n';
 		logos.flush();
 
 		int nrep = 1;

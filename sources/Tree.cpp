@@ -480,6 +480,9 @@ bool Tree::RegisterWith(const TaxonSet* taxset, Link* from, int& tot)	{
 			from->GetNode()->SetIndex(i);
 			tot++;
 		}
+		else {
+			cerr << "did not find :" << from->GetNode()->GetName() << '\n';
+		}
 		return(i != -1);
 	}
 	else{

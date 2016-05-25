@@ -196,6 +196,18 @@ void MultipleOmegaProcess::SampleOmega()	{
 		omega[i] = 1.0;
 	}
 }
+	
+void MultipleOmegaProcess::SampleOmegaWeights()	{
+	double total = 0;
+	for (int k=0; k<GetNomega(); k++)	{
+		omegaweight[k] = rnd::GetRandom().sGamma(omegaweightalpha);
+		total += omegaweight[k];
+	}
+	for (int k=0; k<GetNomega(); k++)	{
+		omegaweight[k] /= total;
+	}
+
+}
 
 double MultipleOmegaProcess::LogOmegaPrior()        {
 	double total=0;

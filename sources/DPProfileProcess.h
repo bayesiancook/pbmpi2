@@ -58,12 +58,9 @@ class DPProfileProcess: public virtual DirichletMixtureProfileProcess	{
 	// multinomial 
 	virtual double LogProxy(int site, int cat);
 	virtual void SampleAlloc();
-	void SampleHyper();
 
-	virtual void PriorSampleProfile() 	{
-		cerr << "in DPProfileProcess::PriorSampleProfile\n";
-		exit(1);
-	}
+	virtual void SampleHyper();
+	virtual void PriorSampleHyper();
 
 	// kappa has an exponential prior of mean 10
 	double LogHyperPrior();

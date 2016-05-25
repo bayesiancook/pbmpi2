@@ -95,7 +95,10 @@ class RateProcess : public virtual MPIModule {
 		cerr << "in RateProcess::SampleRate\n";
 		exit(1);
 	}
-	virtual void PriorSampleRate() {};
+	virtual void PriorSampleRate() {
+		cerr << "in RateProcess::PriorSampleRate\n";
+		exit(1);
+	};
 
 	virtual void ToStream(ostream& os)	{
 		cerr << "in RateProcess::ToStream\n";

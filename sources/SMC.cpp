@@ -790,7 +790,7 @@ double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep)	{
 			GlobalRestrictedTemperedMove();
 
 			// resampling mappings for sites still under the current topology
-			GlobalSetMinMax(0,fracmin);
+			GlobalSetMinMax(fracmin,1);
 			GlobalUnfold();
 			GlobalCollapse();
 
@@ -836,7 +836,7 @@ double PhyloProcess::GlobalTreeSteppingStone(int nfrac, int nstep)	{
 			// again switch to new topology
 			GlobalSwapTree();
 			// resampling mappings for sites already under the new topology
-			GlobalSetMinMax(fracmax,1);
+			GlobalSetMinMax(0,fracmin);
 			GlobalUnfold();
 			GlobalCollapse();
 			// finally switch back to old topology
@@ -991,7 +991,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 		double fracmax = ((double) step+1) / nstep;
 
 		// resampling mappings for sites still under the current topology
-		GlobalSetMinMax(0,fracmin);
+		GlobalSetMinMax(fracmin,1);
 		GlobalUnfold();
 		GlobalCollapse();
 
@@ -1005,6 +1005,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 		}
 
 		double delta = 0;
+
 		if (sumovercomponents)	{
 			delta -= GlobalGetFullLogLikelihood();
 		}
@@ -1013,7 +1014,6 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 		}
 
 		GlobalSwapTree();
-
 		GlobalUpdateConditionalLikelihoods();
 
 		if (sumovercomponents)	{
@@ -1032,7 +1032,7 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 		GlobalCollapse();
 
 		// resampling mappings for sites already under the new topology
-		GlobalSetMinMax(fracmax,1);
+		GlobalSetMinMax(0,fracmin);
 		GlobalUnfold();
 		GlobalCollapse();
 

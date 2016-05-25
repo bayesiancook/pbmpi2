@@ -81,7 +81,8 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	// sampling from prior
 	//------
 
-	void SampleProfile();
+	virtual void SampleProfile();
+	virtual void PriorSampleProfile();
 	virtual void SampleStat();
 	virtual void SampleStat(int cat);
 

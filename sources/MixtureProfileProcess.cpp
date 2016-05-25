@@ -212,19 +212,18 @@ void MixtureProfileProcess::RenormalizeProfiles()	{
 	}
 }
 
-/*
 void MixtureProfileProcess::PriorSampleProfile()	{
 	PriorSampleHyper();
-	PriorSampleAlloc();
+	PriorSampleGlobalParameters();
+	SampleAlloc();
 	SampleStat();
 }
-*/
 
 void MixtureProfileProcess::SampleProfile()	{
 	SampleHyper();
+	SampleGlobalParameters();
 	SampleAlloc();
 	SampleStat();
-	// UpdateComponents();
 }
 
 void MixtureProfileProcess::SampleStat()	{

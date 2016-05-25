@@ -80,12 +80,11 @@ class FiniteProfileProcess: public virtual DirichletMixtureProfileProcess	{
 	void SampleAlloc();
 	void SampleStat();
 	virtual void SampleStat(int cat);
-	virtual void SampleHyper(); // added virtual
-	virtual void SampleWeights(); // added virtual
 
-	virtual void PriorSampleProfile();
+	virtual void SampleHyper(); // added virtual
 	virtual void PriorSampleHyper();
-	virtual void PriorSampleWeights();
+
+	virtual void SampleWeights(); // added virtual
 
 	virtual double LogHyperPrior();
 

@@ -98,7 +98,13 @@ void DirichletProfileProcess::SampleHyper()	{
 
 	for (int i=0; i<GetDim(); i++)	{
 		dirweight[i] = 1;
-		// dirweight[i] = rnd::GetRandom().sExpo();
+	}
+}
+
+void DirichletProfileProcess::PriorSampleHyper()	{
+
+	for (int i=0; i<GetDim(); i++)	{
+		dirweight[i] = rnd::GetRandom().sExpo();
 	}
 }
 

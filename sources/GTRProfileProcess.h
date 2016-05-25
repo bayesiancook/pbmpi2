@@ -106,6 +106,12 @@ class GTRProfileProcess : public virtual MatrixProfileProcess {
 	// relative rates
 	virtual double LogRRPrior();
 	virtual void SampleRR();
+	virtual void SampleGlobalParameters()	{
+		SampleRR();
+	}
+	virtual void PriorSampleGlobalParameters()	{
+		SampleRR();
+	}
 
 	// assumes that site-specific sufficient statistics are already updated
 	// collect them into more compact sufficient statistics

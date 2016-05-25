@@ -327,6 +327,21 @@ double FiniteProfileProcess::IncrementalFiniteMove(int nrep)	{
 	return ((double) NAccepted) / GetNsite() / nrep;
 }
 
+void FiniteProfileProcess::ResampleWeights()	{
+	UpdateOccupancyNumbers();
+	double total = 0;
+	for (int k=0; k<GetNcomponent(); k++)	{
+		weight[k] = rnd::GetRandom().sGamma(weightalpha + occupancy[k]);
+		if (weight[k] < 1e-10)	{
+			weight[k] = 1e-10;
+		}
+		total += weight[k];
+	}
+	for (int k=0; k<GetNcomponent(); k++)	{
+		weight[k] /= total;
+	}
+}
+
 void FiniteProfileProcess::SampleWeights()	{
 	double total = 0;
 	for (int k=0; k<GetNcomponent(); k++)	{
@@ -346,56 +361,30 @@ void FiniteProfileProcess::SampleWeights()	{
 	}
 }
 
-void FiniteProfileProcess::ResampleWeights()	{
-	UpdateOccupancyNumbers();
-	double total = 0;
-	for (int k=0; k<GetNcomponent(); k++)	{
-		weight[k] = rnd::GetRandom().sGamma(weightalpha + occupancy[k]);
-		if (weight[k] < 1e-10)	{
-			weight[k] = 1e-10;
-		}
-		total += weight[k];
-	}
-	for (int k=0; k<GetNcomponent(); k++)	{
-		weight[k] /= total;
-	}
-}
+void FiniteProfileProcess::SampleHyper()	{
 
-void FiniteProfileProcess::PriorSampleProfile()	{
-
-	PriorSampleHyper();
-	PriorSampleWeights();
-	SampleStat();
+	if (empmix != 2)	{
+		DirichletProfileProcess::SampleHyper();
+	}
+	statfixalpha = 0.01;
+	weightalpha = 1.0;
+	SampleWeights();
 }
 
 void FiniteProfileProcess::PriorSampleHyper()	{
 
+	if (empmix != 2)	{
+		DirichletProfileProcess::SampleHyper();
+	}
+	statfixalpha = 0.01;
+	weightalpha = 1.0;
 	if (empmix == 2)	{
-		cerr << "in FiniteProfileProcess::PriorSampleHyper: statfix\n";
-		exit(1);
+		statfixalpha = 10 * rnd::GetRandom().sExpo();
 	}
-
-	DirichletProfileProcess::SampleHyper();
-}
-
-void FiniteProfileProcess::PriorSampleWeights()	{
-
-	double total = 0;
-	for (int k=0; k<GetNcomponent(); k++)	{
-		weight[k] = rnd::GetRandom().sGamma(weightalpha);
-		total += weight[k];
+	if (! fixncomp)	{
+		weightalpha = rnd::GetRandom().sExpo();
 	}
-	for (int k=0; k<GetNcomponent(); k++)	{
-		weight[k] /= total;
-	}
-}
-
-void FiniteProfileProcess::SampleHyper()	{
-
-	DirichletProfileProcess::SampleHyper();
-	if (empmix == 2)	{
-		statfixalpha = 0.01;
-	}
+	SampleWeights();
 }
 
 void FiniteProfileProcess::SampleAlloc()	{
@@ -512,7 +501,6 @@ double FiniteProfileProcess::LogHyperPrior()	{
 	}
 	else if (empmix == 2)	{
 		total -= 10 * statfixalpha;
-		// total -= 0.1 * weightalpha;
 	}
 	else if (empmix == 3)	{
 	}

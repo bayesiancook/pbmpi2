@@ -138,13 +138,24 @@ class ProfileProcess : public virtual MPIModule {
 	// sample all parameters (including hyperparameters)
 	// strictly from prior ...
 	virtual void PriorSampleProfile() {
-		// .. although .. 
-		SampleProfile();
+		PriorSampleHyper();
+		PriorSampleGlobalParameters();
+		SampleStat();
 	}
 
 	// with some quirks to make draw more reasonable for MCMC
 	virtual void SampleProfile()	{
-		cerr << "in ProfileProcess::SampleProfile\n";
+		SampleHyper();
+		PriorSampleGlobalParameters();
+		SampleStat();
+	}
+
+	virtual void PriorSampleGlobalParameters() {}
+	virtual void SampleGlobalParameters() {}
+
+	// sampling hyperparameters
+	virtual void PriorSampleHyper()	{
+		cerr << "in ProfileProcess::SampleHyper\n";
 		exit(1);
 	}
 

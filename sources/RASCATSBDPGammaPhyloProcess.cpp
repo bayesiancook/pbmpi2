@@ -25,7 +25,7 @@ double RASCATSBDPGammaPhyloProcess::GlobalRestrictedTemperedMove()	{
 	// if marginal suff stat move is done before that in a multi gene context
 
 	if (TemperedGene())	{
-		PoissonSBDPProfileProcess::Move(1,1,1,1);
+		PoissonSBDPProfileProcess::Move(1,5,1,1);
 		GlobalUpdateParameters();
 	}
 
@@ -53,7 +53,7 @@ double RASCATSBDPGammaPhyloProcess::GlobalRestrictedTemperedMove()	{
 	}
 
 	if (TemperedGene())	{
-		PoissonSBDPProfileProcess::Move(1,1,1,1);
+		PoissonSBDPProfileProcess::Move(1,5,1,1);
 		GlobalUpdateParameters();
 	}
 }

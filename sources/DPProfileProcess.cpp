@@ -29,8 +29,20 @@ const double meandir[] = {0.499737,0.171262,0.183399,0.225593,0.197453,0.211819,
 
 void DPProfileProcess::SampleHyper()	{
 	DirichletProfileProcess::SampleHyper();
-	// kappa = 100;
 	kappa = 1;
+}
+
+void DPProfileProcess::PriorSampleHyper()	{
+	DirichletProfileProcess::PriorSampleHyper();
+
+	if (kappaprior == 0)	{
+		kappa = 10.0 * rnd::GetRandom().sExpo();
+	}
+	else 	{
+		double a = log(1e-4);
+		double x = 2*a*(rnd::GetRandom().Uniform() - 0.5);
+		kappa = exp(x);
+	}
 }
 
 double DPProfileProcess::LogProxy(int site, int cat)	{
@@ -90,13 +102,15 @@ void DPProfileProcess::SampleAlloc()	{
 		double total = 0;
 		double max = 0;
 		for (int k=0; k<Ncomponent; k++)	{
-			double tmp = log(occupancy[k]) * LogProxy(i,k);
+			double tmp = log(occupancy[k]);
+			// double tmp = log(occupancy[k]) * LogProxy(i,k);
 			if ((!k) || (max < tmp))	{
 				max = tmp;
 			}
 			p[k] = tmp;
 		}
-		p[Ncomponent] = log(kappa) + LogProxy(i,Ncomponent);
+		p[Ncomponent] = log(kappa);
+		// p[Ncomponent] = log(kappa) + LogProxy(i,Ncomponent);
 		if (max < p[Ncomponent])	{
 			max = p[Ncomponent];
 		}

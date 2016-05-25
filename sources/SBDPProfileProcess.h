@@ -95,15 +95,24 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 	double LogIntegratedAllocProb();
 	double MoveKappa(double tuning, int nrep);
 
-	// redefined
-	virtual void PriorSampleProfile();
-
 	void SampleAlloc();
-
 	void IncrementalSampleAlloc();
 
 	void SampleWeights();
 	void ResampleWeights();
+
+	/*
+	virtual void SampleHyper()	{
+		DPProfileProcess::SampleHyper();
+		SampleWeights();
+	}
+
+	virtual void PriorSampleHyper()	{
+		DPProfileProcess::PriorSampleHyper();
+		SampleWeights();
+	}
+	*/
+
 	// void ResampleLastWeight();
 	double MoveOccupiedCompAlloc(int nrep = 1);
 	double MoveAdjacentCompAlloc(int nrep = 1);

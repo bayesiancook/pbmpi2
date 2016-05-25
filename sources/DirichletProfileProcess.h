@@ -35,6 +35,7 @@ class DirichletProfileProcess : public virtual ProfileProcess {
 	// prior of hyperparameters
 	virtual double LogHyperPrior();
 	virtual void SampleHyper();
+	virtual void PriorSampleHyper();
 
 	// move on hyperparameters
 	virtual double MoveHyper(double tuning, int nrep)	{

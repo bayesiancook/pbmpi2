@@ -84,16 +84,16 @@ void DGamRateProcess::UpdateDiscreteCategories()	{
 
 void DGamRateProcess::SampleRate()	{
 	if (! FixAlpha())	{
-		// alpha = rnd::GetRandom().sExpo();
-		alpha = 1;
-		UpdateDiscreteCategories();
+		SetAlpha(1.0);
 	}
 }
 
 void DGamRateProcess::PriorSampleRate()	{
 	if (! FixAlpha())	{
-		alpha = rnd::GetRandom().sExpo();
-		UpdateDiscreteCategories();
+		double a = meanalpha * meanalpha / varalpha;
+		double b = meanalpha / varalpha;
+		double tmp = rnd::GetRandom().Gamma(a,b);
+		SetAlpha(tmp);
 	}
 }
 

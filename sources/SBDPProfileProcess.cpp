@@ -146,20 +146,15 @@ double SBDPProfileProcess::NonMPIMove(double tuning, int nmix, int nrep, int nal
 	return 1;
 }
 
-void SBDPProfileProcess::PriorSampleProfile()	{
-
-	SampleHyper();
-	SampleWeights();
-}
-
 void SBDPProfileProcess::SampleAlloc()	{
 
 	for (int k=0; k<GetNmodeMax(); k++)	{
 		CreateComponent(k);
 	}
 	Ncomponent = GetNmodeMax();
-
 	SampleWeights();
+
+	// SampleWeights();
 	for (int i=0; i<GetNsite(); i++)	{
 		if (ActiveSite(i))	{
 			double U = rnd::GetRandom().Uniform();

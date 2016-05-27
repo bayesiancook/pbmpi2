@@ -156,6 +156,10 @@ void PhyloProcess::ReadPB(int argc, char* argv[])	{
 			else if (s == "-sitelogl")	{
 				sitelogl = 1;
 			}
+			else if (s == "-o")	{
+				i++;
+				outputname = argv[i];
+			}
 			else if ( (s == "-x") || (s == "-extract") )	{
 				i++;
 				if (i == argc) throw(0);
@@ -202,6 +206,10 @@ void PhyloProcess::ReadPB(int argc, char* argv[])	{
 		cerr << "error : should run readpb_mpi in mpi mode, with at least 2 processes\n";
 		MPI_Finalize();
 		exit(1);
+	}
+
+	if (outputname == "")	{
+		outputname = name;
 	}
 
 	if (ppred)	{
@@ -361,8 +369,8 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 	double meanlogbf = 0;
 	double varlogbf = 0;
 
-	ofstream os((name + ".logbf").c_str());
-	ofstream logos((name + ".logbflist").c_str());
+	ofstream os((outputname + ".logbf").c_str());
+	ofstream logos((outputname + ".logbflist").c_str());
 	logos << "#logbf\tDlogL\n";
 
 	while (i < until)	{

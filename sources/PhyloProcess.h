@@ -54,6 +54,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	// default constructor: pointers set to nil
 	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
+		outputname = "";
 		tree = 0;
 		treestring = "None";
 		temperedbl = 1;
@@ -739,6 +740,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void FillMissingMap();
 	void BackwardFillMissingMap(const Link* from);
 	void ForwardFillMissingMap(const Link* from, const Link* up);
+
 	int** missingmap;
 
 	double*** sitecondlmap;
@@ -755,6 +757,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	string datafile;
 	string treefile;
 	string treestring;
+
+	string outputname;
 
 	double* empfreq;
 

@@ -277,6 +277,10 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 			else if (s == "-map")	{
 				map = 1;
 			}
+			else if (s == "-o")	{
+				i++;
+				outputname = argv[i];
+			}
 			else if ( (s == "-x") || (s == "-extract") )	{
 				i++;
 				if (i == argc) throw(0);
@@ -326,6 +330,10 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		cerr << "error : should run readpb_mpi in mpi mode, with at least 2 processes\n";
 		MPI_Finalize();
 		exit(1);
+	}
+
+	if (outputname == "")	{
+		outputname = name;
 	}
 
 	if (ss)	{

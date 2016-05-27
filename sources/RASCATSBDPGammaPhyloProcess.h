@@ -86,11 +86,13 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 		chronototal.Start();
 		propchrono.Start();
 
-		BranchLengthMove(tuning);
-		BranchLengthMove(0.1 * tuning);
+		if ((! topobf) || (size < bfburnin))	{
+			BranchLengthMove(tuning);
+			BranchLengthMove(0.1 * tuning);
 
-		if (! fixtopo)	{
-			MoveTopo();
+			if (! fixtopo)	{
+				MoveTopo();
+			}
 		}
 
 		propchrono.Stop();

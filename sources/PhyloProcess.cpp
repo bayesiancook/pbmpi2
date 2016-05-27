@@ -46,6 +46,12 @@ void PhyloProcess::New(int unfold)	{
 	Create();
 
 	if (! GetMyid())	{
+
+		if (topobf)	{
+			SetTopoBF();
+			logbf = 0;
+		}
+
 		Sample();
 		if (unfold)	{
 			GlobalUnfold();
@@ -72,6 +78,11 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 
 	if (unfold)	{
 		if (! GetMyid()) {
+
+			if (topobf)	{
+				SetTopoBF();
+			}
+
 			FromStream(is);
 			GlobalUnfold();
 		}
@@ -158,7 +169,7 @@ void PhyloProcess::Monitor(ostream& os)  {
 	}
 }
 
-void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
+void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, int inbfnfrac, int inbfnrep, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
 
 	datafile = indatafile;
 	treefile = intreefile;
@@ -167,6 +178,10 @@ void PhyloProcess::SetParameters(string indatafile, string intreefile, int inisc
 	fixtopo = infixtopo;
 	fixroot = infixroot;
 	topoburnin = intopoburnin;
+	topobf = intopobf;
+	bfburnin = inbfburnin;
+	bfnfrac = inbfnfrac;
+	bfnrep = inbfnrep;
 	NSPR = inNSPR;
 	NMHSPR = inNMHSPR;
 	NTSPR = inNTSPR;
@@ -215,6 +230,54 @@ void PhyloProcess::SetParameters(string indatafile, string intreefile, int inisc
 	fastcondrate = infastcondrate;
 }
 
+void PhyloProcess::SetTopoBF()	{
+
+	GlobalBackupTree();
+	Link* down = GetTree()->GetLCA(taxon1,taxon2);
+	if (! down)	{
+		cerr << "error in PhyloProcess::SetTopoBF: did not find LCA of " << taxon1 << " and " << taxon2 << '\n';
+		exit(1);
+	}
+	Link* up = GetTree()->GetAncestor(down);
+	Link* fromdown = GlobalDetach(down,up);
+	Link* todown = GetTree()->GetLCA(taxon3,taxon4);
+	if (! todown)	{
+		cerr << "error in PhyloProcess::SetTopoBF: did not find LCA of " << taxon3 << " and " << taxon4 << '\n';
+		exit(1);
+	}
+	Link* toup = GetTree()->GetAncestor(todown);
+	GlobalAttach(down,up,todown,toup);
+	GlobalSwapTree();
+}
+
+
+void PhyloProcess::IncSize()	{
+	size++;
+	if (topobf)	{
+		if (size > bfburnin)	{
+
+			double delta = 1.0 / bfnfrac;
+			GlobalSetMinMax(bffrac,bffrac+delta);
+			GlobalUpdateConditionalLikelihoods();
+			double deltalogp = -logL;
+			GlobalSwapTree();
+			GlobalUpdateConditionalLikelihoods();
+			deltalogp += logL;
+			GlobalSwapTree();
+			GlobalSetMinMax(0,1);
+			GlobalUpdateConditionalLikelihoods();
+			logbf += deltalogp;
+			ofstream os((name + ".bf").c_str(),ios_base::app);
+			os << bffrac << '\t' << deltalogp << '\t' << logbf << '\n';
+
+			int c = (size - bfburnin) % bfnrep;
+			if (! c)	{
+				bffrac += delta;
+			}
+		}
+	}
+}
+
 void PhyloProcess::ToStreamHeader(ostream& os)	{
 	os << version << '\n';
 	propchrono.ToStream(os);
@@ -243,7 +306,14 @@ void PhyloProcess::ToStreamHeader(ostream& os)	{
 	os << sumovercomponents << '\n';
 	SetNamesFromLengths();
 	GetTree()->ToStream(os);
+	os << 0 << '\n';
+	os << topobf << '\t' << bfburnin << '\t' << bfnfrac << '\t' << bfnrep << '\t' << bffrac << '\n';
+	os << logbf << '\n';
 	os << 1 << '\n';
+
+	if ((! GetMyid()) && topobf)	{
+		GlobalWriteSiteRankToStream(os);
+	}
 }
 
 void PhyloProcess::FromStreamHeader(istream& is)	{
@@ -278,11 +348,21 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
 	is >> fastcondrate;
 	is >> sumovercomponents;
 	is >> treestring;
+	topobf = 0;
 	int check;
 	is >> check;
 	if (! check)	{
-		cerr << "error when reading stream header \n";
-		exit(1);
+		is >> topobf >> bfburnin >> bfnfrac >> bfnrep >> bffrac;
+		is >> logbf;
+		is >> check;
+		if (!check)	{
+			cerr << "error when reading stream header \n";
+			exit(1);
+		}
+	}
+
+	if ((! GetMyid()) && topobf)	{
+		GlobalReadSiteRankFromStream(is);
 	}
 }
 
@@ -617,7 +697,18 @@ void PhyloProcess::Unfold()	{
 
 	DeleteMappings();
 	ActivateSumOverRateAllocations();
-	UpdateConditionalLikelihoods();
+	if (topobf)	{
+		SetMinMax(bffrac,1);
+		UpdateConditionalLikelihoods();
+		SlaveSwapTree();
+		SetMinMax(0,bffrac);
+		UpdateConditionalLikelihoods();
+		SlaveSwapTree();
+		SetMinMax(0,1);
+	}
+	else	{
+		UpdateConditionalLikelihoods();
+	}
 	/*
 	if (!sumratealloc)	{
 		DrawAllocations(0);
@@ -657,9 +748,24 @@ void PhyloProcess::Collapse()	{
 	DrawAllocations(0);
 	InactivateSumOverRateAllocations();
 	// }
-	SampleNodeStates();
-	FillMissingMap();
-	SampleSubstitutionMappings(GetRoot());
+	if (topobf)	{
+		SetMinMax(bffrac,1);
+		SampleNodeStates();
+		FillMissingMap();
+		SampleSubstitutionMappings(GetRoot());
+		SlaveSwapTree();
+		SetMinMax(0,bffrac);
+		SampleNodeStates();
+		FillMissingMap();
+		SampleSubstitutionMappings(GetRoot());
+		SlaveSwapTree();
+		SetMinMax(0,1);
+	}
+	else	{
+		SampleNodeStates();
+		FillMissingMap();
+		SampleSubstitutionMappings(GetRoot());
+	}
 	activesuffstat = true;
 }
 

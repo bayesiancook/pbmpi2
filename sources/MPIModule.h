@@ -147,6 +147,8 @@ class MPIModule {
 	virtual void NonMPIReshuffleSites();
 	virtual void GlobalReshuffleSites();
 	virtual void SlaveReshuffleSites();
+	virtual void GlobalWriteSiteRankToStream(ostream& os);
+	virtual void GlobalReadSiteRankFromStream(istream& is);
 
 	int myid;
 	int nprocs;

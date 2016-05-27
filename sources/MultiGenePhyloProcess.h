@@ -73,6 +73,17 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	virtual void GlobalReshuffleSites();
 	virtual void SlaveReshuffleSites();
 
+	virtual void GlobalWriteSiteRankToStream(ostream& os)	{
+		cerr << "in multi gene site rank\n";
+		exit(1);
+	}
+
+	virtual void GlobalReadSiteRankFromStream(istream& is)	{
+		cerr << "in multi gene site rank\n";
+		exit(1);
+	}
+
+
 	// re-implement slave functions
 	// should dispatch job over all genes,
 	// collect results and send back to master

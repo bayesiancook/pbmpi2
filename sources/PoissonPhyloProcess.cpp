@@ -83,10 +83,27 @@ void PoissonPhyloProcess::Collapse()	{
 	DrawAllocations(0);
 	InactivateSumOverRateAllocations();
 	// }
-	SampleNodeStates();
-	FillMissingMap();
-	SampleSubstitutionMappings(GetRoot());
-	PoissonUpdateSiteProfileSuffStat();
+	if (topobf)	{
+		SetMinMax(bffrac,1);
+		SampleNodeStates();
+		FillMissingMap();
+		SampleSubstitutionMappings(GetRoot());
+		PoissonUpdateSiteProfileSuffStat();
+		SlaveSwapTree();
+		SetMinMax(0,bffrac);
+		SampleNodeStates();
+		FillMissingMap();
+		SampleSubstitutionMappings(GetRoot());
+		PoissonUpdateSiteProfileSuffStat();
+		SlaveSwapTree();
+		SetMinMax(0,1);
+	}
+	else	{
+		SampleNodeStates();
+		FillMissingMap();
+		SampleSubstitutionMappings(GetRoot());
+		PoissonUpdateSiteProfileSuffStat();
+	}
 	activesuffstat = true;
 }
 

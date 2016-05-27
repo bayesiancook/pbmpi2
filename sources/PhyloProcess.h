@@ -64,6 +64,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		empfreq = 0;
 		tracktopo = 0;
 		topoburnin = 0;
+		topobf = 0;
 		fixroot = 0;
 		spracc = sprtry = 0;
 		mhspracc = mhsprtry = 0;
@@ -287,7 +288,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void Monitor(ostream& os);
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, int inbfnfrac, int inbfnrep, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
 
 	void SetMPI(int inmyid, int innprocs)	{
 		myid = inmyid;
@@ -771,7 +772,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double* loglarray;
 
 	int size;
-	void IncSize()	{size++;}
+
+	void SetTopoBF();
+
+	void IncSize();
 	int GetSize() {return size;}
 	void SetSize(int insize) {size = insize;}
 
@@ -798,6 +802,14 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int topoburnin;
 	int fixroot;
 	int fixtopo;
+
+	double logbf;
+	int topobf;
+	int bfburnin;
+	int bfnrep;
+	int bfnfrac;
+	double bffrac;
+
 	int NSPR;
 	int NMHSPR;
 	int NTSPR;

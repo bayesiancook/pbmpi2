@@ -120,6 +120,26 @@ void MPIModule::SlaveReshuffleSites()	{
 	// MPI_Bcast(localrank,nsite,MPI_INT,0,MPI_COMM_WORLD);
 }
 
+void MPIModule::GlobalWriteSiteRankToStream(ostream& os)	{
+
+	for (int i=0; i<nsite; i++)	{
+		os << globalrank[i] << '\t';
+	}
+	os << '\n';
+}
+
+void MPIModule::GlobalReadSiteRankFromStream(istream& is)	{
+
+	for (int i=0; i<nsite; i++)	{
+		is >> globalrank[i];
+	}
+	if (GetNprocs() > 1)	{
+		MESSAGE signal = RESHUFFLE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(globalrank,nsite,MPI_INT,0,MPI_COMM_WORLD);
+	}
+}
+
 int MPIModule::GetNactiveSite()	{
 
 	int count = 0;

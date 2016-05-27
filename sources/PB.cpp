@@ -125,6 +125,11 @@ int main(int argc, char* argv[])	{
 
 	int topoburnin = 0;
 
+	int topobf = 0;
+	int bfburnin = 1000;
+	int bfnfrac = 100;
+	int bfnrep = 100;
+
 	int nmodemax = 0;
 
 	int temperedbl = 1;
@@ -184,6 +189,23 @@ int main(int argc, char* argv[])	{
 			else if (s == "-topoburnin")	{
 				i++;
 				topoburnin = atoi(argv[i]);
+			}
+			else if (s == "-topobf")	{
+				topobf = 1;
+				i++;
+				bfburnin = atoi(argv[i]);
+				i++;
+				bfnfrac = atoi(argv[i]);
+				i++;
+				bfnrep = atoi(argv[i]);
+				i++;
+				taxon1 = argv[i];
+				i++;
+				taxon2 = argv[i];
+				i++;
+				taxon3 = argv[i];
+				i++;
+				taxon4 = argv[i];
 			}
 			else if (s == "-smc")	{
 				smc = 1;
@@ -832,18 +854,21 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,fixtopo,fixroot,topoburnin,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs,sitesuffstat);
+		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,fixtopo,fixroot,topoburnin,topobf,bfburnin,bfnfrac,bfnrep,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs,sitesuffstat);
 
 		if (! myid)	{
 			cerr << '\n';
 			cerr << "chain name : " << name << '\n';
 			// MPI master only
 			ofstream os((name + ".treelist").c_str());
-			ofstream tos((name + ".trace").c_str());
 			if (NTSPR || fasttopo)	{
 				ofstream tspros((name + ".temperedmove").c_str());
 			}
 			ofstream topos((name + ".topo").c_str());
+			if (topobf)	{
+				ofstream bos((name + ".bf").c_str());
+			}
+			ofstream tos((name + ".trace").c_str());
 			model->TraceHeader(tos);
 			tos.close();
 			ofstream pos((name + ".param").c_str());

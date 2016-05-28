@@ -455,10 +455,13 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void ReadPB(int argc, char* argv[]);
 	virtual void Read(string name, int burnin, int every, int until);
-	virtual void ReadTopoBF(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nfrac, int nstep);
 	virtual void ReadSiteLogL(string name, int burnin, int every, int until);
 	virtual void ReadCV(string testdatafile, string name, int burnin, int every, int until, int iscodon = 0, GeneticCodeType codetype = Universal);
 	virtual void PostPred(int ppredtype, string name, int burnin, int every, int until, int rateprior, int profileprior, int rootprior);
+
+	void FastReadTopoBF2(string name, int burnin, int every, int until, double prop);
+	void ReadTopoBF2(string name, int burnin, int every, int until, double prop);
+	virtual void ReadTopoBF(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nfrac, int nstep);
 
 	void GlobalSetRatePrior(int inrateprior);
 	void SlaveSetRatePrior();

@@ -448,9 +448,6 @@ class Model	{
 		}	
 		cerr << name << ": stopping after " << GetSize() << " points.\n";
 		cerr << '\n';
-		if (process->topobf)	{
-			cerr << "fast estimate of log BF : " << process->logbf << '\n';
-		}
 	}
 
 	NewickTree* GetTree() {return process->GetLengthTree();}

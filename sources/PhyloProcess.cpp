@@ -49,7 +49,6 @@ void PhyloProcess::New(int unfold)	{
 
 		if (topobf)	{
 			SetTopoBF();
-			logbf = 0;
 		}
 
 		Sample();
@@ -60,6 +59,10 @@ void PhyloProcess::New(int unfold)	{
 
 	if (BPP)	{
 		BPP->RegisterWithTaxonSet(GetData()->GetTaxonSet());
+	}
+	if (topobf)	{
+		ofstream os((name + ".mpi").c_str());
+		GlobalWriteSiteRankToStream(os);
 	}
 }
 
@@ -77,12 +80,13 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 	Create();
 
 	if (unfold)	{
-		if (! GetMyid()) {
 
+		if (! GetMyid()) {
 			if (topobf)	{
 				SetTopoBF();
+				ifstream mpis((name + ".mpi").c_str());
+				GlobalReadSiteRankFromStream(mpis);
 			}
-
 			FromStream(is);
 			GlobalUnfold();
 		}
@@ -257,6 +261,8 @@ void PhyloProcess::IncSize()	{
 		if (size > bfburnin)	{
 
 			double delta = 1.0 / bfnfrac;
+			double deltalogp = GlobalComputeTopoBFLogLikelihoodRatio(bffrac,bffrac+delta);
+			/*
 			GlobalSetMinMax(bffrac,bffrac+delta);
 			GlobalUpdateConditionalLikelihoods();
 			double deltalogp = -logL;
@@ -266,17 +272,20 @@ void PhyloProcess::IncSize()	{
 			GlobalSwapTree();
 			GlobalSetMinMax(0,1);
 			GlobalUpdateConditionalLikelihoods();
-			logbf += deltalogp;
+			*/
 			ofstream os((name + ".bf").c_str(),ios_base::app);
-			os << bffrac << '\t' << deltalogp << '\t' << logbf << '\n';
+			os << bffrac << '\t' << deltalogp << '\n';
 
 			int c = (size - bfburnin) % bfnrep;
 			if (! c)	{
 				bffrac += delta;
+				GlobalSetBFFrac();
+				GlobalUpdateConditionalLikelihoods();
 			}
 		}
 	}
 }
+
 
 void PhyloProcess::ToStreamHeader(ostream& os)	{
 	os << version << '\n';
@@ -308,12 +317,8 @@ void PhyloProcess::ToStreamHeader(ostream& os)	{
 	GetTree()->ToStream(os);
 	os << 0 << '\n';
 	os << topobf << '\t' << bfburnin << '\t' << bfnfrac << '\t' << bfnrep << '\t' << bffrac << '\n';
-	os << logbf << '\n';
 	os << 1 << '\n';
 
-	if ((! GetMyid()) && topobf)	{
-		GlobalWriteSiteRankToStream(os);
-	}
 }
 
 void PhyloProcess::FromStreamHeader(istream& is)	{
@@ -353,7 +358,6 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
 	is >> check;
 	if (! check)	{
 		is >> topobf >> bfburnin >> bfnfrac >> bfnrep >> bffrac;
-		is >> logbf;
 		is >> check;
 		if (!check)	{
 			cerr << "error when reading stream header \n";
@@ -361,9 +365,13 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
 		}
 	}
 
-	if ((! GetMyid()) && topobf)	{
+	/*
+	if (topobf)	{
+		cerr << nsite << '\n';
+		exit(1);
 		GlobalReadSiteRankFromStream(is);
 	}
+	*/
 }
 
 //-------------------------------------------------------------------------
@@ -697,6 +705,7 @@ void PhyloProcess::Unfold()	{
 
 	DeleteMappings();
 	ActivateSumOverRateAllocations();
+	/*
 	if (topobf)	{
 		SetMinMax(bffrac,1);
 		UpdateConditionalLikelihoods();
@@ -709,6 +718,7 @@ void PhyloProcess::Unfold()	{
 	else	{
 		UpdateConditionalLikelihoods();
 	}
+	*/
 	/*
 	if (!sumratealloc)	{
 		DrawAllocations(0);
@@ -854,16 +864,116 @@ void PhyloProcess::SlaveInactivateZip()	{
 //	* Likelihood computation
 //-------------------------------------------------------------------------
 
-void PhyloProcess::UpdateConditionalLikelihoods()	{
-	PostOrderPruning(GetRoot(),condlmap[0]);
+double PhyloProcess::ComputeTopoBFLogLikelihoodRatio(double fracmin, double fracmax)	{
 
-	// not necessary
+	double delta = 0;
+
+	SetMinMax(fracmin,fracmax);
+
+	PostOrderPruning(GetRoot(),condlmap[0]);
 	MultiplyByStationaries(condlmap[0],condflag);
 	ComputeLikelihood(condlmap[0],condflag);
-
 	PreOrderPruning(GetRoot(),condlmap[0]);
 
-	// CheckLikelihood();
+	delta -= SumLogLikelihood();
+
+	SlaveSwapTree();
+
+	PostOrderPruning(GetRoot(),condlmap[0]);
+	MultiplyByStationaries(condlmap[0],condflag);
+	ComputeLikelihood(condlmap[0],condflag);
+	PreOrderPruning(GetRoot(),condlmap[0]);
+
+	delta += SumLogLikelihood();
+
+	SlaveSwapTree();
+
+	PostOrderPruning(GetRoot(),condlmap[0]);
+	MultiplyByStationaries(condlmap[0],condflag);
+	ComputeLikelihood(condlmap[0],condflag);
+	PreOrderPruning(GetRoot(),condlmap[0]);
+
+	SetMinMax(0,1);
+
+	return delta;
+}
+
+double PhyloProcess::GlobalComputeTopoBFLogLikelihoodRatio(double fracmin, double fracmax)	{
+
+	double ret = 0;
+
+	if (GetNprocs() > 1)	{
+
+		double frac[2];
+		frac[0] = fracmin;
+		frac[1] = fracmax;
+		MESSAGE signal = TOPOLRT;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(frac,2,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+		MPI_Status stat;
+		double delta;
+		for(int i=1; i<GetNprocs(); i++) {
+			MPI_Recv(&delta,1,MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+			ret += delta;
+		}
+	}
+	else	{
+		ret = ComputeTopoBFLogLikelihoodRatio(fracmin,fracmax);
+	}
+	return ret;
+}
+
+void PhyloProcess::SlaveComputeTopoBFLogLikelihoodRatio()	{
+
+	double frac[2];
+	MPI_Bcast(frac,2,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	double delta = ComputeTopoBFLogLikelihoodRatio(frac[0],frac[1]);
+	MPI_Send(&delta,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
+
+void PhyloProcess::GlobalSetBFFrac()	{
+
+	MESSAGE signal = SETBFFRAC;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&bffrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+}
+
+void PhyloProcess::SlaveSetBFFrac()	{
+
+	MPI_Bcast(&bffrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+}
+
+void PhyloProcess::UpdateConditionalLikelihoods()	{
+
+	if (topobf)	{
+
+		SetMinMax(bffrac,1);
+
+		PostOrderPruning(GetRoot(),condlmap[0]);
+		MultiplyByStationaries(condlmap[0],condflag);
+		ComputeLikelihood(condlmap[0],condflag);
+		PreOrderPruning(GetRoot(),condlmap[0]);
+
+		SlaveSwapTree();
+		SetMinMax(0,bffrac);
+
+		PostOrderPruning(GetRoot(),condlmap[0]);
+		MultiplyByStationaries(condlmap[0],condflag);
+		ComputeLikelihood(condlmap[0],condflag);
+		PreOrderPruning(GetRoot(),condlmap[0]);
+
+		SlaveSwapTree();
+		SetMinMax(0,1);
+		SumLogLikelihood();
+	}
+	else	{
+		PostOrderPruning(GetRoot(),condlmap[0]);
+		MultiplyByStationaries(condlmap[0],condflag);
+		ComputeLikelihood(condlmap[0],condflag);
+		PreOrderPruning(GetRoot(),condlmap[0]);
+	}
 }
 
 void PhyloProcess::GlobalUpdateConditionalLikelihoods()	{
@@ -873,11 +983,12 @@ void PhyloProcess::GlobalUpdateConditionalLikelihoods()	{
 		// just send Updateconlikelihood message to all slaves
 		MESSAGE signal = UPDATE;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-		GlobalComputeNodeLikelihood(GetRoot(),0);
+		GlobalCollectLogLikelihood();
 	}
 	else	{
 		UpdateConditionalLikelihoods();
-		ComputeNodeLikelihood(GetRoot(),0);
+		// SumLogLikelihood();
+		// ComputeNodeLikelihood(GetRoot(),0);
 	}
 
 }
@@ -918,6 +1029,50 @@ double PhyloProcess::ComputeNodeLikelihood(const Link* from, int auxindex)	{
 		DeleteConditionalLikelihoodVector(aux);
 	}
 	return lnL;
+}
+
+double PhyloProcess::GlobalCollectLogLikelihood()	{
+
+	if (GetNprocs() > 1)	{
+
+		MESSAGE signal = COLLECTLIKELIHOOD;
+		MPI_Status stat;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+		logL = 0.0;
+		double sum;
+		for(int i=1; i<GetNprocs(); i++) {
+			MPI_Recv(&sum,1,MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+			logL += sum;
+		}
+	}
+	else	{
+		// logL = SumLogLikelihood();
+	}
+	if (isnan(logL))	{
+		cerr << "in PhyloProcess::GlobalCollectLogLikelihood: logL is nan\n";
+		exit(1);
+	}
+	return logL;
+}
+
+void PhyloProcess::SlaveCollectLogLikelihood()	{
+	MPI_Send(&logL,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+	/*
+	double ret = SumLogLikelihood();
+	MPI_Send(&ret,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+	*/
+}
+
+double PhyloProcess::SumLogLikelihood()	{
+
+	logL = 0;
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			logL += sitelogL[i];
+		}
+	}
+	return logL;
 }
 
 double PhyloProcess::GlobalComputeNodeLikelihood(const Link* from, int auxindex)	{ 
@@ -1786,6 +1941,15 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 	case ROOT:
 		MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
 		SlaveRoot(n);
+		break;
+	case TOPOLRT:
+		SlaveComputeTopoBFLogLikelihoodRatio();
+		break;
+	case SETBFFRAC:
+		SlaveSetBFFrac();
+		break;
+	case COLLECTLIKELIHOOD:
+		SlaveCollectLogLikelihood();
 		break;
 	case LIKELIHOOD:
 		MPI_Bcast(arg,2,MPI_INT,0,MPI_COMM_WORLD);

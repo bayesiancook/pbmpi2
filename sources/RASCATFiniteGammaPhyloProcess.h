@@ -127,11 +127,13 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		chronototal.Start();
 		propchrono.Start();
 
-		BranchLengthMove(tuning);
-		BranchLengthMove(0.1 * tuning);
+		if ((! topobf) || (size < bfburnin))	{
+			BranchLengthMove(tuning);
+			BranchLengthMove(0.1 * tuning);
 
-		if (! fixtopo)	{
-			TopoMoveCycle(1,tuning);
+			if (! fixtopo)	{
+				TopoMoveCycle(1,tuning);
+			}
 		}
 
 		propchrono.Stop();
@@ -193,6 +195,8 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 	}
 
 	virtual void ReadPB(int argc, char* argv[]);
+	void FastReadTopoBF2(string name, int burnin, int every, int until, double prop);
+
 	void SlaveComputeCVScore();
 	void SlaveComputeSiteLogL();
 

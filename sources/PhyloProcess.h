@@ -320,6 +320,17 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void SlaveComputeNodeLikelihood(int,int);
 	double LocalComputeNodeLikelihood(int,int);
 
+	double GlobalCollectLogLikelihood();
+	void SlaveCollectLogLikelihood();
+	double SumLogLikelihood();
+
+	double GlobalComputeTopoBFLogLikelihoodRatio(double fracmin, double fracmax);
+	void SlaveComputeTopoBFLogLikelihoodRatio();
+	double ComputeTopoBFLogLikelihoodRatio(double fracmin, double fracmax);
+
+	void GlobalSetBFFrac();
+	void SlaveSetBFFrac();
+
 	// Feb 1st, 2016
 	// special device set up for calculating, on the fly, the likelihood summed over profile allocations
 	// valid only under specific settings
@@ -803,7 +814,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int fixroot;
 	int fixtopo;
 
-	double logbf;
 	int topobf;
 	int bfburnin;
 	int bfnrep;

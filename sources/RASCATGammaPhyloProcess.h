@@ -149,6 +149,8 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 	virtual void ReadPB(int argc, char* argv[]);
 	void ReadSiteProfiles(string name, int burnin, int every, int until);
 	virtual void ReadStatMin(string name, int burnin, int every, int until);
+	void ReadTopoBF2(string name, int burnin, int every, int until, double prop);
+	void FastReadTopoBF2(string name, int burnin, int every, int until, double prop);
 
 	void ToStream(ostream& os)	{
 		GammaBranchProcess::ToStream(os);

@@ -366,6 +366,8 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int toponfrac = 100;
 	int toponstep = 10;
 	int bf = 0;
+	double bfprop = 0.5;
+
 	int temperedbl = 1;
 	int temperedgene = 0;
 	int temperedrate = 0;
@@ -407,6 +409,12 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 			else if (s == "-bf")	{
 				bf = 1;
 				i++;
+				bfprop = atof(argv[i]);
+			}
+			/*
+			else if (s == "-bf")	{
+				bf = 1;
+				i++;
 				taxon1 = argv[i];
 				i++;
 				taxon2 = argv[i];
@@ -419,6 +427,7 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				i++;
 				toponstep = atoi(argv[i]);
 			}
+			*/
 			else if (s == "-sumcomp")	{
 				i++;
 				sumcomp = atoi(argv[i]);
@@ -513,6 +522,17 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		ReadCV(testdatafile,name,burnin,every,until);
 	}
 	else if (bf)	{
+		sumovercomponents = sumcomp;
+		if (sumcomp > 0)	{
+			GlobalActivateSumOverComponents();
+			// ReadTopoBF2(name,burnin,every,until,bfprop);
+		}
+		else	{
+			FastReadTopoBF2(name,burnin,every,until,bfprop);
+		}
+	}
+	/*
+	else if (bf)	{
 		SetTemperedBL(temperedbl);
 		SetTemperedGene(temperedgene);
 		SetTemperedRate(temperedrate);
@@ -522,6 +542,7 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		}
 		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponfrac,toponstep);
 	}
+	*/
 	else if (sitelogl)	{
 		ReadSiteLogL(name,burnin,every,until);
 	}
@@ -539,6 +560,74 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	}
 }
 
+
+void RASCATFiniteGammaPhyloProcess::FastReadTopoBF2(string name, int burnin, int every, int until, double prop)	{
+
+	ifstream is((name + ".bf").c_str());
+
+	int b = (1-prop) * bfnrep;
+	int n = bfnrep - b;
+
+	double totvarlog = 0;
+	double logbf = 0;
+
+	for (int frac=0; frac<bfnfrac; frac++)	{
+
+		double f = ((double) frac) / bfnfrac;
+
+		double delta[n];
+
+		for (int i=0; i<b; i++)	{
+			double tmp1, tmp2;
+			is >> tmp1 >> tmp2;
+			if (tmp1 != f)	{
+				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
+				exit(1);
+			}
+		}
+		double max = 0;
+		for (int i=0; i<n; i++)	{
+			double tmp1, tmp2;
+			is >> tmp1 >> tmp2;
+			if (tmp1 != f)	{
+				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
+				exit(1);
+			}
+			delta[i] = tmp2;
+			if ((!i) || (max < tmp2))	{
+				max = tmp2;
+			}
+		}
+
+		double meanlog = 0;
+		double varlog = 0;
+		for (int i=0; i<n; i++)	{
+			meanlog += delta[i];
+			varlog += delta[i]*delta[i];
+		}
+		meanlog /= n;
+		varlog /= n;
+		varlog -= meanlog*meanlog;
+		totvarlog += varlog;
+
+		double tot = 0;
+		for (int i=0; i<n; i++)	{
+			tot += exp(delta[i] - max);
+		}
+		tot /= n;
+
+		double logscore = log(tot) + max;
+
+		logbf += logscore;
+	}
+
+	cout << '\n';
+	cout << "log bf : " << logbf << '\n';
+	cout << '\n';
+	cout << "total log variance: " << totvarlog << '\n';
+	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+	cout << "per site : " << totvarlog / GetNsite() << '\n';
+}
 
 void RASCATFiniteGammaPhyloProcess::SlaveComputeCVScore()	{
 

@@ -123,6 +123,16 @@ class MPIModule {
 		fmax = inmax;
 	}
 
+	void RestoreMinMax()	{
+		fmin = bkfmin;
+		fmax = bkfmax;
+	}
+
+	void BackupMinMax()	{
+		bkfmin = fmin;
+		bkfmax = fmax;
+	}
+
 	// SMC
 	void ResetNsite()	{
 		fmin = fmax = 0;

@@ -11,7 +11,6 @@ void MPIModule::CreateMPI(int innsite)	{
 	sitemin = new int[nprocs];
 	sitemax = new int[nprocs];
 	globalrank = new int[nsite];
-	// localrank = new int[nsite];
 
 	fmin = 0;
 	fmax = 1;
@@ -63,8 +62,9 @@ void MPIModule::NonMPIReshuffleSites()	{
 	int* permut = new int[nsite];
 	rnd::GetRandom().DrawFromUrn(permut,nsite,nsite);
 	for (int i=0; i<nsite; i++)	{
+		// canonical ranking
+		// globalrank[i] = i;
 		globalrank[i] = permut[i];
-		// localrank[i] = permut[i];
 	}
 	delete[] permut;
 }
@@ -98,26 +98,21 @@ void MPIModule::GlobalReshuffleSites()	{
 		int* permut = new int[localnsite];
 		rnd::GetRandom().DrawFromUrn(permut,localnsite,localnsite);
 		for (int i=0; i<localnsite; i++)	{
+			// canonical ranking
+			// globalrank[sitemin[j] + i] = tmprank[sitemin[j] + i];
 			globalrank[sitemin[j] + permut[i]] = tmprank[sitemin[j] + i];
 		}
-		/*
-		for (int i=0; i<localnsite; i++)	{
-			localrank[sitemin + permut[i]] = i;
-		}
-		*/
 		delete[] permut;
 	}
 
 	delete[] tmprank;
 
 	MPI_Bcast(globalrank,nsite,MPI_INT,0,MPI_COMM_WORLD);
-	// MPI_Bcast(localrank,nsite,MPI_INT,0,MPI_COMM_WORLD);
 }
 
 void MPIModule::SlaveReshuffleSites()	{
 
 	MPI_Bcast(globalrank,nsite,MPI_INT,0,MPI_COMM_WORLD);
-	// MPI_Bcast(localrank,nsite,MPI_INT,0,MPI_COMM_WORLD);
 }
 
 void MPIModule::GlobalWriteSiteRankToStream(ostream& os)	{
@@ -148,13 +143,5 @@ int MPIModule::GetNactiveSite()	{
 			count++;
 		}
 	}
-	/*
-	int count2 = (int) (nsite * (fmax - fmin));
-	if (count != count2)	{
-		cerr << "error in mpi module: number of active sites does not match\n";
-		cerr << count << '\t' << count2 << '\n';
-		exit(1);
-	}
-	*/
 	return count;
 }

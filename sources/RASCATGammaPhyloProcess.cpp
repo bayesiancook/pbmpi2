@@ -364,7 +364,8 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 			ReadTopoBF2(name,burnin,every,until,bfprop);
 		}
 		else	{
-			FastReadTopoBF2(name,burnin,every,until,bfprop);
+			// FastReadTopoBF2(name,burnin,every,until,bfprop);
+			ReadTopoBF2(name,burnin,every,until,bfprop);
 		}
 	}
 	/*

@@ -412,32 +412,55 @@ void PhyloProcess::FastReadTopoBF2(string name, int burnin, int every, int until
 
 void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, double prop)	{
 
-	ifstream is((name + ".bf").c_str());
+	ifstream bis((name + ".bf").c_str());
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
 
 	int b = (1-prop) * bfnrep;
 	int n = bfnrep - b;
 
 	double totvarlog = 0;
 	double logbf = 0;
+	double logbf2 = 0;
+
+	cerr << "burnin\n";
+	for (int i=0; i<burnin; i++)	{
+		cerr << '.';
+		FromStream(is);
+	}
+	cerr << '\n';
 
 	for (int frac=0; frac<bfnfrac; frac++)	{
 
 		double f = ((double) frac) / bfnfrac;
+		cerr << frac << '\n';
+		bffrac = f;
+		GlobalSetBFFrac();
 
 		double delta[n];
+		double delta2[n];
 
 		for (int i=0; i<b; i++)	{
-			double tmp1, tmp2, tmp3;
-			is >> tmp1 >> tmp2 >> tmp3;
+			cerr << '.';
+			double tmp1, tmp2;
+			bis >> tmp1 >> tmp2;
 			if (tmp1 != f)	{
 				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
 				exit(1);
 			}
+			FromStream(is);
 		}
-		int max = 0;
+		cerr << '\n';
+
+		double max = 0;
+		double max2 = 0;
 		for (int i=0; i<n; i++)	{
-			double tmp1, tmp2, tmp3;
-			is >> tmp1 >> tmp2 >> tmp3;
+			cerr << '.';
+			double tmp1, tmp2;
+			bis >> tmp1 >> tmp2;
 			if (tmp1 != f)	{
 				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
 				exit(1);
@@ -446,7 +469,21 @@ void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, do
 			if ((!i) || (max < tmp2))	{
 				max = tmp2;
 			}
+			FromStream(is);
+			QuickUpdate();
+			double df = 1.0 / bfnfrac;
+			double deltalogp = GlobalComputeTopoBFLogLikelihoodRatio(bffrac,bffrac+df);
+			if (fabs(deltalogp - tmp2) > 1e-6)	{
+				cerr << "error: non matching bf score\n";
+				cerr << f << '\t' << tmp2 << '\t' << deltalogp << '\n';
+				exit(1);
+			}
+			delta2[i] = deltalogp;
+			if ((!i) || (max2 < deltalogp))	{
+				max2 = deltalogp;
+			}
 		}
+		cerr << '\n';
 
 		double meanlog = 0;
 		double varlog = 0;
@@ -464,14 +501,21 @@ void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, do
 			tot += exp(delta[i] - max);
 		}
 		tot /= n;
-
 		double logscore = log(tot) + max;
-
 		logbf += logscore;
+
+		double tot2 = 0;
+		for (int i=0; i<n; i++)	{
+			tot2 += exp(delta2[i] - max2);
+		}
+		tot2 /= n;
+		double logscore2 = log(tot2) + max2;
+		logbf2 += logscore2;
 	}
 
 	cout << '\n';
-	cout << "log bf : " << logbf << '\n';
+	cout << "log bf :  " << logbf << '\n';
+	cout << "log bf2 : " << logbf2 << '\n';
 	cout << '\n';
 	cout << "total log variance: " << totvarlog << '\n';
 	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';

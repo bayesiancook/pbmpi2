@@ -426,6 +426,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		MESSAGE signal = BCAST_TREE;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 		GlobalBroadcastTree();
+
+		if (topobf)	{
+			SetTopoBF();
+		}
 		
 		GlobalCollapse();
 		GlobalUnfold();

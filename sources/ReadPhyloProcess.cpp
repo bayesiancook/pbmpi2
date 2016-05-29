@@ -246,6 +246,7 @@ void PhyloProcess::Read(string name, int burnin, int every, int until)	{
 	while ((i < until) && (i < burnin))	{
 		cerr << '.';
 		FromStream(is);
+		QuickUpdate();
 		i++;
 	}
 	cerr << '\n';
@@ -505,7 +506,7 @@ void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, do
 	double logbf2 = 0;
 
 	cerr << "burnin\n";
-	for (int i=0; i<burnin; i++)	{
+	for (int i=0; i<bfburnin; i++)	{
 		cerr << '.';
 		FromStream(is);
 	}
@@ -514,9 +515,9 @@ void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, do
 	for (int frac=0; frac<bfnfrac; frac++)	{
 
 		double f = ((double) frac) / bfnfrac;
-		cerr << frac << '\n';
+		cerr << f << '\n';
 		bffrac = f;
-		GlobalSetBFFrac();
+
 
 		double delta[n];
 		double delta2[n];
@@ -551,11 +552,13 @@ void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, do
 			QuickUpdate();
 			double df = 1.0 / bfnfrac;
 			double deltalogp = GlobalComputeTopoBFLogLikelihoodRatio(bffrac,bffrac+df);
-			if (fabs(deltalogp - tmp2) > 1e-6)	{
+			/*
+			if (fabs(deltalogp - tmp2) > 1e-4)	{
 				cerr << "error: non matching bf score\n";
-				cerr << f << '\t' << tmp2 << '\t' << deltalogp << '\n';
+				cerr << f << '\t' << tmp2 << '\t' << deltalogp << '\t' << tmp2 - deltalogp << '\n';
 				exit(1);
 			}
+			*/
 			delta2[i] = deltalogp;
 			if ((!i) || (max2 < deltalogp))	{
 				max2 = deltalogp;
@@ -598,6 +601,16 @@ void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, do
 	cout << "total log variance: " << totvarlog << '\n';
 	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
 	cout << "per site : " << totvarlog / GetNsite() << '\n';
+
+	ofstream os((name + ".logbf").c_str());
+	os << '\n';
+	os << "log bf :  " << logbf << '\n';
+	os << "log bf2 : " << logbf2 << '\n';
+	os << '\n';
+	os << "total log variance: " << totvarlog << '\n';
+	os << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+	os << "per site : " << totvarlog / GetNsite() << '\n';
+
 }
 
 void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int nfrac, int nstep)	{

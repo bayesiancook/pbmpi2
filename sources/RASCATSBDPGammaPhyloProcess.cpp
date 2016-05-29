@@ -321,6 +321,71 @@ void RASCATSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
 
 double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 
+	int ncomp = GetNcomponent();
+	if ((sumovercomponents > 0) && (sumovercomponents < GetNcomponent()))	{
+		ncomp = sumovercomponents;
+	}
+
+	double* modesitelogL = new double[ncomp];
+
+	double totlogL = 0;
+
+	if (ncomp == GetNcomponent())	{
+
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+
+				// remove site
+				RemoveSite(i,SBDPProfileProcess::alloc[i]);
+
+				double max = 0;
+				for (int k=0; k<GetNcomponent(); k++)	{
+					AddSite(i,k);
+					modesitelogL[k] = SiteLogLikelihood(i);
+					if ((!k) || (max < modesitelogL[k]))	{
+						max = modesitelogL[k];
+					}
+					RemoveSite(i,k);
+				}
+
+				double total = 0;
+				double cumul[GetNcomponent()];
+				for (int k=0; k<GetNcomponent(); k++)	{
+					double tmp = weight[k] * exp(modesitelogL[k] - max);
+					total += tmp;
+					cumul[k] = total;
+				}
+
+				double u = total * rnd::GetRandom().Uniform();
+				int k = 0;
+				while ((k<GetNcomponent()) && (u>cumul[k]))	{
+					k++;
+				}
+
+				if (! reverseafterfull)	{
+					AddSite(i,k);
+					sitelogL[i] = modesitelogL[k];
+				}
+
+				double sitetotlogL = log(total) + max;
+				totlogL += sitetotlogL;
+			}
+		}
+	}
+
+	else	{
+
+		cerr << "get full log likelihood not yet implemented for multiple try\n";
+		exit(1);
+	}
+
+	delete[] modesitelogL;
+	return totlogL;
+}
+
+/*
+double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
+
 	double** modesitelogL = new double*[GetNsite()];
 	int ncomp = GetNcomponent();
 	if ((sumovercomponents > 0) && (sumovercomponents < GetNcomponent()))	{
@@ -432,6 +497,7 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 	delete[] modesitelogL;
 	return totlogL;
 }
+*/
 
 /*
 double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{

@@ -92,10 +92,13 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 
 		if (! GetMyid()) {
 
+			/*
 			if (topobf || sis)	{
 				ifstream mpis((name + ".mpi").c_str());
+				cerr << name << '\n';
 				GlobalReadSiteRankFromStream(mpis);
 			}
+			*/
 
 			if (sis)	{
 				SetSIS();
@@ -265,6 +268,7 @@ void PhyloProcess::SetParameters(string indatafile, string intreefile, int inisc
 
 void PhyloProcess::SetTopoBF()	{
 
+	GlobalSetBFFrac();
 	GlobalBackupTree();
 	Link* down = GetTree()->GetLCA(taxon1,taxon2);
 	if (! down)	{
@@ -446,14 +450,6 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
 			}
 		}
 	}
-
-	/*
-	if (topobf)	{
-		cerr << nsite << '\n';
-		exit(1);
-		GlobalReadSiteRankFromStream(is);
-	}
-	*/
 }
 
 //-------------------------------------------------------------------------
@@ -936,32 +932,46 @@ double PhyloProcess::ComputeTopoBFLogLikelihoodRatio(double fracmin, double frac
 
 	double delta = 0;
 
-	SetMinMax(fracmin,fracmax);
+	if (sumovercomponents)	{
 
-	PostOrderPruning(GetRoot(),condlmap[0]);
-	MultiplyByStationaries(condlmap[0],condflag);
-	ComputeLikelihood(condlmap[0],condflag);
-	PreOrderPruning(GetRoot(),condlmap[0]);
+		SetMinMax(fracmin,fracmax);
 
-	delta -= SumLogLikelihood();
+		delta -= GetFullLogLikelihood();
+		SlaveSwapTree();
+		delta += GetFullLogLikelihood();
+		SlaveSwapTree();
 
-	SlaveSwapTree();
+		SetMinMax(0,1);
+	}
+	else	{
 
-	PostOrderPruning(GetRoot(),condlmap[0]);
-	MultiplyByStationaries(condlmap[0],condflag);
-	ComputeLikelihood(condlmap[0],condflag);
-	PreOrderPruning(GetRoot(),condlmap[0]);
+		SetMinMax(fracmin,fracmax);
 
-	delta += SumLogLikelihood();
+		PostOrderPruning(GetRoot(),condlmap[0]);
+		MultiplyByStationaries(condlmap[0],condflag);
+		ComputeLikelihood(condlmap[0],condflag);
+		PreOrderPruning(GetRoot(),condlmap[0]);
 
-	SlaveSwapTree();
+		delta -= SumLogLikelihood();
 
-	PostOrderPruning(GetRoot(),condlmap[0]);
-	MultiplyByStationaries(condlmap[0],condflag);
-	ComputeLikelihood(condlmap[0],condflag);
-	PreOrderPruning(GetRoot(),condlmap[0]);
+		SlaveSwapTree();
 
-	SetMinMax(0,1);
+		PostOrderPruning(GetRoot(),condlmap[0]);
+		MultiplyByStationaries(condlmap[0],condflag);
+		ComputeLikelihood(condlmap[0],condflag);
+		PreOrderPruning(GetRoot(),condlmap[0]);
+
+		delta += SumLogLikelihood();
+
+		SlaveSwapTree();
+
+		PostOrderPruning(GetRoot(),condlmap[0]);
+		MultiplyByStationaries(condlmap[0],condflag);
+		ComputeLikelihood(condlmap[0],condflag);
+		PreOrderPruning(GetRoot(),condlmap[0]);
+
+		SetMinMax(0,1);
+	}
 
 	return delta;
 }

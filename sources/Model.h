@@ -338,6 +338,10 @@ class Model	{
 
 		process->SetSize(size);
 		process->SetName(name);
+		if ((!myid) && (process->topobf))	{
+			ifstream mpis((name + ".mpi").c_str());
+			process->GlobalReadSiteRankFromStream(mpis);
+		}
 	}
 
 	void ToStream(ostream& os, bool header)	{

@@ -73,8 +73,9 @@ void MixtureProfileProcess::GlobalActivateSumOverComponents()	{
 void MixtureProfileProcess::SlaveActivateSumOverComponents()	{
 
 	MPI_Bcast(&sumovercomponents,1,MPI_INT,0,MPI_COMM_WORLD);
-	ActivateSumOverComponents();
-
+	if (sumovercomponents > 0)	{
+		ActivateSumOverComponents();
+	}
 }
 
 void MixtureProfileProcess::Delete()	{

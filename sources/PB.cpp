@@ -130,6 +130,11 @@ int main(int argc, char* argv[])	{
 	int bfnfrac = 100;
 	int bfnrep = 100;
 
+	int sis = 0;
+	int sisnfrac = 100;
+	int sisnrep = 10;
+	double siscutoff = 0.2;
+
 	int nmodemax = 0;
 
 	int temperedbl = 1;
@@ -189,6 +194,15 @@ int main(int argc, char* argv[])	{
 			else if (s == "-topoburnin")	{
 				i++;
 				topoburnin = atoi(argv[i]);
+			}
+			else if (s == "-sis")	{
+				sis = 1;
+				i++;
+				sisnfrac = atoi(argv[i]);
+				i++;
+				sisnrep = atoi(argv[i]);
+				i++;
+				siscutoff = atof(argv[i]);
 			}
 			else if (s == "-topobf")	{
 				topobf = 1;
@@ -854,7 +868,7 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,fixtopo,fixroot,topoburnin,topobf,bfburnin,bfnfrac,bfnrep,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs,sitesuffstat);
+		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bfnfrac,bfnrep,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs,sitesuffstat);
 
 		if (! myid)	{
 			cerr << '\n';
@@ -867,6 +881,9 @@ int main(int argc, char* argv[])	{
 			ofstream topos((name + ".topo").c_str());
 			if (topobf)	{
 				ofstream bos((name + ".bf").c_str());
+			}
+			if (sis)	{
+				ofstream sos((name + ".sis").c_str());
 			}
 			ofstream tos((name + ".trace").c_str());
 			model->TraceHeader(tos);

@@ -80,6 +80,9 @@ class AASubSelMixtureProfileProcess : public virtual GTRMixtureProfileProcess	{
 				tot += occupancy[k] + 1;
 			}
 		}
+		if (!tot)	{
+			return 1;
+		}
 		norm /= tot;
 		return norm;
 	}

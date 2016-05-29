@@ -65,6 +65,9 @@ class GTRMixtureProfileProcess : public virtual GTRProfileProcess, public virtua
 				tot += occupancy[k] + 1;
 			}
 		}
+		if (! tot)	{
+			return 1;
+		}
 		norm /= tot;
 		return norm;
 	}

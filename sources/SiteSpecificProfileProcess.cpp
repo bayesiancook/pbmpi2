@@ -62,6 +62,9 @@ double SiteSpecificProfileProcess::GetStatEnt()	{
 			totnsite ++;
 		}
 	}
+	if (! totnsite)	{
+		return log((double) GetDim());
+	}
 	return total / totnsite;
 }
 

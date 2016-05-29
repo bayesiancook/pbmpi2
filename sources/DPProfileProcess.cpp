@@ -214,6 +214,10 @@ double DPProfileProcess::IncrementalDPMove(int nrep, double epsilon)	{
 		int site = (int) (GetNsite() * rnd::GetRandom().Uniform());
 
 	// for (int site=0; site<GetNsite(); site++)	{
+		if (alloc[site] == -1)	{
+			cerr << "error in DPProfileProcess::IncrementalDPMove: alloc[site] == -1\n";
+			exit(1);
+		}
 		int bk = alloc[site];
 		int k = occupancy[alloc[site]] > 1 ? Ncomponent : Ncomponent-1;
 		int h = k + Nadd;

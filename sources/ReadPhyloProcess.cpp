@@ -342,6 +342,84 @@ void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	
 
 }
 
+void PhyloProcess::FastReadSIS(string name, int burnin, int every, int until, double prop)	{
+
+	ifstream is((name + ".sis").c_str());
+
+	int level = 10;
+
+	int b = (1-prop) * sisnrep;
+	int n = sisnrep - b;
+
+	double totvarlog = 0;
+	double logZ = 0;
+
+
+	double frac = 0;
+	while (frac < 1)	{	
+
+		double delta[n];
+
+		for (int i=0; i<b; i++)	{
+			double tmp1, tmp2;
+			is >> tmp1 >> tmp2;
+			if (fabs(tmp1 - frac) > 1e-6)	{
+				cerr << "error in sis: read " << tmp1 << " instead of " << frac << '\n';
+				exit(1);
+			}
+		}
+		double max = 0;
+		for (int i=0; i<n; i++)	{
+			double tmp1, tmp2;
+			is >> tmp1 >> tmp2;
+			if (fabs(tmp1 - frac) > 1e-6)	{
+				cerr << "error in isis: read " << tmp1 << " instead of " << frac << '\n';
+				exit(1);
+			}
+			delta[i] = tmp2;
+			if ((!i) || (max < tmp2))	{
+				max = tmp2;
+			}
+		}
+
+		double meanlog = 0;
+		double varlog = 0;
+		for (int i=0; i<n; i++)	{
+			meanlog += delta[i];
+			varlog += delta[i]*delta[i];
+		}
+		meanlog /= n;
+		varlog /= n;
+		varlog -= meanlog*meanlog;
+		totvarlog += varlog;
+
+		double tot = 0;
+		for (int i=0; i<n; i++)	{
+			tot += exp(delta[i] - max);
+		}
+		tot /= n;
+
+		double logscore = log(tot) + max;
+
+		logZ += logscore;
+		double df = 1.0 / sisnfrac / level;
+		frac += df;
+		if (frac > 1.0)	{
+			frac = 1.0;
+		}
+		if ((level == 10) && (frac >= siscutoff))	{
+			level = 1;
+		}
+	}
+
+	cout << '\n';
+	cout << "log marginal likelihood : " << logZ << '\n';
+	cout << '\n';
+	cout << "total log variance: " << totvarlog << '\n';
+	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+	cout << "per site : " << totvarlog / GetNsite() << '\n';
+}
+
 void PhyloProcess::FastReadTopoBF2(string name, int burnin, int every, int until, double prop)	{
 
 	ifstream is((name + ".bf").c_str());

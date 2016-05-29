@@ -256,6 +256,7 @@ void Random::DrawFromUrn (int* tab , int n, int N)	{	// draw n out of N
 		}
 		if (trial == N)	{
 			cerr << "error in draw from urn: overflow\n";
+			cerr << n << '\t' << N << '\n';
 			exit(1);
 		}
 		tab[i] = trial;	

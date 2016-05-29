@@ -48,10 +48,19 @@ void PhyloProcess::New(int unfold)	{
 	if (! GetMyid())	{
 
 		if (topobf)	{
+			bffrac = 0;
 			SetTopoBF();
 		}
 
-		Sample();
+		if (sis)	{
+			sisfrac = 0;
+			SetSIS();
+			PriorSample();
+		}
+		else	{
+			Sample();
+		}
+
 		if (unfold)	{
 			GlobalUnfold();
 		}
@@ -60,7 +69,7 @@ void PhyloProcess::New(int unfold)	{
 	if (BPP)	{
 		BPP->RegisterWithTaxonSet(GetData()->GetTaxonSet());
 	}
-	if (topobf)	{
+	if (topobf || sis)	{
 		ofstream os((name + ".mpi").c_str());
 		GlobalWriteSiteRankToStream(os);
 	}
@@ -82,11 +91,20 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 	if (unfold)	{
 
 		if (! GetMyid()) {
-			if (topobf)	{
-				SetTopoBF();
+
+			if (topobf || sis)	{
 				ifstream mpis((name + ".mpi").c_str());
 				GlobalReadSiteRankFromStream(mpis);
 			}
+
+			if (sis)	{
+				SetSIS();
+			}
+
+			if (topobf)	{
+				SetTopoBF();
+			}
+
 			FromStream(is);
 			GlobalUnfold();
 		}
@@ -173,19 +191,27 @@ void PhyloProcess::Monitor(ostream& os)  {
 	}
 }
 
-void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, int inbfnfrac, int inbfnrep, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
+void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, int inbfnfrac, int inbfnrep, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
 
 	datafile = indatafile;
 	treefile = intreefile;
 	iscodon = iniscodon;
 	codetype = incodetype;
+
+	sis = insis;
+	sisnfrac = insisnfrac;
+	sisnrep = insisnrep;
+	siscutoff = insiscutoff;
+
 	fixtopo = infixtopo;
 	fixroot = infixroot;
 	topoburnin = intopoburnin;
+
 	topobf = intopobf;
 	bfburnin = inbfburnin;
 	bfnfrac = inbfnfrac;
 	bfnrep = inbfnrep;
+
 	NSPR = inNSPR;
 	NMHSPR = inNMHSPR;
 	NTSPR = inNTSPR;
@@ -225,6 +251,9 @@ void PhyloProcess::SetParameters(string indatafile, string intreefile, int inisc
 	dc = indc;
 	fixbl = infixbl;
 	sumovercomponents = insumovercomponents;
+	if (sis && (! sumovercomponents))	{
+		sumovercomponents = 50;
+	}
 	proposemode = inproposemode;
 	allocmode = inallocmode;
 	// sumratealloc = insumratealloc;
@@ -254,27 +283,25 @@ void PhyloProcess::SetTopoBF()	{
 	GlobalSwapTree();
 }
 
+void PhyloProcess::SetSIS()	{
+
+	GlobalSetMinMax(0,sisfrac);
+
+}
+
 
 void PhyloProcess::IncSize()	{
 	size++;
+
 	if (topobf)	{
 		if (size > bfburnin)	{
 
 			double delta = 1.0 / bfnfrac;
 			double deltalogp = GlobalComputeTopoBFLogLikelihoodRatio(bffrac,bffrac+delta);
-			/*
-			GlobalSetMinMax(bffrac,bffrac+delta);
-			GlobalUpdateConditionalLikelihoods();
-			double deltalogp = -logL;
-			GlobalSwapTree();
-			GlobalUpdateConditionalLikelihoods();
-			deltalogp += logL;
-			GlobalSwapTree();
-			GlobalSetMinMax(0,1);
-			GlobalUpdateConditionalLikelihoods();
-			*/
+
 			ofstream os((name + ".bf").c_str(),ios_base::app);
 			os << bffrac << '\t' << deltalogp << '\n';
+			os.close();
 
 			int c = (size - bfburnin) % bfnrep;
 			if (! c)	{
@@ -283,6 +310,55 @@ void PhyloProcess::IncSize()	{
 				GlobalUpdateConditionalLikelihoods();
 			}
 		}
+	}
+
+	if (sis)	{
+
+		int fast = 1;
+		if (sisfrac < 1.0)	{
+
+			int c = size % sisnrep;
+			if (c)	{
+				if (! fast)	{
+					reverseafterfull = 1;
+					double delta = 1.0 / sisnfrac / sislevel;
+					GlobalSetMinMax(sisfrac,sisfrac+delta);
+					Chrono chrono;
+					chrono.Start();
+					double deltalogp = GlobalGetFullLogLikelihood();
+					chrono.Stop();
+					reverseafterfull = 0;
+
+					ofstream os((name + ".sis").c_str(),ios_base::app);
+					os << sisfrac << '\t' << GetNactiveSite() << '\t' << chrono.GetTime() / 1000 << '\t' << deltalogp << '\t' << logZ << '\n';
+					os.close();
+				}
+
+			}
+			else	{
+				double delta = 1.0 / sisnfrac / sislevel;
+				GlobalSetMinMax(sisfrac,sisfrac+delta);
+				Chrono chrono;
+				chrono.Start();
+				double deltalogp = GlobalGetFullLogLikelihood();
+				chrono.Stop();
+				logZ += deltalogp;
+
+				ofstream os((name + ".sis").c_str(),ios_base::app);
+				os << sisfrac << '\t' << GetNactiveSite() << '\t' << chrono.GetTime() / 1000 << '\t' << deltalogp << '\t' << logZ << '\n';
+				os.close();
+
+				sisfrac += delta;
+				if (sisfrac > 1.0)	{
+					sisfrac = 1.0;
+				}
+				if ((sislevel == 10) && (sisfrac >= siscutoff))	{
+					sislevel = 1;
+				}
+			}
+		}
+		GlobalSetMinMax(0,sisfrac);
+		GlobalUpdateConditionalLikelihoods();
 	}
 }
 
@@ -317,6 +393,8 @@ void PhyloProcess::ToStreamHeader(ostream& os)	{
 	GetTree()->ToStream(os);
 	os << 0 << '\n';
 	os << topobf << '\t' << bfburnin << '\t' << bfnfrac << '\t' << bfnrep << '\t' << bffrac << '\n';
+	os << 0 << '\n';
+	os << sis << '\t' << sisnfrac << '\t' << sisnrep << '\t' << sisfrac << '\t' << siscutoff << '\t' << logZ << '\n';
 	os << 1 << '\n';
 
 }
@@ -360,8 +438,12 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
 		is >> topobf >> bfburnin >> bfnfrac >> bfnrep >> bffrac;
 		is >> check;
 		if (!check)	{
-			cerr << "error when reading stream header \n";
-			exit(1);
+			is >> sis >> sisnfrac >> sisnrep >> sisfrac >> siscutoff >> logZ;
+			is >> check;
+			if (!check)	{
+				cerr << "error when reading stream header \n";
+				exit(1);
+			}
 		}
 	}
 
@@ -706,20 +788,6 @@ void PhyloProcess::Unfold()	{
 	DeleteMappings();
 	ActivateSumOverRateAllocations();
 	/*
-	if (topobf)	{
-		SetMinMax(bffrac,1);
-		UpdateConditionalLikelihoods();
-		SlaveSwapTree();
-		SetMinMax(0,bffrac);
-		UpdateConditionalLikelihoods();
-		SlaveSwapTree();
-		SetMinMax(0,1);
-	}
-	else	{
-		UpdateConditionalLikelihoods();
-	}
-	*/
-	/*
 	if (!sumratealloc)	{
 		DrawAllocations(0);
 		InactivateSumOverRateAllocations();
@@ -945,6 +1013,18 @@ void PhyloProcess::SlaveSetBFFrac()	{
 	MPI_Bcast(&bffrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
 }
 
+void PhyloProcess::GlobalSetSISFrac()	{
+
+	MESSAGE signal = SETSISFRAC;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&sisfrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+}
+
+void PhyloProcess::SlaveSetSISFrac()	{
+
+	MPI_Bcast(&sisfrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+}
+
 void PhyloProcess::UpdateConditionalLikelihoods()	{
 
 	if (topobf)	{
@@ -1139,6 +1219,7 @@ double PhyloProcess::GlobalGetFullLogLikelihood()	{
 			MESSAGE signal = FULLLIKELIHOOD;
 			MPI_Status stat;
 			MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+			MPI_Bcast(&reverseafterfull,1,MPI_INT,0,MPI_COMM_WORLD);
 
 			double sum[2];
 			for(int i=1; i<GetNprocs(); i++) {
@@ -1164,6 +1245,7 @@ double PhyloProcess::GlobalGetFullLogLikelihood()	{
 
 void PhyloProcess::SlaveGetFullLogLikelihood()	{
 
+	MPI_Bcast(&reverseafterfull,1,MPI_INT,0,MPI_COMM_WORLD);
 	double totlogL = GetFullLogLikelihood();
 	double sum[2];
 	sum[0] = totlogL;
@@ -1947,6 +2029,9 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 		break;
 	case SETBFFRAC:
 		SlaveSetBFFrac();
+		break;
+	case SETSISFRAC:
+		SlaveSetSISFrac();
 		break;
 	case COLLECTLIKELIHOOD:
 		SlaveCollectLogLikelihood();

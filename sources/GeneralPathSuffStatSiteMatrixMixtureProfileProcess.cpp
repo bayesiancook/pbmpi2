@@ -51,7 +51,9 @@ void GeneralPathSuffStatSiteMatrixMixtureProfileProcess::AddSite(int site, int c
 }
 
 void GeneralPathSuffStatSiteMatrixMixtureProfileProcess::RemoveSite(int site, int cat)	{
-	occupancy[cat] --;
+	if (cat != -1)	{
+		occupancy[cat] --;
+	}
 }
 
 double GeneralPathSuffStatSiteMatrixMixtureProfileProcess::LogStatProb(int site, int cat)	{

@@ -201,13 +201,15 @@ double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 				k++;
 			}
 
-			if (ncomp == GetNcomponent())	{
-				AddSite(i,k);
+			if (! reverseafterfull)	{
+				if (ncomp == GetNcomponent())	{
+					AddSite(i,k);
+				}
+				else	{
+					AddSite(i,mtryalloc[i][k]);
+				}
+				UpdateZip(i);
 			}
-			else	{
-				AddSite(i,mtryalloc[i][k]);
-			}
-			UpdateZip(i);
 
 			if (ncomp < GetNcomponent())	{
 				total /= ncomp;
@@ -219,7 +221,9 @@ double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 
 	// one last update so that cond likelihoods are in sync with new site allocations
 	// this will also update logL
-	UpdateConditionalLikelihoods();
+	if (! reverseafterfull)	{
+		UpdateConditionalLikelihoods();
+	}
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
@@ -233,8 +237,8 @@ double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 double RASCATFiniteGammaPhyloProcess::GlobalGetFullLogLikelihood()	{
 
 	double totlogL = PhyloProcess::GlobalGetFullLogLikelihood();
-	if (sumovercomponents && (Ncomponent > 1))	{
-		// receive allocs from slaves
+	// receive allocs from slaves
+	if (! reverseafterfull)	{
 		MPI_Status stat;
 		int tmpalloc[GetNsite()];
 		for(int i=1; i<GetNprocs(); ++i) {
@@ -255,15 +259,15 @@ double RASCATFiniteGammaPhyloProcess::GlobalGetFullLogLikelihood()	{
 		/*
 		ResampleWeights();
 		*/
+		GlobalUpdateParameters();
 	}
-	GlobalUpdateParameters();
 	return totlogL;
 }
 
 void RASCATFiniteGammaPhyloProcess::SlaveGetFullLogLikelihood()	{
 
 	PhyloProcess::SlaveGetFullLogLikelihood();
-	if (Ncomponent > 1)	{
+	if (! reverseafterfull)	{
 		MPI_Send(FiniteProfileProcess::alloc,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
 	}
 }
@@ -368,6 +372,9 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int bf = 0;
 	double bfprop = 0.5;
 
+	int sis = 0;
+	double sisprop = 0.5;
+
 	int temperedbl = 1;
 	int temperedgene = 0;
 	int temperedrate = 0;
@@ -410,6 +417,11 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				bf = 1;
 				i++;
 				bfprop = atof(argv[i]);
+			}
+			else if (s == "-sis")	{
+				sis = 1;
+				i++;
+				sisprop = atof(argv[i]);
 			}
 			/*
 			else if (s == "-bf")	{
@@ -520,6 +532,9 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 
 	if (cv)	{
 		ReadCV(testdatafile,name,burnin,every,until);
+	}
+	else if (sis)	{
+		FastReadSIS(name,burnin,every,until,sisprop);
 	}
 	else if (bf)	{
 		sumovercomponents = sumcomp;

@@ -54,6 +54,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	// default constructor: pointers set to nil
 	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
+		reverseafterfull = 0;
 		outputname = "";
 		tree = 0;
 		treestring = "None";
@@ -65,6 +66,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		tracktopo = 0;
 		topoburnin = 0;
 		topobf = 0;
+		sis = 0;
+		sislevel = 10;
+		siscutoff = 0.2;
+		logZ = 0;
 		fixroot = 0;
 		spracc = sprtry = 0;
 		mhspracc = mhsprtry = 0;
@@ -288,7 +293,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void Monitor(ostream& os);
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, int inbfnfrac, int inbfnrep, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, int inbfnfrac, int inbfnrep, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
 
 	void SetMPI(int inmyid, int innprocs)	{
 		myid = inmyid;
@@ -331,6 +336,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void GlobalSetBFFrac();
 	void SlaveSetBFFrac();
 
+	void GlobalSetSISFrac();
+	void SlaveSetSISFrac();
+
 	// Feb 1st, 2016
 	// special device set up for calculating, on the fly, the likelihood summed over profile allocations
 	// valid only under specific settings
@@ -339,6 +347,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual double GetFullLogLikelihood()	{
 		return logL;
 	}
+
+	int reverseafterfull;
 
 	protected:
 
@@ -459,6 +469,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void ReadCV(string testdatafile, string name, int burnin, int every, int until, int iscodon = 0, GeneticCodeType codetype = Universal);
 	virtual void PostPred(int ppredtype, string name, int burnin, int every, int until, int rateprior, int profileprior, int rootprior);
 
+	void FastReadSIS(string name, int burnin, int every, int until, double prop);
 	void FastReadTopoBF2(string name, int burnin, int every, int until, double prop);
 	void ReadTopoBF2(string name, int burnin, int every, int until, double prop);
 	virtual void ReadTopoBF(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nfrac, int nstep);
@@ -505,7 +516,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	}
 
 	double GetLogLikelihood()	{
-		return logL;
+		if (! GetNactiveSite())	{
+			return 0;
+		}
+		return logL / GetNactiveSite() * GetNsite();
 	}
 
 	virtual void GlobalUnfold();
@@ -788,6 +802,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int size;
 
 	void SetTopoBF();
+	void SetSIS();
 
 	void IncSize();
 	int GetSize() {return size;}
@@ -822,6 +837,14 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int bfnrep;
 	int bfnfrac;
 	double bffrac;
+
+	int sis;
+	int sisnfrac;
+	int sisnrep;
+	double sisfrac;
+	int sislevel;
+	double siscutoff;
+	double logZ;
 
 	int NSPR;
 	int NMHSPR;

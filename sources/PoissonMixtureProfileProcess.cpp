@@ -246,12 +246,15 @@ double PoissonMixtureProfileProcess::MoveDirWeights(double tuning, int nrep)	{
 }
 
 void PoissonMixtureProfileProcess::RemoveSite(int site, int cat)	{
-	occupancy[cat] --;
-	if (activesuffstat)	{
-		const int* nsub = GetSiteProfileSuffStatCount(site);
-		int* catnsub = profilesuffstatcount[cat];
-		for (int k=0; k<GetDim(); k++)	{
-			catnsub[k] -= nsub[k];
+	if (cat != -1)	{
+		alloc[site] = -1;
+		occupancy[cat] --;
+		if (activesuffstat)	{
+			const int* nsub = GetSiteProfileSuffStatCount(site);
+			int* catnsub = profilesuffstatcount[cat];
+			for (int k=0; k<GetDim(); k++)	{
+				catnsub[k] -= nsub[k];
+			}
 		}
 	}
 }

@@ -131,6 +131,7 @@ class RASCATGTRDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProcess
 		}
 
 		os << '\t' << GetLogLikelihood();
+		// os << '\t' << GetTotalLength();
 		os << '\t' << GetRenormTotalLength();
 		os << '\t' << GetAlpha();
 		os << '\t' << GetNDisplayedComponent();

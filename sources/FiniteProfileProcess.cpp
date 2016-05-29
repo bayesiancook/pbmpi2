@@ -219,6 +219,10 @@ double FiniteProfileProcess::SlaveIncrementalFiniteMove()	{
 				double* mLogSamplingArray = bigarray + site * Ncomponent;
 				double* cumul = bigcumul + site * Ncomponent;
 
+				if (alloc[site] == -1)	{
+					cerr << "error in SlaveIncrementalFiniteMove: alloc == -1\n";
+					exit(1);
+				}
 				int bk = alloc[site];
 
 				double max = 0;
@@ -282,6 +286,11 @@ double FiniteProfileProcess::IncrementalFiniteMove(int nrep)	{
 		for (int site=0; site<GetNsite(); site++)	{
 
 			if (ActiveSite(site))	{
+
+			if (alloc[site] == -1)	{
+				cerr << "error in IncrementalFiniteMove: alloc == -1\n";
+				exit(1);
+			}
 
 			int bk = alloc[site];
 			RemoveSite(site,bk);

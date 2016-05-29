@@ -38,6 +38,9 @@ void MixtureProfileProcess::Create()	{
 			profile[i] = allocprofile + i*GetDim();
 		}
 		alloc = new int[GetNsite()];
+		for (int i=0; i<GetNsite(); i++)	{
+			alloc[i] = -1;
+		}
 		occupancy = new int[GetNmodeMax()];
 		logstatprior = new double[GetNmodeMax()];
 		profilesuffstatlogprob = new double[GetNmodeMax()];
@@ -180,6 +183,9 @@ double MixtureProfileProcess::GetStatEnt()	{
 		total += occupancy[k] * GetStatEnt(k);
 		totnsite += occupancy[k];
 	}
+	if (! totnsite)	{
+		return log((double) GetDim());
+	}
 	return total / totnsite;
 }
 
@@ -261,6 +267,10 @@ void MixtureProfileProcess::UpdateOccupancyNumbers()	{
 	}
 	for (int i=0; i<GetNsite(); i++)	{
 		if (ActiveSite(i))	{
+			if (alloc[i] == -1)	{
+				cerr << "error in MixtureProfileProcess::UpdateOccupancyNumber: alloc[i] == -1\n";
+				exit(1);
+			}
 			occupancy[alloc[i]]++;
 		}
 	}
@@ -311,6 +321,10 @@ void MixtureProfileProcess::SwapComponents(int cat1, int cat2)	{
 
 	for (int i=0; i<GetNsite(); i++)	{
 		if (ActiveSite(i))	{
+			if (alloc[i] == -1)	{
+				cerr << "error in MixtureProfileProcess::SwapComponents: alloc[i] == -1\n";
+				exit(1);
+			}
 			if (alloc[i] == cat1)	{
 				alloc[i] = cat2;
 			}

@@ -400,13 +400,15 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 				k++;
 			}
 
-			if (ncomp == GetNcomponent())	{
-				AddSite(i,k);
+			if (! reverseafterfull)	{
+				if (ncomp == GetNcomponent())	{
+					AddSite(i,k);
+				}
+				else	{
+					AddSite(i,mtryalloc[i][k]);
+				}
+				UpdateZip(i);
 			}
-			else	{
-				AddSite(i,mtryalloc[i][k]);
-			}
-			UpdateZip(i);
 
 			if (ncomp < GetNcomponent())	{
 				total /= ncomp;
@@ -418,7 +420,9 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 
 	// one last update so that cond likelihoods are in sync with new site allocations
 	// this will also update logL
-	UpdateConditionalLikelihoods();
+	if (! reverseafterfull)	{
+		UpdateConditionalLikelihoods();
+	}
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
@@ -515,7 +519,7 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 double RASCATSBDPGammaPhyloProcess::GlobalGetFullLogLikelihood()	{
 
 	double totlogL = PhyloProcess::GlobalGetFullLogLikelihood();
-	if (sumovercomponents && (Ncomponent > 1))	{
+	if (! reverseafterfull)	{
 		// receive allocs from slaves
 		MPI_Status stat;
 		int tmpalloc[GetNsite()];
@@ -537,15 +541,15 @@ double RASCATSBDPGammaPhyloProcess::GlobalGetFullLogLikelihood()	{
 		/*
 		ResampleWeights();
 		*/
+		GlobalUpdateParameters();
 	}
-	GlobalUpdateParameters();
 	return totlogL;
 }
 
 void RASCATSBDPGammaPhyloProcess::SlaveGetFullLogLikelihood()	{
 
 	PhyloProcess::SlaveGetFullLogLikelihood();
-	if (sumovercomponents && (Ncomponent > 1))	{
+	if (! reverseafterfull)	{
 		MPI_Send(SBDPProfileProcess::alloc,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
 	}
 }

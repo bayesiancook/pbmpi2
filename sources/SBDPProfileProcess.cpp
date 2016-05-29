@@ -257,7 +257,8 @@ void SBDPProfileProcess::ResampleWeights()	{
 
 	UpdateOccupancyNumbers();
 
-	int remainingOcc = GetNsite();
+	int remainingOcc = GetNactiveSite();
+	// int remainingOcc = GetNsite();
 	double cumulProduct = 1.0;
 	double totweight = 0;
 	double v, x, y;
@@ -288,7 +289,7 @@ double SBDPProfileProcess::MoveOccupiedCompAlloc(int k0)	{
 	ResampleWeights();
 	double total = 0.0;
 	int Nocc = GetNOccupiedComponent();
-	if (Nocc != 1)	{
+	if (Nocc > 1)	{
 		for (int i=0; i<nrep; i++)	{
 			int* occupiedComponentIndices = new int[Nocc];
 			int j=0;
@@ -323,7 +324,7 @@ double SBDPProfileProcess::MoveOccupiedCompAlloc(int k0)	{
 }
 
 double SBDPProfileProcess::LogIntegratedAllocProb()	{
-	int remainingOcc = GetNsite();
+	int remainingOcc = GetNactiveSite();
 	double total = 0;
 	for (int k=0; k<GetNcomponent(); k++)	{
 		if (remainingOcc)	{
@@ -333,6 +334,8 @@ double SBDPProfileProcess::LogIntegratedAllocProb()	{
 	}
 	if (remainingOcc)	{
 		cerr << "error in allocation count\n";
+		cerr << GetNOccupiedComponent() << '\n';
+		cerr << GetNactiveSite() << '\n';
 		exit(1);
 	}
 	return total;
@@ -631,6 +634,11 @@ void SBDPProfileProcess::SlaveMixMove()	{
 
 				if (ActiveSite(site))	{
 
+					if (alloc[site] == -1)	{
+						cerr << "error in SBDPProfileProcess::SlaveMixMove: alloc == -1\n";
+						exit(1);
+					}
+
 					if (allocmode)	{
 
 						int bk = alloc[site];
@@ -919,6 +927,11 @@ double SBDPProfileProcess::MixMove(int nrep, int nallocrep, double epsilon, int 
 
 				if (ActiveSite(site))	{
 
+					if (alloc[site] == -1)	{
+						cerr << "error in SBDPProfileProcess::MixMove: alloc == -1\n";
+						exit(1);
+					}
+
 					int bk = alloc[site];
 
 					double max = 0;
@@ -1046,6 +1059,11 @@ double SBDPProfileProcess::IncrementalDPMove(int nrep, double epsilon)	{
 		}
 
 		for (int site=0; site<GetNsite(); site++)	{
+
+			if (alloc[site] == -1)	{
+				cerr << "error in SBDPProfileProcess::IncrementalDPMove: alloc == -1\n";
+				exit(1);
+			}
 
 			int bk = alloc[site];
 

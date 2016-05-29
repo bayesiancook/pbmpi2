@@ -29,6 +29,11 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	virtual ~MixtureProfileProcess(){}
 
 	double* GetProfile(int site)	{
+		if (alloc[site] == -1)	{
+			cerr << "error in MixtureProfileProcess::GetProfile(int site): alloc is -1\n";
+			cerr << "site : " << site << '\n';
+			exit(1);
+		}
 		return profile[alloc[site]];
 	}
 
@@ -135,8 +140,12 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 		alloc[site] = cat;
 		occupancy[cat]++;
 	}
+
 	virtual void RemoveSite(int site, int cat)	{
-		occupancy[cat]--;
+		if (cat != -1)	{
+			alloc[site] = -1;
+			occupancy[cat]--;
+		}
 	}
 
 	virtual double GetWeight(int cat)	{

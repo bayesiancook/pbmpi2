@@ -255,7 +255,9 @@ void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::AddSite(int site, i
 }
 
 void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::RemoveSite(int site, int cat)	{
-	occupancy[cat] --;
+	if (cat != -1)	{
+		occupancy[cat] --;
+	}
 }
 
 

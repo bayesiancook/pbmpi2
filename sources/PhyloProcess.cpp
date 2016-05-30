@@ -357,8 +357,8 @@ void PhyloProcess::IncSize()	{
 					blfactor = 1.0 / blfactor;
 				}
 				else	{
-					// GlobalRescaleBranchPrior(blfactor,1);
-					RescaleBranchPrior(1.0/blfactor,1);
+					GlobalRescaleBranchPrior(blfactor,1);
+					// RescaleBranchPrior(1.0/blfactor,1);
 				}
 			}
 

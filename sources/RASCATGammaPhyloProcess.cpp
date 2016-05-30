@@ -357,16 +357,18 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	else if (cv)	{
 		ReadCV(testdatafile,name,burnin,every,until);
 	}
-	else if (bf)	{
+	else if (bf == 1)	{
 		sumovercomponents = sumcomp;
 		if (sumcomp)	{
 			GlobalActivateSumOverComponents();
-			ReadTopoBF2(name,burnin,every,until,bfprop);
+			ReadTopoBF(name,burnin,every,until,bfprop);
 		}
 		else	{
-			FastReadTopoBF2(name,burnin,every,until,bfprop);
-			// ReadTopoBF2(name,burnin,every,until,bfprop);
+			FastReadTopoBF(name,burnin,every,until,bfprop);
 		}
+	}
+	else if (bf == 2)	{
+		FastReadTopoBL(name,burnin,every,until,bfprop);
 	}
 	/*
 	else if (bf)	{

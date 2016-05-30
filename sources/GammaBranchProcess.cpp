@@ -24,10 +24,20 @@ void GammaBranchProcess::Create()	{
 		branchmean = new double[GetNbranch()];
 		branchrelvar = new double[GetNbranch()];
 	}
+	if (! branchscaling)	{
+		branchscaling = new double[GetBranchNcat()];
+		for (int k=0; k<GetBranchNcat(); k++)	{
+			branchscaling[k] = 0.1;
+		}
+	}
 }
 
 void GammaBranchProcess::Delete()	{
 
+	if (branchscaling)	{
+		delete[] branchscaling;
+		branchscaling = 0;
+	}
 	if (branchmean)	{
 		delete[] branchmean;
 		delete[] branchrelvar;
@@ -130,6 +140,15 @@ void GammaBranchProcess::SampleLengthHyperParameters()	{
 	branchbeta = 10.0;
 }
 	
+void GammaBranchProcess::RescaleBranchPrior(double factor, int index)	{
+
+	if (index >= BranchNcat)	{
+		cerr << "error in GammaBranchProcess::RescaleBranchPrior\n";
+		exit(1);
+	}
+	branchscaling[index] *= factor;
+}
+
 double GammaBranchProcess::LogBranchLengthPrior(const Branch* branch)	{
 
 	int index = branch->GetIndex();
@@ -138,7 +157,11 @@ double GammaBranchProcess::LogBranchLengthPrior(const Branch* branch)	{
 		double branchalpha = 1.0 / branchrelvar[index];
 		return branchalpha * log(branchbeta) - rnd::GetRandom().logGamma(branchalpha) + (branchalpha-1) * log(blarray[index]) - branchbeta * blarray[index];
 	}
-	return branchalpha * log(branchbeta) - rnd::GetRandom().logGamma(branchalpha) + (branchalpha-1) * log(blarray[index]) - branchbeta * blarray[index];
+	double beta = branchbeta;
+	if (fabs(branchscaling[branchalloc[index]] - 0.1) > 1e-4)	{
+		beta = 1.0 / branchscaling[branchalloc[index]];
+	}
+	return branchalpha * log(beta) - rnd::GetRandom().logGamma(branchalpha) + (branchalpha-1) * log(blarray[index]) - beta * blarray[index];
 }
 
 double GammaBranchProcess::LogLengthHyperPrior()	{
@@ -230,7 +253,11 @@ double GammaBranchProcess::MPIMoveBranchLengths()	{
 	}
 	else	{
 		for (int i=1; i<GetNbranch(); i++)	{
-			blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), branchbeta + GetBranchLengthSuffStatBeta(i));
+			double beta = branchbeta;
+			if (fabs(branchscaling[branchalloc[i]] - 0.1) > 1e-4)	{
+				beta = 1.0 / branchscaling[branchalloc[i]];
+			}
+			blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), beta + GetBranchLengthSuffStatBeta(i));
 		}
 	}
 	return 1.0;
@@ -248,7 +275,11 @@ double GammaBranchProcess::NonMPIMoveBranchLengths()	{
 	}
 	else	{
 		for (int i=1; i<GetNbranch(); i++)	{
-			blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), branchbeta + GetBranchLengthSuffStatBeta(i));
+			double beta = branchbeta;
+			if (fabs(branchscaling[branchalloc[i]] - 0.1) > 1e-4)	{
+				beta = 1.0 / branchscaling[branchalloc[i]];
+			}
+			blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), beta + GetBranchLengthSuffStatBeta(i));
 		}
 	}
 	return 1.0;

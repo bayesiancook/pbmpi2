@@ -127,7 +127,7 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		chronototal.Start();
 		propchrono.Start();
 
-		if ((! topobf) || (size < bfburnin))	{
+		if ((topobf != 1) || (size < bfburnin))	{
 			BranchLengthMove(tuning);
 			BranchLengthMove(0.1 * tuning);
 

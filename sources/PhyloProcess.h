@@ -293,7 +293,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void Monitor(ostream& os);
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, int inbfnfrac, int inbfnrep, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, int inbfnfrac, int inbfnrep, double blfactor, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate);
 
 	void SetMPI(int inmyid, int innprocs)	{
 		myid = inmyid;
@@ -474,8 +474,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void PostPred(int ppredtype, string name, int burnin, int every, int until, int rateprior, int profileprior, int rootprior);
 
 	void FastReadSIS(string name, int burnin, int every, int until, double prop);
-	void FastReadTopoBF2(string name, int burnin, int every, int until, double prop);
-	void ReadTopoBF2(string name, int burnin, int every, int until, double prop);
+	void FastReadTopoBF(string name, int burnin, int every, int until, double prop);
+	void FastReadTopoBL(string name, int burnin, int every, int until, double prop);
+	void ReadTopoBF(string name, int burnin, int every, int until, double prop);
 	virtual void ReadTopoBF(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nfrac, int nstep);
 
 	void GlobalSetRatePrior(int inrateprior);
@@ -841,6 +842,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int bfnrep;
 	int bfnfrac;
 	double bffrac;
+	double blfactor;
 
 	int sis;
 	int sisnfrac;

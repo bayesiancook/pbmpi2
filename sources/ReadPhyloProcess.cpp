@@ -421,7 +421,74 @@ void PhyloProcess::FastReadSIS(string name, int burnin, int every, int until, do
 	cout << "per site : " << totvarlog / GetNsite() << '\n';
 }
 
-void PhyloProcess::FastReadTopoBF2(string name, int burnin, int every, int until, double prop)	{
+void PhyloProcess::FastReadTopoBL(string name, int burnin, int every, int until, double prop)	{
+
+	ifstream is((name + ".bf").c_str());
+
+	int b = (1-prop) * bfnrep;
+	int n = bfnrep - b;
+
+	double totvarlog = 0;
+	double logbf = 0;
+
+	for (int frac=-bfnfrac; frac<bfnfrac; frac++)	{
+
+		double delta[n];
+
+		for (int i=0; i<b; i++)	{
+			int tmp1;
+			double tmp2, tmp3;
+			is >> tmp1 >> tmp2 >> tmp3;
+			if (tmp1 != frac)	{
+				cerr << "error in topo bl: read " << tmp1 << " instead of " << frac << '\n';
+				exit(1);
+			}
+		}
+		double max = 0;
+		for (int i=0; i<n; i++)	{
+			int tmp1;
+			double tmp2, tmp3;
+			is >> tmp1 >> tmp2 >> tmp3;
+			if (tmp1 != frac)	{
+				cerr << "error in topo bl: read " << tmp1 << " instead of " << frac << '\n';
+				exit(1);
+			}
+			delta[i] = tmp2;
+			if ((!i) || (max < tmp2))	{
+				max = tmp2;
+			}
+		}
+
+		double meanlog = 0;
+		double varlog = 0;
+		for (int i=0; i<n; i++)	{
+			meanlog += delta[i];
+			varlog += delta[i]*delta[i];
+		}
+		meanlog /= n;
+		varlog /= n;
+		varlog -= meanlog*meanlog;
+		totvarlog += varlog;
+
+		double tot = 0;
+		for (int i=0; i<n; i++)	{
+			tot += exp(delta[i] - max);
+		}
+		tot /= n;
+
+		double logscore = log(tot) + max;
+
+		logbf += logscore;
+	}
+
+	cout << '\n';
+	cout << "log bf : " << logbf << '\n';
+	cout << '\n';
+	cout << "total log variance: " << totvarlog << '\n';
+	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+}
+
+void PhyloProcess::FastReadTopoBF(string name, int burnin, int every, int until, double prop)	{
 
 	ifstream is((name + ".bf").c_str());
 
@@ -489,7 +556,7 @@ void PhyloProcess::FastReadTopoBF2(string name, int burnin, int every, int until
 	cout << "per site : " << totvarlog / GetNsite() << '\n';
 }
 
-void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, double prop)	{
+void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, double prop)	{
 
 	ifstream bis((name + ".bf").c_str());
 	ifstream is((name + ".chain").c_str());

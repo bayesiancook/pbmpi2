@@ -25,8 +25,12 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 
 	public:
 
-	BranchProcess() : tree(0), blarray(0), swaproot(0), fixbl(0) {}
+	BranchProcess() : tree(0), blarray(0), swaproot(0), fixbl(0), BranchNcat(1), branchalloc(0) {}
 	virtual ~BranchProcess() {}
+
+	int GetBranchNcat()	{
+		return BranchNcat;
+	}
 
 	NewickTree* GetLengthTree() {return this;}
 	Tree* GetTree() {return tree;}
@@ -138,6 +142,16 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	// return number of branches
 	int MoveAllBranches(double factor);
 	int RecursiveMoveAllBranches(const Link* from, double e);
+
+	double GetAllocTotalLength(int cat)	{
+		double tot = 0;
+		for (int j=1; j<GetNbranch(); j++)	{
+			if (branchalloc[j] == cat)	{
+				tot += blarray[j];
+			}
+		}
+		return tot;
+	}
 
 	double GetTotalLength()	{
 		return RecursiveTotalLength(GetRoot());
@@ -271,6 +285,18 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		return 0;
 	}
 
+	void GlobalSetBranchAlloc(int branchindex, int alloc);
+	void SlaveSetBranchAlloc();
+
+	void GlobalRescaleBranchPrior(double factor, int index);
+	void SlaveRescaleBranchPrior();
+	virtual void RescaleBranchPrior(double factor, int index) {
+		cerr << "error: in BranchProcess::RescaleBranchPrior\n";
+		exit(1);
+	}
+	
+	// SetBranchAlloc(string taxon1, strong taxon2, int alloc);
+
 	// implements a map<const Branch*, double>
 
 	double LengthSuffStatLogProb();
@@ -321,12 +347,21 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 			bk2array = new double[GetNbranch()];
 			blarray[0] = 0;
 			SetLengthsFromNames();
+			branchalloc = new int[GetNbranch()];
+			for (int j=0; j<GetNbranch(); j++)	{
+				branchalloc[j] = 0;
+			}
 		}
 	}
+
 	virtual void Delete() {
-		delete[] blarray;
-		delete[] bkarray;
-		delete[] bk2array;
+		if (blarray)	{
+			delete[] blarray;
+			blarray = 0;
+			delete[] bkarray;
+			delete[] bk2array;
+			delete[] branchalloc;
+		}
 	}
 
 	// translation tables : from pointers of type Link* Branch* and Node* to their index and vice versa
@@ -433,6 +468,8 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	int swaproot;
 
 	int fixbl;
+	int BranchNcat;
+	int* branchalloc;
 
 };
 

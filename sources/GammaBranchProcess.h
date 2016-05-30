@@ -24,7 +24,7 @@ class GammaBranchProcess : public virtual BranchProcess	{
 
 	public:
 
-	GammaBranchProcess() : branchmean(0), branchrelvar(0), betaprior(0), hierarchicallengthprior(0) {}
+	GammaBranchProcess() : branchscaling(0), branchmean(0), branchrelvar(0), betaprior(0), hierarchicallengthprior(0) {}
 	virtual ~GammaBranchProcess() {}
 
 	virtual void Create();
@@ -92,6 +92,9 @@ class GammaBranchProcess : public virtual BranchProcess	{
 		}
 	}
 
+	virtual void RescaleBranchPrior(double factor, int index);
+
+	double* branchscaling;
 	double branchalpha;
 	double branchbeta;
 	double bkbranchalpha;

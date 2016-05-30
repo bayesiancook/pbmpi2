@@ -65,6 +65,59 @@ void BranchProcess::SwapLength()	{
 }
 */
 
+/*
+void BranchProcess::SetBranchAlloc(string taxon1, string taxon2, int alloc)	{
+
+	Link* link = tree->GetLCA(taxon1,taxon2);
+	if (!link)	{
+		cerr << "error in GammaBranchProcess::SetBranchAlloc: did not find LCA of " << taxon1 << " and " << taxon2 << '\n';
+		exit(1);
+	}
+	if (link->isRoot())	{
+		cerr << "error in GammaBranchProcess::SetBranchAlloc: LCA of " << taxon1 << " and " << taxon2 << " is root\n";
+		exit(1);
+	}
+	branchalloc[link->GetBranch()->GetIndex()] = alloc;
+}
+*/
+
+void BranchProcess::GlobalSetBranchAlloc(int branchindex, int alloc)	{
+
+	MESSAGE signal = SETBRANCHALLOC;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&branchindex,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&alloc,1,MPI_INT,0,MPI_COMM_WORLD);
+	branchalloc[branchindex] = alloc;
+}
+
+
+void BranchProcess::SlaveSetBranchAlloc()	{
+
+	int branchindex,alloc;
+	MPI_Bcast(&branchindex,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&alloc,1,MPI_INT,0,MPI_COMM_WORLD);
+	branchalloc[branchindex] = alloc;
+}
+
+void BranchProcess::GlobalRescaleBranchPrior(double factor, int alloc)	{
+
+	MESSAGE signal = RESCALEBRANCH;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&factor,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	MPI_Bcast(&alloc,1,MPI_INT,0,MPI_COMM_WORLD);
+	RescaleBranchPrior(factor,alloc);
+}
+
+
+void BranchProcess::SlaveRescaleBranchPrior()	{
+
+	double factor;
+	int alloc;
+	MPI_Bcast(&factor,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	MPI_Bcast(&alloc,1,MPI_INT,0,MPI_COMM_WORLD);
+	RescaleBranchPrior(factor,alloc);
+}
+
 
 void BranchProcess::RestoreBranch(const Branch* branch)	{
 	if (! branch)	{

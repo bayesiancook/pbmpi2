@@ -11,7 +11,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Create()	{
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == myid)	{
 				process[gene] = new RASCATGTRSBDPGammaPhyloProcess(Ncat,rrtype,kappaprior);
-				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bfnfrac,bfnrep,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
+				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bfnfrac,bfnrep,blfactor,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
 				process[gene]->SetName(name);
 				process[gene]->SetMPI(0,1);
 				GetProcess(gene)->SetFixAlpha(GlobalAlpha());

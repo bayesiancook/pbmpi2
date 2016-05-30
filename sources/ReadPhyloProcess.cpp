@@ -502,6 +502,7 @@ void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, do
 	int n = bfnrep - b;
 
 	double totvarlog = 0;
+	double totvarlog2 = 0;
 	double logbf = 0;
 	double logbf2 = 0;
 
@@ -577,6 +578,17 @@ void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, do
 		varlog -= meanlog*meanlog;
 		totvarlog += varlog;
 
+		double meanlog2 = 0;
+		double varlog2 = 0;
+		for (int i=0; i<n; i++)	{
+			meanlog2 += delta2[i];
+			varlog2 += delta2[i]*delta2[i];
+		}
+		meanlog2 /= n;
+		varlog2 /= n;
+		varlog2 -= meanlog2*meanlog2;
+		totvarlog2 += varlog2;
+
 		double tot = 0;
 		for (int i=0; i<n; i++)	{
 			tot += exp(delta[i] - max);
@@ -596,20 +608,28 @@ void PhyloProcess::ReadTopoBF2(string name, int burnin, int every, int until, do
 
 	cout << '\n';
 	cout << "log bf :  " << logbf << '\n';
-	cout << "log bf2 : " << logbf2 << '\n';
-	cout << '\n';
 	cout << "total log variance: " << totvarlog << '\n';
 	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
 	cout << "per site : " << totvarlog / GetNsite() << '\n';
+	cout << '\n';
+	cout << "log bf2 : " << logbf2 << '\n';
+	cout << "total log variance: " << totvarlog2 << '\n';
+	cout << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
+	cout << "per site : " << totvarlog2 / GetNsite() << '\n';
+	cout << '\n';
 
 	ofstream os((name + ".logbf").c_str());
 	os << '\n';
 	os << "log bf :  " << logbf << '\n';
-	os << "log bf2 : " << logbf2 << '\n';
-	os << '\n';
 	os << "total log variance: " << totvarlog << '\n';
 	os << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
 	os << "per site : " << totvarlog / GetNsite() << '\n';
+	os << '\n';
+	os << "summing over components:\n";
+	os << "log bf2 : " << logbf2 << '\n';
+	os << "total log variance: " << totvarlog2 << '\n';
+	os << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
+	os << "per site : " << totvarlog2 / GetNsite() << '\n';
 
 }
 

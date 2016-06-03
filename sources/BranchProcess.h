@@ -294,6 +294,12 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		cerr << "error: in BranchProcess::RescaleBranchPrior\n";
 		exit(1);
 	}
+
+	/*
+	virtual double GetBranchScalingFactor(int index)	{
+		return 1.0;
+	}
+	*/
 	
 	// SetBranchAlloc(string taxon1, strong taxon2, int alloc);
 

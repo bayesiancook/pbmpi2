@@ -200,7 +200,7 @@ void PhyloProcess::Monitor(ostream& os)  {
 	}
 }
 
-void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, int inbfnfrac, int inbfnrep, double inblfactor, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
+void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, int inbfnfrac, int inbfnrep, double inblfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate)	{
 
 	datafile = indatafile;
 	treefile = intreefile;
@@ -221,6 +221,7 @@ void PhyloProcess::SetParameters(string indatafile, string intreefile, int inisc
 	bfnfrac = inbfnfrac;
 	bfnrep = inbfnrep;
 	blfactor = inblfactor;
+	blfile = inblfile;
 
 	NSPR = inNSPR;
 	NMHSPR = inNMHSPR;
@@ -284,7 +285,25 @@ void PhyloProcess::SetTopoBF()	{
 	}
 	Link* up = GetTree()->GetAncestor(down);
 	if (topobf == 2)	{
-		GlobalSetBranchAlloc(up->GetBranch()->GetIndex(),1);
+		if (blfile != "None")	{
+			ifstream is(blfile.c_str());
+			int n;
+			is >> n;
+			for (int i=0; i<n; i++)	{
+				string tax1, tax2;
+				is >> tax1 >> tax2;
+				Link* down = GetTree()->GetLCA(tax1,tax2);
+				if (! down)	{
+					cerr << "error in set topobf: did not find MRCA of " << tax1 << " and " << tax2 << '\n';
+					exit(1);
+				}
+				Link* up = GetTree()->GetAncestor(down);
+				GlobalSetBranchAlloc(up->GetBranch()->GetIndex(),1);
+			}
+		}
+		else	{
+			GlobalSetBranchAlloc(up->GetBranch()->GetIndex(),1);
+		}
 	}
 	Link* fromdown = GlobalDetach(down,up);
 	Link* todown = GetTree()->GetLCA(taxon3,taxon4);
@@ -344,6 +363,7 @@ void PhyloProcess::IncSize()	{
 
 			ofstream os((name + ".bf").c_str(),ios_base::app);
 			os << bffrac << '\t' << deltalogp << '\t' << GetNsite() * GetAllocTotalLength(1) << '\n';
+			// os << bffrac << '\t' << deltalogp << '\t' << GetNsite() * GetAllocTotalLength(1) << '\t' << log(GetBranchScalingFactor(-1)) << '\t' << log(GetBranchScalingFactor(1)) << '\n';
 			os.close();
 
 			int c = (size - bfburnin) % bfnrep;
@@ -448,6 +468,7 @@ void PhyloProcess::ToStreamHeader(ostream& os)	{
 	os << topobf << '\t' << bfburnin << '\t' << bfnfrac << '\t' << bfnrep << '\t' << bffrac << '\n';
 	if (topobf == 2)	{
 		os << blfactor << '\n';
+		os << blfile << '\n';
 	}
 	os << 0 << '\n';
 	os << sis << '\t' << sisnfrac << '\t' << sisnrep << '\t' << sisfrac << '\t' << siscutoff << '\t' << logZ << '\n';
@@ -494,6 +515,7 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
 		is >> topobf >> bfburnin >> bfnfrac >> bfnrep >> bffrac;
 		if (topobf == 2)	{
 			is >> blfactor;
+		 	is >> blfile;
 		}
 		is >> check;
 		if (!check)	{

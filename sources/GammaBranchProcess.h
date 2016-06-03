@@ -30,6 +30,15 @@ class GammaBranchProcess : public virtual BranchProcess	{
 	virtual void Create();
 	virtual void Delete();
 
+	/*
+	virtual double GetBranchScalingFactor(int index)	{
+		if (index == -1)	{
+			return 1.0 / branchbeta;
+		}
+		return branchscaling[index];
+	}
+	*/
+	
 	double LogBranchLengthPrior(const Branch* branch);
 	virtual double LogLengthHyperPrior();
 

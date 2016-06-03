@@ -227,6 +227,11 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				i++;
 				bfprop = atof(argv[i]);
 			}
+			else if (s == "-bl")	{
+				bf = 2;
+				i++;
+				bfprop = atof(argv[i]);
+			}
 			/*
 			else if (s == "-bf")	{
 				bf = 1;

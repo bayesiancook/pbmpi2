@@ -130,6 +130,7 @@ int main(int argc, char* argv[])	{
 	int bfnfrac = 100;
 	int bfnrep = 100;
 	double blfactor = 1.0;
+	string blfile = "None";
 
 	int sis = 0;
 	int sisnfrac = 100;
@@ -221,6 +222,10 @@ int main(int argc, char* argv[])	{
 				taxon3 = argv[i];
 				i++;
 				taxon4 = argv[i];
+			}
+			else if (s == "-blfile")	{
+				i++;
+				blfile = argv[i];
 			}
 			else if (s == "-topobl")	{
 				topobf = 2;
@@ -888,7 +893,7 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bfnfrac,bfnrep,blfactor,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs,sitesuffstat);
+		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs,sitesuffstat);
 
 		if (! myid)	{
 			cerr << '\n';

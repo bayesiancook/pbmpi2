@@ -189,7 +189,6 @@ int PhyloProcess::GlobalNNI(Link* from, double tuning, int type)	{
 	if (success)	{
 		for(int i = choice;i>0;i--){
 			GetTree()->NNIturn(from);
-			GetTree2()->NNIturn(GetCloneLink(from));
 		}
 	}
 
@@ -324,14 +323,12 @@ void PhyloProcess::LocalTryNNI(int l, int n, int* br, double* m, double* loglike
 	}
 	
 	GetTree()->NNIturn(from);
-	GetTree2()->NNIturn(GetCloneLink(from));
 	if (! mimick)	{
 		PropagateOverABranch(from->Next());
 		loglikelihood[0] += ComputeNodeLikelihood(from,-1);
 	}
 
 	GetTree()->NNIturn(from);
-	GetTree2()->NNIturn(GetCloneLink(from));
 	if (! mimick)	{
 		PropagateOverABranch(from->Next());
 		loglikelihood[1] += ComputeNodeLikelihood(from,-1);
@@ -358,11 +355,9 @@ void PhyloProcess::LocalFinalizeNNI(int n, int* br, int choice, int mimick)	{
 
 	if (choice == 1)	{
 		GetTree()->NNIturn(from);	
-		GetTree2()->NNIturn(GetCloneLink(from));
 	}
 	if (choice != 2)	{
 		GetTree()->NNIturn(from);
-		GetTree2()->NNIturn(GetCloneLink(from));
 		if (! mimick)	{
 			PropagateOverABranch(up);
 		}

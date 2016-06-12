@@ -64,8 +64,6 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 		PhyloProcess::SlaveBroadcastTree();
 	}
 	tree->RegisterWith(GetData()->GetTaxonSet());
-	CloneTree();
-	tree2->RegisterWith(GetData()->GetTaxonSet());
 
 	Create();
 
@@ -517,8 +515,6 @@ void MultiGenePhyloProcess::SlaveBroadcastTree()	{
 			istringstream is(os.str());
 			process[gene]->GetTree()->ReadFromStream(is);
 			process[gene]->GetTree()->RegisterWith(GetData()->GetTaxonSet());
-			process[gene]->CloneTree();
-			process[gene]->GetTree2()->RegisterWith(GetData()->GetTaxonSet());
 		}
 	}
 	delete[] bvector;
@@ -681,33 +677,27 @@ void MultiGenePhyloProcess::SlaveRoot(int n) {
 
 void MultiGenePhyloProcess::SlaveBackupTree()	{
 	GetTree()->Backup();
-	GetTree2()->Backup();
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			process[gene]->GetTree()->Backup();
-			process[gene]->GetTree2()->Backup();
 		}
 	}
 }
 
 void MultiGenePhyloProcess::SlaveRestoreTree()	{
 	GetTree()->Restore();
-	GetTree2()->Restore();
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			process[gene]->GetTree()->Restore();
-			process[gene]->GetTree2()->Restore();
 		}
 	}
 }
 
 void MultiGenePhyloProcess::SlaveSwapTree()	{
 	GetTree()->Swap();
-	GetTree2()->Swap();
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			process[gene]->GetTree()->Swap();
-			process[gene]->GetTree2()->Swap();
 		}
 	}
 }

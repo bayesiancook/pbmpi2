@@ -103,8 +103,6 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 			tree = new Tree(treefile);
 		}
 		tree->RegisterWith(GetData()->GetTaxonSet());
-		CloneTree();
-		tree2->RegisterWith(GetData()->GetTaxonSet());
 	}
 
 

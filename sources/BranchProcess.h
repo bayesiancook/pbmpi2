@@ -25,7 +25,7 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 
 	public:
 
-	BranchProcess() : tree(0), blarray(0), swaproot(0), fixbl(0), BranchNcat(2), branchalloc(0) {}
+	BranchProcess() : tree(0), blarray(0), fixbl(0), BranchNcat(2), branchalloc(0) {}
 	virtual ~BranchProcess() {}
 
 	int GetBranchNcat()	{
@@ -34,34 +34,13 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 
 	NewickTree* GetLengthTree() {return this;}
 	Tree* GetTree() {return tree;}
-	Tree* GetTree2() {return tree2;}
 	Link* GetRoot() {
-		if (swaproot)	{
-			return tree2->GetRoot();
-		}
 		return tree->GetRoot();
 	}
 
 	const Link* GetRoot() const {
-		if (swaproot)	{
-			return tree2->GetRoot();
-		}
 		return tree->GetRoot();
 	}
-
-	Link* GetRoot2() {return tree2->GetRoot();}
-	const Link* GetRoot2() const {return tree2->GetRoot();}
-
-	/*
-	void GlobalSwapRoot();
-	virtual void SlaveSwapRoot()	{
-		SwapRoot();
-	}
-
-	void SwapRoot()	{
-		swaproot = 1 - swaproot;
-	}
-	*/
 
 	string GetBranchName(const Link* link) const;
 	string GetNodeName(const Link* link) const;
@@ -356,10 +335,6 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		tree = intree;
 	}
 
-	void CloneTree()	{
-		tree2 = new Tree(tree);
-	}
-
 	virtual void Create() {
 		if (! blarray)	{
 			if (! tree)	{
@@ -398,26 +373,11 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		return GetTree()->GetLink(linkindex);
 	}
 
-	Link* GetLink2(int linkindex)	{
-		if (! linkindex)	{
-			//return GetRoot();
-			return 0;
-		}
-		return GetTree2()->GetLink(linkindex);
-	}
-
 	Link* GetLinkForGibbs(int linkindex)	{
 		if (! linkindex)	{
 			return GetRoot();
 		}
 		return GetTree()->GetLink(linkindex);
-	}
-
-	Link* GetLinkForGibbs2(int linkindex)	{
-		if (! linkindex)	{
-			return GetRoot2();
-		}
-		return GetTree2()->GetLink(linkindex);
 	}
 
 	const Branch* GetBranch(int branchindex)	{
@@ -448,30 +408,12 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		return node->GetIndex();
 	}
 
-	Link* GetCloneLink(const Link* link)	{
-		return GetLinkForGibbs2(link->GetIndex());
-	}
-
 	Link* GlobalDetach(Link* down, Link* up);
 	void GlobalAttach(Link* down, Link* up, Link* fromdown, Link* fromup);
 	virtual void SlaveDetach(int,int);
 	virtual void SlaveAttach(int,int,int,int);
 	virtual void LocalDetach(int,int);
 	virtual void LocalAttach(int,int,int,int);
-
-	Link* GlobalDetach1(Link* down, Link* up);
-	void GlobalAttach1(Link* down, Link* up, Link* fromdown, Link* fromup);
-	virtual void SlaveDetach1(int,int);
-	virtual void SlaveAttach1(int,int,int,int);
-	virtual void LocalDetach1(int,int);
-	virtual void LocalAttach1(int,int,int,int);
-
-	Link* GlobalDetach2(Link* down, Link* up);
-	void GlobalAttach2(Link* down, Link* up, Link* fromdown, Link* fromup);
-	virtual void SlaveDetach2(int,int);
-	virtual void SlaveAttach2(int,int,int,int);
-	virtual void LocalDetach2(int,int);
-	virtual void LocalAttach2(int,int,int,int);
 
 	void GlobalKnit(Link*);
 	virtual void SlaveKnit();
@@ -482,14 +424,11 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	double GetSubTreeWeight(double lambda, Link* down, Link* up);
 
 	Tree* tree;
-	Tree* tree2;
 	double* blarray;
 	double* bkarray;
 	double* bk2array;
 
 	Chrono chronolength;
-
-	int swaproot;
 
 	int fixbl;
 	int BranchNcat;

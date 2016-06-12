@@ -1375,14 +1375,7 @@ void PhyloProcess::SlaveComputeNodeLikelihood(int fromindex,int auxindex) {
 }
 
 double PhyloProcess::LocalComputeNodeLikelihood(int fromindex,int auxindex) {
-	double ret = 0;
-	if (swaproot)	{
-		ret = ComputeNodeLikelihood(GetLinkForGibbs2(fromindex),auxindex);
-	}
-	else	{
-		ret = ComputeNodeLikelihood(GetLinkForGibbs(fromindex),auxindex);
-	}
-	return ret;
+	return ComputeNodeLikelihood(GetLinkForGibbs(fromindex),auxindex);
 }
 
 double PhyloProcess::GlobalGetFullLogLikelihood()	{
@@ -1569,13 +1562,7 @@ void PhyloProcess::GlobalInitialize(const Link* from, const Link* link, bool con
 }
 
 void PhyloProcess::SlaveInitialize(int n,int m,bool v) {
-	const Link* link = 0;
-	if (swaproot)	{
-		link = GetLink2(m);
-	}
-	else	{
-		link = GetLink(m);
-	}
+	const Link* link = GetLink(m);
 	Initialize(condlmap[n],GetData(link),v);
 }
 
@@ -2072,7 +2059,6 @@ void PhyloProcess::GlobalRootAt(Link* newroot)	{
 	}
 
 	GetTree()->RootAt(newroot);
-	GetTree2()->RootAt(GetCloneLink(newroot));
 	// this may not always be necessary
 	// should perhaps delegate this update to calling functions
 	GlobalUpdateConditionalLikelihoods();	
@@ -2082,7 +2068,6 @@ void PhyloProcess::GlobalRootAt(Link* newroot)	{
 void PhyloProcess::SlaveRootAt(int n) {
 	Link* newroot = GetLink(n);
 	GetTree()->RootAt(newroot);
-	GetTree2()->RootAt(GetCloneLink(newroot));
 }
 
 void PhyloProcess::GlobalRootAtRandom()	{
@@ -2105,7 +2090,6 @@ void PhyloProcess::GlobalRootAtRandom()	{
 		exit(1);
 	}
 	GetTree()->RootAt(newroot);
-	GetTree2()->RootAt(GetCloneLink(newroot));
 	// this may not always be necessary
 	// should perhaps delegate this update to calling functions
 	GlobalUpdateConditionalLikelihoods();	
@@ -2115,7 +2099,6 @@ void PhyloProcess::SlaveRoot(int n) {
 	Link* tmp = 0;
 	Link* newroot = GetTree()->ChooseInternalNode(GetRoot(),tmp,n);
 	GetTree()->RootAt(newroot);
-	GetTree2()->RootAt(GetCloneLink(newroot));
 }
 
 void PhyloProcess::GlobalBackupTree()	{
@@ -2126,13 +2109,11 @@ void PhyloProcess::GlobalBackupTree()	{
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	}
 	GetTree()->Backup();
-	GetTree2()->Backup();
 	Backup();
 }
 
 void PhyloProcess::SlaveBackupTree()	{
 	GetTree()->Backup();
-	GetTree2()->Backup();
 	Backup();
 }
 
@@ -2144,14 +2125,12 @@ void PhyloProcess::GlobalRestoreTree()	{
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	}
 	GetTree()->Restore();
-	GetTree2()->Restore();
 	Restore();
 	GlobalUpdateParameters();
 }
 
 void PhyloProcess::SlaveRestoreTree()	{
 	GetTree()->Restore();
-	GetTree2()->Restore();
 	Restore();
 }
 
@@ -2163,13 +2142,11 @@ void PhyloProcess::GlobalSwapTree()	{
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	}
 	GetTree()->Swap();
-	GetTree2()->Swap();
 }
 
 void PhyloProcess::SlaveSwapTree()	{
 
 	GetTree()->Swap();
-	GetTree2()->Swap();
 }
 
 void PhyloProcess::SetTestSiteMinAndMax()	{
@@ -2316,38 +2293,15 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 		MPI_Bcast(arg,4,MPI_INT,0,MPI_COMM_WORLD);
 		SlaveAttach(arg[0],arg[1],arg[2],arg[3]);
 		break;
-	case ATTACH1:
-		MPI_Bcast(arg,4,MPI_INT,0,MPI_COMM_WORLD);
-		SlaveAttach1(arg[0],arg[1],arg[2],arg[3]);
-		break;
-	case ATTACH2:
-		MPI_Bcast(arg,4,MPI_INT,0,MPI_COMM_WORLD);
-		SlaveAttach2(arg[0],arg[1],arg[2],arg[3]);
-		break;
 	case DETACH:
 		MPI_Bcast(arg,2,MPI_INT,0,MPI_COMM_WORLD);
 		SlaveDetach(arg[0],arg[1]);
 		break;
-	case DETACH1:
-		MPI_Bcast(arg,2,MPI_INT,0,MPI_COMM_WORLD);
-		SlaveDetach1(arg[0],arg[1]);
-		break;
-	case DETACH2:
-		MPI_Bcast(arg,2,MPI_INT,0,MPI_COMM_WORLD);
-		SlaveDetach2(arg[0],arg[1]);
-		break;
-	/*
-	case SWAP:
-		SlaveSwapRoot();
-		break;
-	*/
 	case MINMAX:
 		SlaveSetMinMax();
 		break;
 	case NNI:
 		SlaveNNI();
-		// MPI_Bcast(arg,2,MPI_INT,0,MPI_COMM_WORLD);
-		// SlaveNNI(arg[0],arg[1]);
 		break;
 	case KNIT:
 		SlaveKnit();

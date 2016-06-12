@@ -723,8 +723,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 			SlaveBroadcastTree();
 		}
 		tree->RegisterWith(GetData()->GetTaxonSet());
-		CloneTree();
-		tree2->RegisterWith(GetData()->GetTaxonSet());
 	}
 
 	virtual void SetTree(string treefile)	{
@@ -746,8 +744,6 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 			tree = new Tree(treefile);
 		}
 		tree->RegisterWith(GetData()->GetTaxonSet());
-		CloneTree();
-		tree2->RegisterWith(GetData()->GetTaxonSet());
 	}
 
 	virtual void SetProfileDim()	{

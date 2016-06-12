@@ -78,11 +78,6 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 
 	void SlaveDetach(int,int);
 	void SlaveAttach(int,int,int,int);
-	void SlaveDetach1(int,int);
-	void SlaveAttach1(int,int,int,int);
-	void SlaveDetach2(int,int);
-	void SlaveAttach2(int,int,int,int);
-	// void SlaveSwapRoot();
 	void SlaveKnit();
 
 	GammaBranchProcess* GetBranchProcess(int gene)	{

@@ -431,6 +431,9 @@ void PhyloProcess::FastReadTopoBL(string name, int burnin, int every, int until,
 	double totvarlog = 0;
 	double logbf = 0;
 
+	double logbf0, logbf1, logbf2, logbf3, logbf4;
+	logbf0 = logbf1 = logbf2 = logbf3 = logbf4 = 0;
+
 	for (int frac=-bfnfrac; frac<bfnfrac; frac++)	{
 
 		double delta[n];
@@ -479,13 +482,183 @@ void PhyloProcess::FastReadTopoBL(string name, int burnin, int every, int until,
 		double logscore = log(tot) + max;
 
 		logbf += logscore;
+
+		if (frac == -bfnfrac)	{
+			logbf0 = logscore;
+		}
+		else if (frac == bfnfrac -1)	{
+			logbf4 = logscore;
+		}
+		else if (frac == -1)	{
+			logbf2 = logscore;
+		}
+		else if (frac < -1)	{
+			logbf1 += logscore;
+		}
+		else	{
+			logbf3 += logscore;
+		}
 	}
 
 	cout << '\n';
-	cout << "log bf : " << logbf << '\n';
+	cout << "log bf  : " << logbf << '\n';
+	cout << "log bf0 : " << logbf0 << '\n';
+	cout << "log bf1 : " << logbf1 << '\n';
+	cout << "log bf2 : " << logbf2 << '\n';
+	cout << "log bf3 : " << logbf3 << '\n';
+	cout << "log bf4 : " << logbf4 << '\n';
 	cout << '\n';
 	cout << "total log variance: " << totvarlog << '\n';
 	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+}
+
+void PhyloProcess::ReadTopoBL(string name, int burnin, int every, int until, double prop)	{
+
+	bffrac = -bfnfrac;
+	SetBranchScaling(0.1,1);
+	ifstream bis((name + ".bf").c_str());
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	int b = (1-prop) * bfnrep;
+	int n = bfnrep - b;
+
+	double totvarlog = 0;
+	double totvarlog2 = 0;
+	double logbf = 0;
+	double logbf2 = 0;
+
+	cerr << "burnin\n";
+	for (int i=0; i<bfburnin; i++)	{
+		cerr << '.';
+		FromStream(is);
+	}
+	cerr << '\n';
+
+	for (int frac=-bfnfrac; frac<bfnfrac; frac++)	{
+
+		double delta[n];
+		double delta2[n];
+
+		for (int i=0; i<b; i++)	{
+			cerr << '.';
+			int tmp1;
+			double tmp2, tmp3;
+			bis >> tmp1 >> tmp2 >> tmp3;
+			if (tmp1 != frac)	{
+				cerr << "error in topo bl: read " << tmp1 << " instead of " << frac << '\n';
+				exit(1);
+			}
+			FromStream(is);
+		}
+		cerr << '\n';
+
+		double max = 0;
+		double max2 = 0;
+		for (int i=0; i<n; i++)	{
+			cerr << '.';
+			int tmp1;
+			double tmp2, tmp3;
+			bis >> tmp1 >> tmp2 >> tmp3;
+			if (tmp1 != frac)	{
+				cerr << "error in topo bl: read " << tmp1 << " instead of " << frac << '\n';
+				exit(1);
+			}
+			delta[i] = tmp2;
+			if ((!i) || (max < tmp2))	{
+				max = tmp2;
+			}
+			FromStream(is);
+			// SetTopoBF();
+			SetBranchesToCollapse(blfile);
+			QuickUpdate();
+			double deltalogp = ComputeBLLogLikelihoodRatio(bffrac);
+			delta2[i] = deltalogp;
+			if ((!i) || (max2 < deltalogp))	{
+				max2 = deltalogp;
+			}
+			cerr << tmp1 << '\t' << GetBranchScaling(1) << '\t' << delta[i] << '\t' << delta2[i] << '\t' << tmp3 << '\t' << GetAllocTotalLength(1) * GetNsite() << '\t' << GetAllocTotalLength(1) << '\n';
+		}
+		cerr << '\n';
+
+		double meanlog = 0;
+		double varlog = 0;
+		for (int i=0; i<n; i++)	{
+			meanlog += delta[i];
+			varlog += delta[i]*delta[i];
+		}
+		meanlog /= n;
+		varlog /= n;
+		varlog -= meanlog*meanlog;
+		totvarlog += varlog;
+
+		double meanlog2 = 0;
+		double varlog2 = 0;
+		for (int i=0; i<n; i++)	{
+			meanlog2 += delta2[i];
+			varlog2 += delta2[i]*delta2[i];
+		}
+		meanlog2 /= n;
+		varlog2 /= n;
+		varlog2 -= meanlog2*meanlog2;
+		totvarlog2 += varlog2;
+
+		double tot = 0;
+		for (int i=0; i<n; i++)	{
+			tot += exp(delta[i] - max);
+		}
+		tot /= n;
+		double logscore = log(tot) + max;
+		logbf += logscore;
+
+		double tot2 = 0;
+		for (int i=0; i<n; i++)	{
+			tot2 += exp(delta2[i] - max2);
+		}
+		tot2 /= n;
+		double logscore2 = log(tot2) + max2;
+		logbf2 += logscore2;
+
+		if (frac < -1)	{
+			RescaleBranchPrior(blfactor,1);
+		}
+		else if (frac == -1)	{
+			GlobalSwapTree();
+			GlobalUpdateConditionalLikelihoods();
+		}
+		else if (frac >= 0)	{
+			RescaleBranchPrior(1.0/blfactor,1);
+		}
+	}
+
+	cout << '\n';
+	cout << "log bf :  " << logbf << '\n';
+	cout << "total log variance: " << totvarlog << '\n';
+	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+	cout << "per site : " << totvarlog / GetNsite() << '\n';
+	cout << '\n';
+	cout << "log bf2 : " << logbf2 << '\n';
+	cout << "total log variance: " << totvarlog2 << '\n';
+	cout << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
+	cout << "per site : " << totvarlog2 / GetNsite() << '\n';
+	cout << '\n';
+
+	ofstream os((name + ".logbf").c_str());
+	os << '\n';
+	os << "log bf :  " << logbf << '\n';
+	os << "total log variance: " << totvarlog << '\n';
+	os << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+	os << "per site : " << totvarlog / GetNsite() << '\n';
+	os << '\n';
+	os << "summing over components:\n";
+	os << "log bf2 : " << logbf2 << '\n';
+	os << "total log variance: " << totvarlog2 << '\n';
+	os << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
+	os << "per site : " << totvarlog2 / GetNsite() << '\n';
+
 }
 
 void PhyloProcess::FastReadTopoBF(string name, int burnin, int every, int until, double prop)	{
@@ -715,6 +888,131 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 	cerr << "until : " << until << '\n';
 	int i=0;
 	while ((i < until) && (i < burnin))	{
+		cerr << '.';
+		FromStream(is);
+		i++;
+	}
+	cerr << '\n';
+
+	int samplesize = 0;
+
+	vector<double> deltalogp;
+	vector<double> logbf;
+	double meandeltalogp = 0;
+	double vardeltalogp = 0;
+	double meanlogbf = 0;
+	double varlogbf = 0;
+
+	ofstream os((outputname + ".logbf").c_str());
+	ofstream logos((outputname + ".logbflist").c_str());
+	logos << "#logbf\tDlogL\n";
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		QuickUpdate();
+
+		if (roottax1 != "None")	{
+			
+			Link* newroot = GetTree()->GetLCA(roottax1,roottax2);
+			if (!newroot)	{
+				cerr << "error when rerooting\n";
+				exit(1);
+			}
+			GlobalRootAt(newroot);
+		}
+
+		SetBranchesToCollapse(blfile);
+
+		double tmpdeltalogp = 0;
+		double tmplogbf = 0;
+		Chrono chrono;
+		chrono.Start();
+		cerr << "tempered spr\n";
+		TemperedGibbsSPR(0,0,nfrac,1,2,tmpdeltalogp,tmplogbf,nstep);
+		cerr << tmpdeltalogp << '\t' << tmplogbf << '\n';
+		chrono.Stop();
+		deltalogp.push_back(tmpdeltalogp);
+		logbf.push_back(tmplogbf);
+		meandeltalogp += tmpdeltalogp;
+		vardeltalogp += tmpdeltalogp * tmpdeltalogp;
+		meanlogbf += tmplogbf;
+		varlogbf += tmplogbf * tmplogbf;
+
+		logos << tmplogbf << '\t' << tmpdeltalogp << '\t' << chrono.GetTime() / 1000 << '\n';
+		logos.flush();
+
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+	os << '\n';
+
+	meandeltalogp /= samplesize;
+	vardeltalogp /= samplesize;
+	vardeltalogp -= meandeltalogp * meandeltalogp;
+	meanlogbf /= samplesize;
+	varlogbf /= samplesize;
+	varlogbf -= meanlogbf * meanlogbf;
+
+	if (logbf.size() != samplesize)	{
+		cerr << "error in read bf: non matching size\n";
+		exit(1);
+	}
+
+	double max = logbf[0];
+	for (int i=1; i<samplesize; i++)	{
+		if (max < logbf[i])	{
+			max = logbf[i];
+		}
+	}
+	double mean = 0;
+	double m2 = 0;
+	for (int i=0; i<samplesize; i++)	{
+		double tmp = exp(logbf[i] - max);
+		mean += tmp;
+		m2 += tmp*tmp;
+	}
+	mean /= samplesize;
+	m2 /= samplesize;
+	double effsize = mean*mean / m2;
+	cout << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
+	cout << "logbf1: " << log(mean) + max << '\t' << effsize << '\n';
+	cout << "logbf2: " << meanlogbf << '\t' << varlogbf << '\n';
+	cout << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
+
+	os << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
+	os << "logbf1: " << log(mean) + max << '\t' << effsize << '\n';
+	os << "logbf2: " << meanlogbf << '\t' << varlogbf << '\n';
+	os << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
+	os << '\n';
+	os.close();
+}
+
+/*
+void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int nfrac, int nstep)	{
+
+	SetSpecialSPR(intaxon1,intaxon2,intaxon3,intaxon4);
+	fixroot = 1;
+	
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
 		FromStream(is);
 		i++;
 	}
@@ -740,24 +1038,11 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 
 		QuickUpdate();
 
-		/*
-		logos << i << '\n';
-		Trace(logos);
-		*/
-		// for (int k=0; k<nstep; k++)	{
-		/*
-		for (int k=0; k<nfrac; k++)	{
-			GlobalCollapse();
-			GlobalRestrictedTemperedMove();
-			GlobalUnfold();
-			// Move(1.0);
-			// Trace(logos);
-		}
-		*/
-		/*
-		logos << '\n';
-		logos.flush();
-		*/
+		// for (int k=0; k<nfrac; k++)	{
+		// 	GlobalCollapse();
+		// 	GlobalRestrictedTemperedMove();
+		// 	GlobalUnfold();
+		// }
 
 		double tmpdeltalogp = 0;
 		double tmplogbf = 0;
@@ -824,12 +1109,8 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 	os << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
 	os << '\n';
 	os.close();
-	/*
-	for (int i=0; i<samplesize; i++)	{
-		os << logbf[i] << '\t' << deltalogp[i] << '\n';
-	}
-	*/
 }
+*/
 
 void PhyloProcess::PostPred(int ppredtype, string name, int burnin, int every, int until, int inrateprior, int inprofileprior, int inrootprior)	{
 

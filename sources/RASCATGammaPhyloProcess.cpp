@@ -187,6 +187,10 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 
 	int statmin = 0;
 
+	int bfl = 0;
+	roottax1 = "None";
+	roottax2 = "None";
+
 	try	{
 
 		if (argc == 1)	{
@@ -232,9 +236,19 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				i++;
 				bfprop = atof(argv[i]);
 			}
-			/*
-			else if (s == "-bf")	{
-				bf = 1;
+			else if (s == "-ibl")	{
+				bf = 3;
+				i++;
+				bfprop = atof(argv[i]);
+			}
+			else if (s == "-reroot")	{
+				i++;
+				roottax1 = argv[i];
+				i++;
+				roottax2 = argv[i];
+			}
+			else if (s == "-bfl")	{
+				bfl = 1;
 				i++;
 				taxon1 = argv[i];
 				i++;
@@ -246,9 +260,18 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				i++;
 				toponfrac= atoi(argv[i]);
 				i++;
-				toponstep = atoi(argv[i]);
+				blfactor = atof(argv[i]);
+				// toponstep = atoi(argv[i]);
+				toponstep = 1;
 			}
-			*/
+			else if (s == "-blfile")	{
+				i++;
+				blfile = argv[i];
+			}
+			else if (s == "-blfactor")	{
+				i++;
+				blfactor = atof(argv[i]);
+			}
 			else if (s == "-sumcomp")	{
 				i++;
 				sumcomp = atoi(argv[i]);
@@ -374,6 +397,12 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	}
 	else if (bf == 2)	{
 		FastReadTopoBL(name,burnin,every,until,bfprop);
+	}
+	else if (bf == 3)	{
+		ReadTopoBL(name,burnin,every,until,bfprop);
+	}
+	else if (bfl)	{
+		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponfrac,toponstep);
 	}
 	/*
 	else if (bf)	{

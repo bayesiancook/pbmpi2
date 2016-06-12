@@ -122,6 +122,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double GlobalTreeSteppingStone(int nfrac, int nstep);
 	double GlobalTemperedTreeMoveLogProb(int nstep, Link* from, Link* up, Link* fromdown, Link* fromup, Link* todown, Link* toup);
 	double GlobalTemperedTreeMoveLogProb(int nstep);
+	double GlobalTemperedBLTreeMoveLogProb(int nstep);
 	virtual double GlobalRestrictedTemperedMove();	
 
 	void GlobalSetMinMax(double min, double max);
@@ -334,6 +335,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void SlaveComputeTopoBFLogLikelihoodRatio();
 	double ComputeTopoBFLogLikelihoodRatio(double fracmin, double fracmax);
 
+	double ComputeBLLogLikelihoodRatio(double frac);
+
 	void GlobalSetBFFrac();
 	void SlaveSetBFFrac();
 
@@ -421,20 +424,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	
 	public: 
 
-	void QuickUpdate()	{
-
-		MPI_Status stat;
-		MESSAGE signal = BCAST_TREE;
-		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-		GlobalBroadcastTree();
-
-		if (topobf)	{
-			SetTopoBF();
-		}
-		
-		GlobalCollapse();
-		GlobalUnfold();
-	}
+	void QuickUpdate();
 
 	virtual void SetDataFromLeaves()	{
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
@@ -478,6 +468,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void FastReadTopoBF(string name, int burnin, int every, int until, double prop);
 	void FastReadTopoBL(string name, int burnin, int every, int until, double prop);
 	void ReadTopoBF(string name, int burnin, int every, int until, double prop);
+	void ReadTopoBL(string name, int burnin, int every, int until, double prop);
 	virtual void ReadTopoBF(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nfrac, int nstep);
 
 	void GlobalSetRatePrior(int inrateprior);
@@ -544,6 +535,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void GlobalRestoreBranch(const Branch* branch);
 
 	void GlobalRootAtRandom();
+	void GlobalRootAt(Link* newroot);
+	void SlaveRootAt(int n);
+
+	void SetBranchesToCollapse(string inblfile);
 
 	void RecursiveGibbsNNI(Link* from, double tuning, int type, int& success, int& moves);
 	double GibbsNNI(double tuning, int);
@@ -876,6 +871,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	GeneticCodeType codetype;
 
 	int** observedarray;
+
+	string roottax1;
+	string roottax2;
 
 	string taxon1;
 	string taxon2;

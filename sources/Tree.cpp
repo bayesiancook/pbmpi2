@@ -799,7 +799,11 @@ Link* Tree::Detach(Link* down, Link* up)	{
 		exit(1);
 	}
 	if (!foundup)	{
-		cerr << "error in Detach: dit not find up\n";
+		cerr << "error in Detach: did not find up\n";
+		ToStream(cerr,down);
+		cerr << '\n';
+		cerr << '\n';
+		ToStream(cerr);
 		exit(1);
 	}
 
@@ -880,7 +884,11 @@ void Tree::Detach2(Link* down, Link* up, Link*& fromdown, Link*& fromup)	{
 		exit(1);
 	}
 	if (!foundup)	{
-		cerr << "error in Detach: dit not find up\n";
+		cerr << "error in Detach2: did not find up\n";
+		ToStream(cerr,fromdown);
+		cerr << '\n';
+		cerr << '\n';
+		ToStream(cerr);
 		exit(1);
 	}
 

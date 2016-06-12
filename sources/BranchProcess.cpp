@@ -54,6 +54,13 @@ void BranchProcess::RestoreLength()	{
 	}
 }
 
+void BranchProcess::ResetBranchAlloc()	{
+
+	for (int i=0; i<GetNbranch(); i++)	{
+		branchalloc[i] = 0;
+	}
+}
+
 /*
 void BranchProcess::SwapLength()	{
 
@@ -81,6 +88,7 @@ void BranchProcess::SetBranchAlloc(string taxon1, string taxon2, int alloc)	{
 }
 */
 
+/*
 void BranchProcess::GlobalSetBranchAlloc(int branchindex, int alloc)	{
 
 	MESSAGE signal = SETBRANCHALLOC;
@@ -98,7 +106,9 @@ void BranchProcess::SlaveSetBranchAlloc()	{
 	MPI_Bcast(&alloc,1,MPI_INT,0,MPI_COMM_WORLD);
 	branchalloc[branchindex] = alloc;
 }
+*/
 
+/*
 void BranchProcess::GlobalRescaleBranchPrior(double factor, int alloc)	{
 
 	MESSAGE signal = RESCALEBRANCH;
@@ -117,6 +127,7 @@ void BranchProcess::SlaveRescaleBranchPrior()	{
 	MPI_Bcast(&alloc,1,MPI_INT,0,MPI_COMM_WORLD);
 	RescaleBranchPrior(factor,alloc);
 }
+*/
 
 
 void BranchProcess::RestoreBranch(const Branch* branch)	{

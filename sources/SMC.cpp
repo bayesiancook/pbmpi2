@@ -1010,6 +1010,48 @@ double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep, Link* down, Link* 
 	return deltalogp;
 }
 
+double PhyloProcess::GlobalTemperedBLTreeMoveLogProb(int nstep)	{
+
+	// assumes the two trees have already been set up
+
+	// backup
+
+	double deltalogp = 0;
+	ofstream os((name + ".tempered").c_str());
+
+	for (int step=-nstep; step<nstep; step++)	{
+
+		double delta = 0;
+		if (step == -1)	{
+			delta += GlobalComputeTopoBFLogLikelihoodRatio(0,1);
+			GlobalSwapTree();
+			GlobalUpdateConditionalLikelihoods();
+			blfactor = 1.0 / blfactor;
+		}
+		else	{
+			delta -= LogLengthPrior();
+			RescaleBranchPrior(blfactor,1);
+			delta += LogLengthPrior();
+		}
+
+		deltalogp += delta;
+		os << step << '\t' << GetNsite() * GetAllocTotalLength(1) << '\t' << delta << '\t' << deltalogp << '\n';
+		os.flush();
+
+		if (step < nstep-1)	{
+			int bkfixtopo = fixtopo;
+			fixtopo = 0;
+			Move(1.0);
+			fixtopo = bkfixtopo;
+		}
+	}
+
+	// os.close();
+	// GlobalSwapTree();
+
+	return deltalogp;
+}
+
 double PhyloProcess::GlobalTemperedTreeMoveLogProb(int nstep)	{
 
 	// assumes the two trees have already been set up

@@ -25,7 +25,7 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 
 	public:
 
-	BranchProcess() : tree(0), blarray(0), swaproot(0), fixbl(0), BranchNcat(1), branchalloc(0) {}
+	BranchProcess() : tree(0), blarray(0), swaproot(0), fixbl(0), BranchNcat(2), branchalloc(0) {}
 	virtual ~BranchProcess() {}
 
 	int GetBranchNcat()	{
@@ -285,15 +285,33 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		return 0;
 	}
 
+	void ResetBranchAlloc();
+
+	void SetBranchAlloc(int branchindex, int alloc)	{
+		branchalloc[branchindex] = alloc;
+	}
+
+	virtual double GetBranchScaling(int index)	{
+		cerr << "error: in BranchProcess::GetBranchScaling\n";
+		exit(1);
+		return 1.0;
+	}
+
+	virtual void SetBranchScaling(double scale, int index) {
+		cerr << "error: in BranchProcess::SetBranchScaling\n";
+		exit(1);
+	}
+
+	virtual void RescaleBranchPrior(double factor, int index)	{
+		SetBranchScaling(factor*GetBranchScaling(index),index);
+	}
+	/*
 	void GlobalSetBranchAlloc(int branchindex, int alloc);
 	void SlaveSetBranchAlloc();
 
 	void GlobalRescaleBranchPrior(double factor, int index);
 	void SlaveRescaleBranchPrior();
-	virtual void RescaleBranchPrior(double factor, int index) {
-		cerr << "error: in BranchProcess::RescaleBranchPrior\n";
-		exit(1);
-	}
+	*/
 
 	/*
 	virtual double GetBranchScalingFactor(int index)	{

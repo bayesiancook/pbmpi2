@@ -115,6 +115,9 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 			}
 
 			FromStream(is);
+			if (topobf == 2)	{
+				SetBranchesToCollapse(blfile);
+			}
 			GlobalUnfold();
 		}
 	}
@@ -274,36 +277,69 @@ void PhyloProcess::SetParameters(string indatafile, string intreefile, int inisc
 	fastcondrate = infastcondrate;
 }
 
+void PhyloProcess::SetBranchesToCollapse(string blfile)	{
+
+	ResetBranchAlloc();
+	if (blfile != "None")	{
+		ifstream is(blfile.c_str());
+		int n;
+		is >> n;
+		for (int i=0; i<n; i++)	{
+			string tax1, tax2;
+			is >> tax1 >> tax2;
+			Link* down = GetTree()->GetLCA(tax1,tax2);
+			if (! down)	{
+				cerr << "error in set topobf: did not find MRCA of " << tax1 << " and " << tax2 << '\n';
+				exit(1);
+			}
+			Link* up = GetTree()->GetAncestor(down);
+			SetBranchAlloc(up->GetBranch()->GetIndex(),1);
+			// cerr << tax1 << '\t' << tax2 << '\t' << up->GetBranch()->GetIndex() << '\t' << branchalloc[up->GetBranch()->GetIndex()] << '\n';
+		}
+	}
+	else	{
+		Link* down = GetTree()->GetLCA(taxon1,taxon2);
+		if (! down)	{
+			cerr << "error in PhyloProcess::SetTopoBF: did not find LCA of " << taxon1 << " and " << taxon2 << '\n';
+			exit(1);
+		}
+		Link* up = GetTree()->GetAncestor(down);
+		SetBranchAlloc(up->GetBranch()->GetIndex(),1);
+	}
+}
+
+
 void PhyloProcess::SetTopoBF()	{
 
 	GlobalSetBFFrac();
+	if (topobf == 2)	{
+		double scale = 0.1;
+		if (bffrac < -1)	{
+			scale *= exp((bfnfrac + bffrac)*log(blfactor));
+		}
+		else if (bffrac == 0)	{
+			scale *= exp((bfnfrac - 1)*log(blfactor));
+		}
+		else	{
+			scale *= exp((bfnfrac - bffrac -1)*log(blfactor));
+		}
+		SetBranchScaling(scale,1);	
+		cerr << "in set topo bf: scale is : " << scale << '\n';
+		cerr << "bffrac : " << bffrac << '\n';
+	}
 	GlobalBackupTree();
 	Link* down = GetTree()->GetLCA(taxon1,taxon2);
+	/*
+	ofstream os1((GetName() + ".tree1").c_str());
+	GetTree()->ToStream(os1);
+	*/
 	if (! down)	{
 		cerr << "error in PhyloProcess::SetTopoBF: did not find LCA of " << taxon1 << " and " << taxon2 << '\n';
 		exit(1);
 	}
 	Link* up = GetTree()->GetAncestor(down);
 	if (topobf == 2)	{
-		if (blfile != "None")	{
-			ifstream is(blfile.c_str());
-			int n;
-			is >> n;
-			for (int i=0; i<n; i++)	{
-				string tax1, tax2;
-				is >> tax1 >> tax2;
-				Link* down = GetTree()->GetLCA(tax1,tax2);
-				if (! down)	{
-					cerr << "error in set topobf: did not find MRCA of " << tax1 << " and " << tax2 << '\n';
-					exit(1);
-				}
-				Link* up = GetTree()->GetAncestor(down);
-				GlobalSetBranchAlloc(up->GetBranch()->GetIndex(),1);
-			}
-		}
-		else	{
-			GlobalSetBranchAlloc(up->GetBranch()->GetIndex(),1);
-		}
+		SetBranchesToCollapse(blfile);
 	}
 	Link* fromdown = GlobalDetach(down,up);
 	Link* todown = GetTree()->GetLCA(taxon3,taxon4);
@@ -313,7 +349,13 @@ void PhyloProcess::SetTopoBF()	{
 	}
 	Link* toup = GetTree()->GetAncestor(todown);
 	GlobalAttach(down,up,todown,toup);
+	/*
+	ofstream os2((GetName() + ".tree2").c_str());
+	GetTree()->ToStream(os2);
 	GlobalSwapTree();
+	ofstream os3((GetName() + ".tree3").c_str());
+	GetTree()->ToStream(os3);
+	*/
 
 }
 
@@ -356,29 +398,38 @@ void PhyloProcess::IncSize()	{
 			}
 			else	{
 				deltalogp -= LogLengthPrior();
-				RescaleBranchPrior(blfactor,1);
+				if (bffrac < -1)	{
+					RescaleBranchPrior(blfactor,1);
+				}
+				else	{
+					RescaleBranchPrior(1.0/blfactor,1);
+				}
 				deltalogp += LogLengthPrior();
-				RescaleBranchPrior(1.0/blfactor,1);
+				if (bffrac < -1)	{
+					RescaleBranchPrior(1.0/blfactor,1);
+				}
+				else	{
+					RescaleBranchPrior(blfactor,1);
+				}
 			}
 
 			ofstream os((name + ".bf").c_str(),ios_base::app);
 			os << bffrac << '\t' << deltalogp << '\t' << GetNsite() * GetAllocTotalLength(1) << '\n';
-			// os << bffrac << '\t' << deltalogp << '\t' << GetNsite() * GetAllocTotalLength(1) << '\t' << log(GetBranchScalingFactor(-1)) << '\t' << log(GetBranchScalingFactor(1)) << '\n';
 			os.close();
 
 			int c = (size - bfburnin) % bfnrep;
 			if (! c)	{
 
 				bffrac += 1;
-				// GlobalSetBFFrac();
 				if (bffrac == 0)	{
 					GlobalSwapTree();
 					GlobalUpdateConditionalLikelihoods();
-					blfactor = 1.0 / blfactor;
+				}
+				else if (bffrac < 0)	{
+					RescaleBranchPrior(blfactor,1);
 				}
 				else	{
-					GlobalRescaleBranchPrior(blfactor,1);
-					// RescaleBranchPrior(1.0/blfactor,1);
+					RescaleBranchPrior(1.0/blfactor,1);
 				}
 			}
 
@@ -433,6 +484,52 @@ void PhyloProcess::IncSize()	{
 		GlobalSetMinMax(0,sisfrac);
 		GlobalUpdateConditionalLikelihoods();
 	}
+
+}
+
+void PhyloProcess::QuickUpdate()	{
+
+	MPI_Status stat;
+	MESSAGE signal = BCAST_TREE;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	GlobalBroadcastTree();
+
+	/*
+	if (topobf)	{
+		cerr << "set topo bf\n";
+		SetTopoBF();
+		cerr << "set topo bf ok\n";
+	}
+	*/
+	
+	GlobalCollapse();
+	GlobalUnfold();
+}
+
+
+double PhyloProcess::ComputeBLLogLikelihoodRatio(double bffrac)	{
+
+	double deltalogp = 0;
+	if (bffrac == -1)	{
+		deltalogp = GlobalComputeTopoBFLogLikelihoodRatio(0,1);
+	}
+	else	{
+		deltalogp -= LogLengthPrior();
+		if (bffrac < -1)	{
+			RescaleBranchPrior(blfactor,1);
+		}
+		else	{
+			RescaleBranchPrior(1.0/blfactor,1);
+		}
+		deltalogp += LogLengthPrior();
+		if (bffrac < -1)	{
+			RescaleBranchPrior(1.0/blfactor,1);
+		}
+		else	{
+			RescaleBranchPrior(blfactor,1);
+		}
+	}
+	return deltalogp;
 }
 
 
@@ -1962,6 +2059,32 @@ double PhyloProcess::MoveTopo()	{
 	return success;
 }
 
+void PhyloProcess::GlobalRootAt(Link* newroot)	{
+
+	int n = GetLinkIndex(newroot);
+
+	if (GetNprocs() > 1)	{
+		// MPI
+		// call slaves, send a reroot message with argument newroot
+		MESSAGE signal = ROOTAT;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
+	}
+
+	GetTree()->RootAt(newroot);
+	GetTree2()->RootAt(GetCloneLink(newroot));
+	// this may not always be necessary
+	// should perhaps delegate this update to calling functions
+	GlobalUpdateConditionalLikelihoods();	
+}
+
+
+void PhyloProcess::SlaveRootAt(int n) {
+	Link* newroot = GetLink(n);
+	GetTree()->RootAt(newroot);
+	GetTree2()->RootAt(GetCloneLink(newroot));
+}
+
 void PhyloProcess::GlobalRootAtRandom()	{
 
 	int n = GetTree()->CountInternalNodes(GetRoot());
@@ -2044,6 +2167,7 @@ void PhyloProcess::GlobalSwapTree()	{
 }
 
 void PhyloProcess::SlaveSwapTree()	{
+
 	GetTree()->Swap();
 	GetTree2()->Swap();
 }
@@ -2111,18 +2235,24 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 		MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
 		SlaveRoot(n);
 		break;
+	case ROOTAT:
+		MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
+		SlaveRootAt(n);
+		break;
 	case TOPOLRT:
 		SlaveComputeTopoBFLogLikelihoodRatio();
 		break;
 	case SETBFFRAC:
 		SlaveSetBFFrac();
 		break;
+	/*
 	case RESCALEBRANCH:
 		SlaveRescaleBranchPrior();
 		break;
 	case SETBRANCHALLOC:
 		SlaveSetBranchAlloc();
 		break;
+	*/
 	case SETSISFRAC:
 		SlaveSetSISFrac();
 		break;

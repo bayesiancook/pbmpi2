@@ -140,13 +140,22 @@ void GammaBranchProcess::SampleLengthHyperParameters()	{
 	branchbeta = 10.0;
 }
 	
-void GammaBranchProcess::RescaleBranchPrior(double factor, int index)	{
+double GammaBranchProcess::GetBranchScaling(int index)	{
 
 	if (index >= BranchNcat)	{
-		cerr << "error in GammaBranchProcess::RescaleBranchPrior\n";
+		cerr << "error in GammaBranchProcess::ScaleBranchPrior\n";
 		exit(1);
 	}
-	branchscaling[index] *= factor;
+	return branchscaling[index];
+}
+
+void GammaBranchProcess::SetBranchScaling(double factor, int index)	{
+
+	if (index >= BranchNcat)	{
+		cerr << "error in GammaBranchProcess::ScaleBranchPrior\n";
+		exit(1);
+	}
+	branchscaling[index] = factor;
 }
 
 double GammaBranchProcess::LogBranchLengthPrior(const Branch* branch)	{

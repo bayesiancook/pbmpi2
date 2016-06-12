@@ -334,7 +334,8 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 				deltalogp = GlobalTreeSteppingStone(nfrac,nstep);
 			}
 			else	{
-				deltalogp = GlobalTemperedTreeMoveLogProb(nfrac);
+				deltalogp = GlobalTemperedBLTreeMoveLogProb(nfrac);
+				// deltalogp = GlobalTemperedTreeMoveLogProb(nfrac);
 			}
 		}
 

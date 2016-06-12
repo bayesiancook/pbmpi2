@@ -101,7 +101,8 @@ class GammaBranchProcess : public virtual BranchProcess	{
 		}
 	}
 
-	virtual void RescaleBranchPrior(double factor, int index);
+	virtual void SetBranchScaling(double factor, int index);
+	virtual double GetBranchScaling(int index);
 
 	double* branchscaling;
 	double branchalpha;

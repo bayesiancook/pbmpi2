@@ -434,7 +434,7 @@ void PhyloProcess::FastReadTopoBL(string name, int burnin, int every, int until,
 	double logbf0, logbf1, logbf2, logbf3, logbf4;
 	logbf0 = logbf1 = logbf2 = logbf3 = logbf4 = 0;
 
-	for (int frac=-bfnfrac; frac<bfnfrac; frac++)	{
+	for (int frac=-bfnfrac; frac<bfnfrac-1; frac++)	{
 
 		double delta[n];
 
@@ -486,7 +486,7 @@ void PhyloProcess::FastReadTopoBL(string name, int burnin, int every, int until,
 		if (frac == -bfnfrac)	{
 			logbf0 = logscore;
 		}
-		else if (frac == bfnfrac -1)	{
+		else if (frac == bfnfrac -2)	{
 			logbf4 = logscore;
 		}
 		else if (frac == -1)	{
@@ -572,9 +572,10 @@ void PhyloProcess::ReadTopoBL(string name, int burnin, int every, int until, dou
 				max = tmp2;
 			}
 			FromStream(is);
+			QuickUpdate();
 			// SetTopoBF();
 			SetBranchesToCollapse(blfile);
-			QuickUpdate();
+			// QuickUpdate();
 			double deltalogp = ComputeBLLogLikelihoodRatio(bffrac);
 			delta2[i] = deltalogp;
 			if ((!i) || (max2 < deltalogp))	{
@@ -626,10 +627,15 @@ void PhyloProcess::ReadTopoBL(string name, int burnin, int every, int until, dou
 			RescaleBranchPrior(blfactor,1);
 		}
 		else if (frac == -1)	{
+			/*
+			cerr << "global swap tree\n";
 			GlobalSwapTree();
+			cerr << "global update cond\n";
 			GlobalUpdateConditionalLikelihoods();
+			cerr << "frac == 1 ok\n";
+			*/
 		}
-		else if (frac >= 0)	{
+		else if (frac > 0)	{
 			RescaleBranchPrior(1.0/blfactor,1);
 		}
 	}

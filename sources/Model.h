@@ -424,13 +424,18 @@ class Model	{
 
 			Move(1,every);
 			
-			process->IncSize();
-
 			ofstream os((name + ".treelist").c_str(), ios_base::app);
+
+			// this one is not useful
 			process->SetNamesFromLengths();
+
 			process->RenormalizeBranchLengths();
 			GetTree()->ToStream(os);
 			process->DenormalizeBranchLengths();
+			/*
+			process->SetNamesFromLengths();
+			process->GetTree()->ToStream(os);
+			*/
 			os.close();
 
 			ofstream tos((name + ".trace").c_str(), ios_base::app);
@@ -441,17 +446,20 @@ class Model	{
 			process->Monitor(mos);
 			mos.close();
 
-			ofstream pos((name + ".param").c_str());
-			pos.precision(12);
-			ToStream(pos,true);
-			pos.close();
-
 			if (saveall)	{
 				ofstream cos((name + ".chain").c_str(),ios_base::app);
 				cos.precision(12);
 				ToStream(cos,false);
 				cos.close();
 			}
+
+			process->IncSize();
+
+			ofstream pos((name + ".param").c_str());
+			pos.precision(12);
+			ToStream(pos,true);
+			pos.close();
+
 		}	
 		cerr << name << ": stopping after " << GetSize() << " points.\n";
 		cerr << '\n';

@@ -381,6 +381,10 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 
 	int sumcomp = 0;
 
+	int bfl = 0;
+	roottax1 = "None";
+	roottax2 = "None";
+
 	try	{
 
 		if (argc == 1)	{
@@ -423,10 +427,40 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				i++;
 				bfprop = atof(argv[i]);
 			}
+			else if (s == "-ibl")	{
+				bf = 3;
+				i++;
+				bfprop = atof(argv[i]);
+			}
 			else if (s == "-sis")	{
 				sis = 1;
 				i++;
 				sisprop = atof(argv[i]);
+			}
+			else if (s == "-bfl")	{
+				bfl = 1;
+				i++;
+				taxon1 = argv[i];
+				i++;
+				taxon2 = argv[i];
+				i++;
+				taxon3 = argv[i];
+				i++;
+				taxon4 = argv[i];
+				i++;
+				toponfrac= atoi(argv[i]);
+				i++;
+				blfactor = atof(argv[i]);
+				// toponstep = atoi(argv[i]);
+				toponstep = 1;
+			}
+			else if (s == "-blfile")	{
+				i++;
+				blfile = argv[i];
+			}
+			else if (s == "-blfactor")	{
+				i++;
+				blfactor = atof(argv[i]);
 			}
 			/*
 			else if (s == "-bf")	{
@@ -543,7 +577,7 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	}
 	else if (bf == 1)	{
 		sumovercomponents = sumcomp;
-		if (sumcomp > 0)	{
+		if (sumcomp)	{
 			GlobalActivateSumOverComponents();
 			ReadTopoBF(name,burnin,every,until,bfprop);
 		}
@@ -553,6 +587,12 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	}
 	else if (bf == 2)	{
 		FastReadTopoBL(name,burnin,every,until,bfprop);
+	}
+	else if (bf == 3)	{
+		ReadTopoBL(name,burnin,every,until,bfprop);
+	}
+	else if (bfl)	{
+		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponfrac,toponstep);
 	}
 	/*
 	else if (bf)	{

@@ -115,9 +115,11 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 			}
 
 			FromStream(is);
+			/*
 			if (topobf == 2)	{
 				SetBranchesToCollapse(blfile);
 			}
+			*/
 			GlobalUnfold();
 		}
 	}
@@ -327,12 +329,10 @@ void PhyloProcess::SetTopoBF()	{
 		cerr << "in set topo bf: scale is : " << scale << '\n';
 		cerr << "bffrac : " << bffrac << '\n';
 	}
+	// cerr << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
 	GlobalBackupTree();
 	Link* down = GetTree()->GetLCA(taxon1,taxon2);
-	/*
-	ofstream os1((GetName() + ".tree1").c_str());
-	GetTree()->ToStream(os1);
-	*/
+
 	if (! down)	{
 		cerr << "error in PhyloProcess::SetTopoBF: did not find LCA of " << taxon1 << " and " << taxon2 << '\n';
 		exit(1);
@@ -349,14 +349,7 @@ void PhyloProcess::SetTopoBF()	{
 	}
 	Link* toup = GetTree()->GetAncestor(todown);
 	GlobalAttach(down,up,todown,toup);
-	/*
-	ofstream os2((GetName() + ".tree2").c_str());
-	GetTree()->ToStream(os2);
 	GlobalSwapTree();
-	ofstream os3((GetName() + ".tree3").c_str());
-	GetTree()->ToStream(os3);
-	*/
-
 }
 
 void PhyloProcess::SetSIS()	{

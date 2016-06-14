@@ -179,6 +179,9 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int bf = 0;
 	double bfprop = 0.5;
 
+	int sis = 0;
+	double sisprop = 0.5;
+
 	int temperedbl = 1;
 	int temperedgene = 0;
 	int temperedrate = 0;
@@ -384,6 +387,9 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	}
 	else if (cv)	{
 		ReadCV(testdatafile,name,burnin,every,until);
+	}
+	else if (sis)	{
+		FastReadSIS(name,burnin,every,until,sisprop);
 	}
 	else if (bf == 1)	{
 		sumovercomponents = sumcomp;

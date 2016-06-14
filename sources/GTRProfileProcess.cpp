@@ -66,7 +66,7 @@ double GTRProfileProcess::GlobalParametersMove()	{
 	if (! fixrr)	{
 		GlobalUpdateParameters();
 		GlobalUpdateSiteProfileSuffStat();
-		UpdateModeProfileSuffStat();
+		GlobalUpdateModeProfileSuffStat();
 		MoveRR();
 		GlobalUpdateParameters();
 	}

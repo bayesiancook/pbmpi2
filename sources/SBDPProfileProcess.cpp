@@ -70,14 +70,12 @@ double SBDPProfileProcess::MPIMove(double tuning, int nmix, int nrep, int nalloc
 		GlobalUpdateParameters();
 		GlobalUpdateSiteProfileSuffStat();
 		GlobalUpdateModeProfileSuffStat();
-		// UpdateModeProfileSuffStat();
 
 		if ((!rep) && InitIncremental)	{
 			cerr << "init incremental\n";
 			InitIncremental--;
 			IncrementalSampleAlloc();
 			GlobalUpdateModeProfileSuffStat();
-			// UpdateModeProfileSuffStat();
 		}
 
 		if (proposemode)	{

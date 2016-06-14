@@ -55,42 +55,26 @@ void PoissonMixtureProfileProcess::Delete() {
 
 void PoissonMixtureProfileProcess::GlobalUpdateModeProfileSuffStat()	{
 
-	if (sitesuffstat)	{
-		UpdateModeProfileSuffStat();
-		if (GetNprocs() > 1)	{
-			MESSAGE signal = UPDATE_MPROFILE;
-			MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-			MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
-		}
+	if (GetNprocs() > 1)	{
+		MESSAGE signal = UPDATE_MPROFILE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+		MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
 	}
-	else	{
-		if (GetNprocs() > 1)	{
-			MESSAGE signal = UPDATE_MPROFILE;
-			MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-			MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
-			MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
-		}
 
-		else	{
-			UpdateModeProfileSuffStat();
-		}
+	else	{
+		UpdateModeProfileSuffStat();
 	}
 }
 
 void PoissonMixtureProfileProcess::SlaveUpdateModeProfileSuffStat()	{
 
-	if (sitesuffstat)	{
-		MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
+	UpdateModeProfileSuffStat();
+	for (int k=0; k<Ncomponent*GetDim(); k++)	{
+		alloctmpprofilesuffstatcount[k] = allocprofilesuffstatcount[k];
 	}
-	else	{
-		UpdateModeProfileSuffStat();
-		for (int k=0; k<Ncomponent*GetDim(); k++)	{
-			alloctmpprofilesuffstatcount[k] = allocprofilesuffstatcount[k];
-		}
-		MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
-		MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
-
-	}
+	MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+	MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
 }
 
 void PoissonMixtureProfileProcess::UpdateModeProfileSuffStat()	{
@@ -100,25 +84,12 @@ void PoissonMixtureProfileProcess::UpdateModeProfileSuffStat()	{
 			profilesuffstatcount[i][k] = 0;
 		}
 	}
-	if (sitesuffstat)	{
-		for (int i=0; i<GetNsite(); i++)	{
-			if (ActiveSite(i))	{
-				const int* count = GetSiteProfileSuffStatCount(i);
-				int cat = alloc[i];
-				for (int k=0; k<GetDim(); k++)	{
-					profilesuffstatcount[cat][k] += count[k];
-				}
-			}
-		}
-	}
-	else	{
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i))	{
-				const int* count = GetSiteProfileSuffStatCount(i);
-				int cat = alloc[i];
-				for (int k=0; k<GetDim(); k++)	{
-					profilesuffstatcount[cat][k] += count[k];
-				}
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			const int* count = GetSiteProfileSuffStatCount(i);
+			int cat = alloc[i];
+			for (int k=0; k<GetDim(); k++)	{
+				profilesuffstatcount[cat][k] += count[k];
 			}
 		}
 	}
@@ -221,6 +192,8 @@ double PoissonMixtureProfileProcess::LogStatIntPrior(int cat)	{
 	
 double PoissonMixtureProfileProcess::MoveDirWeights(double tuning, int nrep)	{
 
+	cerr << "in PoissonMixtureProfileProcess::MoveDirWeights\n";
+	exit(1);
 	UpdateOccupancyNumbers();
 	UpdateModeProfileSuffStat();
 	double naccepted = 0;

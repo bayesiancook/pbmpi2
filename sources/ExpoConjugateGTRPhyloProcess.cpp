@@ -30,18 +30,7 @@ void ExpoConjugateGTRPhyloProcess::CreateSuffStat()	{
 		cerr << "error in ExpoConjugateGTRPhyloProcess::CreateSuffStat\n";
 		exit(1);
 	}
-	if ((! GetMyid()) && sitesuffstat)	{
-		allocsiteprofilesuffstatcount = new int[GetNsite()*GetDim()];
-		allocsiteprofilesuffstatbeta = new double[GetNsite()*GetDim()];
-		siteprofilesuffstatcount = new int*[GetNsite()];
-		siteprofilesuffstatbeta = new double*[GetNsite()];
-
-		for (int i=0; i<GetNsite(); i++)	{
-			siteprofilesuffstatcount[i] = allocsiteprofilesuffstatcount + i*GetDim();
-			siteprofilesuffstatbeta[i] = allocsiteprofilesuffstatbeta + i*GetDim();
-		}
-	}
-	else	{
+	if (GetMyid() || (GetNprocs() == 1))	{
 		allocsiteprofilesuffstatcount = new int[(GetSiteMax() - GetSiteMin())*GetDim()];
 		allocsiteprofilesuffstatbeta = new double[(GetSiteMax() - GetSiteMin())*GetDim()];
 		siteprofilesuffstatcount = new int*[GetNsite()];
@@ -118,7 +107,6 @@ void ExpoConjugateGTRPhyloProcess::UpdateSiteProfileSuffStat()	{
 		}
 	}
 	for (int j=0; j<GetNbranch(); j++)	{
-		// AddSiteProfileSuffStat(siteprofilesuffstatcount,siteprofilesuffstatbeta,submap[j],blarray[j], (j == 0));
 		AddSiteProfileSuffStat(siteprofilesuffstatcount,siteprofilesuffstatbeta,submap[j],blarray[j],missingmap[j]);
 	}
 }
@@ -126,43 +114,9 @@ void ExpoConjugateGTRPhyloProcess::UpdateSiteProfileSuffStat()	{
 void ExpoConjugateGTRPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 
 	if (GetNprocs() > 1)	{
-	// MPI2
-	// ask slaves to update siteprofilesuffstats
-	// slaves should call : UpdateSiteProfileSuffStat
-	// then collect all suff stats
-	MPI_Status stat;
-	MESSAGE signal = UPDATE_SPROFILE;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-
-	int nalloc = GetMaxSiteNumber() * GetNstate();
-	int ivector[nalloc];
-	double dvector[nalloc];
-
-	for(int i=1; i<GetNprocs(); i++) {
-		MPI_Recv(ivector,GetProcSiteNumber(i)*GetNstate(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
-		int l = 0;
-		for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); ++j) {
-			if (ActiveSite(i))	{
-				for(int k=0; k<GetNstate(); ++k) {
-					siteprofilesuffstatcount[j][k] = ivector[l];
-					l++;
-				}
-			}
-		}
-	}
-	for(int i=1; i<GetNprocs(); i++) {
-		MPI_Recv(dvector,GetProcSiteNumber(i)*GetNstate(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
-		int l = 0;
-		for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); ++j) {
-			if (ActiveSite(i))	{
-				for(int k=0; k<GetNstate(); ++k) {
-					siteprofilesuffstatbeta[j][k] = dvector[l];
-					l++;
-				}
-			}
-		}
-	}
-
+		MPI_Status stat;
+		MESSAGE signal = UPDATE_SPROFILE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	}
 	else	{
 		UpdateSiteProfileSuffStat();
@@ -172,30 +126,6 @@ void ExpoConjugateGTRPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 void ExpoConjugateGTRPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 
 	UpdateSiteProfileSuffStat();
-	int workload = (GetSiteMax() - GetSiteMin())*GetNstate();
-	int ivector[workload];
-	int k = 0;
-	for(int i=GetSiteMin(); i<GetSiteMax(); i++) {
-		if (ActiveSite(i))	{
-			for(int j=0; j<GetNstate(); ++j) {
-				ivector[k] = siteprofilesuffstatcount[i][j];
-				k++;
-			}
-		}
-	}
-	MPI_Send(ivector,workload,MPI_INT,0,TAG1,MPI_COMM_WORLD);
-	double dvector[workload];
-	k = 0;
-	for(int i=GetSiteMin(); i<GetSiteMax(); i++) {
-		if (ActiveSite(i))	{
-			for(int j=0; j<GetNstate(); j++) {
-				dvector[k] = siteprofilesuffstatbeta[i][j];
-				k++;
-			}
-		}
-	}
-	MPI_Send(dvector,workload,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
-
 }
 
 int ExpoConjugateGTRPhyloProcess::GlobalCountMapping()	{

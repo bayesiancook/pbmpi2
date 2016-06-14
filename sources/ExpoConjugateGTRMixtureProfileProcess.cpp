@@ -66,52 +66,32 @@ void ExpoConjugateGTRMixtureProfileProcess::Delete() {
 
 void ExpoConjugateGTRMixtureProfileProcess::GlobalUpdateModeProfileSuffStat()	{
 
-	if (sitesuffstat)	{
-		UpdateModeProfileSuffStat();
-
-		if (GetNprocs() > 1)	{
-			MESSAGE signal = UPDATE_MPROFILE;
-			MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-
-			MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
-			MPI_Bcast(allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-		}
-	}
-	else	{
-		if (GetNprocs() > 1)	{
-			MESSAGE signal = UPDATE_MPROFILE;
-			MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-			MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
-			MPI_Reduce(alloctmpprofilesuffstatbeta,allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-			MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
-			MPI_Bcast(allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-		}
-
-		else	{
-			UpdateModeProfileSuffStat();
-		}
-	}
-
-}
-
-void ExpoConjugateGTRMixtureProfileProcess::SlaveUpdateModeProfileSuffStat()	{
-
-	if (sitesuffstat)	{
-		MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
-		MPI_Bcast(allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-	}
-	else	{
-		UpdateModeProfileSuffStat();
-		for (int k=0; k<Ncomponent*GetDim(); k++)	{
-			alloctmpprofilesuffstatcount[k] = allocprofilesuffstatcount[k];
-			alloctmpprofilesuffstatbeta[k] = allocprofilesuffstatbeta[k];
-		}
+	if (GetNprocs() > 1)	{
+		MESSAGE signal = UPDATE_MPROFILE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 		MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 		MPI_Reduce(alloctmpprofilesuffstatbeta,allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 		MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
 		MPI_Bcast(allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-
 	}
+
+	else	{
+		UpdateModeProfileSuffStat();
+	}
+}
+
+void ExpoConjugateGTRMixtureProfileProcess::SlaveUpdateModeProfileSuffStat()	{
+
+	UpdateModeProfileSuffStat();
+	for (int k=0; k<Ncomponent*GetDim(); k++)	{
+		alloctmpprofilesuffstatcount[k] = allocprofilesuffstatcount[k];
+		alloctmpprofilesuffstatbeta[k] = allocprofilesuffstatbeta[k];
+	}
+	MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+	MPI_Reduce(alloctmpprofilesuffstatbeta,allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+	MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+
 }
 
 void ExpoConjugateGTRMixtureProfileProcess::UpdateModeProfileSuffStat()	{
@@ -122,29 +102,14 @@ void ExpoConjugateGTRMixtureProfileProcess::UpdateModeProfileSuffStat()	{
 			profilesuffstatbeta[i][k] = 0;
 		}
 	}
-	if (sitesuffstat)	{
-		for (int i=0; i<GetNsite(); i++)	{
-			if (ActiveSite(i))	{
-				const int* count = GetSiteProfileSuffStatCount(i);
-				const double* beta = GetSiteProfileSuffStatBeta(i);
-				int cat = alloc[i];
-				for (int k=0; k<GetDim(); k++)	{
-					profilesuffstatcount[cat][k] += count[k];
-					profilesuffstatbeta[cat][k] += beta[k];
-				}
-			}
-		}
-	}
-	else	{
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i))	{
-				const int* count = GetSiteProfileSuffStatCount(i);
-				const double* beta = GetSiteProfileSuffStatBeta(i);
-				int cat = alloc[i];
-				for (int k=0; k<GetDim(); k++)	{
-					profilesuffstatcount[cat][k] += count[k];
-					profilesuffstatbeta[cat][k] += beta[k];
-				}
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			const int* count = GetSiteProfileSuffStatCount(i);
+			const double* beta = GetSiteProfileSuffStatBeta(i);
+			int cat = alloc[i];
+			for (int k=0; k<GetDim(); k++)	{
+				profilesuffstatcount[cat][k] += count[k];
+				profilesuffstatbeta[cat][k] += beta[k];
 			}
 		}
 	}

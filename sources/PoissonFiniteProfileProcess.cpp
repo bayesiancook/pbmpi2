@@ -167,7 +167,6 @@ double PoissonFiniteProfileProcess::GlobalIncrementalFiniteMove(int nrep)	{
 	
 	// final cleanup
 	UpdateOccupancyNumbers();
-	// UpdateModeProfileSuffStat();
 
 	return 1;
 }

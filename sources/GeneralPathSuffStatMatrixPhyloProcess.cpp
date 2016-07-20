@@ -156,10 +156,12 @@ void GeneralPathSuffStatMatrixPhyloProcess::UpdateBranchLengthSuffStat()	{
 void GeneralPathSuffStatMatrixPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{
 
 	if (GetNprocs() > 1)	{
+		/*
 		for (int i=0; i<GetNsite(); i++)	{
 			sitepaircount[i].clear();
 			sitewaitingtime[i].clear();
 		}
+		*/
 
 		MPI_Status stat;
 		MESSAGE signal = UPDATE_SPROFILE;

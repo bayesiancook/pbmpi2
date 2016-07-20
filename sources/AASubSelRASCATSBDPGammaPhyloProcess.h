@@ -155,35 +155,47 @@ class AASubSelRASCATSBDPGammaPhyloProcess : public virtual GeneralPathSuffStatMa
 		chronototal.Start();
 
 		propchrono.Start();
-		BranchLengthMove(tuning);
-		BranchLengthMove(0.1 * tuning);
+		if (! FixBL())	{
+			BranchLengthMove(tuning);
+			BranchLengthMove(0.1 * tuning);
+		}
+
 		if (! fixtopo)	{
 			MoveTopo();
 		}
 		propchrono.Stop();
 
-		GlobalCollapse();
-
-		GammaBranchProcess::Move(tuning,10);
-
-		GlobalUpdateParameters();
-		DGamRateProcess::Move(0.3*tuning,10);
-		DGamRateProcess::Move(0.03*tuning,10);
-
-		AASubSelSBDPProfileProcess::Move(1,1,10);
-
-		if (! fixrr)	{
-			LengthRelRateMove(1,10);
-			LengthRelRateMove(0.1,10);
-			LengthRelRateMove(0.01,10);
+		for (int rep=0; rep<5; rep++)	{
+			GlobalCollapse();
+			AugmentedMove(tuning);
+			GlobalUnfold();
 		}
-
-
-		GlobalUnfold();
 
 		chronototal.Stop();
 
 		return 1;
+	}
+
+	double AugmentedMove(double tuning = 1)	{
+
+		if (! FixBL())	{
+			GammaBranchProcess::Move(tuning,10);
+			GlobalUpdateParameters();
+		}
+
+
+		if (! FixAlpha())	{
+			DGamRateProcess::Move(0.3*tuning,10);
+			DGamRateProcess::Move(0.03*tuning,10);
+		}
+
+		AASubSelSBDPProfileProcess::Move(1,1,10);
+
+		if (! FixRR()){
+			LengthRelRateMove(1,10);
+			LengthRelRateMove(0.1,10);
+			LengthRelRateMove(0.01,10);
+		}
 	}
 
 	void ToStream(ostream& os)	{

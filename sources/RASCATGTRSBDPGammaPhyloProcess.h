@@ -181,11 +181,11 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 
 		propchrono.Stop();
 
-		GlobalCollapse();
-
-		AugmentedMove(tuning);
-
-		GlobalUnfold();
+		for (int rep=0; rep<5; rep++)	{
+			GlobalCollapse();
+			AugmentedMove(tuning);
+			GlobalUnfold();
+		}
 
 		chronototal.Stop();
 

@@ -206,7 +206,7 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 
 	int rateprior = 0;
 	int profileprior = 0;
-	int rootprior = 0;
+	int rootprior = 1;
 
 	try	{
 
@@ -237,6 +237,34 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				}
 				else	{
 					cerr << "error after ppredrate: should be prior or posterior\n";
+					throw(0);
+				}
+			}
+			else if (s == "-ppredprofile")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					profileprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					profileprior = 0;
+				}
+				else	{
+					cerr << "error after ppredprofile: should be prior or posterior\n";
+					throw(0);
+				}
+			}
+			else if (s == "-ppredroot")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					rootprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					rootprior = 0;
+				}
+				else	{
+					cerr << "error after ppredroot: should be prior or posterior\n";
 					throw(0);
 				}
 			}

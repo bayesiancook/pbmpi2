@@ -201,15 +201,18 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 
 
 		if (! FixAlpha())	{
+			DGamRateProcess::Move(tuning,10);
 			DGamRateProcess::Move(0.3*tuning,10);
 			DGamRateProcess::Move(0.03*tuning,10);
 		}
 
-		ExpoConjugateGTRSBDPProfileProcess::Move(1,1,10);
+		GlobalUpdateParameters();
+		ExpoConjugateGTRSBDPProfileProcess::Move(1,1,2);
 		if (iscodon){
-			ExpoConjugateGTRSBDPProfileProcess::Move(0.1,1,15);
-			ExpoConjugateGTRSBDPProfileProcess::Move(0.01,1,15);
+			ExpoConjugateGTRSBDPProfileProcess::Move(0.1,1,3);
+			ExpoConjugateGTRSBDPProfileProcess::Move(0.01,1,3);
 		}
+		GlobalUpdateParameters();
 
 		if (! FixRR()){
 			LengthRelRateMove(1,10);

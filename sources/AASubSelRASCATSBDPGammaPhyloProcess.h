@@ -193,11 +193,14 @@ class AASubSelRASCATSBDPGammaPhyloProcess : public virtual GeneralPathSuffStatMa
 
 
 		if (! FixAlpha())	{
+			DGamRateProcess::Move(tuning,10);
 			DGamRateProcess::Move(0.3*tuning,10);
 			DGamRateProcess::Move(0.03*tuning,10);
 		}
 
-		AASubSelSBDPProfileProcess::Move(1,1,10);
+		GlobalUpdateParameters();
+		AASubSelSBDPProfileProcess::Move(1,1,2);
+		GlobalUpdateParameters();
 
 		if (! FixRR()){
 			LengthRelRateMove(1,10);

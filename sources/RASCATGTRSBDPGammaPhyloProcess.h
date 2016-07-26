@@ -196,6 +196,7 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 
 		if (! FixBL())	{
 			GammaBranchProcess::Move(tuning,10);
+			GammaBranchProcess::Move(0.1*tuning,10);
 			GlobalUpdateParameters();
 		}
 
@@ -207,7 +208,8 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 		}
 
 		GlobalUpdateParameters();
-		ExpoConjugateGTRSBDPProfileProcess::Move(1,1,2);
+		ExpoConjugateGTRSBDPProfileProcess::Move(1,5,2,1);
+		// ExpoConjugateGTRSBDPProfileProcess::Move(1,1,2);
 		if (iscodon){
 			ExpoConjugateGTRSBDPProfileProcess::Move(0.1,1,3);
 			ExpoConjugateGTRSBDPProfileProcess::Move(0.01,1,3);

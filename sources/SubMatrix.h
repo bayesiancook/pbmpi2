@@ -124,6 +124,8 @@ class SubMatrix  	{
 	// used by accept-reject resampling method
 	// CPU level 1
 	int 			DrawOneStep(int state);
+	double			DrawWaitingTime(int state);
+	int 			DrawFromStationary();
 
 	void			ToStream(ostream& os);
 	void			CheckReversibility();
@@ -332,6 +334,14 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
 	return m;
 }
 
+inline double SubMatrix::DrawWaitingTime(int state)	{
+
+	const double* row = GetRow(state);
+	double p = -row[state] * rnd::GetRandom().Uniform();
+	double t = rnd::GetRandom().sExpo() / (-row[state]);
+	return t;
+}
+
 inline int SubMatrix::DrawOneStep(int state)	{
 
 	const double* row = GetRow(state);
@@ -353,6 +363,22 @@ inline int SubMatrix::DrawOneStep(int state)	{
 		}
 		// ToStream(cerr);	
 		exit(1);
+	}
+	return k;
+}
+
+inline int SubMatrix::DrawFromStationary()	{
+
+	double p =rnd::GetRandom().Uniform();
+	int k = 0;
+	double tot = mStationary[k];
+	while ((k<GetNstate()) && (tot < p))	{
+		k++;
+		if (k == GetNstate())	{
+			cerr << "error in DrawFromStationary\n";
+			exit(1);
+		}
+		tot += mStationary[k];
 	}
 	return k;
 }

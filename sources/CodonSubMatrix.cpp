@@ -76,7 +76,14 @@ double CodonSubMatrix::RateAwayNonsyn(int i)	{
 	return total;
 }
 
+double CodonSubMatrix::NonSynRate()	{
 
+	double total = 0;
+	for (int i=0; i<GetNstate(); i++)	{
+		total += mStationary[i] * RateAwayNonsyn(i);
+	}
+	return total;
+}
 
 void AACodonMutSelProfileSubMatrix::ComputeArray(int i)	{
 
@@ -203,27 +210,66 @@ void AACodonMutSelProfileSubMatrix::ComputeStationary()	{
 	//cout.flush();	
 }
 
-//*
-double AACodonMutSelProfileSubMatrix::GetRate()	{
-	
-	if (! ArrayUpdated())	{
-		UpdateStationary();
-		for (int k=0; k<Nstate; k++)	{
-			ComputeArray(k);
+void HBAACodonMutSelProfileSubMatrix::ComputeArray(int i)	{
+
+	double total = 0;
+	for (int j=0; j<GetNstate(); j++)       {
+		if (i!=j)       {
+			int pos = GetDifferingPosition(i,j);
+			if ((pos != -1) && (pos != 3))  {
+				int a = GetCodonPosition(pos,i);
+				int b = GetCodonPosition(pos,j);
+				if (a == b)     {
+					cerr << "identical states\n";
+					cerr << GetCodonStateSpace()->GetState(i) << '\t' << GetCodonStateSpace()->GetState(j) << '\n';
+					cerr << pos << '\n';
+					exit(1);
+				}
+				Q[i][j] = nucrr[GetNucRRIndex(a,b)] * nucstat[b];
+				double f = nucstat[b] / nucstat[a];
+				if (! Synonymous(i,j))  {
+					f *= exp((*Ne) * log(aaprofile[GetCodonStateSpace()->Translation(j)] / aaprofile[GetCodonStateSpace()->Translation(i)]));
+				}
+
+				if (fabs(f) > 1e-8)	{
+					Q[i][j] *= log(f) / (1 - f);
+				}
+
+				if (! Synonymous(i,j))  {
+					Q[i][j] *= *omega;
+				}
+			}
+			else    {
+				Q[i][j] = 0;
+			}
+			total += Q[i][j];
 		}
 	}
-	for (int k=0; k<Nstate; k++)	{
-		flagarray[k] = true;
-	}
-	double norm = 0;
-	for (int i=0; i<Nnuc-1; i++)	{
-		for (int j=i+1; j<Nnuc; j++)	{
-			norm += nucstat[i] * nucstat[j] * nucrr[GetNucRRIndex(i,j)];
-		}
-	}
-	return 2 * (norm * 3);
+	Q[i][i] = -total;
 }
-//*/
+
+void HBAACodonMutSelProfileSubMatrix::ComputeStationary()	{
+
+	for (int i=0; i<GetNstate(); i++)	{
+		mStationary[i] = nucstat[GetCodonStateSpace()->GetCodonPosition(0,i)] * nucstat[GetCodonStateSpace()->GetCodonPosition(1,i)] * nucstat[GetCodonStateSpace()->GetCodonPosition(2,i)];
+	}
+	double aanorm[Naa];
+	for (int k=0; k<Naa; k++)	{
+		aanorm[k] = 0;
+	}
+	for (int i=0; i<GetNstate(); i++)	{
+		aanorm[GetCodonStateSpace()->Translation(i)] += mStationary[i];
+	}
+	double total = 0;
+	for (int i=0; i<GetNstate(); i++)	{
+		int aa = GetCodonStateSpace()->Translation(i);
+		mStationary[i] *= exp((*Ne) * log(aaprofile[aa])) / aanorm[aa];
+		total += mStationary[i];
+	}
+	for (int i=0; i<GetNstate(); i++)	{
+		mStationary[i] /= total;
+	}
+}
 
 void CodonMutSelProfileSubMatrix::ComputeArray(int i)	{
 

@@ -52,7 +52,7 @@ void SequenceAlignment::GetEmpiricalFreq(double* in)	{
 	}
 }
 
-void SequenceAlignment::GetSiteEmpiricalFreq(double** in)	{
+void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon)	{
 	for (int j=0; j<GetNsite(); j++)	{
 		for (int i=0; i<GetNstate(); i++)	{
 			in[j][i] = 0;
@@ -65,7 +65,28 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in)	{
 			}
 		}
 	}
+
+	double globfreq[GetNstate()];
+	for (int i=0; i<GetNstate(); i++)	{
+		globfreq[i] = 0;
+	}
 	for (int j=0; j<GetNsite(); j++)	{
+		for (int i=0; i<GetNstate(); i++)	{
+			globfreq[i] += in[j][i];
+		}
+	}
+	double total = 0;
+	for (int i=0; i<GetNstate(); i++)	{
+		total += globfreq[i];
+	}
+	for (int i=0; i<GetNstate(); i++)	{
+		globfreq[i] /= total;
+	}
+		
+	for (int j=0; j<GetNsite(); j++)	{
+		for (int i=0; i<GetNstate(); i++)	{
+			in[j][i] += epsilon * globfreq[i];
+		}
 		double total = 0;
 		for (int i=0; i<GetNstate(); i++)	{
 			total += in[j][i];

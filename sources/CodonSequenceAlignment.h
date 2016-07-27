@@ -30,6 +30,9 @@ class CodonSequenceAlignment : public SequenceAlignment	{
 
 	CodonSequenceAlignment(SequenceAlignment* from, bool force_stops = false,GeneticCodeType type = Universal);
 
+	CodonSequenceAlignment(int** inData, string* names, int inNsite, StateSpace* instatespace, const TaxonSet* intaxset) :
+		SequenceAlignment(inData,names,inNsite,instatespace,intaxset) {}
+
 	~CodonSequenceAlignment() {}
 
 	void DeleteAAConstantSites()	{

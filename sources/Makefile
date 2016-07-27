@@ -45,7 +45,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= pb_mpi ccpmcmc readpb_mpi tracecomp bpcomp bpcomp2 diversity
+ALL= simucodonrev pb_mpi ccpmcmc readpb_mpi tracecomp bpcomp bpcomp2 diversity
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean
@@ -81,6 +81,9 @@ $(PROGSDIR)/missfrac: MissingFractionPerGene.o $(OBJS)
 
 $(PROGSDIR)/jackknife: JackKnife.o $(OBJS)
 	$(CC) JackKnife.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+
+$(PROGSDIR)/simucodonrev: SimuCodonRev.o $(OBJS)
+	$(CC) SimuCodonRev.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 $(PROGSDIR)/simucodon: SimuCodon.o $(OBJS)
 	$(CC) SimuCodon.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@

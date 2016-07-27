@@ -47,6 +47,7 @@ class CodonSubMatrix : public SubMatrix	{
 
 	double RateAwaySyn(int i);
 	double RateAwayNonsyn(int i);
+	double NonSynRate();
 	
 	protected:
 
@@ -57,6 +58,28 @@ class CodonSubMatrix : public SubMatrix	{
 	double* nucrr;
 	double* nucstat;
 	bool normalise;		
+};
+
+class HBAACodonMutSelProfileSubMatrix : public CodonSubMatrix	{
+
+	public:
+
+	HBAACodonMutSelProfileSubMatrix(CodonStateSpace* instatespace, double* innucrr, double* innucstat, double* inaaprofile, double* inomega, double* inNe, bool innormalise) :
+		CodonSubMatrix(instatespace,innucrr,innucstat,innormalise),
+		aaprofile(inaaprofile),
+		omega(inomega),
+		Ne(inNe) {}
+
+	double* GetAAProfile() {return aaprofile;}
+
+	protected:
+
+	void ComputeArray(int state);
+	void ComputeStationary();
+	// double GetRate();
+	double* aaprofile;
+	double* omega;
+	double* Ne;
 };
 
 class AACodonMutSelProfileSubMatrix : public CodonSubMatrix	{

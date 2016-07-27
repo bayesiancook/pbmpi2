@@ -73,6 +73,10 @@ double CodonSubMatrix::RateAwayNonsyn(int i)	{
 		}
 		j++;
 	}
+	if (total < 0)	{
+		cerr << "error: negative rate away non syn\n";
+		exit(1);
+	}
 	return total;
 }
 
@@ -210,6 +214,26 @@ void AACodonMutSelProfileSubMatrix::ComputeStationary()	{
 	//cout.flush();	
 }
 
+double AACodonMutSelProfileSubMatrix::GetRate()	{
+	
+	if (! ArrayUpdated())	{
+		UpdateStationary();
+		for (int k=0; k<Nstate; k++)	{
+			ComputeArray(k);
+		}
+	}
+	for (int k=0; k<Nstate; k++)	{
+		flagarray[k] = true;
+	}
+	double norm = 0;
+	for (int i=0; i<Nnuc-1; i++)	{
+		for (int j=i+1; j<Nnuc; j++)	{
+			norm += nucstat[i] * nucstat[j] * nucrr[GetNucRRIndex(i,j)];
+		}
+	}
+	return 2 * (norm * 3);
+}
+
 void HBAACodonMutSelProfileSubMatrix::ComputeArray(int i)	{
 
 	double total = 0;
@@ -226,13 +250,13 @@ void HBAACodonMutSelProfileSubMatrix::ComputeArray(int i)	{
 					exit(1);
 				}
 				Q[i][j] = nucrr[GetNucRRIndex(a,b)] * nucstat[b];
-				double f = nucstat[b] / nucstat[a];
+				double f = nucstat[a] / nucstat[b];
 				if (! Synonymous(i,j))  {
 					f *= exp((*Ne) * log(aaprofile[GetCodonStateSpace()->Translation(j)] / aaprofile[GetCodonStateSpace()->Translation(i)]));
 				}
 
-				if (fabs(f) > 1e-8)	{
-					Q[i][j] *= log(f) / (1 - f);
+				if (fabs(f-1) > 1e-8)	{
+					Q[i][j] *= log(f) / (1 - 1.0/f);
 				}
 
 				if (! Synonymous(i,j))  {

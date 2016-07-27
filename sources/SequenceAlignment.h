@@ -550,30 +550,7 @@ class SequenceAlignment	{
 		return GetTotalDiversity(0,GetNsite()) / GetNsite();
 	}
 
-	double GetMeanPairwiseDiff()	{
-
-		double tot = 0;
-		int count = 0;
-		for (int j=0; j<Ntaxa; j++)	{
-			for (int k=j+1; k<Ntaxa; k++)	{
-				double diff = 0;
-				int c = 0;
-				for (int i=0; i<Nsite; i++)	{
-					if ((Data[j][i] != unknown) && (Data[k][i] != unknown))	{
-						c++;
-						if (Data[j][i] != Data[k][i])	{
-							diff++;
-						}
-					}
-				}
-				diff /= c;
-				tot += diff;
-				count++;
-			}
-		}
-		tot /= count;
-		return tot;
-	}
+	double GetMeanPairwiseDiff();
 
 	double CompositionalHeterogeneity(double* taxstat, ostream* os, double& meandist)	{
 

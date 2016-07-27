@@ -52,6 +52,42 @@ void SequenceAlignment::GetEmpiricalFreq(double* in)	{
 	}
 }
 
+double SequenceAlignment::GetMeanPairwiseDiff()	{
+
+	double tot = 0;
+	int count = 0;
+	for (int j=0; j<Ntaxa; j++)	{
+		for (int k=j+1; k<Ntaxa; k++)	{
+			double diff = 0;
+			int c = 0;
+			for (int i=0; i<Nsite; i++)	{
+				if ((Data[j][i] != unknown) && (Data[k][i] != unknown))	{
+					c++;
+					if (Data[j][i] != Data[k][i])	{
+						diff++;
+					}
+				}
+			}
+			if (c)	{
+				diff /= c;
+			}
+			tot += diff;
+			count++;
+		}
+	}
+	if (! count)	{
+		cerr << "mean pairwise diff : count is 0\n";
+		cerr << Ntaxa << '\n';
+		exit(1);
+	}
+	tot /= count;
+	if (isnan(tot))	{
+		cerr << "mean pairwise diff: nan\n";
+		exit(1);
+	}
+	return tot;
+}
+
 void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon)	{
 	for (int j=0; j<GetNsite(); j++)	{
 		for (int i=0; i<GetNstate(); i++)	{

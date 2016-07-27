@@ -63,8 +63,10 @@ class Simulator : public NewickTree {
 		// get parameters from file
 		ifstream prmis(paramfile.c_str());
 
+		cerr << "Param file : " << paramfile << '\n';
 		// read file
 		string tmp;
+		prmis >> tmp;
 
 		if (tmp != "PseudoCount")	{
 			cerr << "error: missing PseudoCount keyword\n";
@@ -191,12 +193,15 @@ class Simulator : public NewickTree {
 	void RecursiveSetBranchLengths(const Link* from)	{
 		if (! from->isRoot())	{
 			double l = atof(from->GetBranch()->GetName().c_str());
-			if (! l)	{
+			if (l<=0)	{
 				cerr << "null branch length : " << from->GetBranch()->GetName() << '\n';
 				exit(1);
 			}
 			bl[from->GetBranch()] = l * mu;
 			totlength += l*mu;
+		}
+		else	{
+			bl[from->GetBranch()] = 0;
 		}
 		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
 			RecursiveSetBranchLengths(link->Out());
@@ -205,10 +210,12 @@ class Simulator : public NewickTree {
 
 	void Simulate()	{
 		RecursiveSimulate(GetRoot());
+		cerr << '\n';
 	}
 
 	void RecursiveSimulate(const Link* from)	{
 
+		cerr << '.';
 		if (from->isRoot())	{
 			RootSimulate();
 		}
@@ -279,6 +286,7 @@ class Simulator : public NewickTree {
 		cerr << "make new ali\n";
 		CodonSequenceAlignment* codonali = new CodonSequenceAlignment(data,names,Nsite,codonstatespace,taxonset);
 
+		cerr << "write ali\n";
 		ofstream callos((basename + ".ali").c_str());
 		codonali->ToStream(callos);
 	
@@ -415,6 +423,9 @@ int main(int argc, char* argv[])	{
 
 	cerr << "new sim\n";
 	Simulator* sim = new Simulator(datafile,treefile,paramfile,mask,basename);
+
+	cerr << "simulate\n";
+	sim->Simulate();
 
 	cerr << "write simu\n";
 	sim->WriteSimu();

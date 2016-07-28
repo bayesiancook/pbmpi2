@@ -119,7 +119,7 @@ class Simulator : public NewickTree {
 
 		CreateMatrices();
 		UpdateMatrices();
-		double nonsynrate = ComputeAverageNonSynRate();
+		nonsynrate = ComputeAverageNonSynRate();
 
 		prmis >> tmp;
 		if (tmp != "mu")	{
@@ -128,13 +128,11 @@ class Simulator : public NewickTree {
 			exit(1);
 		}
 		prmis >> mu;
-		mu /= nonsynrate;
 
 		totlength = 0;
 		RecursiveSetBranchLengths(GetRoot());
 
 		cerr << "length  : " << totlength << '\n';
-		cerr << "total subs length per codon: " << mu * totlength << '\n';
 	}
 
 	void CreateMatrices()	{
@@ -197,8 +195,8 @@ class Simulator : public NewickTree {
 				cerr << "null branch length : " << from->GetBranch()->GetName() << '\n';
 				exit(1);
 			}
-			bl[from->GetBranch()] = l * mu;
-			totlength += l*mu;
+			bl[from->GetBranch()] = l;
+			totlength += l;
 		}
 		else	{
 			bl[from->GetBranch()] = 0;
@@ -209,6 +207,9 @@ class Simulator : public NewickTree {
 	}
 
 	void Simulate()	{
+		count = 0;
+		dscount = 0;
+		dncount = 0;
 		RecursiveSimulate(GetRoot());
 		cerr << '\n';
 	}
@@ -247,7 +248,7 @@ class Simulator : public NewickTree {
 
 	void BranchSimulate(const Link* from)	{
 
-		double l = bl[from->GetBranch()];
+		double l = bl[from->GetBranch()] * mu / nonsynrate;
 
 		int* ancseq = nodeseq[from->Out()->GetNode()];
 		for (int i=0; i<Nsite; i++)	{
@@ -264,6 +265,13 @@ class Simulator : public NewickTree {
 				t += dt;
 				if (t < l)	{
 					int newstate = Q[i]->DrawOneStep(state);
+					count++;
+					if (codonstatespace->Synonymous(state,newstate))	{
+						dscount++;
+					}
+					else	{
+						dncount++;
+					}
 					state = newstate;
 				}
 			}
@@ -298,13 +306,10 @@ class Simulator : public NewickTree {
 		protali->ToStream(protos);
 
 		ofstream sos((basename + ".summary").c_str());
-		
-		/*
-		sos << "mean number of subs per site : " << ((double) count) / Nsite << '\n';
-		sos << "mean number of syns per site : " << ((double) dscount) / Nsite << '\n';
-		sos << "mean number of reps per site : " << ((double) dncount) / Nsite << '\n';
+
+		sos << "tot number of subs per site : " << ((double) count) / Nsite << '\n';
+		sos << "tot number of reps per site : " << ((double) dncount) / Nsite << '\n';
 		sos << '\n';
-		*/
 		sos << "mean diversity     : " << protali->GetMeanDiversity() << '\n';
 		sos << "ref  diversity     : " << protdata->GetMeanDiversity() << '\n';
 		sos << '\n';
@@ -327,11 +332,9 @@ class Simulator : public NewickTree {
 		}
 	}
 
-	/*
 	int count;
 	int dscount;
 	int dncount;
-	*/
 
 	int mask;
 
@@ -349,6 +352,7 @@ class Simulator : public NewickTree {
 	// gc
 	double gamma;
 
+	double nonsynrate;
 	double mu;
 	double omega;
 	double Ne;

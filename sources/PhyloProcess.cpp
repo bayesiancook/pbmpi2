@@ -296,7 +296,7 @@ void PhyloProcess::SetBranchesToCollapse(string blfile)	{
 			}
 			Link* up = GetTree()->GetAncestor(down);
 			SetBranchAlloc(up->GetBranch()->GetIndex(),1);
-			// cerr << tax1 << '\t' << tax2 << '\t' << up->GetBranch()->GetIndex() << '\t' << branchalloc[up->GetBranch()->GetIndex()] << '\n';
+			cerr << tax1 << '\t' << tax2 << '\t' << up->GetBranch()->GetIndex() << '\t' << branchalloc[up->GetBranch()->GetIndex()] << '\n';
 		}
 	}
 	else	{
@@ -326,8 +326,10 @@ void PhyloProcess::SetTopoBF()	{
 			scale *= exp((bfnfrac - bffrac -1)*log(blfactor));
 		}
 		SetBranchScaling(scale,1);	
+		/*
 		cerr << "in set topo bf: scale is : " << scale << '\n';
 		cerr << "bffrac : " << bffrac << '\n';
+		*/
 	}
 	// cerr << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
 	GlobalBackupTree();
@@ -338,6 +340,7 @@ void PhyloProcess::SetTopoBF()	{
 		exit(1);
 	}
 	Link* up = GetTree()->GetAncestor(down);
+
 	if (topobf == 2)	{
 		SetBranchesToCollapse(blfile);
 	}
@@ -486,15 +489,6 @@ void PhyloProcess::QuickUpdate()	{
 	MESSAGE signal = BCAST_TREE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	GlobalBroadcastTree();
-
-	/*
-	if (topobf)	{
-		cerr << "set topo bf\n";
-		SetTopoBF();
-		cerr << "set topo bf ok\n";
-	}
-	*/
-	
 	GlobalCollapse();
 	GlobalUnfold();
 }

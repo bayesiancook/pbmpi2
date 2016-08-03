@@ -470,6 +470,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void ReadTopoBF(string name, int burnin, int every, int until, double prop);
 	void ReadTopoBL(string name, int burnin, int every, int until, double prop);
 	virtual void ReadTopoBF(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nfrac, int nstep);
+	virtual void ReadTopoBL(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nfrac, int nstep);
 
 	void GlobalSetRatePrior(int inrateprior);
 	void SlaveSetRatePrior();

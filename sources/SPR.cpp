@@ -334,7 +334,9 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 				deltalogp = GlobalTreeSteppingStone(nfrac,nstep);
 			}
 			else	{
+				cerr << "tempered bl\n";
 				deltalogp = GlobalTemperedBLTreeMoveLogProb(nfrac);
+				cerr << deltalogp << '\n';
 				// deltalogp = GlobalTemperedTreeMoveLogProb(nfrac);
 			}
 		}
@@ -343,6 +345,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 			// GlobalSwapTree();
 		}
 
+		cerr << "rev prob\n";
 		// reverse probability 
 		GlobalDetach(down,up);
 		GlobalUpdateConditionalLikelihoods();
@@ -369,6 +372,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 		deltalogp = logp2 - prologp1;
 	}
 
+	cerr << "rev2\n";
 	// calculate probability of reverse move
 	double max2 = 0;
 	notfound = 1;
@@ -455,6 +459,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 	if (special == 2)	{
 		accepted = 0;
 	}
+	cerr << "accepted : " << accepted << '\n';
 	logBF = deltalogp;
 	retdeltalogp = logp2 - prologp1;
 
@@ -493,6 +498,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 
 	if (! accepted)	{
 
+		cerr << "restore tree\n";
 		if (version == 1)	{
 			GlobalDetach(down,up);
 			GlobalAttach(down,up,fromdown,fromup);
@@ -505,6 +511,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 		if (version == 2)	{
 			GlobalRestoreTree();
 		}
+		cerr << "restore tree ok\n";
 
 	}
 

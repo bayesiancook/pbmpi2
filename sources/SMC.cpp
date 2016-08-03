@@ -1014,8 +1014,6 @@ double PhyloProcess::GlobalTemperedBLTreeMoveLogProb(int nstep)	{
 
 	// assumes the two trees have already been set up
 
-	// backup
-
 	double deltalogp = 0;
 	ofstream os((name + ".tempered").c_str());
 
@@ -1039,16 +1037,11 @@ double PhyloProcess::GlobalTemperedBLTreeMoveLogProb(int nstep)	{
 		os.flush();
 
 		if (step < nstep-1)	{
-			int bkfixtopo = fixtopo;
-			fixtopo = 0;
 			Move(1.0);
-			fixtopo = bkfixtopo;
 		}
 	}
 
-	// os.close();
-	// GlobalSwapTree();
-
+	blfactor = 1.0 / blfactor;
 	return deltalogp;
 }
 

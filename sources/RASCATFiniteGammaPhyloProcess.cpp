@@ -478,9 +478,9 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				i++;
 				toponfrac= atoi(argv[i]);
 				i++;
+				toponstep = atoi(argv[i]);
+				i++;
 				blfactor = atof(argv[i]);
-				// toponstep = atoi(argv[i]);
-				toponstep = 1;
 			}
 			else if (s == "-blfile")	{
 				i++;
@@ -620,7 +620,7 @@ void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		ReadTopoBL(name,burnin,every,until,bfprop);
 	}
 	else if (bfl)	{
-		ReadTopoBF(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponfrac,toponstep);
+		ReadTopoBL(name,burnin,every,until,taxon1,taxon2,taxon3,taxon4,toponfrac,toponstep);
 	}
 	/*
 	else if (bf)	{

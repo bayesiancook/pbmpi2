@@ -56,15 +56,17 @@ class AASubSelMixtureProfileProcess : public virtual GTRMixtureProfileProcess	{
 		double tot = 0;
 		for (int i=0; i<GetDim(); i++)	{
 			for (int j=0; j<GetDim(); j++)	{
-				double tmp = profile[k][i] * rr[rrindex(i,j,GetDim())];
-				double deltaF = log(profile[k][j] / profile[k][i]);
-				if (fabs(deltaF) < TOOSMALL)        {
-					tmp /= ( 1.0 - (deltaF / 2) );
+				if (i != j)	{
+					double tmp = profile[k][i] * rr[rrindex(i,j,GetDim())];
+					double deltaF = log(profile[k][j] / profile[k][i]);
+					if (fabs(deltaF) < TOOSMALL)        {
+						tmp /= ( 1.0 - (deltaF / 2) );
+					}
+					else    {
+						tmp *=  (deltaF)/(1.0 - exp(-deltaF));
+					}
+					tot += tmp;
 				}
-				else    {
-					tmp *=  (deltaF)/(1.0 - exp(-deltaF));
-				}
-				tot += tmp;
 			}
 		}
 		return tot;

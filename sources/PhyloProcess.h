@@ -66,10 +66,16 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		tracktopo = 0;
 		topoburnin = 0;
 		topobf = 0;
+		bfburnin = 0;
+		bfnfrac = 0;
+		bfnrep = 0;
+		bffrac = 0;
 		blfile = "None";
 		sis = 0;
 		sislevel = 10;
 		siscutoff = 0.2;
+		sisfrac = 0;
+		sisnrep = 0;
 		logZ = 0;
 		fixroot = 0;
 		spracc = sprtry = 0;

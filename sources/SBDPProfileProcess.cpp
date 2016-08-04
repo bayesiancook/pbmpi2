@@ -616,6 +616,10 @@ void SBDPProfileProcess::SlaveMixMove()	{
 		double totp = 0;
 		double totq = 0;
 		if (allocmode)	{
+			cerr << "check alloc mode in SBDPProfileProcess::SlaveMixMove\n";
+			exit(1);
+		}
+		if (! allocmode)	{
 			for (int mode = 0; mode<K0; mode++)	{
 				totp += weight[mode];
 			}

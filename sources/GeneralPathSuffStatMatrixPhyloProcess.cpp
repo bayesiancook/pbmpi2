@@ -111,11 +111,22 @@ void GeneralPathSuffStatMatrixPhyloProcess::UpdateSiteProfileSuffStat()	{
 		if (ActiveSite(i))	{
 			sitepaircount[i].clear();
 			sitewaitingtime[i].clear();
+			siterootstate[i] = -1;
 		}
 	}
 
 	for (int j=0; j<GetNbranch(); j++)	{
 		AddSiteProfileSuffStat(siterootstate,sitepaircount,sitewaitingtime,submap[j],blarray[j],missingmap[j]);
+	}
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			if (siterootstate[i] == -1)	{
+				cerr << "error in GPSSMatrixPhyloProcess::UpdateSiteProfileSuffStat: site root state is -1\n";
+				cerr << "site : " << i << '\n';
+				exit(1);
+			}
+		}
 	}
 }
 

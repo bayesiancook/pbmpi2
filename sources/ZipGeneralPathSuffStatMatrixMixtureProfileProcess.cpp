@@ -24,17 +24,19 @@ void ZipGeneralPathSuffStatMatrixMixtureProfileProcess::UpdateModeProfileSuffSta
 			int cat = alloc[site];
 			int orbitsize = GetOrbitSize(site);
 
-			if (rootstate != orbitsize)	{
-				profilerootcount[cat][GetStateFromZip(site,rootstate)]++;
-			}
-			for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
-				if (i->first != orbitsize)	{
-					profilewaitingtime[cat][GetStateFromZip(site,i->first)] += i->second;
+			if (rootstate != -1)	{
+				if (rootstate != orbitsize)	{
+					profilerootcount[cat][GetStateFromZip(site,rootstate)]++;
 				}
-			}
-			for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
-				if ((i->first.first != orbitsize) && (i->first.second != orbitsize))	{
-					profilepaircount[cat][pair<int,int>(GetStateFromZip(site,i->first.first),GetStateFromZip(site,i->first.second))] += i->second;
+				for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
+					if (i->first != orbitsize)	{
+						profilewaitingtime[cat][GetStateFromZip(site,i->first)] += i->second;
+					}
+				}
+				for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
+					if ((i->first.first != orbitsize) && (i->first.second != orbitsize))	{
+						profilepaircount[cat][pair<int,int>(GetStateFromZip(site,i->first.first),GetStateFromZip(site,i->first.second))] += i->second;
+					}
 				}
 			}
 		}
@@ -60,16 +62,19 @@ double ZipGeneralPathSuffStatMatrixMixtureProfileProcess::LogStatProb(int site, 
 	double** q = mat->GetQ();
 	int nstate = mat->GetNstate();
 
-	total += log(stat[GetSiteRootState(site)]);
+	int rootstate = GetSiteRootState(site);
+	if (rootstate != -1)	{
+		total += log(stat[GetSiteRootState(site)]);
 
-	map<int,double>& waitingtime = GetSiteWaitingTime(site);
-	for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
-		total += i->second * q[i->first][i->first];
-	}
+		map<int,double>& waitingtime = GetSiteWaitingTime(site);
+		for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
+			total += i->second * q[i->first][i->first];
+		}
 
-	map<pair<int,int>, int>& paircount = GetSitePairCount(site);
-	for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
-		total += i->second * log(q[i->first.first][i->first.second]);
+		map<pair<int,int>, int>& paircount = GetSitePairCount(site);
+		for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
+			total += i->second * log(q[i->first.first][i->first.second]);
+		}
 	}
 
 	return total;

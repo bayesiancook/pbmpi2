@@ -36,12 +36,14 @@ double GeneralPathSuffStatMatrixSiteSpecificProfileProcess::ProfileSuffStatLogPr
 	map<int,double>& waitingtime = GetSiteWaitingTime(site);
 	int rootstate = GetSiteRootState(site);
 	const double* stat = matrixarray[site]->GetStationary();
-	total += log(stat[rootstate]);
-	for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
-		total += i->second * (*mat)(i->first,i->first);
-	}
-	for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
-		total += i->second * log((*mat)(i->first.first, i->first.second));
+	if (rootstate != -1)	{
+		total += log(stat[rootstate]);
+		for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
+			total += i->second * (*mat)(i->first,i->first);
+		}
+		for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
+			total += i->second * log((*mat)(i->first.first, i->first.second));
+		}
 	}
 	profilesuffstatlogprob[site] = total;
 	return total;

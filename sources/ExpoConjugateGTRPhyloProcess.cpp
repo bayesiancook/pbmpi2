@@ -109,6 +109,26 @@ void ExpoConjugateGTRPhyloProcess::UpdateSiteProfileSuffStat()	{
 	for (int j=0; j<GetNbranch(); j++)	{
 		AddSiteProfileSuffStat(siteprofilesuffstatcount,siteprofilesuffstatbeta,submap[j],blarray[j],missingmap[j]);
 	}
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			if (GetData()->AllMissingColumn(i))	{
+				for (int k=0; k<GetDim(); k++)	{
+					if (siteprofilesuffstatcount[i][k] != 0)	{
+						cerr << "error in ExpoConjugateGTRPhyloProcess::UpdateSiteProfileSuffStat: all missing column has counts\n";
+						cerr << "site : " << i << '\n';
+						GetData()->PrintColumn(cerr,i);
+						exit(1);
+					}
+					if (siteprofilesuffstatbeta[i][k] != 0)	{
+						cerr << "error in ExpoConjugateGTRPhyloProcess::UpdateSiteProfileSuffStat: all missing column has positive beta\n";
+						cerr << "site : " << i << '\n';
+						GetData()->PrintColumn(cerr,i);
+						exit(1);
+					}
+				}
+			}
+		}
+	}
 }
 
 void ExpoConjugateGTRPhyloProcess::GlobalUpdateSiteProfileSuffStat()	{

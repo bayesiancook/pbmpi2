@@ -119,12 +119,24 @@ void GeneralPathSuffStatMatrixPhyloProcess::UpdateSiteProfileSuffStat()	{
 		AddSiteProfileSuffStat(siterootstate,sitepaircount,sitewaitingtime,submap[j],blarray[j],missingmap[j]);
 	}
 
+	// check
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
 			if (siterootstate[i] == -1)	{
-				cerr << "error in GPSSMatrixPhyloProcess::UpdateSiteProfileSuffStat: site root state is -1\n";
-				cerr << "site : " << i << '\n';
-				exit(1);
+				if (! GetData()->AllMissingColumn(i))	{
+					cerr << "error in GPSSMatrixPhyloProcess::UpdateSiteProfileSuffStat: site root state is -1\n";
+					cerr << "site : " << i << '\n';
+					GetData()->PrintColumn(cerr,i);
+					exit(1);
+				}
+				else	{
+					if (sitepaircount[i].size() || sitewaitingtime[i].size())	{
+						cerr << "error in GPSSMatrixPhyloProcess:: all missing column has non empty suff stats\n";
+						cerr << "site : " << i << '\n';
+						GetData()->PrintColumn(cerr,i);
+						exit(1);
+					}
+				}
 			}
 		}
 	}

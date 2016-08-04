@@ -345,6 +345,13 @@ class SequenceAlignment	{
 		return statespace;
 	}
 
+	void PrintColumn(ostream& os, int site)	{
+		for (int j=0; j<Ntaxa; j++)	{
+			os << GetStateSpace()->GetState(Data[j][site]) << '\t';
+		}
+		os << '\n';
+	}
+
 	void Mask(SequenceAlignment* from)	{
 		for (int i=0; i<from->GetNsite(); i++)	{
 			for (int j=0; j<Ntaxa; j++)	{
@@ -408,6 +415,16 @@ class SequenceAlignment	{
 		int tax = 0;
 		while ((tax < GetNtaxa()) && ret)	{
 			ret &= (Data[tax][site] != unknown);
+			tax++;
+		}
+		return ret;
+	}
+	
+	bool AllMissingColumn(int site)	{
+		bool ret = true;
+		int tax = 0;
+		while ((tax < GetNtaxa()) && ret)	{
+			ret &= (Data[tax][site] == unknown);
 			tax++;
 		}
 		return ret;

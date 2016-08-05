@@ -80,11 +80,12 @@ double MultiGeneRASCATSBDPGammaPhyloProcess::Move(double tuning)	{
 
 	propchrono.Stop();
 
-	// for (int rep=0; rep<5; rep++)	{
+	for (int rep=0; rep<5; rep++)	{
 
 		GlobalCollapse();
 
 		MultiGeneBranchProcess::Move(tuning,10);
+		MultiGeneBranchProcess::Move(0.1*tuning,10);
 
 		GlobalUpdateParameters();
 
@@ -92,13 +93,14 @@ double MultiGeneRASCATSBDPGammaPhyloProcess::Move(double tuning)	{
 
 		GlobalUpdateParameters();
 
-		MultiGeneRateProcess::Move(0.3*tuning,50);
-		MultiGeneRateProcess::Move(0.03*tuning,50);
+		MultiGeneRateProcess::Move(tuning,10);
+		MultiGeneRateProcess::Move(0.3*tuning,10);
+		MultiGeneRateProcess::Move(0.03*tuning,10);
 
 		GlobalUpdateParameters();
 
 		GlobalUnfold();
-	// }
+	}
 
 	chronototal.Stop();
 

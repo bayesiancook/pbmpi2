@@ -457,6 +457,10 @@ void Tree::EraseInternalNodeName(Link * from)	{
 void Tree::RegisterWith(const TaxonSet* intaxset)	{
 	taxset = intaxset;
 	int tot = 0;
+	int bifurcbefore = 0;
+	if (GetRoot()->Next()->Next()->Next() == GetRoot())	{
+		bifurcbefore = 1;
+	}
 	if(!RegisterWith(taxset,GetRoot(),tot)){
 		cout << "There is no match between the tree and the sequences.\n";
 		cerr << "number of taxa in sequence: " << taxset->GetNtaxa () << '\n';
@@ -468,6 +472,37 @@ void Tree::RegisterWith(const TaxonSet* intaxset)	{
 		cerr << "error : non matching number of taxa : " << tot << '\t' << taxset->GetNtaxa() << '\n';
 		cerr << "some taxa in the dataset are not present in the tree\n";
 		exit(1);
+	}
+	if (! bifurcbefore)	{
+		if (GetRoot()->Next()->Next()->Next() == GetRoot())	{
+			Link* l1 = GetRoot()->Next();
+			Link* l2 = l1->Next();
+			Link* ol1 = l1->Out();
+			Link* ol2 = l2->Out();
+			Branch* b1 = l1->GetBranch();
+			Branch* b2 = l2->GetBranch();
+			Node* n = l1->GetNode();
+			delete l1;
+			delete l2;
+			delete b1;
+			delete n;
+			ol1->SetOut(ol2);
+			ol2->SetOut(ol1);
+			ol1->SetBranch(b2);
+			Link* ll1 = ol1;
+			if (ol1->isLeaf())	{
+				if (ol2->isLeaf())	{
+					cerr << "error: tree has only two taxa\n";
+					exit(1);
+				}
+				ll1 = ol2;
+			}
+			
+			Link* ll2 = ll1->Next();
+			ll1->SetNext(GetRoot());
+			GetRoot()->SetNext(ll2);
+			GetRoot()->SetNode(ll1->GetNode());
+		}
 	}
 	SetIndices();
 	CheckIndices(GetRoot());
@@ -481,7 +516,7 @@ bool Tree::RegisterWith(const TaxonSet* taxset, Link* from, int& tot)	{
 			tot++;
 		}
 		else {
-			cerr << "did not find :" << from->GetNode()->GetName() << '\n';
+			// cerr << "did not find :" << from->GetNode()->GetName() << '\n';
 		}
 		return(i != -1);
 	}

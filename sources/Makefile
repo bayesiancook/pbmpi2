@@ -45,7 +45,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= pb_mpi readpb_mpi ccpmcmc tracecomp bpcomp bpcomp2 diversity simucodonrev 
+ALL= mccpmcmc pb_mpi readpb_mpi ccpmcmc tracecomp bpcomp bpcomp2 diversity simucodonrev 
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean
@@ -69,6 +69,9 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 # Targets
+
+$(PROGSDIR)/mccpmcmc: MultiCCPMCMC.o $(OBJS)
+	$(CC) MultiCCPMCMC.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 $(PROGSDIR)/ccpmcmc: CCPMCMC.o $(OBJS)
 	$(CC) CCPMCMC.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@

@@ -124,6 +124,16 @@ class BpList	{
 		return tot;
 	}
 
+	bool isInformative(vector<int> bp)	{
+		int n = 0;
+		for (int i=0; i<GetNtaxa(); i++)	{
+			if (bp[i] == 1)	{
+				n++;
+			}
+		}
+		return ((n >= 2) && (n <= GetNtaxa() - 2));
+	}
+
 	double GetLogPriorBpMass(vector<int> bp)	{
 
 		int n = 0;
@@ -536,16 +546,20 @@ class UnrootedBPP	{
 	BpList* bplist;
 	double cutoff;
 	double beta;
+	int tpactivated;
 	const TaxonSet* taxset;
 	// map<const Link*, vector<double> > probmap;
 	map<pair<Link*,Link*>,double> logprobmap;
 	map<pair<Link*,Link*>,double> logprobmap2;
 	map<pair<Link*,Link*>,double> proposemap;
 
-	UnrootedBPP() {}
+	UnrootedBPP() {
+		tpactivated = 0;
+	}
 
 	UnrootedBPP(string filename, double incutoff, double inbeta)	{
 
+		tpactivated = 0;
 		cutoff = incutoff;
 		beta = inbeta;
 		ifstream is(filename.c_str());
@@ -588,7 +602,15 @@ class UnrootedBPP	{
 		bplist->RegisterWithTaxonSet(taxset);
 	}
 
-	double GetLogProb(Tree* tree);
+	void ActivateTP()	{
+		tpactivated = 1;
+	}
+
+	void InactivateTP()	{
+		tpactivated = 0;
+	}
+
+	virtual double GetLogProb(Tree* tree);
 
 	int FullGibbsSPR(Tree* tree);
 	double ProposeFullGibbsSPR(Tree* tree, Link*& subtree, Link*& subtreeup, Link*& fromdown, Link*& fromup, Link*& down, Link*& up);
@@ -605,7 +627,8 @@ class UnrootedBPP	{
 
 	double GetSummedLogProb(Tree* tree, const Link* subtree);
 
-	virtual vector<int> RecursiveGetLogProb(const Link* from, double& logprob);
+	vector<int> RecursiveGetLogProb(const Link* from, double& logprob);
+
 	virtual vector<int> RecursiveBackwardRegraft(const Link* from, const Link* subtree, vector<int> bpsubtree, double phisubtree, double& phi, double& mu);
 
 	/*
@@ -622,6 +645,7 @@ class UnrootedCCP : public UnrootedBPP	{
 
 	UnrootedCCP(string filename, double incutoff, double inbeta)	{
 
+		tpactivated = 1;
 		beta = inbeta;
 		cutoff = incutoff;
 		ifstream is(filename.c_str());
@@ -652,6 +676,8 @@ class UnrootedCCP : public UnrootedBPP	{
 	}
 
 	double GetFragilityScore(vector<int> tp);
+
+	double GetLogProb(Tree* tree);
 
 	vector<int> RecursiveGetLogProb(const Link* from, double& logprob);
 	vector<int> RecursiveBackwardRegraft(const Link* from, const Link* subtree, vector<int> bpsubtree, double phisubtree, double& phi, double& mu);

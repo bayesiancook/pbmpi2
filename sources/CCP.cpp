@@ -46,6 +46,19 @@ double UnrootedBPP::GetLogProb(Tree* tree)	{
 	return logprob;
 }
 
+
+double UnrootedCCP::GetLogProb(Tree* tree)	{
+
+	double logprob = 0;
+	if (tpactivated)	{
+		RecursiveGetLogProb(tree->GetRoot(),logprob);
+	}
+	else	{
+		UnrootedBPP::RecursiveGetLogProb(tree->GetRoot(),logprob);
+	}
+	return logprob;
+}
+
 vector<int> UnrootedBPP::RecursiveGetLogProb(const Link* from, double& logprob)	{
 
 	vector<int> ret(GetNtaxa(),0);

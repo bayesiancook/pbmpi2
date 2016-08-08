@@ -282,9 +282,9 @@ int main(int argc, char* argv[])	{
 
 	// make random tree based on taxon set
 	tree = new Tree(taxset);
-	ifstream is("ref.tre");
-	tree->ReadFromStream(is);
-	// tree->MakeRandomTree();
+	// ifstream is("ref.tre");
+	// tree->ReadFromStream(is);
+	tree->MakeRandomTree();
 	tree->RegisterWith(taxset);
 	tree->EraseInternalNodeName();
 
@@ -300,6 +300,10 @@ int main(int argc, char* argv[])	{
 	double ntry = 0;
 	ofstream os((name + ".trace").c_str());
 	ofstream tos((name + ".treelist").c_str());
+
+	int size = 0;
+
+	ccp->InactivateTP();
 
 	while (1)	{
 
@@ -324,6 +328,10 @@ int main(int argc, char* argv[])	{
 			ntry++;
 		}
 
+		size++;
+		if (size >= 100)	{
+			ccp->ActivateTP();
+		}
 		mcmcbp->Add(tree,1);
 
 		os << naccept/ntry << '\t' << ccp->GetLogProb(tree) << '\n';

@@ -318,6 +318,9 @@ class Model	{
 		else if (type == "ZIPCATGTRFINITE")	{
 			process = new ZipGeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess(is,myid,nprocs); 
 		}
+		else if (type == "AASUBSELSBDP")	{
+			process = new AASubSelRASCATSBDPGammaPhyloProcess(is,myid,nprocs);
+		}
 		else if (type == "AACODONMUTSELFINITE")	{
 			process = new AACodonMutSelFinitePhyloProcess(is,myid,nprocs);
 		}

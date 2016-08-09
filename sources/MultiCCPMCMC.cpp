@@ -156,6 +156,7 @@ int main(int argc, char* argv[])	{
 	string name = argv[5];
 	string ccptype = argv[6];
 	string treefile = argv[7];
+	int burnin = atoi(argv[8]);
 
 	ifstream is(ccplist.c_str());
 	is >> Ngene;
@@ -210,7 +211,7 @@ int main(int argc, char* argv[])	{
 		}
 
 		size++;
-		if (size > 100)	{
+		if (size > burnin)	{
 			for (int gene=0; gene<Ngene; gene++)	{
 				ccp[gene]->InactivateTP();
 			}

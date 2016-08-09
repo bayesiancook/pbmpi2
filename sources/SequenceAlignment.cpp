@@ -228,6 +228,87 @@ void SequenceAlignment::ToStream(ostream& os)	{
 	os << '\n';
 }
 
+void SequenceAlignment::PrintWithoutAllMissingTaxa(ostream& os)	{
+
+	int ntax = 0;
+	for (int i=0; i<Ntaxa; i++)	{
+		int missing = 1;
+		for (int j=0; j<Nsite; j++)	{
+			missing &= (Data[i][j] == unknown);
+		}
+		if (! missing)	{
+			ntax++;
+		}
+	}
+	// os << Ntaxa << '\t' << 876<< '\n';
+	os << ntax << '\t' << Nsite << '\n';
+	int max = 0;
+	for (int i=0; i<Ntaxa; i++)	{
+		int missing = 1;
+		for (int j=0; j<Nsite; j++)	{
+			missing &= (Data[i][j] == unknown);
+		}
+		if (! missing)	{
+		int l = taxset->GetTaxon(i).length();
+		if (max < l)	{
+			max = l;
+		}
+		/*
+		string s = taxset->GetTaxon(i);
+		unsigned int l = s.length();
+		unsigned int i = 0;
+		while ((i < l) && (s[i] != '_')) i++;
+		if (i == l)	{
+			cerr << "error in get name\n";
+			exit(1);
+		}
+		i++;
+		int m = l-i+1;
+		if (max < m)	{
+			max = m;
+		}
+		*/
+		}
+	}
+	
+	for (int i=0; i<Ntaxa; i++)	{
+		int missing = 1;
+		for (int j=0; j<Nsite; j++)	{
+			missing &= (Data[i][j] == unknown);
+		}
+		if (! missing)	{
+		os << taxset->GetTaxon(i);
+		/*
+		string s = taxset->GetTaxon(i);
+		unsigned int l = s.length();
+		unsigned int i = 0;
+		while ((i < l) && (s[i] != '_')) i++;
+		if (i == l)	{
+			cerr << "error in get name\n";
+			exit(1);
+		}
+		i++;
+		os << s.substr(i,l-i);
+		for (unsigned int j=0; j< 5 + max - l + i; j++)	{
+		*/
+		for (unsigned int j=0; j< 5 + max - taxset->GetTaxon(i).length(); j++)	{
+			os << ' ';
+		}
+		for (int j=0; j<Nsite; j++)	{
+		/*
+		for (int j=0; j<875; j++)	{
+			if (j == 266)	{
+				os << '-';
+			}
+		*/
+			os << statespace->GetState(GetState(i,j));
+		}
+		os << '\n';
+		}
+	}
+	os << '\n';
+}
+
 FileSequenceAlignment::FileSequenceAlignment(string filename)	{
 
 	SpeciesNames = 0;

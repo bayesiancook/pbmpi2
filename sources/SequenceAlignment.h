@@ -483,6 +483,8 @@ class SequenceAlignment	{
 	void ToStream(ostream& os);
 	void ToFasta(ostream& os);
 
+	void PrintWithoutAllMissingTaxa(ostream& os);
+
 	void SetTestData(int testnsite, int offset, int sitemin, int sitemax, int* tmp)	{
 
 		int index = 0;

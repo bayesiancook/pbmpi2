@@ -53,6 +53,11 @@ class MPIModule {
 		return nsite;
 	}
 
+	// in case of multi gene processes: perhaps could be reduced to GetNsite
+	virtual int GetTotalNsite()	{
+		return GetNsite();
+	}
+
 	// total number of active sites across processes
 	int GetNactiveSite();
 

@@ -33,7 +33,25 @@ void MultiGenePhyloProcess::New(int unfold)	{
 
 	if (! GetMyid())	{
 		GlobalBroadcastTree();
-		Sample();
+		if (topobf)	{
+			if (topobf == 1)	{
+				bffrac = 0;
+			}
+			else	{
+				bffrac = -bfnfrac;
+			}
+			SetTopoBF();
+		}
+
+		if (sis)	{
+			sisfrac = 0;
+			SetSIS();
+			PriorSample();
+		}
+		else	{
+			Sample();
+		}
+
 		GlobalUpdateParameters();
 		GlobalSample();
 		GlobalUnfold();
@@ -69,6 +87,15 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 
 	if (! GetMyid())	{
 		GlobalBroadcastTree();
+
+		if (sis)	{
+			SetSIS();
+		}
+
+		if (topobf)	{
+			SetTopoBF();
+		}
+
 		FromStream(is);
 		GlobalUpdateParameters();
 		GlobalUnfold();
@@ -618,6 +645,20 @@ void MultiGenePhyloProcess::SlaveGetFullLogLikelihood()	{
 	sum[1] = totlogl;
 	// sum[1] = logL;
 	MPI_Send(&totlogl,2,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
+void MultiGenePhyloProcess::SlaveComputeTopoBFLogLikelihoodRatio()	{
+
+	double frac[2];
+	MPI_Bcast(frac,2,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	double delta = 0;
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			double tmp = process[gene]->ComputeTopoBFLogLikelihoodRatio(frac[0],frac[1]);
+			delta += tmp;
+		}
+	}
+	MPI_Send(&delta,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
 void MultiGenePhyloProcess::SlaveReset(int n,bool v) {

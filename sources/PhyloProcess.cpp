@@ -96,10 +96,6 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 
 	SetTreeFromString(treestring);
 
-	if (topobf == 2)	{
-		BranchNcat = 2;
-	}
-
 	Create();
 
 	if (unfold)	{
@@ -331,7 +327,6 @@ void PhyloProcess::SetTopoBF()	{
 		cerr << "bffrac : " << bffrac << '\n';
 		*/
 	}
-	// cerr << taxon1 << '\t' << taxon2 << '\t' << taxon3 << '\t' << taxon4 << '\n';
 	GlobalBackupTree();
 	Link* down = GetTree()->GetLCA(taxon1,taxon2);
 
@@ -410,7 +405,7 @@ void PhyloProcess::IncSize()	{
 			}
 
 			ofstream os((name + ".bf").c_str(),ios_base::app);
-			os << bffrac << '\t' << deltalogp << '\t' << GetNsite() * GetAllocTotalLength(1) << '\n';
+			os << bffrac << '\t' << deltalogp << '\t' << GetTotalNsite() * GetAllocTotalLength(1) << '\n';
 			os.close();
 
 			int c = (size - bfburnin) % bfnrep;
@@ -1174,9 +1169,11 @@ void PhyloProcess::SlaveComputeTopoBFLogLikelihoodRatio()	{
 
 void PhyloProcess::GlobalSetBFFrac()	{
 
-	MESSAGE signal = SETBFFRAC;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(&bffrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	if (GetNprocs() > 1)	{
+		MESSAGE signal = SETBFFRAC;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(&bffrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
 }
 
 void PhyloProcess::SlaveSetBFFrac()	{
@@ -1186,9 +1183,11 @@ void PhyloProcess::SlaveSetBFFrac()	{
 
 void PhyloProcess::GlobalSetSISFrac()	{
 
-	MESSAGE signal = SETSISFRAC;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(&sisfrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	if (GetNprocs() > 1)	{
+		MESSAGE signal = SETSISFRAC;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(&sisfrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
 }
 
 void PhyloProcess::SlaveSetSISFrac()	{

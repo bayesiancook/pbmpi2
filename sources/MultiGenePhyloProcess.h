@@ -46,6 +46,10 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	void SlavePostNew();
 	void SlavePostOpen();
 
+	virtual int GetTotalNsite()	{
+		return GlobalNsite;
+	}
+
 	protected:
 
         virtual int SpecialSlaveExecute(MESSAGE);
@@ -118,6 +122,8 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 
 	void SlaveActivateZip();
 	void SlaveInactivateZip();
+
+	virtual void SlaveComputeTopoBFLogLikelihoodRatio();
 
 	void SlaveUpdateConditionalLikelihoods();
 	void SlaveComputeNodeLikelihood(int,int);

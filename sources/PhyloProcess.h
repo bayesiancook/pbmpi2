@@ -338,7 +338,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double SumLogLikelihood();
 
 	double GlobalComputeTopoBFLogLikelihoodRatio(double fracmin, double fracmax);
-	void SlaveComputeTopoBFLogLikelihoodRatio();
+	virtual void SlaveComputeTopoBFLogLikelihoodRatio();
 	double ComputeTopoBFLogLikelihoodRatio(double fracmin, double fracmax);
 
 	double ComputeBLLogLikelihoodRatio(double frac);

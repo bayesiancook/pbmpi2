@@ -30,6 +30,10 @@ class MultiGeneMPIModule	{
 	virtual void Create();
 	virtual void Delete();
 
+	virtual int GetTotalNsite()	{
+		return GlobalNsite;
+	}
+
 	protected:
 
 	PhyloProcess** process;

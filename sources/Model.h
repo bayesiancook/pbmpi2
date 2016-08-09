@@ -343,7 +343,7 @@ class Model	{
 
 		process->SetSize(size);
 		process->SetName(name);
-		if ((!myid) && (process->topobf))	{
+		if ((!myid) && ((process->topobf == 1) || (process->sis)))	{
 			ifstream mpis((name + ".mpi").c_str());
 			process->GlobalReadSiteRankFromStream(mpis);
 		}

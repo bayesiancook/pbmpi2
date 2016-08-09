@@ -1241,7 +1241,6 @@ void PhyloProcess::GlobalUpdateConditionalLikelihoods()	{
 		// SumLogLikelihood();
 		// ComputeNodeLikelihood(GetRoot(),0);
 	}
-
 }
 
 void PhyloProcess::SlaveUpdateConditionalLikelihoods()	{

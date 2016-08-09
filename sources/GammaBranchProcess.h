@@ -24,7 +24,10 @@ class GammaBranchProcess : public virtual BranchProcess	{
 
 	public:
 
-	GammaBranchProcess() : branchscaling(0), branchmean(0), branchrelvar(0), betaprior(0), hierarchicallengthprior(0) {}
+	GammaBranchProcess() : branchscaling(0), branchmean(0), branchrelvar(0), betaprior(0), hierarchicallengthprior(0) {
+		branchalpha = 1.0;
+		branchbeta = 10.0;
+	}
 	virtual ~GammaBranchProcess() {}
 
 	virtual void Create();

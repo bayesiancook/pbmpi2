@@ -144,7 +144,8 @@ double MultiGeneRateProcess::Move(double tuning, int nrep)	{
 	double ret = 0;
 	chronorate.Start();
 	if (globalalpha)	{
-		ret = MoveAlpha(tuning, nrep);
+		ret = DGamRateProcess::Move(tuning,nrep);
+		// ret = MoveAlpha(tuning, nrep);
 	}
 	else	{
 		GlobalCollectGeneAlphas();

@@ -111,6 +111,8 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	void SlaveUnfold();
 	void SlaveCollapse();
 
+	void SlaveCollectLogLikelihood();
+
 	void SlaveActivateSumOverRateAllocations();
 	void SlaveInactivateSumOverRateAllocations();
 

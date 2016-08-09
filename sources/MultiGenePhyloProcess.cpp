@@ -580,6 +580,18 @@ void MultiGenePhyloProcess::SlaveUpdateConditionalLikelihoods()	{
 	}
 }
 
+void MultiGenePhyloProcess::SlaveCollectLogLikelihood()	{
+	double totlogl = 0;
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			genelnL[gene] = process[gene]->GetLogLikelihood();
+			totlogl += genelnL[gene];
+		}
+	}
+	MPI_Send(&totlogl,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
+
 void MultiGenePhyloProcess::SlaveComputeNodeLikelihood(int fromindex,int auxindex) {
 	double totlogl = 0;
 	for (int gene=0; gene<Ngene; gene++)	{

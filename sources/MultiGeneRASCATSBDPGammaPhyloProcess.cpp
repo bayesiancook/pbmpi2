@@ -75,31 +75,42 @@ double MultiGeneRASCATSBDPGammaPhyloProcess::Move(double tuning)	{
 			cerr << "error in multigene multibl move topo\n";
 			exit(1);
 		}
+		// cerr << "move topo\n";
 		MoveTopo();
+		// cerr << "move topo ok\n";
 	}
 
 	propchrono.Stop();
 
 	for (int rep=0; rep<5; rep++)	{
 
+		// cerr << "collapse\n";
 		GlobalCollapse();
 
+		// cerr << "lengths\n";
 		MultiGeneBranchProcess::Move(tuning,10);
 		MultiGeneBranchProcess::Move(0.1*tuning,10);
 
+		// cerr << "update params\n";
 		GlobalUpdateParameters();
 
+		// cerr << "gene move\n";
 		GlobalGeneMove();
 
+		// cerr << "update params\n";
 		GlobalUpdateParameters();
 
+		// cerr << "rates\n";
 		MultiGeneRateProcess::Move(tuning,10);
 		MultiGeneRateProcess::Move(0.3*tuning,10);
 		MultiGeneRateProcess::Move(0.03*tuning,10);
 
+		// cerr << "update params\n";
 		GlobalUpdateParameters();
 
+		// cerr << "unfold\n";
 		GlobalUnfold();
+		// cerr << "ok\n";
 	}
 
 	chronototal.Stop();

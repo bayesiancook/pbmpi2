@@ -155,6 +155,10 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 		return 1.0;
 	}
 
+	double GetLogLikelihood()	{
+		return logL;
+	}
+
 	void Trace(ostream& os)	{
 
 		os << GetSize();

@@ -322,10 +322,6 @@ void PhyloProcess::SetTopoBF()	{
 			scale *= exp((bfnfrac - bffrac -1)*log(blfactor));
 		}
 		SetBranchScaling(scale,1);	
-		/*
-		cerr << "in set topo bf: scale is : " << scale << '\n';
-		cerr << "bffrac : " << bffrac << '\n';
-		*/
 	}
 	GlobalBackupTree();
 	Link* down = GetTree()->GetLCA(taxon1,taxon2);
@@ -489,6 +485,7 @@ void PhyloProcess::QuickUpdate()	{
 }
 
 
+/*
 double PhyloProcess::ComputeBLLogLikelihoodRatio(double bffrac)	{
 
 	double deltalogp = 0;
@@ -513,7 +510,7 @@ double PhyloProcess::ComputeBLLogLikelihoodRatio(double bffrac)	{
 	}
 	return deltalogp;
 }
-
+*/
 
 void PhyloProcess::ToStreamHeader(ostream& os)	{
 	os << version << '\n';

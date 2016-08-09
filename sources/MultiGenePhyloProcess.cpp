@@ -496,7 +496,27 @@ int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{
 	}
 }
 
-// should be defined at the level of the non specialized PhyloProcess class
+
+void MultiGenePhyloProcess::SlaveSetBFFrac()	{
+
+	MPI_Bcast(&bffrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->bffrac = bffrac;
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveSetSISFrac()	{
+
+	MPI_Bcast(&sisfrac,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->sisfrac = sisfrac;
+		}
+	}
+}
+
 void MultiGenePhyloProcess::GlobalSample()	{
 	assert(myid == 0);
 	MESSAGE signal = SAMPLE;

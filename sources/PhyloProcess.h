@@ -341,13 +341,13 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void SlaveComputeTopoBFLogLikelihoodRatio();
 	double ComputeTopoBFLogLikelihoodRatio(double fracmin, double fracmax);
 
-	double ComputeBLLogLikelihoodRatio(double frac);
+	// double ComputeBLLogLikelihoodRatio(double frac);
 
 	void GlobalSetBFFrac();
-	void SlaveSetBFFrac();
+	virtual void SlaveSetBFFrac();
 
 	void GlobalSetSISFrac();
-	void SlaveSetSISFrac();
+	virtual void SlaveSetSISFrac();
 
 	// Feb 1st, 2016
 	// special device set up for calculating, on the fly, the likelihood summed over profile allocations
@@ -473,8 +473,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void FastReadSIS(string name, int burnin, int every, int until, double prop);
 	void FastReadTopoBF(string name, int burnin, int every, int until, double prop);
 	void FastReadTopoBL(string name, int burnin, int every, int until, double prop);
+	/*
 	void ReadTopoBF(string name, int burnin, int every, int until, double prop);
 	void ReadTopoBL(string name, int burnin, int every, int until, double prop);
+	*/
 	virtual void ReadTopoBF(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nfrac, int nstep);
 	virtual void ReadTopoBL(string name, int burnin, int every, int until, string tax1, string tax2, string tax3, string tax4, int nfrac, int nstep);
 

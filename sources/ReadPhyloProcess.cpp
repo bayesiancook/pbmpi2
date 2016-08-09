@@ -514,162 +514,6 @@ void PhyloProcess::FastReadTopoBL(string name, int burnin, int every, int until,
 	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
 }
 
-void PhyloProcess::ReadTopoBL(string name, int burnin, int every, int until, double prop)	{
-
-	// bug: midway, when the tree is changed: we need to somehow backup the sister group when in the initial position
-	bffrac = -bfnfrac;
-	SetBranchScaling(0.1,1);
-	ifstream bis((name + ".bf").c_str());
-	ifstream is((name + ".chain").c_str());
-	if (!is)	{
-		cerr << "error: no .chain file found\n";
-		exit(1);
-	}
-
-	int b = (1-prop) * bfnrep;
-	int n = bfnrep - b;
-
-	double totvarlog = 0;
-	double totvarlog2 = 0;
-	double logbf = 0;
-	double logbf2 = 0;
-
-	cerr << "burnin\n";
-	for (int i=0; i<bfburnin; i++)	{
-		cerr << '.';
-		FromStream(is);
-	}
-	cerr << '\n';
-
-	for (int frac=-bfnfrac; frac<bfnfrac; frac++)	{
-
-		double delta[n];
-		double delta2[n];
-
-		for (int i=0; i<b; i++)	{
-			cerr << '.';
-			int tmp1;
-			double tmp2, tmp3;
-			bis >> tmp1 >> tmp2 >> tmp3;
-			if (tmp1 != frac)	{
-				cerr << "error in topo bl: read " << tmp1 << " instead of " << frac << '\n';
-				exit(1);
-			}
-			FromStream(is);
-		}
-		cerr << '\n';
-
-		double max = 0;
-		double max2 = 0;
-		for (int i=0; i<n; i++)	{
-			cerr << '.';
-			int tmp1;
-			double tmp2, tmp3;
-			bis >> tmp1 >> tmp2 >> tmp3;
-			if (tmp1 != frac)	{
-				cerr << "error in topo bl: read " << tmp1 << " instead of " << frac << '\n';
-				exit(1);
-			}
-			delta[i] = tmp2;
-			if ((!i) || (max < tmp2))	{
-				max = tmp2;
-			}
-			FromStream(is);
-			QuickUpdate();
-			// SetTopoBF();
-			SetBranchesToCollapse(blfile);
-			// QuickUpdate();
-			double deltalogp = ComputeBLLogLikelihoodRatio(bffrac);
-			delta2[i] = deltalogp;
-			if ((!i) || (max2 < deltalogp))	{
-				max2 = deltalogp;
-			}
-			cerr << tmp1 << '\t' << GetBranchScaling(1) << '\t' << delta[i] << '\t' << delta2[i] << '\t' << tmp3 << '\t' << GetAllocTotalLength(1) * GetNsite() << '\t' << GetAllocTotalLength(1) << '\n';
-		}
-		cerr << '\n';
-
-		double meanlog = 0;
-		double varlog = 0;
-		for (int i=0; i<n; i++)	{
-			meanlog += delta[i];
-			varlog += delta[i]*delta[i];
-		}
-		meanlog /= n;
-		varlog /= n;
-		varlog -= meanlog*meanlog;
-		totvarlog += varlog;
-
-		double meanlog2 = 0;
-		double varlog2 = 0;
-		for (int i=0; i<n; i++)	{
-			meanlog2 += delta2[i];
-			varlog2 += delta2[i]*delta2[i];
-		}
-		meanlog2 /= n;
-		varlog2 /= n;
-		varlog2 -= meanlog2*meanlog2;
-		totvarlog2 += varlog2;
-
-		double tot = 0;
-		for (int i=0; i<n; i++)	{
-			tot += exp(delta[i] - max);
-		}
-		tot /= n;
-		double logscore = log(tot) + max;
-		logbf += logscore;
-
-		double tot2 = 0;
-		for (int i=0; i<n; i++)	{
-			tot2 += exp(delta2[i] - max2);
-		}
-		tot2 /= n;
-		double logscore2 = log(tot2) + max2;
-		logbf2 += logscore2;
-
-		if (frac < -1)	{
-			RescaleBranchPrior(blfactor,1);
-		}
-		else if (frac == -1)	{
-			/*
-			cerr << "global swap tree\n";
-			GlobalSwapTree();
-			cerr << "global update cond\n";
-			GlobalUpdateConditionalLikelihoods();
-			cerr << "frac == 1 ok\n";
-			*/
-		}
-		else if (frac > 0)	{
-			RescaleBranchPrior(1.0/blfactor,1);
-		}
-	}
-
-	cout << '\n';
-	cout << "log bf :  " << logbf << '\n';
-	cout << "total log variance: " << totvarlog << '\n';
-	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
-	cout << "per site : " << totvarlog / GetNsite() << '\n';
-	cout << '\n';
-	cout << "log bf2 : " << logbf2 << '\n';
-	cout << "total log variance: " << totvarlog2 << '\n';
-	cout << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
-	cout << "per site : " << totvarlog2 / GetNsite() << '\n';
-	cout << '\n';
-
-	ofstream os((name + ".logbf").c_str());
-	os << '\n';
-	os << "log bf :  " << logbf << '\n';
-	os << "total log variance: " << totvarlog << '\n';
-	os << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
-	os << "per site : " << totvarlog / GetNsite() << '\n';
-	os << '\n';
-	os << "summing over components:\n";
-	os << "log bf2 : " << logbf2 << '\n';
-	os << "total log variance: " << totvarlog2 << '\n';
-	os << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
-	os << "per site : " << totvarlog2 / GetNsite() << '\n';
-
-}
-
 void PhyloProcess::FastReadTopoBF(string name, int burnin, int every, int until, double prop)	{
 
 	ifstream is((name + ".bf").c_str());
@@ -736,150 +580,6 @@ void PhyloProcess::FastReadTopoBF(string name, int burnin, int every, int until,
 	cout << "total log variance: " << totvarlog << '\n';
 	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
 	cout << "per site : " << totvarlog / GetNsite() << '\n';
-}
-
-void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, double prop)	{
-
-	ifstream bis((name + ".bf").c_str());
-	ifstream is((name + ".chain").c_str());
-	if (!is)	{
-		cerr << "error: no .chain file found\n";
-		exit(1);
-	}
-
-	int b = (1-prop) * bfnrep;
-	int n = bfnrep - b;
-
-	double totvarlog = 0;
-	double totvarlog2 = 0;
-	double logbf = 0;
-	double logbf2 = 0;
-
-	cerr << "burnin\n";
-	for (int i=0; i<bfburnin; i++)	{
-		cerr << '.';
-		FromStream(is);
-	}
-	cerr << '\n';
-
-	for (int frac=0; frac<bfnfrac; frac++)	{
-
-		double f = ((double) frac) / bfnfrac;
-		cerr << f << '\n';
-		bffrac = f;
-
-
-		double delta[n];
-		double delta2[n];
-
-		for (int i=0; i<b; i++)	{
-			cerr << '.';
-			double tmp1, tmp2;
-			bis >> tmp1 >> tmp2;
-			if (tmp1 != f)	{
-				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
-				exit(1);
-			}
-			FromStream(is);
-		}
-		cerr << '\n';
-
-		double max = 0;
-		double max2 = 0;
-		for (int i=0; i<n; i++)	{
-			cerr << '.';
-			double tmp1, tmp2;
-			bis >> tmp1 >> tmp2;
-			if (tmp1 != f)	{
-				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
-				exit(1);
-			}
-			delta[i] = tmp2;
-			if ((!i) || (max < tmp2))	{
-				max = tmp2;
-			}
-			FromStream(is);
-			QuickUpdate();
-			double df = 1.0 / bfnfrac;
-			double deltalogp = GlobalComputeTopoBFLogLikelihoodRatio(bffrac,bffrac+df);
-			/*
-			if (fabs(deltalogp - tmp2) > 1e-4)	{
-				cerr << "error: non matching bf score\n";
-				cerr << f << '\t' << tmp2 << '\t' << deltalogp << '\t' << tmp2 - deltalogp << '\n';
-				exit(1);
-			}
-			*/
-			delta2[i] = deltalogp;
-			if ((!i) || (max2 < deltalogp))	{
-				max2 = deltalogp;
-			}
-		}
-		cerr << '\n';
-
-		double meanlog = 0;
-		double varlog = 0;
-		for (int i=0; i<n; i++)	{
-			meanlog += delta[i];
-			varlog += delta[i]*delta[i];
-		}
-		meanlog /= n;
-		varlog /= n;
-		varlog -= meanlog*meanlog;
-		totvarlog += varlog;
-
-		double meanlog2 = 0;
-		double varlog2 = 0;
-		for (int i=0; i<n; i++)	{
-			meanlog2 += delta2[i];
-			varlog2 += delta2[i]*delta2[i];
-		}
-		meanlog2 /= n;
-		varlog2 /= n;
-		varlog2 -= meanlog2*meanlog2;
-		totvarlog2 += varlog2;
-
-		double tot = 0;
-		for (int i=0; i<n; i++)	{
-			tot += exp(delta[i] - max);
-		}
-		tot /= n;
-		double logscore = log(tot) + max;
-		logbf += logscore;
-
-		double tot2 = 0;
-		for (int i=0; i<n; i++)	{
-			tot2 += exp(delta2[i] - max2);
-		}
-		tot2 /= n;
-		double logscore2 = log(tot2) + max2;
-		logbf2 += logscore2;
-	}
-
-	cout << '\n';
-	cout << "log bf :  " << logbf << '\n';
-	cout << "total log variance: " << totvarlog << '\n';
-	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
-	cout << "per site : " << totvarlog / GetNsite() << '\n';
-	cout << '\n';
-	cout << "log bf2 : " << logbf2 << '\n';
-	cout << "total log variance: " << totvarlog2 << '\n';
-	cout << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
-	cout << "per site : " << totvarlog2 / GetNsite() << '\n';
-	cout << '\n';
-
-	ofstream os((name + ".logbf").c_str());
-	os << '\n';
-	os << "log bf :  " << logbf << '\n';
-	os << "total log variance: " << totvarlog << '\n';
-	os << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
-	os << "per site : " << totvarlog / GetNsite() << '\n';
-	os << '\n';
-	os << "summing over components:\n";
-	os << "log bf2 : " << logbf2 << '\n';
-	os << "total log variance: " << totvarlog2 << '\n';
-	os << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
-	os << "per site : " << totvarlog2 / GetNsite() << '\n';
-
 }
 
 void PhyloProcess::ReadTopoBL(string name, int burnin, int every, int until, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int nfrac, int nstep)	{
@@ -1134,6 +834,7 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 }
 
 /*
+
 void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int nfrac, int nstep)	{
 
 	SetSpecialSPR(intaxon1,intaxon2,intaxon3,intaxon4);
@@ -1245,6 +946,296 @@ void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, str
 	os << "dlogp: " << meandeltalogp << '\t' << vardeltalogp << '\n';
 	os << '\n';
 	os.close();
+}
+void PhyloProcess::ReadTopoBL(string name, int burnin, int every, int until, double prop)	{
+
+	// bug: midway, when the tree is changed: we need to somehow backup the sister group when in the initial position
+	bffrac = -bfnfrac;
+	SetBranchScaling(0.1,1);
+	ifstream bis((name + ".bf").c_str());
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	int b = (1-prop) * bfnrep;
+	int n = bfnrep - b;
+
+	double totvarlog = 0;
+	double totvarlog2 = 0;
+	double logbf = 0;
+	double logbf2 = 0;
+
+	cerr << "burnin\n";
+	for (int i=0; i<bfburnin; i++)	{
+		cerr << '.';
+		FromStream(is);
+	}
+	cerr << '\n';
+
+	for (int frac=-bfnfrac; frac<bfnfrac; frac++)	{
+
+		double delta[n];
+		double delta2[n];
+
+		for (int i=0; i<b; i++)	{
+			cerr << '.';
+			int tmp1;
+			double tmp2, tmp3;
+			bis >> tmp1 >> tmp2 >> tmp3;
+			if (tmp1 != frac)	{
+				cerr << "error in topo bl: read " << tmp1 << " instead of " << frac << '\n';
+				exit(1);
+			}
+			FromStream(is);
+		}
+		cerr << '\n';
+
+		double max = 0;
+		double max2 = 0;
+		for (int i=0; i<n; i++)	{
+			cerr << '.';
+			int tmp1;
+			double tmp2, tmp3;
+			bis >> tmp1 >> tmp2 >> tmp3;
+			if (tmp1 != frac)	{
+				cerr << "error in topo bl: read " << tmp1 << " instead of " << frac << '\n';
+				exit(1);
+			}
+			delta[i] = tmp2;
+			if ((!i) || (max < tmp2))	{
+				max = tmp2;
+			}
+			FromStream(is);
+			QuickUpdate();
+			// SetTopoBF();
+			SetBranchesToCollapse(blfile);
+			// QuickUpdate();
+			double deltalogp = ComputeBLLogLikelihoodRatio(bffrac);
+			delta2[i] = deltalogp;
+			if ((!i) || (max2 < deltalogp))	{
+				max2 = deltalogp;
+			}
+			cerr << tmp1 << '\t' << GetBranchScaling(1) << '\t' << delta[i] << '\t' << delta2[i] << '\t' << tmp3 << '\t' << GetAllocTotalLength(1) * GetNsite() << '\t' << GetAllocTotalLength(1) << '\n';
+		}
+		cerr << '\n';
+
+		double meanlog = 0;
+		double varlog = 0;
+		for (int i=0; i<n; i++)	{
+			meanlog += delta[i];
+			varlog += delta[i]*delta[i];
+		}
+		meanlog /= n;
+		varlog /= n;
+		varlog -= meanlog*meanlog;
+		totvarlog += varlog;
+
+		double meanlog2 = 0;
+		double varlog2 = 0;
+		for (int i=0; i<n; i++)	{
+			meanlog2 += delta2[i];
+			varlog2 += delta2[i]*delta2[i];
+		}
+		meanlog2 /= n;
+		varlog2 /= n;
+		varlog2 -= meanlog2*meanlog2;
+		totvarlog2 += varlog2;
+
+		double tot = 0;
+		for (int i=0; i<n; i++)	{
+			tot += exp(delta[i] - max);
+		}
+		tot /= n;
+		double logscore = log(tot) + max;
+		logbf += logscore;
+
+		double tot2 = 0;
+		for (int i=0; i<n; i++)	{
+			tot2 += exp(delta2[i] - max2);
+		}
+		tot2 /= n;
+		double logscore2 = log(tot2) + max2;
+		logbf2 += logscore2;
+
+		if (frac < -1)	{
+			RescaleBranchPrior(blfactor,1);
+		}
+		else if (frac == -1)	{
+			// cerr << "global swap tree\n";
+			// GlobalSwapTree();
+			// cerr << "global update cond\n";
+			// GlobalUpdateConditionalLikelihoods();
+			// cerr << "frac == 1 ok\n";
+		}
+		else if (frac > 0)	{
+			RescaleBranchPrior(1.0/blfactor,1);
+		}
+	}
+
+	cout << '\n';
+	cout << "log bf :  " << logbf << '\n';
+	cout << "total log variance: " << totvarlog << '\n';
+	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+	cout << "per site : " << totvarlog / GetNsite() << '\n';
+	cout << '\n';
+	cout << "log bf2 : " << logbf2 << '\n';
+	cout << "total log variance: " << totvarlog2 << '\n';
+	cout << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
+	cout << "per site : " << totvarlog2 / GetNsite() << '\n';
+	cout << '\n';
+
+	ofstream os((name + ".logbf").c_str());
+	os << '\n';
+	os << "log bf :  " << logbf << '\n';
+	os << "total log variance: " << totvarlog << '\n';
+	os << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+	os << "per site : " << totvarlog / GetNsite() << '\n';
+	os << '\n';
+	os << "summing over components:\n";
+	os << "log bf2 : " << logbf2 << '\n';
+	os << "total log variance: " << totvarlog2 << '\n';
+	os << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
+	os << "per site : " << totvarlog2 / GetNsite() << '\n';
+
+}
+
+void PhyloProcess::ReadTopoBF(string name, int burnin, int every, int until, double prop)	{
+
+	ifstream bis((name + ".bf").c_str());
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	int b = (1-prop) * bfnrep;
+	int n = bfnrep - b;
+
+	double totvarlog = 0;
+	double totvarlog2 = 0;
+	double logbf = 0;
+	double logbf2 = 0;
+
+	cerr << "burnin\n";
+	for (int i=0; i<bfburnin; i++)	{
+		cerr << '.';
+		FromStream(is);
+	}
+	cerr << '\n';
+
+	for (int frac=0; frac<bfnfrac; frac++)	{
+
+		double f = ((double) frac) / bfnfrac;
+		cerr << f << '\n';
+		bffrac = f;
+
+
+		double delta[n];
+		double delta2[n];
+
+		for (int i=0; i<b; i++)	{
+			cerr << '.';
+			double tmp1, tmp2;
+			bis >> tmp1 >> tmp2;
+			if (tmp1 != f)	{
+				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
+				exit(1);
+			}
+			FromStream(is);
+		}
+		cerr << '\n';
+
+		double max = 0;
+		double max2 = 0;
+		for (int i=0; i<n; i++)	{
+			cerr << '.';
+			double tmp1, tmp2;
+			bis >> tmp1 >> tmp2;
+			if (tmp1 != f)	{
+				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
+				exit(1);
+			}
+			delta[i] = tmp2;
+			if ((!i) || (max < tmp2))	{
+				max = tmp2;
+			}
+			FromStream(is);
+			QuickUpdate();
+			double df = 1.0 / bfnfrac;
+			double deltalogp = GlobalComputeTopoBFLogLikelihoodRatio(bffrac,bffrac+df);
+			delta2[i] = deltalogp;
+			if ((!i) || (max2 < deltalogp))	{
+				max2 = deltalogp;
+			}
+		}
+		cerr << '\n';
+
+		double meanlog = 0;
+		double varlog = 0;
+		for (int i=0; i<n; i++)	{
+			meanlog += delta[i];
+			varlog += delta[i]*delta[i];
+		}
+		meanlog /= n;
+		varlog /= n;
+		varlog -= meanlog*meanlog;
+		totvarlog += varlog;
+
+		double meanlog2 = 0;
+		double varlog2 = 0;
+		for (int i=0; i<n; i++)	{
+			meanlog2 += delta2[i];
+			varlog2 += delta2[i]*delta2[i];
+		}
+		meanlog2 /= n;
+		varlog2 /= n;
+		varlog2 -= meanlog2*meanlog2;
+		totvarlog2 += varlog2;
+
+		double tot = 0;
+		for (int i=0; i<n; i++)	{
+			tot += exp(delta[i] - max);
+		}
+		tot /= n;
+		double logscore = log(tot) + max;
+		logbf += logscore;
+
+		double tot2 = 0;
+		for (int i=0; i<n; i++)	{
+			tot2 += exp(delta2[i] - max2);
+		}
+		tot2 /= n;
+		double logscore2 = log(tot2) + max2;
+		logbf2 += logscore2;
+	}
+
+	cout << '\n';
+	cout << "log bf :  " << logbf << '\n';
+	cout << "total log variance: " << totvarlog << '\n';
+	cout << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+	cout << "per site : " << totvarlog / GetNsite() << '\n';
+	cout << '\n';
+	cout << "log bf2 : " << logbf2 << '\n';
+	cout << "total log variance: " << totvarlog2 << '\n';
+	cout << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
+	cout << "per site : " << totvarlog2 / GetNsite() << '\n';
+	cout << '\n';
+
+	ofstream os((name + ".logbf").c_str());
+	os << '\n';
+	os << "log bf :  " << logbf << '\n';
+	os << "total log variance: " << totvarlog << '\n';
+	os << "reduced by summing over " << n << " replicates: " << totvarlog / n << '\n';
+	os << "per site : " << totvarlog / GetNsite() << '\n';
+	os << '\n';
+	os << "summing over components:\n";
+	os << "log bf2 : " << logbf2 << '\n';
+	os << "total log variance: " << totvarlog2 << '\n';
+	os << "reduced by summing over " << n << " replicates: " << totvarlog2 / n << '\n';
+	os << "per site : " << totvarlog2 / GetNsite() << '\n';
+
 }
 */
 

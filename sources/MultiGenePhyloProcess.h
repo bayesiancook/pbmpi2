@@ -112,6 +112,9 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 
 	void SlaveBroadcastTree();
 
+	void SlaveSetBFFrac();
+	void SlaveSetSISFrac();
+
 	void SlaveUnfold();
 	void SlaveCollapse();
 

@@ -128,13 +128,11 @@ void MPIModule::GlobalReadSiteRankFromStream(istream& is)	{
 	for (int i=0; i<nsite; i++)	{
 		is >> globalrank[i];
 	}
-	/*
 	if (GetNprocs() > 1)	{
 		MESSAGE signal = RESHUFFLE;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 		MPI_Bcast(globalrank,nsite,MPI_INT,0,MPI_COMM_WORLD);
 	}
-	*/
 }
 
 int MPIModule::GetNactiveSite()	{

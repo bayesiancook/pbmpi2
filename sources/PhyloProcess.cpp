@@ -47,16 +47,12 @@ void PhyloProcess::New(int unfold)	{
 
 	if (! GetMyid())	{
 
-		if (topobf)	{
-			if (topobf == 1)	{
-				bffrac = 0;
-			}
-			else	{
-				bffrac = -bfnfrac;
-			}
-			// SetTopoBF();
+		if (topobf == 1)	{
+			bffrac = 0;
 		}
-
+		if (topobf == 2)	{
+			bffrac = -bfnfrac;
+		}
 		if (sis)	{
 			sisfrac = 0;
 			SetSIS();
@@ -77,12 +73,6 @@ void PhyloProcess::New(int unfold)	{
 	if (BPP)	{
 		BPP->RegisterWithTaxonSet(GetData()->GetTaxonSet());
 	}
-	/*
-	if (topobf || sis)	{
-		ofstream os((name + ".mpi").c_str());
-		GlobalWriteSiteRankToStream(os);
-	}
-	*/
 }
 
 //-------------------------------------------------------------------------
@@ -95,20 +85,10 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 	SetProfileDim();
 	CreateMPI(GetData()->GetNsite());
 
-	/*
-	if (topobf)	{
-		SetTree(treefile);
-	}
-	else	{
-		SetTreeFromString(treestring);
-	}
-	*/
-
 	SetTreeFromString(treestring);
 
 	Create();
 
-	GlobalReadSiteRankFromStream(is);
 
 	if (unfold)	{
 
@@ -120,31 +100,11 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 				SetSIS();
 			}
 
-			/*
-			if (topobf)	{
-				delete tree;
-				tree = 0;
-				SetTree(treefile);
-				SetTopoBF();
-			}
-			*/
-
 			if (topobf)	{
 				GlobalSetTopoBF();
 			}
+			GlobalReadSiteRankFromStream(is);
 			GlobalUnfold();
-			cerr << "in open: " << GetLogLikelihood() << '\n';
-			GlobalUpdateConditionalLikelihoods();
-			cerr << "after update: " << GetLogLikelihood() << '\n';
-		}
-		else	{
-			/*
-			if (topobf)	{
-				delete tree;
-				tree = 0;
-				SetTree(treefile);
-			}
-			*/
 		}
 	}
 }
@@ -330,19 +290,12 @@ void PhyloProcess::SetBranchesToCollapse(string blfile)	{
 			exit(1);
 		}
 		Link* up = GetTree()->GetAncestor(down);
-		cerr << "collapsing:\n";
-		GetTree()->ToStream(cerr,up);
-		cerr << '\n';
 		SetBranchAlloc(up->GetBranch()->GetIndex(),1);
 	}
 }
 
 void PhyloProcess::GlobalSetTopoBF()	{
 
-	cerr << "set topo bf\n";
-	if (topobf == 2)	{
-		GlobalResetTree();
-	}
 	GlobalSetBFFrac();
 	if (topobf == 2)	{
 		double scale = 0.1;
@@ -357,7 +310,6 @@ void PhyloProcess::GlobalSetTopoBF()	{
 		}
 		SetBranchScaling(scale,1);	
 	}
-	// GetTree()->ToStream(cerr);
 	GlobalBackupTree();
 	Link* down = GetTree()->GetLCA(taxon1,taxon2);
 
@@ -378,14 +330,10 @@ void PhyloProcess::GlobalSetTopoBF()	{
 	}
 	Link* toup = GetTree()->GetAncestor(todown);
 	GlobalAttach(down,up,todown,toup);
-	// GetTree()->ToStream(cerr);
 	GlobalSwapTree();
-	// GetTree()->ToStream(cerr);
 
-	if (topobf == 2)	{
-		if (bffrac >= 0)	{
-			GlobalSwapTree();
-		}
+	if ((topobf == 2) && (bffrac >= 0))	{
+		GlobalSwapTree();
 	}
 }
 
@@ -581,8 +529,14 @@ void PhyloProcess::ToStreamHeader(ostream& os)	{
 	os << fasttopo << '\t' << fasttopofracmin << '\t' << fasttoponstep << '\n';
 	os << fastcondrate << '\n';
 	os << sumovercomponents << '\n';
+	if ((topobf == 2) && (bffrac >= 0))	{
+		GlobalSwapTree();
+	}
 	SetNamesFromLengths();
 	GetTree()->ToStream(os);
+	if ((topobf == 2) && (bffrac >= 0))	{
+		GlobalSwapTree();
+	}
 	os << topobf << '\t' << bfburnin << '\t' << bfnfrac << '\t' << bfnrep << '\t' << bffrac << '\n';
 	os << treefile << '\n';
 	if (topobf == 2)	{
@@ -2118,6 +2072,7 @@ void PhyloProcess::SlaveRoot(int n) {
 	GetTree()->RootAt(newroot);
 }
 
+/*
 void PhyloProcess::GlobalResetTree()	{
 	
 	if (GetNprocs() > 1)	{
@@ -2142,6 +2097,7 @@ void PhyloProcess::ResetTree()	{
 	tree = new Tree(treefile);
 	tree->RegisterWith(GetData()->GetTaxonSet());
 }
+*/
 
 void PhyloProcess::GlobalBackupTree()	{
 
@@ -2293,9 +2249,11 @@ void PhyloProcess::SlaveExecute(MESSAGE signal)	{
 		MPI_Bcast(&alpha,1,Propagate_arg,0,MPI_COMM_WORLD);
 		SlaveProposeMove(alpha.condalloc,alpha.time);
 		break;
+	/*
 	case RESETTREE:
 		SlaveResetTree();
 		break;
+	*/
 	case BACKUPTREE:
 		SlaveBackupTree();
 		break;

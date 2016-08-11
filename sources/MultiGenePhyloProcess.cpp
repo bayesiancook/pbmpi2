@@ -79,23 +79,15 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 	AllocateAlignments(datafile);
 	SetProfileDim();
 
-	/*
-	if (topobf)	{
-		tree = new Tree(treefile);
+	tree = new Tree(GetData()->GetTaxonSet());
+	if (GetMyid() == 0)	{
+		istringstream s(treestring);
+		tree->ReadFromStream(s);
+		GlobalBroadcastTree();
 	}
 	else	{
-	*/
-		tree = new Tree(GetData()->GetTaxonSet());
-		if (GetMyid() == 0)	{
-			istringstream s(treestring);
-			tree->ReadFromStream(s);
-			GlobalBroadcastTree();
-		}
-		else	{
-			PhyloProcess::SlaveBroadcastTree();
-		}
-	// }
-	tree->RegisterWith(GetData()->GetTaxonSet());
+		PhyloProcess::SlaveBroadcastTree();
+	}
 
 	Create();
 
@@ -110,33 +102,18 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 			SetSIS();
 		}
 
-		if (topobf)	{
-			/*
-			delete tree;
-			tree = 0;
-			cerr << "inittree: " << inittree << '\n';
-			exit(1);
-			tree = new Tree(inittree);
-			GlobalBroadcastTree();
-			*/
-			// SetTopoBF();
-		}
-
 		GlobalUpdateParameters();
 
 		if (topobf)	{
 			GlobalSetTopoBF();
 		}
+		GlobalReadSiteRankFromStream(is);
 		GlobalUnfold();
 	}
 	else	{
 		SlavePostOpen();
 		SlaveBroadcastTree();
 		MPI_Barrier(MPI_COMM_WORLD);
-		if (topobf)	{
-			// SlaveBroadcastTree();
-			// PhyloProcess::SlaveBroadcastTree();
-		}
 	}
 
 	if (BPP)	{
@@ -322,7 +299,6 @@ void MultiGenePhyloProcess::AllocateAlignments(string datafile)	{
 	delete[] geneweight;
 }
 
-/*
 void MultiGenePhyloProcess::GlobalWriteSiteRankToStream(ostream& os)	{
 
 	MESSAGE signal = WRITESITERANK;
@@ -342,8 +318,8 @@ void MultiGenePhyloProcess::GlobalWriteSiteRankToStream(ostream& os)	{
 		}
 	}
 }
-*/
 
+/*
 void MultiGenePhyloProcess::GlobalWriteSiteRankToStream(ostream& os)	{
 
 	MESSAGE signal = WRITESITERANK;
@@ -360,6 +336,7 @@ void MultiGenePhyloProcess::GlobalWriteSiteRankToStream(ostream& os)	{
 		delete[] rank;
 	}
 }
+*/
 
 void MultiGenePhyloProcess::SlaveWriteSiteRankToStream()	{
 
@@ -370,7 +347,6 @@ void MultiGenePhyloProcess::SlaveWriteSiteRankToStream()	{
 	}
 }
 
-/*
 void MultiGenePhyloProcess::GlobalReadSiteRankFromStream(istream& is)	{
 
 	cerr << "read site ranks\n";
@@ -390,8 +366,8 @@ void MultiGenePhyloProcess::GlobalReadSiteRankFromStream(istream& is)	{
 		}
 	}
 }
-*/
 
+/*
 void MultiGenePhyloProcess::GlobalReadSiteRankFromStream(istream& is)	{
 
 	if (myid)	{
@@ -410,20 +386,16 @@ void MultiGenePhyloProcess::GlobalReadSiteRankFromStream(istream& is)	{
 		}
 	}
 }
+*/
 
 void MultiGenePhyloProcess::SlaveReadSiteRankFromStream()	{
 
-	cerr << "error: in MultiGenePhyloProcess::SlaveReadSiteRankFromStream\n";
-	exit(1);
-
-	/*
 	MPI_Status stat;
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			MPI_Recv(process[gene]->globalrank,genesize[gene],MPI_INT,0,TAG1,MPI_COMM_WORLD,&stat);
 		}
 	}
-	*/
 }
 
 
@@ -645,6 +617,7 @@ int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{
 }
 
 
+/*
 void MultiGenePhyloProcess::SlaveResetTree()	{
 
 	for (int gene=0; gene<Ngene; gene++)	{
@@ -653,6 +626,7 @@ void MultiGenePhyloProcess::SlaveResetTree()	{
 		}
 	}
 }
+*/
 
 void MultiGenePhyloProcess::SlaveSetBFFrac()	{
 

@@ -521,7 +521,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		return 0;
 	}
 
-	double GetLogLikelihood()	{
+	virtual double GetLogLikelihood()	{
 		if (! GetNactiveSite())	{
 			return 0;
 		}
@@ -807,13 +807,13 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	int size;
 
+	/*
 	void GlobalResetTree();
 	virtual void SlaveResetTree();
 	void ResetTree();
+	*/
 
 	virtual void GlobalSetTopoBF();
-	// virtual void SlaveSetTopoBF();
-	// void SetTopoBF();
 	void SetSIS();
 
 	void IncSize();

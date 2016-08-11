@@ -104,7 +104,7 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	}
 
 
-	void SlaveResetTree();
+	// void SlaveResetTree();
 	void SlaveBroadcastTree();
 
 	void SlaveSetBFFrac();

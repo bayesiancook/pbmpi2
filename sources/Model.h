@@ -261,14 +261,6 @@ class Model	{
 
 		process->SetMPI(myid,nprocs);
 		process->New();
-
-		/*
-		if ((!myid) && ((process->topobf == 1) || (process->sis)))	{
-			ofstream mpos((name + ".mpi").c_str());
-			process->GlobalWriteSiteRankToStream(mpos);
-		}
-		*/
-
 	}
 
 	Model(string inname, int myid, int nprocs)	{
@@ -350,12 +342,6 @@ class Model	{
 
 		process->SetSize(size);
 		process->SetName(name);
-		/*
-		if ((!myid) && ((process->topobf == 1) || (process->sis)))	{
-			ifstream mpis((name + ".mpi").c_str());
-			process->GlobalReadSiteRankFromStream(mpis);
-		}
-		*/
 	}
 
 	void ToStream(ostream& os, bool header)	{
@@ -364,9 +350,23 @@ class Model	{
 			os << every << '\t' << until << '\t' << GetSize() << '\n';
 			os << saveall << '\n';
 			process->ToStreamHeader(os);
+
+			// necessary to be able to restart topobl runs
+			if ((process->topobf == 2) && (process->bffrac >= 0))	{
+				process->GlobalSwapTree();
+			}
+		}
+
+		process->ToStream(os);
+
+		if (header)	{
+			// necessary to be able to restart topobl runs
+			if ((process->topobf == 2) && (process->bffrac >= 0))	{
+				process->GlobalSwapTree();
+			}
+
 			process->GlobalWriteSiteRankToStream(os);
 		}
-		process->ToStream(os);
 	}
 
 	~Model()	{
@@ -422,16 +422,9 @@ class Model	{
 
 	void Run(int smc, int deltansite, int shortcycle, int longcycle, int cutoffsize, int nrep)	{
 
-		cerr << "current logL : " << process->GetLogLikelihood() << '\n';
+		cerr << "current logL : " << process->GetLogLikelihood() << '\t';
 		process->GlobalUpdateConditionalLikelihoods();
-		cerr << "current logL : " << process->GetLogLikelihood() << '\n';
-		cerr << "current length : " << process->GetTotalLength() << '\t' << process->GetAllocTotalLength(1) << '\n';
-		cerr << "BF: " << process->bffrac << '\t' << process->fmin << '\t' << process->fmax << '\n';
-		/*
-		if (process->topobf == 2)	{
-			cerr << "current branch scaling: " << process->GetBranchScaling(1) << '\n';
-		}
-		*/
+		cerr << process->GetLogLikelihood() << '\n';
 
 		ofstream ros((name + ".run").c_str());
 		ros << 1 << '\n';
@@ -485,17 +478,9 @@ class Model	{
 
 		}	
 		cerr << name << ": stopping after " << GetSize() << " points.\n";
-		cerr << "current logL : " << process->GetLogLikelihood() << '\n';
+		cerr << "current logL : " << process->GetLogLikelihood() << '\t';
 		process->GlobalUpdateConditionalLikelihoods();
-		cerr << "current logL : " << process->GetLogLikelihood() << '\n';
-		cerr << "current length : " << process->GetTotalLength() << '\t' << process->GetAllocTotalLength(1) << '\n';
-		cerr << "BF: " << process->bffrac << '\t' << process->fmin << '\t' << process->fmax << '\n';
-		/*
-		if (process->topobf == 2)	{
-			cerr << "current branch scaling: " << process->GetBranchScaling(1) << '\n';
-		}
-		*/
-		cerr << '\n';
+		cerr << process->GetLogLikelihood() << '\n';
 	}
 
 	NewickTree* GetTree() {return process->GetLengthTree();}

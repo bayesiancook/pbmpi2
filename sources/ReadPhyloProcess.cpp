@@ -626,7 +626,7 @@ void PhyloProcess::ReadTopoBL(string name, int burnin, int every, int until, str
 		QuickUpdate();
 		bffrac = -bfnfrac;
 		SetBranchScaling(0.1,1);
-		SetTopoBF();
+		GlobalSetTopoBF();
 
 		GlobalUpdateConditionalLikelihoods();
 		double logp1 = logL;

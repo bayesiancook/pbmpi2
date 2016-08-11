@@ -48,6 +48,11 @@ void GammaBranchProcess::Delete()	{
 
 void GammaBranchProcess::ToStream(ostream& os)	{
 
+	/*
+	for (int j=0; j<GetNbranch(); j++)	{
+		os << blarray[j] << '\n';
+	}
+	*/
 	SetNamesFromLengths();
 	tree->ToStream(os);
 	// if hierarchical prior, the hyperparameters are already saved to stream by the multi gene branch process
@@ -96,6 +101,11 @@ void GammaBranchProcess::ToStreamWithLengths(ostream& os, const Link* from)	{
 
 void GammaBranchProcess::FromStream(istream& is)	{
 
+	/*
+	for (int j=0; j<GetNbranch(); j++)	{
+		is >> blarray[j];
+	}
+	*/
 	tree->ReadFromStream(is);
 	SetLengthsFromNames();
 	if (! hierarchicallengthprior)	{

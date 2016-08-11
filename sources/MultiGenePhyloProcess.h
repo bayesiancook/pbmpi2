@@ -39,7 +39,7 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	void SlaveToStream();
 	void SlaveFromStream();
 
-	void AllocateAlignments(string datafile, string treefile);
+	void AllocateAlignments(string datafile);
 
 	virtual void New(int unfold = 1);
 	virtual void Open(istream& is, int unfold = 1);
@@ -51,6 +51,11 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	}
 
 	protected:
+
+	virtual void GlobalWriteSiteRankToStream(ostream& os);
+	virtual void GlobalReadSiteRankFromStream(istream& is);
+	virtual void SlaveWriteSiteRankToStream();
+	virtual void SlaveReadSiteRankFromStream();
 
         virtual int SpecialSlaveExecute(MESSAGE);
 
@@ -77,17 +82,6 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	virtual void GlobalReshuffleSites();
 	virtual void SlaveReshuffleSites();
 
-	virtual void GlobalWriteSiteRankToStream(ostream& os)	{
-		cerr << "in multi gene site rank\n";
-		exit(1);
-	}
-
-	virtual void GlobalReadSiteRankFromStream(istream& is)	{
-		cerr << "in multi gene site rank\n";
-		exit(1);
-	}
-
-
 	// re-implement slave functions
 	// should dispatch job over all genes,
 	// collect results and send back to master
@@ -110,6 +104,7 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	}
 
 
+	void SlaveResetTree();
 	void SlaveBroadcastTree();
 
 	void SlaveSetBFFrac();

@@ -262,6 +262,13 @@ class Model	{
 		process->SetMPI(myid,nprocs);
 		process->New();
 
+		/*
+		if ((!myid) && ((process->topobf == 1) || (process->sis)))	{
+			ofstream mpos((name + ".mpi").c_str());
+			process->GlobalWriteSiteRankToStream(mpos);
+		}
+		*/
+
 	}
 
 	Model(string inname, int myid, int nprocs)	{
@@ -343,10 +350,12 @@ class Model	{
 
 		process->SetSize(size);
 		process->SetName(name);
+		/*
 		if ((!myid) && ((process->topobf == 1) || (process->sis)))	{
 			ifstream mpis((name + ".mpi").c_str());
 			process->GlobalReadSiteRankFromStream(mpis);
 		}
+		*/
 	}
 
 	void ToStream(ostream& os, bool header)	{
@@ -355,6 +364,7 @@ class Model	{
 			os << every << '\t' << until << '\t' << GetSize() << '\n';
 			os << saveall << '\n';
 			process->ToStreamHeader(os);
+			process->GlobalWriteSiteRankToStream(os);
 		}
 		process->ToStream(os);
 	}
@@ -412,6 +422,17 @@ class Model	{
 
 	void Run(int smc, int deltansite, int shortcycle, int longcycle, int cutoffsize, int nrep)	{
 
+		cerr << "current logL : " << process->GetLogLikelihood() << '\n';
+		process->GlobalUpdateConditionalLikelihoods();
+		cerr << "current logL : " << process->GetLogLikelihood() << '\n';
+		cerr << "current length : " << process->GetTotalLength() << '\t' << process->GetAllocTotalLength(1) << '\n';
+		cerr << "BF: " << process->bffrac << '\t' << process->fmin << '\t' << process->fmax << '\n';
+		/*
+		if (process->topobf == 2)	{
+			cerr << "current branch scaling: " << process->GetBranchScaling(1) << '\n';
+		}
+		*/
+
 		ofstream ros((name + ".run").c_str());
 		ros << 1 << '\n';
 		ros.close();
@@ -450,7 +471,7 @@ class Model	{
 
 			if (saveall)	{
 				ofstream cos((name + ".chain").c_str(),ios_base::app);
-				cos.precision(12);
+				// cos.precision(12);
 				ToStream(cos,false);
 				cos.close();
 			}
@@ -464,6 +485,16 @@ class Model	{
 
 		}	
 		cerr << name << ": stopping after " << GetSize() << " points.\n";
+		cerr << "current logL : " << process->GetLogLikelihood() << '\n';
+		process->GlobalUpdateConditionalLikelihoods();
+		cerr << "current logL : " << process->GetLogLikelihood() << '\n';
+		cerr << "current length : " << process->GetTotalLength() << '\t' << process->GetAllocTotalLength(1) << '\n';
+		cerr << "BF: " << process->bffrac << '\t' << process->fmin << '\t' << process->fmax << '\n';
+		/*
+		if (process->topobf == 2)	{
+			cerr << "current branch scaling: " << process->GetBranchScaling(1) << '\n';
+		}
+		*/
 		cerr << '\n';
 	}
 

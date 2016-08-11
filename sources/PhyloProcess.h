@@ -807,7 +807,13 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	int size;
 
-	void SetTopoBF();
+	void GlobalResetTree();
+	virtual void SlaveResetTree();
+	void ResetTree();
+
+	virtual void GlobalSetTopoBF();
+	// virtual void SlaveSetTopoBF();
+	// void SetTopoBF();
 	void SetSIS();
 
 	void IncSize();

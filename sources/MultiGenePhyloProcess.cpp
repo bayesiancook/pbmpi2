@@ -325,7 +325,6 @@ void MultiGenePhyloProcess::AllocateAlignments(string datafile)	{
 /*
 void MultiGenePhyloProcess::GlobalWriteSiteRankToStream(ostream& os)	{
 
-	cerr << "write site ranks\n";
 	MESSAGE signal = WRITESITERANK;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
@@ -347,7 +346,6 @@ void MultiGenePhyloProcess::GlobalWriteSiteRankToStream(ostream& os)	{
 
 void MultiGenePhyloProcess::GlobalWriteSiteRankToStream(ostream& os)	{
 
-	cerr << "write site ranks\n";
 	MESSAGE signal = WRITESITERANK;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 

@@ -574,6 +574,8 @@ void PhyloProcess::FastReadTopoBF(string name, int burnin, int every, int until,
 		logbf += logscore;
 	}
 
+	ofstream os((name + ".logbf").c_str());
+	os << logbf << '\n';
 	cout << '\n';
 	cout << "log bf : " << logbf << '\n';
 	cout << '\n';

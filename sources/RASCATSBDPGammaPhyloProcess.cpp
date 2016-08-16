@@ -375,212 +375,60 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 
 	else	{
 
-		cerr << "get full log likelihood not yet implemented for multiple try\n";
-		exit(1);
-	}
-
-	delete[] modesitelogL;
-	return totlogL;
-}
-
-/*
-double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
-
-	double** modesitelogL = new double*[GetNsite()];
-	int ncomp = GetNcomponent();
-	if ((sumovercomponents > 0) && (sumovercomponents < GetNcomponent()))	{
-		ncomp = sumovercomponents;
-	}
-
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-			modesitelogL[i] = new double[ncomp];
-		}
-	}
-
-	double totlogL = 0;
-
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-			RemoveSite(i,SBDPProfileProcess::alloc[i]);
-		}
-	}
-
-	for (int k=0; k<ncomp; k++)	{
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{
-				if (ncomp == GetNcomponent())	{
-					AddSite(i,k);
+
+				// remove site
+				RemoveSite(i,SBDPProfileProcess::alloc[i]);
+
+				double max = 0;
+				for (int k=0; k<ncomp; k++)	{
+					int found = 0;
+					for (int l=0; l<k; l++)	{
+						if (mtryalloc[i][k] == mtryalloc[i][l])	{
+							found = 1;
+							modesitelogL[k] = modesitelogL[l];
+						}
+					}
+					if (! found)	{
+						AddSite(i,mtryalloc[i][k]);
+						modesitelogL[k] = SiteLogLikelihood(i);
+						RemoveSite(i,mtryalloc[i][k]);
+					}
+					if ((!k) || (max < modesitelogL[k]))	{
+						max = modesitelogL[k];
+					}
 				}
-				else	{
+
+				double total = 0;
+				double cumul[ncomp];
+				for (int k=0; k<ncomp; k++)	{
+					double tmp = exp(modesitelogL[k] - max) / mtryweight[i][k];
+					// double tmp = weight[mtryalloc[i][k]] * exp(modesitelogL[k] - max);
+					total += tmp;
+					cumul[k] = total;
+				}
+
+				double u = total * rnd::GetRandom().Uniform();
+				int k = 0;
+				while ((k<ncomp) && (u>cumul[k]))	{
+					k++;
+				}
+
+				if (! reverseafterfull)	{
 					AddSite(i,mtryalloc[i][k]);
+					sitelogL[i] = modesitelogL[k];
 				}
-				UpdateZip(i);
-			}
-		}
-		UpdateConditionalLikelihoods();
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i))	{
-				modesitelogL[i][k] = sitelogL[i];
-			}
-		}
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i))	{
-				if (ncomp == GetNcomponent())	{
-					RemoveSite(i,k);
-				}
-				else	{
-					RemoveSite(i,mtryalloc[i][k]);
-				}
+
+				double sitetotlogL = log(total) + max;
+				totlogL += sitetotlogL;
 			}
 		}
 	}
 
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-			double max = modesitelogL[i][0];
-			for (int k=1; k<ncomp; k++)	{
-				if (max < modesitelogL[i][k])	{
-					max = modesitelogL[i][k];
-				}
-			}
-			double total = 0;
-			double cumul[ncomp];
-			for (int k=0; k<ncomp; k++)	{
-				double w = 0;
-				if (ncomp == GetNcomponent())	{
-					w = weight[k];
-				}
-				else	{
-					w = weight[mtryalloc[i][k]] / mtryweight[i][k];
-				}
-				double tmp = w * exp(modesitelogL[i][k] - max);
-				total += tmp;
-				cumul[k] = total;
-			}
-
-			double u = total * rnd::GetRandom().Uniform();
-			int k = 0;
-			while ((k<ncomp) && (u>cumul[k]))	{
-				k++;
-			}
-
-			if (! reverseafterfull)	{
-				if (ncomp == GetNcomponent())	{
-					AddSite(i,k);
-				}
-				else	{
-					AddSite(i,mtryalloc[i][k]);
-				}
-				UpdateZip(i);
-			}
-
-			if (ncomp < GetNcomponent())	{
-				total /= ncomp;
-			}
-			double sitetotlogL = log(total) + max;
-			totlogL += sitetotlogL;
-		}
-	}
-
-	// one last update so that cond likelihoods are in sync with new site allocations
-	// this will also update logL
-	if (! reverseafterfull)	{
-		UpdateConditionalLikelihoods();
-	}
-
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-			delete[] modesitelogL[i];
-		}
-	}
 	delete[] modesitelogL;
 	return totlogL;
 }
-*/
-
-/*
-double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
-
-	double** modesitelogL = new double*[GetNsite()];
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-			modesitelogL[i] = new double[GetNcomponent()];
-		}
-	}
-
-	double totlogL = 0;
-
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-			RemoveSite(i,SBDPProfileProcess::alloc[i]);
-		}
-	}
-
-	for (int k=0; k<GetNcomponent(); k++)	{
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i))	{
-				AddSite(i,k);
-				UpdateZip(i);
-			}
-		}
-		UpdateConditionalLikelihoods();
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i))	{
-				modesitelogL[i][k] = sitelogL[i];
-			}
-		}
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i))	{
-				RemoveSite(i,k);
-			}
-		}
-	}
-
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-			double max = modesitelogL[i][0];
-			for (int k=1; k<GetNcomponent(); k++)	{
-				if (max < modesitelogL[i][k])	{
-					max = modesitelogL[i][k];
-				}
-			}
-			double total = 0;
-			double cumul[GetNcomponent()];
-			for (int k=0; k<GetNcomponent(); k++)	{
-				double tmp = weight[k] * exp(modesitelogL[i][k] - max);
-				total += tmp;
-				cumul[k] = total;
-			}
-
-			double u = total * rnd::GetRandom().Uniform();
-			int k = 0;
-			while ((k<GetNcomponent()) && (u>cumul[k]))	{
-				k++;
-			}
-
-			AddSite(i,k);
-			UpdateZip(i);
-
-			double sitetotlogL = log(total) + max;
-			totlogL += sitetotlogL;
-		}
-	}
-
-	// one last update so that cond likelihoods are in sync with new site allocations
-	// this will also update logL
-	UpdateConditionalLikelihoods();
-
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-			delete[] modesitelogL[i];
-		}
-	}
-	delete[] modesitelogL;
-
-	return totlogL;
-}
-*/
 
 double RASCATSBDPGammaPhyloProcess::GlobalGetFullLogLikelihood()	{
 

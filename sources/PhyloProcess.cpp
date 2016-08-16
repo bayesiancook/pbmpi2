@@ -296,6 +296,10 @@ void PhyloProcess::SetBranchesToCollapse(string blfile)	{
 
 void PhyloProcess::GlobalSetTopoBF()	{
 
+	if (sumovercomponents > 0)	{
+		GlobalActivateSumOverComponents();
+	}
+
 	GlobalSetBFFrac();
 	if (topobf == 2)	{
 		double scale = 0.1;
@@ -1075,6 +1079,10 @@ double PhyloProcess::ComputeTopoBFLogLikelihoodRatio(double fracmin, double frac
 	double delta = 0;
 
 	if (sumovercomponents)	{
+
+		if (sumovercomponents != -1)	{
+			ChooseMultipleTryAlloc();
+		}
 
 		SetMinMax(fracmin,fracmax);
 

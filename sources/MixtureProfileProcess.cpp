@@ -49,17 +49,15 @@ void MixtureProfileProcess::Create()	{
 
 void MixtureProfileProcess::ActivateSumOverComponents()	{
 
-	if (mtryalloc)	{
-		cerr << "error: mtryalloc already allocated\n";
-		exit(1);
-	}
-	mtryalloc = new int*[GetNsite()];
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		mtryalloc[i] = new int[sumovercomponents];
-	}
-	mtryweight = new double*[GetNsite()];
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		mtryweight[i] = new double[sumovercomponents];
+	if (!mtryalloc)	{
+		mtryalloc = new int*[GetNsite()];
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			mtryalloc[i] = new int[sumovercomponents];
+		}
+		mtryweight = new double*[GetNsite()];
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			mtryweight[i] = new double[sumovercomponents];
+		}
 	}
 }
 
@@ -157,7 +155,8 @@ void MixtureProfileProcess::ChooseMultipleTryAlloc()	{
 	}
 
 	meandiv /= nsite;
-	cerr << myid << '\t' << meandiv << '\n';
+
+	// cerr << meandiv << '\n';
 
 	delete[] probarray;
 	delete[] cumul;

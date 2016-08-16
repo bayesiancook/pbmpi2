@@ -130,6 +130,20 @@ class ProfileProcess : public virtual MPIModule {
 		exit(1);
 	}
 
+	virtual void GlobalActivateSumOverComponents()	{
+		cerr << "error: in ProfileProcess::GlobalChooseMultipleTryAlloc\n";
+		exit(1);
+	}
+
+	virtual void SlaveActivateSumOverComponents()	{
+		cerr << "error: in ProfileProcess::SlaveChooseMultipleTryAlloc\n";
+		exit(1);
+	}
+
+	virtual void ActivateSumOverComponents()	{
+		cerr << "error: in ProfileProcess::ChooseMultipleTryAlloc\n";
+		exit(1);
+	}
 
 	//------
 	// sampling from prior

@@ -60,7 +60,7 @@ class Model	{
 	int until;
 	int saveall;
 
-	Model(string datafile, string treefile, int multigene, int globalalpha, int globalbl, int modeltype, int nratecat, int mixturetype, int nmodemax, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int sis, int sisnfrac, int sisnrep, double siscutoff, int fixtopo, int fixroot, int topoburnin, int topobf, int bfburnin, int bfnfrac, int bfnrep, double blfactor, string blfile, int NSPR, int NMHSPR, int NTSPR, int temperedbl, int temperedgene, int temperedrate,double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, string taxon3, string taxon4, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int Nomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
+	Model(string datafile, string treefile, int multigene, int globalalpha, int globalbl, int mappsuffstat, int modeltype, int nratecat, int mixturetype, int nmodemax, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int sis, int sisnfrac, int sisnrep, double siscutoff, int fixtopo, int fixroot, int topoburnin, int topobf, int bfburnin, int bfnfrac, int bfnrep, double blfactor, string blfile, int NSPR, int NMHSPR, int NTSPR, int temperedbl, int temperedgene, int temperedrate,double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, string taxon3, string taxon4, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int Nomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
 
 		every = inevery;
 		until = inuntil;
@@ -83,11 +83,11 @@ class Model	{
 
 			if (modeltype == 1)	{
 				type = "MULTIGENECATSBDP";
-				process = new MultiGeneRASCATSBDPGammaPhyloProcess(nratecat,kappaprior,nmodemax,globalalpha,globalbl);
+				process = new MultiGeneRASCATSBDPGammaPhyloProcess(nratecat,kappaprior,nmodemax,globalalpha,globalbl,mappsuffstat);
 			}
 			else if (modeltype == 2)	{
 				type = "MULTIGENECATGTRSBDP";
-				process = new MultiGeneRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior,nmodemax,globalalpha,globalbl);
+				process = new MultiGeneRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior,nmodemax,globalalpha,globalbl,mappsuffstat);
 			}
 			else	{
 				cerr << "model not recognized\n";

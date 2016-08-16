@@ -66,14 +66,16 @@ void MultiGeneBranchProcess::Delete()	{
 		delete[] geneblarray;
 		delete[] tmpgeneblarray;
 		geneblarray = 0;
-		delete[] allocgeneblcount;
-		delete[] alloctmpgeneblcount;
-		delete[] geneblcount;
-		delete[] tmpgeneblcount;
-		delete[] allocgeneblbeta;
-		delete[] alloctmpgeneblbeta;
-		delete[] geneblbeta;
-		delete[] tmpgeneblbeta;
+		if (mappsuffstat)	{
+			delete[] allocgeneblcount;
+			delete[] alloctmpgeneblcount;
+			delete[] geneblcount;
+			delete[] tmpgeneblcount;
+			delete[] allocgeneblbeta;
+			delete[] alloctmpgeneblbeta;
+			delete[] geneblbeta;
+			delete[] tmpgeneblbeta;
+		}
 
 		delete[] totloglength;
 		delete[] totlength;

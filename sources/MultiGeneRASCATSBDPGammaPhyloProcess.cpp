@@ -66,8 +66,10 @@ double MultiGeneRASCATSBDPGammaPhyloProcess::Move(double tuning)	{
 	propchrono.Start();
 
 	if (GlobalBranchLengths())	{
-		BranchLengthMove(tuning);
-		BranchLengthMove(0.1 * tuning);
+		if ((topobf != 1) || (size < bfburnin))	{
+			BranchLengthMove(tuning);
+			BranchLengthMove(0.1 * tuning);
+		}
 	}
 
 	if (! fixtopo)	{

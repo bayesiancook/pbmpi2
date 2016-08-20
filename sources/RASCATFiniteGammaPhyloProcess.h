@@ -127,6 +127,18 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		chronototal.Start();
 		propchrono.Start();
 
+		if (! FixBL())	{
+			if ((topobf != 3) && ((topobf != 1) || (size < bfburnin)))	{
+				BranchLengthMove(tuning);
+				BranchLengthMove(0.1 * tuning);
+			}
+		}
+
+		if (! FixTopo())	{
+			MoveTopo();
+		}
+
+		/*
 		if ((topobf != 1) || (size < bfburnin))	{
 			BranchLengthMove(tuning);
 			BranchLengthMove(0.1 * tuning);
@@ -135,6 +147,7 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 				TopoMoveCycle(1,tuning);
 			}
 		}
+		*/
 
 		propchrono.Stop();
 
@@ -156,6 +169,7 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		GammaBranchProcess::Move(0.1*tuning,10);
 
 		GlobalUpdateParameters();
+
 		DGamRateProcess::Move(tuning,10);
 		DGamRateProcess::Move(0.3*tuning,10);
 		DGamRateProcess::Move(0.03*tuning,10);

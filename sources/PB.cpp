@@ -130,6 +130,7 @@ int main(int argc, char* argv[])	{
 	int bfburnin = 1000;
 	int bfnfrac = 100;
 	int bfnrep = 100;
+	double bffrac = 0;
 	double blfactor = 1.0;
 	string blfile = "None";
 
@@ -201,6 +202,26 @@ int main(int argc, char* argv[])	{
 				sisnrep = atoi(argv[i]);
 				i++;
 				siscutoff = atof(argv[i]);
+			}
+			else if (s == "-fixtopobf")	{
+				topobf = 3;
+				i++;
+				bfburnin = atoi(argv[i]);
+				i++;
+				int tmp = atoi(argv[i]);
+				i++;
+				bfnfrac = atoi(argv[i]);
+				bffrac = ((double) tmp) / bfnfrac;
+				i++;
+				bfnrep = atoi(argv[i]);
+				i++;
+				taxon1 = argv[i];
+				i++;
+				taxon2 = argv[i];
+				i++;
+				taxon3 = argv[i];
+				i++;
+				taxon4 = argv[i];
 			}
 			else if (s == "-topobf")	{
 				topobf = 1;
@@ -895,7 +916,7 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,mappsuffstat,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs);
+		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,mappsuffstat,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs);
 
 		if (! myid)	{
 			cerr << '\n';

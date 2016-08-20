@@ -76,7 +76,7 @@ void PoissonPhyloProcess::Collapse()	{
 	DrawAllocations(0);
 	InactivateSumOverRateAllocations();
 	// }
-	if (topobf == 1)	{
+	if ((topobf == 1) || (topobf == 3))	{
 		SetMinMax(bffrac,1);
 		SampleNodeStates();
 		FillMissingMap();

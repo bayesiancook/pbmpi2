@@ -60,7 +60,7 @@ class Model	{
 	int until;
 	int saveall;
 
-	Model(string datafile, string treefile, int multigene, int globalalpha, int globalbl, int mappsuffstat, int modeltype, int nratecat, int mixturetype, int nmodemax, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int sis, int sisnfrac, int sisnrep, double siscutoff, int fixtopo, int fixroot, int topoburnin, int topobf, int bfburnin, int bfnfrac, int bfnrep, double blfactor, string blfile, int NSPR, int NMHSPR, int NTSPR, int temperedbl, int temperedgene, int temperedrate,double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, string taxon3, string taxon4, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int Nomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
+	Model(string datafile, string treefile, int multigene, int globalalpha, int globalbl, int mappsuffstat, int modeltype, int nratecat, int mixturetype, int nmodemax, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int sis, int sisnfrac, int sisnrep, double siscutoff, int fixtopo, int fixroot, int topoburnin, int topobf, int bfburnin, double bffrac, int bfnfrac, int bfnrep, double blfactor, string blfile, int NSPR, int NMHSPR, int NTSPR, int temperedbl, int temperedgene, int temperedrate,double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, string taxon3, string taxon4, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int Nomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
 
 		every = inevery;
 		until = inuntil;
@@ -247,13 +247,19 @@ class Model	{
 		}
 		}
 
-		process->SetParameters(datafile,treefile,iscodon,codetype,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
+		process->SetParameters(datafile,treefile,iscodon,codetype,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
 
 		if (topobf == 1)	{
 			until = bfburnin + bfnfrac*bfnrep;
 		}
 		if (topobf == 2)	{
 			until = bfburnin + 2*bfnfrac*bfnrep;
+		}
+		if (topobf == 3)	{
+			until = bfburnin + bfnrep;
+			if (bfnrep == -1)	{
+				until = -1;
+			}
 		}
 		process->SetName(name);
 

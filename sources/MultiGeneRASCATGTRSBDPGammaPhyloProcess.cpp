@@ -11,7 +11,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Create()	{
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == myid)	{
 				process[gene] = new RASCATGTRSBDPGammaPhyloProcess(Ncat,rrtype,kappaprior);
-				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
+				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
 				process[gene]->SetName(name);
 				process[gene]->SetMPI(0,1);
 				GetProcess(gene)->SetFixAlpha(GlobalAlpha());
@@ -48,8 +48,10 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
 	propchrono.Start();
 
 	if (GlobalBranchLengths())	{
-		BranchLengthMove(tuning);
-		BranchLengthMove(0.1 * tuning);
+		if ((topobf != 3) && ((topobf != 1) || (size < bfburnin)))	{
+			BranchLengthMove(tuning);
+			BranchLengthMove(0.1 * tuning);
+		}
 	}
 
 	if (! fixtopo)	{
@@ -62,11 +64,12 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
 
 	propchrono.Stop();
 
-	// for (int rep=0; rep<5; rep++)	{
+	for (int rep=0; rep<5; rep++)	{
 
 		GlobalCollapse();
 
 		MultiGeneBranchProcess::Move(tuning,10);
+		MultiGeneBranchProcess::Move(0.1*tuning,10);
 
 		GlobalUpdateParameters();
 
@@ -74,8 +77,9 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
 
 		GlobalUpdateParameters();
 
-		MultiGeneRateProcess::Move(0.3*tuning,50);
-		MultiGeneRateProcess::Move(0.03*tuning,50);
+		MultiGeneRateProcess::Move(tuning,10);
+		MultiGeneRateProcess::Move(0.3*tuning,10);
+		MultiGeneRateProcess::Move(0.03*tuning,10);
 
 		GlobalUpdateParameters();
 
@@ -92,7 +96,7 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
 		GlobalUpdateParameters();
 
 		GlobalUnfold();
-	// }
+	}
 
 	chronototal.Stop();
 

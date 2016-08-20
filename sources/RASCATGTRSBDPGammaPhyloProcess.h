@@ -168,11 +168,13 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 	double Move(double tuning = 1.0)	{
 
 		chronototal.Start();
-
 		propchrono.Start();
+
 		if (! FixBL())	{
-			BranchLengthMove(tuning);
-			BranchLengthMove(0.1 * tuning);
+			if ((topobf != 3) && ((topobf != 1) || (size < bfburnin)))	{
+				BranchLengthMove(tuning);
+				BranchLengthMove(0.1 * tuning);
+			}
 		}
 
 		if (! FixTopo())	{

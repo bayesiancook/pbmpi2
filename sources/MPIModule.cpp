@@ -40,7 +40,7 @@ void MPIModule::CreateMPI(int innsite)	{
 	if (nprocs > 1)	{
 
 		if (! myid)	{
-			GlobalReshuffleSites();
+			GlobalReshuffleSites(0);
 		}
 		else	{
 			MESSAGE signal;
@@ -53,23 +53,26 @@ void MPIModule::CreateMPI(int innsite)	{
 		}
 	}
 	else	{
-		NonMPIReshuffleSites();
+		NonMPIReshuffleSites(0);
 	}
 }
 
-void MPIModule::NonMPIReshuffleSites()	{
+void MPIModule::NonMPIReshuffleSites(int rand)	{
 
 	int* permut = new int[nsite];
 	rnd::GetRandom().DrawFromUrn(permut,nsite,nsite);
 	for (int i=0; i<nsite; i++)	{
-		// canonical ranking
-		// globalrank[i] = i;
-		globalrank[i] = permut[i];
+		if (rand)	{
+			globalrank[i] = permut[i];
+		}
+		else	{
+			globalrank[i] = i;
+		}
 	}
 	delete[] permut;
 }
 
-void MPIModule::GlobalReshuffleSites()	{
+void MPIModule::GlobalReshuffleSites(int rand)	{
 
 	MESSAGE signal = RESHUFFLE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -98,9 +101,12 @@ void MPIModule::GlobalReshuffleSites()	{
 		int* permut = new int[localnsite];
 		rnd::GetRandom().DrawFromUrn(permut,localnsite,localnsite);
 		for (int i=0; i<localnsite; i++)	{
-			// canonical ranking
-			// globalrank[sitemin[j] + i] = tmprank[sitemin[j] + i];
-			globalrank[sitemin[j] + permut[i]] = tmprank[sitemin[j] + i];
+			if (rand)	{
+				globalrank[sitemin[j] + permut[i]] = tmprank[sitemin[j] + i];
+			}
+			else	{
+				globalrank[sitemin[j] + i] = tmprank[sitemin[j] + i];
+			}
 		}
 		delete[] permut;
 	}

@@ -157,6 +157,9 @@ class RASCATGTRFiniteGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloPro
 
 	double Move(double tuning = 1.0)	{
 
+		cerr << "revise GTR move\n";
+		exit(1);
+
 		chronototal.Start();
 		propchrono.Start();
 

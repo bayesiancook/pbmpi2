@@ -13,7 +13,7 @@ int main(int argc, char* argv[])	{
 		cerr << '.';
 		from->Randomize();
 		ostringstream s;
-		s << output << rep << ".ali";
+		s << "rnd" << rep << output << ".ali";
 		ofstream os(s.str().c_str());
 		from->ToStream(os);	
 	}

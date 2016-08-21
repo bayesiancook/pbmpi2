@@ -14,33 +14,45 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#ifndef MULTIGENEPROFILEPROCESS_H
-#define MULTIGENEPROFILEPROCESS_H
+#ifndef MULTIGENESBDPPROFILEPROCESS_H
+#define MULTIGENESBDPPROFILEPROCESS_H
 
-#include "MultiGeneMPIModule.h"
-#include "ProfileProcess.h"
+#include "MultiGeneProfileProcess.h"
 #include "SBDPProfileProcess.h"
 
-class MultiGeneProfileProcess : public virtual ProfileProcess, public virtual MultiGeneMPIModule	{
+class MultiGeneSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual MultiGeneProfileProcess	{
 
 	public:
 
-	MultiGeneProfileProcess() {}
-	virtual ~MultiGeneProfileProcess() {}
-
 	virtual void Create()	{
-		ProfileProcess::Create();
-		MultiGeneMPIModule::Create();
+		MultiGeneProfileProcess::Create();
+		SBDPProfileProcess::Create();
 	}
 
 	virtual void Delete()	{
-		MultiGeneMPIModule::Delete();
-		ProfileProcess::Delete();
+		SBDPProfileProcess::Delete();
+		MultiGeneProfileProcess::Delete();
 	}
 
-	virtual void SlaveUpdateSiteProfileSuffStat();
-	virtual void GlobalUpdateSiteProfileSuffStat();
+	SBDPProfileProcess* GetSBDPProfileProcess(int gene)	{
 
+		SBDPProfileProcess* tmp = dynamic_cast<SBDPProfileProcess*>(process[gene]);
+		if (!tmp)	{
+			cerr << "error in MultiGeneSBDPProfileProcess::GetSBDPProfileProcess\n";
+			exit(1);
+		}
+		return tmp;
+	}
+
+	double GlobalGetMeanNcomponent();
+	double GlobalGetMeanStatEnt();
+	double GlobalGetMeanStatAlpha();
+	double GlobalGetMeanKappa();
+
+	void SlaveGetMeanNcomponent();
+	void SlaveGetMeanStatEnt();
+	void SlaveGetMeanStatAlpha();
+	void SlaveGetMeanKappa();
 
 };
 

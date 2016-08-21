@@ -18,9 +18,10 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define MULTIGENERASCATSBDPGAMMAPHYLOPROCESS_H
 
 #include "MultiGenePhyloProcess.h"
+#include "MultiGeneSBDPProfileProcess.h"
 #include "RASCATSBDPGammaPhyloProcess.h"
 
-class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual RASCATSBDPGammaPhyloProcess	{
+class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual MultiGeneSBDPProfileProcess, public virtual RASCATSBDPGammaPhyloProcess	{
 
 	public:
 
@@ -63,17 +64,6 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 		cerr << "error: in multi gene GeFullLogLikelihood\n";
 		exit(1);
 	}
-
-
-	double GlobalGetMeanNcomponent();
-	double GlobalGetMeanStatEnt();
-	double GlobalGetMeanStatAlpha();
-	double GlobalGetMeanKappa();
-
-	void SlaveGetMeanNcomponent();
-	void SlaveGetMeanStatEnt();
-	void SlaveGetMeanStatAlpha();
-	void SlaveGetMeanKappa();
 
 	virtual void Create();
 	virtual void Delete();

@@ -18,6 +18,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define MULTIGENERASCATGTRSBDPGAMMAPHYLOPROCESS_H
 
 #include "MultiGenePhyloProcess.h"
+#include "MultiGeneSBDPProfileProcess.h"
 #include "RASCATGTRSBDPGammaPhyloProcess.h"
 #include "ExpoConjugateGTRProfileProcess.h"
 
@@ -53,7 +54,7 @@ class MultiGeneExpoConjugateGTRProfileProcess : public virtual ExpoConjugateGTRP
 };
 
 
-class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual MultiGeneExpoConjugateGTRProfileProcess, public virtual RASCATGTRSBDPGammaPhyloProcess	{
+class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual MultiGeneExpoConjugateGTRProfileProcess, public virtual MultiGeneSBDPProfileProcess, public virtual RASCATGTRSBDPGammaPhyloProcess	{
 
 	public:
 
@@ -87,16 +88,6 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 	virtual void UpdateRRSuffStat()	{
 		MultiGeneExpoConjugateGTRProfileProcess::UpdateRRSuffStat();
 	}
-
-	double GlobalGetMeanNcomponent();
-	double GlobalGetMeanStatEnt();
-	double GlobalGetMeanStatAlpha();
-	double GlobalGetMeanKappa();
-
-	void SlaveGetMeanNcomponent();
-	void SlaveGetMeanStatEnt();
-	void SlaveGetMeanStatAlpha();
-	void SlaveGetMeanKappa();
 
 	virtual void Create();
 	virtual void Delete();

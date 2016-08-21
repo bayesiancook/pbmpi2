@@ -28,6 +28,11 @@ void PoissonDPProfileProcess::ToStream(ostream& os)	{
 
 	os << Ncomponent << '\n';
 	os << kappa << '\n';
+	/*
+	if (kappaprior == 2)	{
+		os << kappamean << '\t' << kapparelvar << '\n';
+	}
+	*/
 	for (int j=0; j<GetDim(); j++)	{
 		os << dirweight[j] << '\t';
 	}
@@ -50,6 +55,11 @@ void PoissonDPProfileProcess::FromStream(istream& is)	{
 
 	is >> Ncomponent;
 	is >> kappa;
+	/*
+	if (kappaprior == 2)	{
+		is >> kappamean >> kapparelvar;
+	}
+	*/
 	
 	for (int i=0; i<GetDim(); i++)	{
 		is >> dirweight[i];

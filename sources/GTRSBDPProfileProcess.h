@@ -26,8 +26,10 @@ class GTRSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual 
 	GTRSBDPProfileProcess() {}
 	virtual ~GTRSBDPProfileProcess() {}
 
+	/*
 	void ToStream(ostream& os);
 	void FromStream(istream& is);
+	*/
 
 	protected:
 

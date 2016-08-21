@@ -25,7 +25,7 @@ class DPProfileProcess: public virtual DirichletMixtureProfileProcess	{
 
 	public:
 
-	DPProfileProcess() : kappa(1), movekappa(true), kappaprior(0), Nadd(30), Ninc(3) {}
+	DPProfileProcess() : kappa(1), movekappa(true), kappaprior(0), Nadd(30), Ninc(3), kappamean(10.0), kapparelvar(1.0) {}
 	virtual ~DPProfileProcess(){}
 
 	double GetKappa()	{
@@ -66,11 +66,14 @@ class DPProfileProcess: public virtual DirichletMixtureProfileProcess	{
 	double LogHyperPrior();
 	virtual double LogAllocPrior();
 
+	double kappamean;
+	double kapparelvar;
 	double kappa;
 	bool movekappa;
 	int kappaprior;
 	// 0 : exponential of mean 20
 	// 1 : jeffreys prior 
+	// 2 : gamma (kappamean and kapparelvar)
 };
 
 #endif

@@ -38,10 +38,19 @@ void DPProfileProcess::PriorSampleHyper()	{
 	if (kappaprior == 0)	{
 		kappa = 10.0 * rnd::GetRandom().sExpo();
 	}
-	else 	{
+	else if (kappaprior == 1)	{
 		double a = log(1e-4);
 		double x = 2*a*(rnd::GetRandom().Uniform() - 0.5);
 		kappa = exp(x);
+	}
+	else if (kappaprior == 2)	{
+		double beta = 1.0 / kappamean;
+		double alpha = 1.0 / kapparelvar;
+		kappa = rnd::GetRandom().Gamma(alpha,beta);
+	}
+	else	{
+		cerr << "error in DPProfileProcess::PriorSampleHyper: kappaprior unrecognized\n";
+		exit(1);
 	}
 }
 
@@ -141,12 +150,17 @@ double DPProfileProcess::LogHyperPrior()	{
 	if (kappaprior == 0)	{
 		total = -kappa / 10.0;
 	}
-	else 	{
+	else if (kappa == 1)	{
 		total = -log(kappa);
 		if ((kappa < 1e-4) || (kappa > 1e4))	{
 			// total = InfProb;
 			total -= 1.0 / 0;
 		}
+	}
+	else if (kappa == 2)	{
+		double beta = 1.0 / kappamean;
+		double alpha = 1.0 / kapparelvar;
+		total += alpha * log(beta) - rnd::GetRandom().logGamma(alpha) + (alpha - 1)*log(kappa) - beta*kappa;
 	}
 	total += DirichletProfileProcess::LogHyperPrior();
 	return total;

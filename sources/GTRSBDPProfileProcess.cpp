@@ -1,6 +1,7 @@
 
 #include "GTRSBDPProfileProcess.h"
 
+/*
 void GTRSBDPProfileProcess::ToStream(ostream& os)	{
 
 	os << Ncomponent << '\n';
@@ -57,3 +58,5 @@ void GTRSBDPProfileProcess::FromStream(istream& is)	{
 
 	ResampleWeights();
 }
+*/
+

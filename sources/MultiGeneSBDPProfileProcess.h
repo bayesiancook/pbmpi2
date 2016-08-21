@@ -24,15 +24,23 @@ class MultiGeneSBDPProfileProcess : public virtual SBDPProfileProcess, public vi
 
 	public:
 
-	virtual void Create()	{
-		MultiGeneProfileProcess::Create();
-		SBDPProfileProcess::Create();
-	}
+	MultiGeneSBDPProfileProcess() : kappaarray(0) {}
+	virtual ~MultiGeneSBDPProfileProcess() {}
 
-	virtual void Delete()	{
-		SBDPProfileProcess::Delete();
-		MultiGeneProfileProcess::Delete();
-	}
+	virtual void Create();
+	virtual void Delete();
+
+	void GlobalCollectKappas();
+	void SlaveCollectKappas();
+
+	// override SBDPProfileProcess functions
+	double LogHyperPrior();
+	void SampleHyper();
+	void PriorSampleHyper();
+
+	double MoveHyper(double tuning, int nrep);
+	double MoveKappaMean(double tuning);
+	double MoveKappaRelVar(double tuning);
 
 	SBDPProfileProcess* GetSBDPProfileProcess(int gene)	{
 
@@ -54,6 +62,7 @@ class MultiGeneSBDPProfileProcess : public virtual SBDPProfileProcess, public vi
 	void SlaveGetMeanStatAlpha();
 	void SlaveGetMeanKappa();
 
+	double* kappaarray;
 };
 
 #endif

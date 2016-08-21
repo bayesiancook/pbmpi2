@@ -32,6 +32,11 @@ class DPProfileProcess: public virtual DirichletMixtureProfileProcess	{
 		return kappa;
 	}
 
+	void SetKappaHyperParams(double inmean, double inrelvar)	{
+		kappamean = inmean;
+		kapparelvar = inrelvar;
+	}
+
 	protected:
 
 	virtual double Move(double tuning = 1, int n = 1, int nrep = 1);

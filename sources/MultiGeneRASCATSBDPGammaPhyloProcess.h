@@ -143,6 +143,9 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 			os << "\tvaralpha";
 		}
 		os << "\tNmode\tstatent\tstatalpha\tkappa";
+		if (kappaprior == 2)	{
+			os << "\tkappamean\trelvar";
+		}
 		os << '\n'; 
 	}
 
@@ -182,6 +185,10 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 		os << '\t' << GlobalGetMeanStatEnt();
 		os << '\t' << GlobalGetMeanStatAlpha();
 		os << '\t' << GlobalGetMeanKappa();
+		if (kappaprior == 2)	{
+			os << '\t' << kappamean;
+			os << '\t' << kapparelvar;
+		}
 		os << '\n';
 	}
 

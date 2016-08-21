@@ -19,6 +19,132 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "Parallel.h"
 #include "MultiGeneSBDPProfileProcess.h"
 
+void MultiGeneSBDPProfileProcess::Create()	{
+
+	if (! kappaarray)	{
+		kappaarray = new double[Ngene];
+		MultiGeneProfileProcess::Create();
+		SBDPProfileProcess::Create();
+	}
+}
+
+void MultiGeneSBDPProfileProcess::Delete()	{
+
+	if (kappaarray)	{
+		SBDPProfileProcess::Delete();
+		MultiGeneProfileProcess::Delete();
+		delete[] kappaarray;
+		kappaarray = 0;
+	}
+}
+
+double MultiGeneSBDPProfileProcess::LogHyperPrior()	{
+
+	if (kappaprior != 2)	{
+		return 0;
+	}
+	// assumes that kappas have already been collected
+
+	double beta = 1.0 / kappamean;
+	double alpha = 1.0 / kapparelvar;
+	double total = Ngene * (alpha*log(beta) - rnd::GetRandom().logGamma(alpha));
+	for (int gene=0; gene<Ngene; gene++)	{
+		total += (alpha-1)*log(kappaarray[gene]) - beta*kappaarray[gene];
+	}
+
+	// prior mean ? 
+	total -= kappamean / 10;
+
+	// prior relvar:
+	total -= kapparelvar;
+	return total;
+}
+
+void MultiGeneSBDPProfileProcess::SampleHyper()	{
+
+	if (kappaprior == 2)	{
+		kappamean = 10 * rnd::GetRandom().sExpo();
+		kapparelvar = rnd::GetRandom().sExpo();
+	}
+}
+
+void MultiGeneSBDPProfileProcess::PriorSampleHyper()	{
+
+	if (kappaprior == 2)	{
+		kappamean = 10 * rnd::GetRandom().sExpo();
+		kapparelvar = rnd::GetRandom().sExpo();
+	}
+}
+
+double MultiGeneSBDPProfileProcess::MoveHyper(double tuning, int nrep)	{
+
+	if (kappaprior == 2)	{
+		GlobalCollectKappas();
+		for (int rep=0; rep<nrep; rep++)	{
+			MoveKappaMean(tuning);
+			MoveKappaRelVar(tuning);
+		}
+		GlobalUpdateParameters();
+	}
+	return 1.0;
+}
+
+double MultiGeneSBDPProfileProcess::MoveKappaMean(double tuning)	{
+
+	double deltalogprob = - LogHyperPrior();
+	double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
+	double e = exp(m);
+	kappamean *= e;
+	deltalogprob += LogHyperPrior();
+	deltalogprob += m;
+	int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
+	if (!accepted)	{
+		kappamean /= e;
+	}
+	return ((double) accepted);
+}
+
+double MultiGeneSBDPProfileProcess::MoveKappaRelVar(double tuning)	{
+
+	double deltalogprob = - LogHyperPrior();
+	double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
+	double e = exp(m);
+	kapparelvar *= e;
+	deltalogprob += LogHyperPrior();
+	deltalogprob += m;
+	int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
+	if (!accepted)	{
+		kapparelvar /= e;
+	}
+	return ((double) accepted);
+}
+
+void MultiGeneSBDPProfileProcess::GlobalCollectKappas()	{
+
+	MESSAGE signal = COLLECTKAPPAS;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Status stat;
+	double* tmpkappaarray = new double[Ngene];
+	for(int i=1; i<GetNprocs(); i++) {
+		MPI_Recv(tmpkappaarray,Ngene,MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		for (int gene=0; gene<Ngene; gene++)	{
+			if (genealloc[gene] == i)	{
+				kappaarray[gene] = tmpkappaarray[gene];
+			}
+		}
+	}
+	delete[] tmpkappaarray;
+}
+
+void MultiGeneSBDPProfileProcess::SlaveCollectKappas()	{
+
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			kappaarray[gene] = GetSBDPProfileProcess(gene)->GetKappa();
+		}
+	}
+	MPI_Send(kappaarray,Ngene,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
 
 double MultiGeneSBDPProfileProcess::GlobalGetMeanNcomponent()	{
 

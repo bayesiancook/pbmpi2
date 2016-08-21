@@ -759,6 +759,9 @@ int main(int argc, char* argv[])	{
 			else if (s == "-expkappa")	{
 				kappaprior = 0;
 			}
+			else if (s == "-gamkappa")	{
+				kappaprior = 2;
+			}
 			else if (s == "-rigidbaseprior")	{
 				profilepriortype = 1;
 			}

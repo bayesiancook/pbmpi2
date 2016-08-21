@@ -38,6 +38,9 @@ class MultiGeneProfileProcess : public virtual ProfileProcess, public virtual Mu
 		ProfileProcess::Delete();
 	}
 
+	virtual void SampleProfileHyperParameters() {}
+	virtual void PriorSampleProfileHyperParameters() {}
+
 	virtual void SlaveUpdateSiteProfileSuffStat();
 	virtual void GlobalUpdateSiteProfileSuffStat();
 

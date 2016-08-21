@@ -137,6 +137,9 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 			nd += nbranch;
 		}
 		nd += nrr;
+		if (kappaprior == 2)	{
+			nd += 2;
+		}
 		double dvector[nd]; 
 		MESSAGE signal = PARAMETER_DIFFUSION;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -172,6 +175,13 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters() {
 			index++;
 		}
 
+		if (kappaprior == 2)	{
+			dvector[index] = kappamean;
+			index++;
+			dvector[index] = kapparelvar;
+			index++;
+		}
+
 		// Now send out the doubles and ints over the wire...
 		MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
@@ -192,6 +202,9 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 		nd += nbranch;
 	}
 	nd += nrr;
+	if (kappaprior == 2)	{
+		nd += 2;
+	}
 	double dvector[nd]; 
 
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
@@ -222,8 +235,18 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 		index++;
 	}
 
+	if (kappaprior == 2)	{
+		kappamean = dvector[index];
+		index++;
+		kapparelvar = dvector[index];
+		index++;
+	}
+
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
+			if (kappaprior == 2)	{
+				GetProcess(gene)->SetKappaHyperParams(kappamean,kapparelvar);
+			}
 			if (GlobalAlpha())	{
 				GetProcess(gene)->SetAlpha(GetAlpha());
 			}
@@ -261,6 +284,9 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 				break;
 			case MEANSTATALPHA:
 				SlaveGetMeanStatAlpha();
+				break;
+			case COLLECTKAPPAS:
+				SlaveCollectKappas();
 				break;
 			default:
 			RASCATGTRSBDPGammaPhyloProcess::SlaveExecute(signal);

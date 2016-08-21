@@ -38,6 +38,8 @@ class DirichletMixtureProfileProcess : public virtual DirichletProfileProcess, p
 		MixtureProfileProcess::Delete();
 		DirichletProfileProcess::Delete();
 	}
+
+	void GetPostCount(int* count);
 };
 
 

@@ -60,7 +60,7 @@ class Model	{
 	int until;
 	int saveall;
 
-	Model(string datafile, string treefile, int multigene, int globalalpha, int globalbl, int mappsuffstat, int modeltype, int nratecat, int mixturetype, int nmodemax, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, string rrtype, int iscodon, int sis, int sisnfrac, int sisnrep, double siscutoff, int fixtopo, int fixroot, int topoburnin, int topobf, int bfburnin, double bffrac, int bfnfrac, int bfnrep, double blfactor, string blfile, int NSPR, int NMHSPR, int NTSPR, int temperedbl, int temperedgene, int temperedrate,double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, string taxon3, string taxon4, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int Nomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
+	Model(string datafile, string treefile, int multigene, int globalalpha, int globalbl, int mappsuffstat, int modeltype, int nratecat, int mixturetype, int nmodemax, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, int dirpriortype, int nstatcomp, int priorempmix, string priormixtype, int fixstatweight, int fixstatalpha, int fixstatcenter, string rrtype, int iscodon, int sis, int sisnfrac, int sisnrep, double siscutoff, int fixtopo, int fixroot, int topoburnin, int topobf, int bfburnin, double bffrac, int bfnfrac, int bfnrep, double blfactor, string blfile, int NSPR, int NMHSPR, int NTSPR, int temperedbl, int temperedgene, int temperedrate,double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, string taxon3, string taxon4, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int Nomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, string inname, int myid, int nprocs)	{
 
 		every = inevery;
 		until = inuntil;
@@ -107,10 +107,12 @@ class Model	{
 			else if (mixturetype == 2)	{
 				type = "CATDP";
 				process = new RASCATGammaPhyloProcess(nratecat,kappaprior);
+				// process = new RASCATGammaPhyloProcess(nratecat,kappaprior,dirpriortype,nstatcomp,empmixprior,mixpriortype);
 			}
 			else	{
 				type = "CATSBDP";
 				process = new RASCATSBDPGammaPhyloProcess(nratecat,kappaprior);
+				// process = new RASCATSBDPGammaPhyloProcess(nratecat,kappaprior,dirpriortype,nstatcomp,empmixprior,mixpriortype);
 			}
 		}
 
@@ -148,20 +150,24 @@ class Model	{
 					if (suffstat)	{
 						type = "ZIPCATGTRSBDP";
 						process = new ZipRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior);
+						// process = new ZipRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior,dirpriortype,nstatcomp,priorempmix,priormixtype);
 					}
 					else	{
 						type = "ZIPGPSSCATGTRSBDP";
 						process = new ZipGeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior);
+						// process = new ZipGeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior,dirpriortype,nstatcomp,priorempmix,priormixtype);
 					}
 				}
 				else	{
 					if (suffstat)	{
 						type = "CATGTRSBDP";
 						process = new RASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior);
+						// process = new RASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior,dirpriortype,nstatcomp,priorempmix,priormixtype);
 					}
 					else	{
 						type = "GPSSCATGTRSBDP";
 						process = new GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior);
+						// process = new GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior,dirpriortype,nstatcomp,priorempmix,priormixtype);
 					}
 				}
 			}
@@ -247,7 +253,7 @@ class Model	{
 		}
 		}
 
-		process->SetParameters(datafile,treefile,iscodon,codetype,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate);
+		process->SetParameters(datafile,treefile,iscodon,codetype,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,dirpriortype,nstatcomp,priorempmix,priormixtype,fixstatweight,fixstatalpha,fixstatcenter);
 
 		if (topobf == 1)	{
 			until = bfburnin + bfnfrac*bfnrep;

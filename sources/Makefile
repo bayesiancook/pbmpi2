@@ -7,7 +7,7 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	MultiGenePhyloProcess.cpp MultiGeneRASCATGTRSBDPGammaPhyloProcess.cpp MultiGeneRASCATSBDPGammaPhyloProcess.cpp \
 	StateSpace.cpp CodonStateSpace.cpp ZippedSequenceAlignment.cpp SubMatrix.cpp \
 	ZipSubMatrix.cpp GTRSubMatrix.cpp CodonSubMatrix.cpp linalg.cpp Chrono.cpp BranchProcess.cpp \
-	GammaBranchProcess.cpp RateProcess.cpp DGamRateProcess.cpp ProfileProcess.cpp DirichletProfileProcess.cpp \
+	GammaBranchProcess.cpp RateProcess.cpp DGamRateProcess.cpp ProfileProcess.cpp DirichletProfileProcess.cpp DirichletMixtureProfileProcess.cpp \
 	SiteSpecificProfileProcess.cpp MatrixSiteSpecificProfileProcess.cpp GeneralPathSuffStatMatrixSiteSpecificProfileProcess.cpp \
 	CovMatrix.cpp MVNProfileProcess.cpp MVNSiteSpecificProfileProcess.cpp AACodonMutSelMVNSiteSpecificPhyloProcess.cpp \
 	GTRProfileProcess.cpp GTRDPProfileProcess.cpp GTRSBDPProfileProcess.cpp GTRFiniteProfileProcess.cpp ExpoConjugateGTRProfileProcess.cpp \

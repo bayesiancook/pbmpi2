@@ -23,7 +23,8 @@ class DirichletProfileProcess : public virtual ProfileProcess {
 
 	public:
 
-	DirichletProfileProcess() : dirweight(0) {}
+	DirichletProfileProcess() : dirweight(0), statcenter(0), statalpha(0), statweight(0) {}
+// Nstatcomp(1), dirpriortype(1), fixstatcenter(0), fixstatalpha(0), fixstatweight(0), priorempmix(0), priormixtype("None") {}
 	virtual ~DirichletProfileProcess() {}
 
 	double GetMeanDirWeight();
@@ -37,11 +38,36 @@ class DirichletProfileProcess : public virtual ProfileProcess {
 	virtual void SampleHyper();
 	virtual void PriorSampleHyper();
 
+	void SetEmpiricalPriorStatMix();
+
 	// move on hyperparameters
 	virtual double MoveHyper(double tuning, int nrep)	{
-		MoveDirWeights(tuning,nrep);
+		if (dirpriortype)	{
+			MoveDirWeights(tuning,nrep);
+		}
+		else	{
+			if (! fixstatcenter)	{
+				MoveStatCenter(tuning,nrep,GetDim()/2);
+			}
+			if (! fixstatalpha)	{
+				MoveStatAlpha(tuning,nrep);
+			}
+			if (! fixstatweight)	{
+				MoveStatWeight();
+			}
+		}
 	}
 
+	double GetPostStatProb(double* prof, double* post);
+
+	virtual void GetPostCount(int* count)	{
+		cerr << "in DirichletProfileProcess::GetPostCount, generic version\n";
+		exit(1);
+	}
+
+	double MoveStatWeight();
+	double MoveStatAlpha(double tuning, int nrep);
+	double MoveStatCenter(double tuning, int nrep, int n);
 	double MoveDirWeights(double tuning, int nrep);
 
 	protected:
@@ -50,6 +76,21 @@ class DirichletProfileProcess : public virtual ProfileProcess {
 	virtual void Delete();
 
 	double* dirweight;
+
+	double** statcenter;
+	double* statalpha;
+	double* statweight;
+
+	// currently defined in ProfileProcess
+	/*
+	int Nstatcomp;
+	int dirpriortype;
+	int fixstatcenter;
+	int fixstatalpha;
+	int fixstatweight;
+	int priorempmix;
+	string priormixtype;
+	*/
 };
 
 

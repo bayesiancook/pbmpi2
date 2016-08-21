@@ -83,6 +83,14 @@ int main(int argc, char* argv[])	{
 	string mixtype = "None";
 	string rrtype = "None";
 
+	int dirpriortype = 1;
+	int nstatcomp = 1;
+	int priorempmix = 0;
+	string priormixtype = "None";
+	int fixstatweight = 0;
+	int fixstatalpha = 0;
+	int fixstatcenter = 0;
+
 	int kappaprior = 0;
 	int profilepriortype =0;
 
@@ -563,6 +571,37 @@ int main(int argc, char* argv[])	{
 				i++;
 				mixtype = argv[i];
 			}
+			else if (s == "-mixbaseprior")	{
+				dirpriortype = 0;
+				i++;
+				nstatcomp = atoi(argv[i]);
+			}
+			else if (s == "-empmixbaseprior")	{
+				dirpriortype = 0;
+				i++;
+				priorempmix = 1;
+				priormixtype = argv[i];
+				fixstatalpha = 1;
+				fixstatcenter = 1;
+			}
+			else if (s == "-fixstatweight")	{
+				fixstatweight = 1;
+			}
+			else if (s == "-movestatweight")	{
+				fixstatweight = 0;
+			}
+			else if (s == "-fixstatalpha")	{
+				fixstatalpha = 1;
+			}
+			else if (s == "-movestatalpha")	{
+				fixstatalpha = 0;
+			}
+			else if (s == "-fixstatcenter")	{
+				fixstatcenter = 1;
+			}
+			else if (s == "-movestatcenter")	{
+				fixstatcenter = 0;
+			}
 			else if (s == "-rr")	{
 				modeltype = 2;
 				i++;
@@ -916,7 +955,7 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,mappsuffstat,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,rrtype,iscodon,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs);
+		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,mappsuffstat,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,dirpriortype,nstatcomp,priorempmix,priormixtype,fixstatweight,fixstatalpha,fixstatcenter,rrtype,iscodon,sis,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs);
 
 		if (! myid)	{
 			cerr << '\n';

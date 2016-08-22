@@ -4,8 +4,9 @@
 int main(int argc, char* argv[])	{
 
 	int bfnfrac = atoi(argv[1]);
-	int n = atoi(argv[2]);
-	string name = argv[3];
+	int b = atoi(argv[2]);
+	int n = atoi(argv[3]);
+	string name = argv[4];
 
 	double totvarlog = 0;
 	double logbf = 0;
@@ -20,6 +21,15 @@ int main(int argc, char* argv[])	{
 		double f = ((double) frac) / bfnfrac;
 
 		double delta[n];
+
+		for (int i=0; i<b; i++)	{
+			double tmp1, tmp2;
+			is >> tmp1 >> tmp2;
+			if (tmp1 != f)	{
+				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
+				exit(1);
+			}
+		}
 
 		double max = 0;
 		for (int i=0; i<n; i++)	{

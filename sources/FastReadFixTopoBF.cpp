@@ -25,7 +25,7 @@ int main(int argc, char* argv[])	{
 		for (int i=0; i<b; i++)	{
 			double tmp1, tmp2;
 			is >> tmp1 >> tmp2;
-			if (tmp1 != f)	{
+			if (fabs(tmp1 - f) > 1e-6)	{
 				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
 				exit(1);
 			}
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])	{
 		for (int i=0; i<n; i++)	{
 			double tmp1, tmp2;
 			is >> tmp1 >> tmp2;
-			if (tmp1 != f)	{
+			if (fabs(tmp1 - f) > 1e-6)	{
 				cerr << "error in topo bf 2: read " << tmp1 << " instead of " << f << '\n';
 				exit(1);
 			}

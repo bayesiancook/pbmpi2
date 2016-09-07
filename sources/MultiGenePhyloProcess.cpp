@@ -42,16 +42,23 @@ void MultiGenePhyloProcess::New(int unfold)	{
 			if (topobf == 2)	{
 				bffrac = -bfnfrac;
 			}
+			/*
 			if (topobf == 3)	{
 				cerr << "fix topo bf\n";
 				cerr << "bffrac : " << bffrac << '\n';
 			}
+			*/
 			// SetTopoBF();
 		}
 
-		if (sis)	{
+		if (sis == 1)	{
 			sisfrac = 0;
 			SetSIS();
+		}
+		if (sis == 2)	{
+			SetSIS();
+		}
+		if (sis == 1)	{
 			PriorSample();
 		}
 		else	{

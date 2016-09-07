@@ -74,6 +74,11 @@ void MPIModule::NonMPIReshuffleSites(int rand)	{
 
 void MPIModule::GlobalReshuffleSites(int rand)	{
 
+	if (nprocs == 1)	{
+		NonMPIReshuffleSites(rand);
+	}
+	else	{
+
 	MESSAGE signal = RESHUFFLE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
@@ -114,6 +119,7 @@ void MPIModule::GlobalReshuffleSites(int rand)	{
 	delete[] tmprank;
 
 	MPI_Bcast(globalrank,nsite,MPI_INT,0,MPI_COMM_WORLD);
+	}
 }
 
 void MPIModule::SlaveReshuffleSites()	{

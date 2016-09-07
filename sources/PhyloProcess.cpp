@@ -69,6 +69,9 @@ void PhyloProcess::New(int unfold)	{
 		*/
 		if (sis == 1)	{
 			sisfrac = 0;
+			if (! siscutoff)	{
+				sislevel = 1;
+			}
 			SetSIS();
 		}
 		if (sis == 2)	{
@@ -76,6 +79,9 @@ void PhyloProcess::New(int unfold)	{
 			cerr << "fix BF\n";
 			cerr << "sisfrac : " << sisfrac << '\n';
 			*/
+			if (! siscutoff)	{
+				sislevel = 1;
+			}
 			SetSIS();
 		}
 		if (sis == 1)	{
@@ -509,7 +515,7 @@ void PhyloProcess::IncSize()	{
 
 	if (sis == 1)	{
 
-		int fast = 1;
+		int fast = 0;
 		if (sisfrac < 1.0)	{
 
 			int c = size % sisnrep;
@@ -525,7 +531,7 @@ void PhyloProcess::IncSize()	{
 					reverseafterfull = 0;
 
 					ofstream os((name + ".sis").c_str(),ios_base::app);
-					os << sisfrac << '\t' << GetNactiveSite() << '\t' << chrono.GetTime() / 1000 << '\t' << deltalogp << '\t' << logZ << '\n';
+					os << sisfrac << '\t' << deltalogp << '\t' << logZ << '\n';
 					os.close();
 				}
 
@@ -540,7 +546,7 @@ void PhyloProcess::IncSize()	{
 				logZ += deltalogp;
 
 				ofstream os((name + ".sis").c_str(),ios_base::app);
-				os << sisfrac << '\t' << GetNactiveSite() << '\t' << chrono.GetTime() / 1000 << '\t' << deltalogp << '\t' << logZ << '\n';
+				os << sisfrac << '\t' << deltalogp << '\t' << logZ << '\n';
 				os.close();
 
 				sisfrac += delta;

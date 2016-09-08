@@ -389,6 +389,11 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 
 				double max = 0;
 				for (int k=0; k<ncomp; k++)	{
+					if ((mtryalloc[i][k] < 0) || (mtryalloc[i][k] >= GetNcomponent()))	{
+						cerr << "error in RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood: wrong alloc : " << mtryalloc[i][k] << '\n';
+						cerr << "site " << i << '\t' << "component: " << k << '\n';
+						exit(1);
+					}
 					int found = 0;
 					for (int l=0; l<k; l++)	{
 						if (mtryalloc[i][k] == mtryalloc[i][l])	{
@@ -427,9 +432,17 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 				}
 
 				double sitetotlogL = log(total) + max;
+				if (isinf(sitetotlogL))	{
+					cerr << "sitetotlogL is inf: site " << i << '\n';
+				}
 				totlogL += sitetotlogL;
 			}
 		}
+	}
+
+	if (isinf(totlogL))	{
+		cerr << "error in GetFullLogLikelihood: inf\n";
+		exit(1);
 	}
 
 	delete[] modesitelogL;

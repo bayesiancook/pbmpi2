@@ -49,6 +49,7 @@ void MixtureProfileProcess::Create()	{
 
 void MixtureProfileProcess::ActivateSumOverComponents()	{
 
+	cerr <<  "allocate mtryalloc : " << mtryalloc << '\n';
 	if (!mtryalloc)	{
 		mtryalloc = new int*[GetNsite()];
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
@@ -63,9 +64,16 @@ void MixtureProfileProcess::ActivateSumOverComponents()	{
 
 void MixtureProfileProcess::GlobalActivateSumOverComponents()	{
 
-	MESSAGE signal = ACTIVATEMTRY;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(&sumovercomponents,1,MPI_INT,0,MPI_COMM_WORLD);
+	if (GetNprocs() > 1)	{
+		MESSAGE signal = ACTIVATEMTRY;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(&sumovercomponents,1,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	else	{
+		if (sumovercomponents > 0)	{
+			ActivateSumOverComponents();
+		}
+	}
 }
 
 void MixtureProfileProcess::SlaveActivateSumOverComponents()	{
@@ -123,10 +131,15 @@ void MixtureProfileProcess::ChooseMultipleTryAlloc()	{
 				cumul[k] /= tot;
 			}
 			// rnd::GetRandom().DrawFromUrn(mtryalloc[i],n,GetNcomponent(),probarray,mtryweight[i]);
-			mtryalloc[i][0] = alloc[i];
-			double div = 1;
-			mtryweight[i][0] = probarray[alloc[i]];
-			for (int j=1; j<n; j++)	{
+			double div = 0;
+			int jmin = 0;
+			if (alloc[i] != -1)	{
+				jmin = 1;
+				mtryalloc[i][0] = alloc[i];
+				mtryweight[i][0] = probarray[alloc[i]];
+				div ++;
+			}
+			for (int j=jmin; j<n; j++)	{
 				double u = rnd::GetRandom().Uniform();
 				int k = 0;
 				while ((k<GetNcomponent()) && (u > cumul[k]))	{
@@ -140,7 +153,7 @@ void MixtureProfileProcess::ChooseMultipleTryAlloc()	{
 				mtryweight[i][j] = probarray[k];
 
 				int found = 0;
-				for (int l=0; l<k; l++)	{
+				for (int l=0; l<j; l++)	{
 					if (mtryalloc[i][l] == k)	{
 						found = 1;
 					}
@@ -164,9 +177,14 @@ void MixtureProfileProcess::ChooseMultipleTryAlloc()	{
 
 void MixtureProfileProcess::GlobalChooseMultipleTryAlloc()	{
 
-	MESSAGE signal = MTRYALLOC;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(&sumovercomponents,1,MPI_INT,0,MPI_COMM_WORLD);
+	if (GetNprocs() > 1)	{
+		MESSAGE signal = MTRYALLOC;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(&sumovercomponents,1,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	else	{
+		ChooseMultipleTryAlloc();
+	}
 }
 
 void MixtureProfileProcess::SlaveChooseMultipleTryAlloc()	{

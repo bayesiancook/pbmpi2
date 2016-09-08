@@ -97,6 +97,12 @@ void PhyloProcess::New(int unfold)	{
 			if (topobf)	{
 				GlobalSetTopoBF();
 			}
+			if (sis)	{
+
+				if (sumovercomponents > 0)	{
+					GlobalActivateSumOverComponents();
+				}
+			}
 			GlobalUnfold();
 		}
 	}
@@ -532,6 +538,9 @@ void PhyloProcess::IncSize()	{
 					reverseafterfull = 1;
 					double delta = 1.0 / sisnfrac / sislevel;
 					GlobalSetMinMax(sisfrac,sisfrac+delta);
+					if (sumovercomponents > 0)	{
+						GlobalChooseMultipleTryAlloc();
+					}
 					double deltalogp = GlobalGetFullLogLikelihood();
 					reverseafterfull = 0;
 
@@ -544,6 +553,9 @@ void PhyloProcess::IncSize()	{
 			else	{
 				double delta = 1.0 / sisnfrac / sislevel;
 				GlobalSetMinMax(sisfrac,sisfrac+delta);
+				if (sumovercomponents > 0)	{
+					GlobalChooseMultipleTryAlloc();
+				}
 				double deltalogp = GlobalGetFullLogLikelihood();
 				logZ += deltalogp;
 
@@ -569,10 +581,10 @@ void PhyloProcess::IncSize()	{
 		reverseafterfull = 1;
 		double delta = 1.0 / sisnfrac / sislevel;
 		GlobalSetMinMax(sisfrac,sisfrac+delta);
-		Chrono chrono;
-		chrono.Start();
+		if (sumovercomponents > 0)	{
+			GlobalChooseMultipleTryAlloc();
+		}
 		double deltalogp = GlobalGetFullLogLikelihood();
-		chrono.Stop();
 		reverseafterfull = 0;
 
 		ofstream os((name + ".sis").c_str(),ios_base::app);

@@ -92,7 +92,16 @@ void DGamRateProcess::PriorSampleRate()	{
 	if (! FixAlpha())	{
 		double a = meanalpha * meanalpha / varalpha;
 		double b = meanalpha / varalpha;
-		double tmp = rnd::GetRandom().Gamma(a,b);
+		double tmp = 0;
+		int count = 0;
+		while ((count < 1000) && (tmp < alphamin))	{
+			tmp = rnd::GetRandom().Gamma(a,b);
+			count++;
+		}
+		if (count == 1000)	{
+			cerr << "error in DGamRateProcess::PriorSampleRate\n";
+			exit(1);
+		}
 		SetAlpha(tmp);
 	}
 }
@@ -125,6 +134,9 @@ double DGamRateProcess::MoveAlpha(double tuning, int nrep)	{
 		SetAlpha(newalpha);
 		deltalogprob += m + LogRatePrior() + RateSuffStatLogProb();
 		int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
+		if (alpha < alphamin)	{
+			accepted = 0;
+		}
 		if (accepted)	{
 			naccepted++;
 		}
@@ -148,6 +160,9 @@ double DGamRateProcess::NonMPIMoveAlpha(double tuning, int nrep)	{
 		SetAlpha(newalpha);
 		deltalogprob += m + LogRatePrior() + RateSuffStatLogProb();
 		int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
+		if (alpha < alphamin)	{
+			accepted = 0;
+		}
 		if (accepted)	{
 			naccepted++;
 		}

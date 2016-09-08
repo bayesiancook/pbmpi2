@@ -23,7 +23,7 @@ class DGamRateProcess : public virtual RateProcess {
 
 	public:
 
-	DGamRateProcess() : Ncat(0), rate(0), fixalpha(false), meanalpha(1), varalpha(1) {}
+	DGamRateProcess() : Ncat(0), rate(0), fixalpha(false), meanalpha(1), varalpha(1), alphamin(0.2) {}
 	virtual ~DGamRateProcess() {}
 
 	double GetAlpha() {return alpha;}
@@ -158,6 +158,8 @@ class DGamRateProcess : public virtual RateProcess {
 
 	double meanalpha;
 	double varalpha;
+
+	double alphamin;
 
 };
 

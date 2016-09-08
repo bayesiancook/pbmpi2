@@ -41,8 +41,10 @@ void PhyloProcess::New(int unfold)	{
 	ReadData(datafile);
 	SetProfileDim();
 	CreateMPI(GetData()->GetNsite());
-	if ((sis == 1) || (topobf == 1))	{
-		GlobalReshuffleSites();
+	if (reshuffle)	{
+		if ((sis == 1) || (topobf == 1))	{
+			GlobalReshuffleSites();
+		}
 	}
 	
 	SetTree(treefile);
@@ -218,7 +220,9 @@ void PhyloProcess::Monitor(ostream& os)  {
 	}
 }
 
-void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double inblfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int inpriorempmix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter)	{
+void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double inblfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int inpriorempmix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter, int inreshuffle)	{
+
+	reshuffle = inreshuffle;
 
 	datafile = indatafile;
 	treefile = intreefile;
@@ -304,6 +308,7 @@ void PhyloProcess::SetParameters(string indatafile, string intreefile, int inisc
 
 void PhyloProcess::SetBranchesToCollapse(string blfile)	{
 
+	cerr << "in set branches to collapse\n";
 	ResetBranchAlloc();
 	if (blfile != "None")	{
 		ifstream is(blfile.c_str());
@@ -330,6 +335,7 @@ void PhyloProcess::SetBranchesToCollapse(string blfile)	{
 		}
 		Link* up = GetTree()->GetAncestor(down);
 		SetBranchAlloc(up->GetBranch()->GetIndex(),1);
+		cerr << taxon1 << '\t' << taxon2 << '\t' << up->GetBranch()->GetIndex() << '\t' << branchalloc[up->GetBranch()->GetIndex()] << '\n';
 	}
 }
 
@@ -352,6 +358,8 @@ void PhyloProcess::GlobalSetTopoBF()	{
 			scale *= exp((bfnfrac - bffrac -1)*log(blfactor));
 		}
 		SetBranchScaling(scale,1);	
+		cerr << "set branch scaling to : " << scale << '\n';
+		// cerr << bffrac << '\t' << bfnfrac << '\n';
 	}
 	GlobalBackupTree();
 	Link* down = GetTree()->GetLCA(taxon1,taxon2);
@@ -524,10 +532,7 @@ void PhyloProcess::IncSize()	{
 					reverseafterfull = 1;
 					double delta = 1.0 / sisnfrac / sislevel;
 					GlobalSetMinMax(sisfrac,sisfrac+delta);
-					Chrono chrono;
-					chrono.Start();
 					double deltalogp = GlobalGetFullLogLikelihood();
-					chrono.Stop();
 					reverseafterfull = 0;
 
 					ofstream os((name + ".sis").c_str(),ios_base::app);
@@ -539,10 +544,7 @@ void PhyloProcess::IncSize()	{
 			else	{
 				double delta = 1.0 / sisnfrac / sislevel;
 				GlobalSetMinMax(sisfrac,sisfrac+delta);
-				Chrono chrono;
-				chrono.Start();
 				double deltalogp = GlobalGetFullLogLikelihood();
-				chrono.Stop();
 				logZ += deltalogp;
 
 				ofstream os((name + ".sis").c_str(),ios_base::app);
@@ -700,7 +702,7 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
 	is >> treestring;
 	is >> topobf >> bfburnin >> bfnfrac >> bfnrep >> bffrac;
 	is >> treefile ;
-	if (topobf == 2)	{
+	if ((topobf == 2) || (topobf == 4))	{
 		is >> blfactor;
 		is >> blfile;
 	}

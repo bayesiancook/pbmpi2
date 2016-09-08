@@ -96,7 +96,7 @@ int main(int argc, char* argv[])	{
 
 	int suffstat = 1;
 
-	int saveall = 1;
+	int saveall = 0;
 
 	int randfix = -1;
 
@@ -153,6 +153,8 @@ int main(int argc, char* argv[])	{
 	int temperedbl = 1;
 	int temperedgene = 0;
 	int temperedrate = 0;
+
+	int reshuffle = 0;
 
 	try	{
 
@@ -285,14 +287,13 @@ int main(int argc, char* argv[])	{
 				taxon4 = argv[i];
 			}
 			else if (s == "-fixtopobl")	{
-				topobf = 2;
+				topobf = 4;
 				i++;
 				bfburnin = atoi(argv[i]);
 				i++;
-				int tmp = atoi(argv[i]);
+				bffrac = atof(argv[i]);
 				i++;
 				bfnfrac = atoi(argv[i]);
-				bffrac = ((double) tmp) / bfnfrac;
 				i++;
 				bfnrep = atoi(argv[i]);
 				i++;
@@ -312,6 +313,9 @@ int main(int argc, char* argv[])	{
 				deltansite = atoi(argv[i]);
 				i++;
 				cutoffsize = atoi(argv[i]);
+			}
+			else if (s == "-reshuffle")	{
+				reshuffle = 1;
 			}
 			else if (s == "-Tbl")	{
 				i++;
@@ -993,7 +997,7 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,mappsuffstat,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,dirpriortype,nstatcomp,priorempmix,priormixtype,fixstatweight,fixstatalpha,fixstatcenter,rrtype,iscodon,sis,sisfrac,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,name,myid,nprocs);
+		model = new Model(datafile,treefile,multigene,globalalpha,globalbl,mappsuffstat,modeltype,dgam,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,dirpriortype,nstatcomp,priorempmix,priormixtype,fixstatweight,fixstatalpha,fixstatcenter,rrtype,iscodon,sis,sisfrac,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,fixbl,sumovercomponents,omegaprior,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,reshuffle,name,myid,nprocs);
 
 		if (! myid)	{
 			cerr << '\n';

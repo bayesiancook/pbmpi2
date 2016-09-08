@@ -365,10 +365,12 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 				if (! reverseafterfull)	{
 					AddSite(i,k);
 					sitelogL[i] = modesitelogL[k];
+					/*
 					if (i == 33)	{
 						cerr << "adding site " << i << "to " << k << '\n';
 						cerr << modesitelogL[k] << '\n';
 					}
+					*/
 				}
 
 				double sitetotlogL = log(total) + max;

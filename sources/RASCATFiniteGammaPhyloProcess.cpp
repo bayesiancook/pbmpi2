@@ -120,6 +120,7 @@ void RASCATFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 }
 
 
+/*
 double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 
 	double** modesitelogL = new double*[GetNsite()];
@@ -230,6 +231,118 @@ double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
 			delete[] modesitelogL[i];
 		}
 	}
+	delete[] modesitelogL;
+	return totlogL;
+}
+*/
+
+double RASCATFiniteGammaPhyloProcess::GetFullLogLikelihood()	{
+
+	int ncomp = GetNcomponent();
+	if ((sumovercomponents > 0) && (sumovercomponents < GetNcomponent()))	{
+		ncomp = sumovercomponents;
+	}
+
+	double* modesitelogL = new double[ncomp];
+
+	double totlogL = 0;
+
+	if (ncomp == GetNcomponent())	{
+
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+
+				// remove site
+				RemoveSite(i,FiniteProfileProcess::alloc[i]);
+
+				double max = 0;
+				for (int k=0; k<GetNcomponent(); k++)	{
+					AddSite(i,k);
+					modesitelogL[k] = SiteLogLikelihood(i);
+					if ((!k) || (max < modesitelogL[k]))	{
+						max = modesitelogL[k];
+					}
+					RemoveSite(i,k);
+				}
+
+				double total = 0;
+				double cumul[GetNcomponent()];
+				for (int k=0; k<GetNcomponent(); k++)	{
+					double tmp = weight[k] * exp(modesitelogL[k] - max);
+					total += tmp;
+					cumul[k] = total;
+				}
+
+				double u = total * rnd::GetRandom().Uniform();
+				int k = 0;
+				while ((k<GetNcomponent()) && (u>cumul[k]))	{
+					k++;
+				}
+
+				if (! reverseafterfull)	{
+					AddSite(i,k);
+					sitelogL[i] = modesitelogL[k];
+				}
+
+				double sitetotlogL = log(total) + max;
+				totlogL += sitetotlogL;
+			}
+		}
+	}
+
+	else	{
+
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (ActiveSite(i))	{
+
+				// remove site
+				RemoveSite(i,FiniteProfileProcess::alloc[i]);
+
+				double max = 0;
+				for (int k=0; k<ncomp; k++)	{
+					int found = 0;
+					for (int l=0; l<k; l++)	{
+						if (mtryalloc[i][k] == mtryalloc[i][l])	{
+							found = 1;
+							modesitelogL[k] = modesitelogL[l];
+						}
+					}
+					if (! found)	{
+						AddSite(i,mtryalloc[i][k]);
+						modesitelogL[k] = SiteLogLikelihood(i);
+						RemoveSite(i,mtryalloc[i][k]);
+					}
+					if ((!k) || (max < modesitelogL[k]))	{
+						max = modesitelogL[k];
+					}
+				}
+
+				double total = 0;
+				double cumul[ncomp];
+				for (int k=0; k<ncomp; k++)	{
+					double tmp = exp(modesitelogL[k] - max) / mtryweight[i][k];
+					// double tmp = weight[mtryalloc[i][k]] * exp(modesitelogL[k] - max);
+					total += tmp;
+					cumul[k] = total;
+				}
+
+				double u = total * rnd::GetRandom().Uniform();
+				int k = 0;
+				while ((k<ncomp) && (u>cumul[k]))	{
+					k++;
+				}
+
+				if (! reverseafterfull)	{
+					AddSite(i,mtryalloc[i][k]);
+					sitelogL[i] = modesitelogL[k];
+				}
+
+				double sitetotlogL = log(total) + max;
+				totlogL += sitetotlogL;
+			}
+		}
+	}
+
 	delete[] modesitelogL;
 	return totlogL;
 }

@@ -54,6 +54,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	// default constructor: pointers set to nil
 	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
+
+		reshuffle = 0;
 		reverseafterfull = 0;
 		outputname = "";
 		tree = 0;
@@ -302,7 +304,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void Monitor(ostream& os);
 
-	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double blfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int emppriormix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter);
+	void SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double blfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int emppriormix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter, int inreshuffle);
 
 	void SetMPI(int inmyid, int innprocs)	{
 		myid = inmyid;
@@ -943,6 +945,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int rateprior;
 	int profileprior;
 	int rootprior;
+
+	int reshuffle;
 };
 
 

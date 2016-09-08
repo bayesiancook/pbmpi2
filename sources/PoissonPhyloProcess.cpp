@@ -137,7 +137,11 @@ int PoissonPhyloProcess::RecursiveUpdateSiteProfileSuffStat(const Link* from, in
 					cerr << "error in PoissonPhyloProcess::RecursiveUpdateSiteProfileSuffStat: state should be identical\n";
 					cerr << "site : " << site << '\n';
 					cerr << state << '\t' << tmp << '\t' << GetZipSize(site) << '\t' << GetOrbitSize(site) << '\n';
+					cerr << "rate : " << GetRate(site) << '\n';
 					truedata->PrintColumn(cerr,site);
+					SampleTrueNodeStates(GetRoot());
+					RecursiveUnzipBranchSitePath(GetRoot());
+					WriteTreeMapping(cerr, GetRoot(), site);
 					exit(1);
 				}
 				state = tmp;

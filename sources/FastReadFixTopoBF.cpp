@@ -73,7 +73,7 @@ int main(int argc, char* argv[])	{
 
 		logbf += logscore;
 
-		cerr << f << '\t' << 1.0 / m2 << '\n';
+		cerr << f << '\t' << logscore << '\t' << 1.0 / m2 << '\n';
 	}
 
 	cout << '\n';

@@ -47,11 +47,32 @@ void MatrixPhyloProcess::Collapse()	{
 	DrawAllocations(0);
 	InactivateSumOverRateAllocations();
 	// }
+	/*
 	SampleNodeStates();
 	// DeleteConditionalLikelihoods();
 	FillMissingMap();
 	SampleSubstitutionMappings(GetRoot());
 	// DeleteMatrices();
+	*/
+
+	if ((topobf == 1) || (topobf == 3))	{
+		SetMinMax(bffrac,1);
+		SampleNodeStates();
+		FillMissingMap();
+		SampleSubstitutionMappings(GetRoot());
+		SlaveSwapTree();
+		SetMinMax(0,bffrac);
+		SampleNodeStates();
+		FillMissingMap();
+		SampleSubstitutionMappings(GetRoot());
+		SlaveSwapTree();
+		SetMinMax(0,1);
+	}
+	else	{
+		SampleNodeStates();
+		FillMissingMap();
+		SampleSubstitutionMappings(GetRoot());
+	}
 	activesuffstat = true;
 }
 

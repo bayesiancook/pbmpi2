@@ -223,6 +223,7 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 			LengthRelRateMove(0.1,10);
 			LengthRelRateMove(0.01,10);
 		}
+		GlobalUpdateParameters();
 	}
 
 	virtual double GlobalRestrictedMoveCycle(int nrep = 1, double tuning = 1.0)	{

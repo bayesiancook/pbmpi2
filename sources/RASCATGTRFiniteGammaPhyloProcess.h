@@ -157,67 +157,60 @@ class RASCATGTRFiniteGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloPro
 
 	double Move(double tuning = 1.0)	{
 
-		cerr << "revise GTR move\n";
-		exit(1);
-
 		chronototal.Start();
 		propchrono.Start();
 
-		/*
-		double x = rnd::GetRandom().Uniform();
-		if (x < 0.1)	{
-			BranchLengthMove(tuning);
-		}
-		else if (x < 0.2)	{
-			BranchLengthMove(0.1 * tuning);
-		}
-		*/
-		if (! fixtopo)	{
-			if (fasttopo)	{
-				FastTopoMoveCycle(1,topomu);
-				/*
-				double x = rnd::GetRandom().Uniform();
-				if (x < 0.25)	{
-					SPRMove(2);
-				}
-				else if (x < 0.5)	{
-					NNIMove(1,0.1);
-				}
-				else {
-					FastTopoMoveCycle(1,topomu);
-				}
-				*/
-			}
-			else	{
-				SimpleTopoMoveCycle(1,tuning);
+		if (! FixBL())	{
+			if ((topobf != 3) && ((topobf != 1) || (size < bfburnin)))	{
+				BranchLengthMove(tuning);
+				BranchLengthMove(0.1 * tuning);
 			}
 		}
-		GlobalUpdateConditionalLikelihoods();
+
+		if (! FixTopo())	{
+			MoveTopo();
+		}
 
 		propchrono.Stop();
 
-		GlobalCollapse();
-
-		GammaBranchProcess::Move(tuning,10);
-
-		GlobalUpdateParameters();
-		DGamRateProcess::Move(0.3*tuning,10);
-		DGamRateProcess::Move(0.03*tuning,10);
-
-		ExpoConjugateGTRFiniteProfileProcess::Move(1,1,10);
-
-		if (! fixrr)	{
-			LengthRelRateMove(1,10);
-			LengthRelRateMove(0.1,10);
-			LengthRelRateMove(0.01,10);
-		}
-
-		GlobalUnfold();
+		// for (int rep=0; rep<5; rep++)	{
+			GlobalCollapse();
+			AugmentedMove(tuning);
+			GlobalUnfold();
+		// }
 
 		chronototal.Stop();
 
 		return 1;
 	}
+
+	double AugmentedMove(double tuning = 1)	{
+
+		if (! FixBL())	{
+			GammaBranchProcess::Move(tuning,10);
+			GammaBranchProcess::Move(0.1*tuning,10);
+			GlobalUpdateParameters();
+		}
+
+
+		if (! FixAlpha())	{
+			DGamRateProcess::Move(tuning,10);
+			DGamRateProcess::Move(0.3*tuning,10);
+			DGamRateProcess::Move(0.03*tuning,10);
+		}
+
+		GlobalUpdateParameters();
+		ExpoConjugateGTRFiniteProfileProcess::Move(1,1,10);
+		GlobalUpdateParameters();
+
+		if (! FixRR()){
+			LengthRelRateMove(1,10);
+			LengthRelRateMove(0.1,10);
+			LengthRelRateMove(0.01,10);
+		}
+		GlobalUpdateParameters();
+	}
+
 
 	virtual double GlobalRestrictedMoveCycle(int nrep = 1, double tuning = 1.0)	{
 

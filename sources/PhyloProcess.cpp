@@ -49,6 +49,18 @@ void PhyloProcess::New(int unfold)	{
 	
 	SetTree(treefile);
 
+	if (! GetMyid())	{
+	if (roottax1 != "None")	{
+		cerr << "reroot tree\n";
+		Link* newroot = GetTree()->GetLCA(roottax1,roottax2);
+		if (!newroot)	{
+			cerr << "error when rerooting\n";
+			exit(1);
+		}
+		GlobalRootAt(newroot);
+	}
+	}
+
 	Create();
 
 	if (! GetMyid())	{
@@ -226,7 +238,7 @@ void PhyloProcess::Monitor(ostream& os)  {
 	}
 }
 
-void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double inblfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int inpriorempmix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter, int inreshuffle)	{
+void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, string inroottax1, string inroottax2, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double inblfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int inpriorempmix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter, int inreshuffle)	{
 
 	reshuffle = inreshuffle;
 
@@ -243,6 +255,8 @@ void PhyloProcess::SetParameters(string indatafile, string intreefile, int inisc
 
 	fixtopo = infixtopo;
 	fixroot = infixroot;
+	roottax1 = inroottax1;
+	roottax2 = inroottax2;
 	topoburnin = intopoburnin;
 
 	topobf = intopobf;
@@ -387,7 +401,12 @@ void PhyloProcess::GlobalSetTopoBF()	{
 	}
 	Link* toup = GetTree()->GetAncestor(todown);
 	GlobalAttach(down,up,todown,toup);
+
+	ofstream os("topobftree2");
+	GetTree()->ToStream(os);
 	GlobalSwapTree();
+	ofstream os1("topobftree1");
+	GetTree()->ToStream(os1);
 
 	if (((topobf == 2) || (topobf == 4)) && (bffrac >= 0))	{
 		GlobalSwapTree();

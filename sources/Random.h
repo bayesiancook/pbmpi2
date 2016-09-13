@@ -76,12 +76,34 @@ class Random {
 
 	long int GetCount() {return count;}
 
+	void BackupBuffer()	{
+		for (int i=0; i<MT_LEN; i++)	{
+			bk_buffer[i] =  mt_buffer[i];
+		}
+	}
+
+	bool BufferHasChanged()	{
+		bool ret = false;
+		for (int i=0; i<MT_LEN; i++)	{
+			ret |= (bk_buffer[i] !=  mt_buffer[i]);
+		}
+		return ret;
+	}
+
+	void PrintBuffer()	{
+		for (int i=0; i<MT_LEN; i++)	{
+			cerr << mt_buffer[i] << '\t';
+		}
+		cerr << '\n';
+	}
+
 	private:
 
-	long int count;
 	int Seed;
+	long int count;
 	int mt_index;
 	unsigned long mt_buffer[MT_LEN];
+	unsigned long bk_buffer[MT_LEN];
 
 
   };

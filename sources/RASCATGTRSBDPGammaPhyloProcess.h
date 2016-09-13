@@ -210,6 +210,7 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 		}
 
 		GlobalUpdateParameters();
+
 		ExpoConjugateGTRSBDPProfileProcess::Move(1,5,2,1);
 		// ExpoConjugateGTRSBDPProfileProcess::Move(1,1,2);
 		if (iscodon){
@@ -223,6 +224,8 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 			LengthRelRateMove(0.1,10);
 			LengthRelRateMove(0.01,10);
 		}
+		
+		// in principle, not necessary: augmented move followed by globalunfold, which in turn calls globalupdateparams
 		GlobalUpdateParameters();
 	}
 

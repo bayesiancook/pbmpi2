@@ -24,6 +24,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 void RASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 
+	// rnd::GetRandom().BackupBuffer();
+
 	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
@@ -105,6 +107,12 @@ void RASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	else	{
 		UpdateMatrices();
 	}
+	/*
+	if (rnd::GetRandom().BufferHasChanged())	{
+		cerr << "rnd buffer has changed during update params\n";
+		exit(1);
+	}
+	*/
 }
 
 
@@ -131,6 +139,7 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 void RASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters()	{
 
+	// rnd::GetRandom().BackupBuffer();
 	// SlaveBroadcastTree();
 
 	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nrr = GetNrr();
@@ -178,6 +187,12 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters()	{
 	MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 	UpdateMatrices();
+	/*
+	if (rnd::GetRandom().BufferHasChanged())	{
+		cerr << "rnd buffer has changed during update params\n";
+		exit(1);
+	}
+	*/
 }
 
 

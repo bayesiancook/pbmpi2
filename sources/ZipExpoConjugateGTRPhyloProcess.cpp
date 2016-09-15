@@ -1,13 +1,16 @@
 
 #include "ZipExpoConjugateGTRPhyloProcess.h"
 
-
 void ZipExpoConjugateGTRPhyloProcess::Unfold()	{
 
 	DeleteMappings();
 	ActivateSumOverRateAllocations();
-	CreateMatrices();
-	// ActivateZip();
+	ActivateZip();
+	if (GetMyid() && (! zipmatcreated))	{
+		CreateZipMatrices();
+		zipmatcreated = 1;
+	}
+	UpdateMatrices();
 	UpdateConditionalLikelihoods();
 	/*
 	if (!sumratealloc)	{
@@ -20,7 +23,7 @@ void ZipExpoConjugateGTRPhyloProcess::Unfold()	{
 
 void ZipExpoConjugateGTRPhyloProcess::Collapse()	{
 
-	// InactivateZip();
+	InactivateZip();
 	UpdateConditionalLikelihoods();
 	// if (sumratealloc)	{
 	DrawAllocations(0);
@@ -29,9 +32,9 @@ void ZipExpoConjugateGTRPhyloProcess::Collapse()	{
 	SampleNodeStates();
 	FillMissingMap();
 	SampleSubstitutionMappings(GetRoot());
-	DeleteMatrices();
 	activesuffstat = true;
 }
+
 
 void ZipExpoConjugateGTRPhyloProcess::GlobalActivateFastTopo()	{
 

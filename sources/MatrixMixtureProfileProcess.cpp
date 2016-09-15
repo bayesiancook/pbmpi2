@@ -32,7 +32,9 @@ void MatrixMixtureProfileProcess::Create()	{
 		for (int k=0; k<GetNmodeMax(); k++)	{
 			matrixarray[k] = 0;
 		}
-		CreateMatrices();
+		if (GetMyid() || (GetNprocs() == 1))	{
+			CreateMatrices();
+		}
 	}
 }
 

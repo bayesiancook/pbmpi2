@@ -39,20 +39,6 @@ class ZipMatrixMixtureProfileProcess : public virtual ZipMatrixProfileProcess, p
 		ZipMatrixProfileProcess::Delete();
 	}
 
-	virtual void CreateMatrices()	{
-		MatrixMixtureProfileProcess::CreateMatrices();
-		if (GetMyid())	{
-			ZipMatrixProfileProcess::CreateMatrices();
-		}
-	}
-
-	virtual void DeleteMatrices()	{
-		if (GetMyid())	{
-			ZipMatrixProfileProcess::DeleteMatrices();
-		}
-		MatrixMixtureProfileProcess::DeleteMatrices();
-	}
-
 	virtual void UpdateMatrix(int k)	{
 		MatrixMixtureProfileProcess::UpdateMatrix(k);
 		if (GetMyid())	{

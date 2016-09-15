@@ -13,10 +13,7 @@ void ZipMatrixProfileProcess::Create()	{
 
 void ZipMatrixProfileProcess::Delete()	{
 	if (zipmatrixarray)	{
-		for (int i=0; i<GetNsite(); i++)	{
-			delete zipmatrixarray[i];
-			zipmatrixarray[i] = 0;
-		}
+		DeleteZipMatrices();
 		delete[] zipmatrixarray;
 	}
 	MatrixProfileProcess::Delete();

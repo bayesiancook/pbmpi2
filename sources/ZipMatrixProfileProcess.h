@@ -44,23 +44,21 @@ class ZipMatrixProfileProcess : public virtual MatrixProfileProcess	{
 	virtual int GetStateFromZip(int site, int state) = 0;
 
 	// create/delete all matrices
-	// Create called when deactivating sufficient statistics and activating pruning-based computation (Unfold  in PhyloProcess)
-	virtual void CreateMatrices()	{
+
+	virtual void CreateZipMatrices()	{
 		if (! GetMyid())	{
 			cerr << "error: master in ZipMatrixProfileProcess::CreateMatrices\n";
 			exit(1);
 		}	
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i))	{
-				if (! zipmatrixarray[i])	{
-					SubMatrix* temp = GetOriginalMatrix(i);
-					zipmatrixarray[i] = new ZipSubMatrix(temp,GetZipSize(i),GetZipIndices(i));
-				}
+			if (! zipmatrixarray[i])	{
+				SubMatrix* temp = GetOriginalMatrix(i);
+				zipmatrixarray[i] = new ZipSubMatrix(temp,GetZipSize(i),GetZipIndices(i));
 			}
 		}
 	}
 
-	virtual void DeleteMatrices()	{
+	virtual void DeleteZipMatrices()	{
 		for (int i=0; i<GetNsite(); i++)	{
 			if (zipmatrixarray[i])	{
 				delete zipmatrixarray[i];

@@ -36,15 +36,11 @@ class MatrixProfileProcess : public virtual ProfileProcess	{
 	protected:
 
 	// create/delete all matrices
-	// Create called when deactivating sufficient statistics and activating pruning-based computation (Unfold  in PhyloProcess)
 	virtual void CreateMatrices() = 0;
-	// Delete called when deactivating pruning-based computation and activating sufficient statistics (Collapse in PhyloProcess)
 	virtual void DeleteMatrices() = 0;
 
 	// updates all matrices
-	// (should be called, e.g. when performing a Metropolis on relative exchangeabilities or global mutation parameters)
 	virtual void UpdateMatrices() = 0;
-	// virtual void DiagonaliseMatrices() = 0;
 };
 
 #endif

@@ -55,11 +55,13 @@ public virtual ZipExpoConjugateGTRFiniteProfileProcess	{
 
 	virtual void Create()	{
 		RASCATGTRFiniteSubstitutionProcess::Create();
+		ZipExpoConjugateGTRFiniteProfileProcess::Create();
 		ZipExpoConjugateGTRSubstitutionProcess::Create();
 	}
 
 	virtual void Delete()	{
 		ZipExpoConjugateGTRSubstitutionProcess::Delete();
+		ZipExpoConjugateGTRFiniteProfileProcess::Delete();
 		RASCATGTRFiniteSubstitutionProcess::Delete();
 	}
 };

@@ -25,7 +25,7 @@ class ZipExpoConjugateGTRPhyloProcess : public virtual ExpoConjugateGTRPhyloProc
 
 	public:
 
-	ZipExpoConjugateGTRPhyloProcess() {}
+	ZipExpoConjugateGTRPhyloProcess() : zipmatcreated(0) {}
 	virtual ~ZipExpoConjugateGTRPhyloProcess() {}
 
 	virtual int GetNstate() {return ZipExpoConjugateGTRSubstitutionProcess::GetNstate();}
@@ -65,13 +65,15 @@ class ZipExpoConjugateGTRPhyloProcess : public virtual ExpoConjugateGTRPhyloProc
 		ZipMatrixPhyloProcess::Delete();
 	}
 
-	virtual void Unfold();
-	virtual void Collapse();
+	void Unfold();
+	void Collapse();
+
 	// double ZipTopoMoveCycle(int nrep, double tuning);
 
 	virtual void GlobalActivateFastTopo();
 	virtual void GlobalInactivateFastTopo();
 
+	int zipmatcreated;
 
 };
 

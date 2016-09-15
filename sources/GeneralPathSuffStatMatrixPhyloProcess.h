@@ -39,15 +39,17 @@ class GeneralPathSuffStatMatrixPhyloProcess : public virtual MatrixPhyloProcess,
 		GeneralPathSuffStatMatrixSubstitutionProcess::Delete();
 	}
 
+	/*
 	void Unfold();
 	void Collapse();
+	*/
 
 	map<pair<int,int>,int>& GetSitePairCount(int site) {return sitepaircount[site];}
 	int GetSiteRootState(int site) {return siterootstate[site];}
 	map<int,double>& GetSiteWaitingTime(int site) {return sitewaitingtime[site];}
 
 	// should also create the matrices
-	void GlobalUnfold();
+	// void GlobalUnfold();
 	// void GlobalCollapse();
 
 	virtual void CreateSuffStat();

@@ -25,16 +25,11 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 
+/*
 void GeneralPathSuffStatMatrixPhyloProcess::Unfold()	{
 
 	DeleteMappings();
 	ActivateSumOverRateAllocations();
-	/*
-	if (!sumratealloc)	{
-		DrawAllocations(0);
-		InactivateSumOverRateAllocations();
-	}
-	*/
 	// this will in fact create only the matrices that did not already exist
 	// CreateMatrices();
 	// this one is important
@@ -76,6 +71,7 @@ void GeneralPathSuffStatMatrixPhyloProcess::GlobalUnfold()	{
 		UpdateConditionalLikelihoods();
 	}
 }
+*/
 
 
 void GeneralPathSuffStatMatrixPhyloProcess::CreateSuffStat()	{

@@ -111,7 +111,6 @@ class AASubSelRASCATSBDPGammaPhyloProcess : public virtual GeneralPathSuffStatMa
 	void ReadNocc(string name, int burnin, int every, int until);
 	void ReadTestProfile(string name, int nrep, double tuning, int burnin, int every, int until);
 	void ReadRelRates(string name, int burnin, int every, int until);
-	void ReadSiteProfiles(string name, int burnin, int every, int until);
 	void SlaveComputeCVScore();
 	void SlaveComputeSiteLogL();
 

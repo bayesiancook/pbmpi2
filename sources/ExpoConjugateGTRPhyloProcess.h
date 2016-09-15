@@ -49,7 +49,6 @@ class ExpoConjugateGTRPhyloProcess : public virtual GTRPhyloProcess, public virt
 	// protected:
 	public:
 
-	void ReadSiteProfiles(string name, int burnin, int every, int until);
 
 	void CreateSuffStat();
 	void DeleteSuffStat();

@@ -24,15 +24,7 @@ void ZipExpoConjugateGTRPhyloProcess::Unfold()	{
 void ZipExpoConjugateGTRPhyloProcess::Collapse()	{
 
 	InactivateZip();
-	UpdateConditionalLikelihoods();
-	// if (sumratealloc)	{
-	DrawAllocations(0);
-	InactivateSumOverRateAllocations();
-	// }
-	SampleNodeStates();
-	FillMissingMap();
-	SampleSubstitutionMappings(GetRoot());
-	activesuffstat = true;
+	MatrixPhyloProcess::Collapse();
 }
 
 

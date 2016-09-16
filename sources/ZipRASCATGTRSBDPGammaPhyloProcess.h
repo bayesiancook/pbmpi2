@@ -52,11 +52,13 @@ class ZipRASCATGTRSBDPSubstitutionProcess : public virtual RASCATGTRSBDPSubstitu
 
 	virtual void Create()	{
 		RASCATGTRSBDPSubstitutionProcess::Create();
+		ZipExpoConjugateGTRSBDPProfileProcess::Create();
 		ZipExpoConjugateGTRSubstitutionProcess::Create();
 	}
 
 	virtual void Delete()	{
 		ZipExpoConjugateGTRSubstitutionProcess::Delete();
+		ZipExpoConjugateGTRSBDPProfileProcess::Delete();
 		RASCATGTRSBDPSubstitutionProcess::Delete();
 	}
 };

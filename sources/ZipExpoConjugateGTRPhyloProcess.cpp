@@ -24,6 +24,7 @@ void ZipExpoConjugateGTRPhyloProcess::Unfold()	{
 void ZipExpoConjugateGTRPhyloProcess::Collapse()	{
 
 	InactivateZip();
+	UpdateConditionalLikelihoods();
 	MatrixPhyloProcess::Collapse();
 }
 

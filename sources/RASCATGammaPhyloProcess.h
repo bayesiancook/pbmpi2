@@ -62,9 +62,10 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 
 	RASCATGammaPhyloProcess() {}
 
-	RASCATGammaPhyloProcess(int nratecat, int inkappaprior)	{
+	RASCATGammaPhyloProcess(int nratecat, int inwithpinv, int inkappaprior)	{
 
 		Ncat = nratecat;
+		withpinv = inwithpinv;
 		kappaprior = inkappaprior;
 	}
 
@@ -76,6 +77,7 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 
 		// specific
 		is >> Ncat;
+		is >> withpinv;
 		is >> kappaprior;
 
 		Open(is);
@@ -92,7 +94,11 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 	}
 
 	void TraceHeader(ostream& os)	{
-		os << "#iter\ttime\ttopo\tloglik\tlength\talpha\tNmode\tstatent\tstatalpha";
+		os << "#iter\ttime\ttopo\tloglik\tlength\talpha";
+		// if (withpinv)	{
+			os << "\tpinv";
+		// }
+		os << "\tNmode\tstatent\tstatalpha";
 		os << "\tkappa";
 		os << '\n'; 
 	}
@@ -112,6 +118,9 @@ class RASCATGammaPhyloProcess : public virtual PoissonPhyloProcess, public virtu
 		}
 
 		os << '\t' << GetLogLikelihood() << '\t' << GetRenormTotalLength() << '\t' << GetAlpha();
+		// if (withpinv)	{
+			os << '\t' << GetPinv();
+		// }
 		os << '\t' << GetNOccupiedComponent() << '\t' << GetStatEnt();
 		os << '\t' << GetMeanDirWeight();
 		os << '\t' << kappa;

@@ -118,7 +118,7 @@ void GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters()	
 	double* dvector = new double[nd];
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	SetAlpha(dvector[0]);
+	SetRateParams(dvector[0],0);
 	for(i=0; i<nbranch; ++i) {
 		blarray[i] = dvector[1+i];
 	}

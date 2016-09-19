@@ -67,6 +67,8 @@ void RASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	int index = 0;
 	dvector[index] = GetAlpha();
 	index++;
+	dvector[index] = GetPinv();
+	index++;
 	
 	for(i=0; i<nbranch; ++i) {
 		dvector[index] = blarray[i];
@@ -152,8 +154,8 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters()	{
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	int index = 0;
-	SetAlpha(dvector[index]);
-	index++;
+	SetRateParams(dvector[index],dvector[index+1]);
+	index+=2;
 	for(i=0; i<nbranch; ++i) {
 		blarray[i] = dvector[index];
 		index++;

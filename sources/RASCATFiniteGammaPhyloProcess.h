@@ -62,9 +62,10 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 
 	RASCATFiniteGammaPhyloProcess() {}
 
-	RASCATFiniteGammaPhyloProcess(int nratecat, int ncat, int infixncomp, int inempmix, string inmixtype)	{
+	RASCATFiniteGammaPhyloProcess(int nratecat, int inwithpinv, int ncat, int infixncomp, int inempmix, string inmixtype)	{
 
 		Ncat = nratecat;
+		withpinv = inwithpinv;
 		Ncomponent = ncat;
 		fixncomp = infixncomp;
 		empmix = inempmix;
@@ -79,6 +80,7 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 
 		// specific
 		is >> Ncat;
+		is >> withpinv;
 		is >> fixncomp;
 		is >> empmix;
 		is >> mixtype;
@@ -97,7 +99,11 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 	}
 
 	void TraceHeader(ostream& os)	{
-		os << "#iter\ttime\ttopo\tloglik\tlength\talpha\tNmode\tstatent\tstatalpha\ttopo";
+		os << "#iter\ttime\ttopo\tloglik\tlength\talpha";
+		if (withpinv)	{
+			os << "\tpinv";
+		}
+		os << "\tNmode\tstatent\tstatalpha\ttopo";
 		os << '\n'; 
 	}
 
@@ -116,6 +122,9 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		}
 
 		os << '\t' << GetLogLikelihood() << '\t' << GetRenormTotalLength() << '\t' << GetAlpha();
+		if (withpinv)	{
+			os << '\t' << GetPinv();
+		}
 		os << '\t' << GetNOccupiedComponent() << '\t' << GetStatEnt();
 		os << '\t' << GetMeanDirWeight();
 		os << '\t' << currenttopo;

@@ -81,9 +81,10 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 
 	RASCATGTRSBDPGammaPhyloProcess() {}
 
-	RASCATGTRSBDPGammaPhyloProcess(int nratecat, string inrrtype, int inkappaprior)	{
+	RASCATGTRSBDPGammaPhyloProcess(int nratecat, int inwithpinv, string inrrtype, int inkappaprior)	{
 
 		Ncat = nratecat;
+		withpinv = inwithpinv;
 		rrtype = inrrtype;
 		kappaprior = inkappaprior;
 	}
@@ -96,6 +97,7 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 
 		// specific
 		is >> Ncat;
+		is >> withpinv;
 		is >> kappaprior;
 		is >> rrtype;
 
@@ -115,7 +117,11 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 	}
 
 	void TraceHeader(ostream& os)	{
-		os << "#iter\ttime\ttopo\tloglik\tlength\talpha\tNmode\tstatent\tstatalpha\tkappa";
+		os << "#iter\ttime\ttopo\tloglik\tlength\talpha";
+		if (withpinv)	{
+			os << "\tpinv";
+		}
+		os << "\tNmode\tstatent\tstatalpha\tkappa";
 		if (! fixrr)	{
 			os << "\trrent\trrmean";
 		}
@@ -141,6 +147,9 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 		os << '\t' << GetLogLikelihood();
 		os << '\t' << GetRenormTotalLength();
 		os << '\t' << GetAlpha();
+		if (withpinv)	{
+			os << '\t' << GetPinv();
+		}
 		os << '\t' << GetNDisplayedComponent();
 		os << '\t' << GetStatEnt();
 		os << '\t' << GetMeanDirWeight();

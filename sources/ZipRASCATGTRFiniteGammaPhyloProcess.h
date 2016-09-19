@@ -70,9 +70,10 @@ class ZipRASCATGTRFiniteGammaPhyloProcess : public virtual RASCATGTRFiniteGammaP
 
 	public:
 
-	ZipRASCATGTRFiniteGammaPhyloProcess(int nratecat, int ncat, int infixncomp, int inempmix, string inmixtype, string inrrtype)	{
+	ZipRASCATGTRFiniteGammaPhyloProcess(int nratecat, int inwithpinv, int ncat, int infixncomp, int inempmix, string inmixtype, string inrrtype)	{
 
 		Ncat = nratecat;
+		withpinv = inwithpinv;
 		Ncomponent = ncat;
 		fixncomp = infixncomp;
 		empmix = inempmix;
@@ -88,6 +89,7 @@ class ZipRASCATGTRFiniteGammaPhyloProcess : public virtual RASCATGTRFiniteGammaP
 
 		// specific
 		is >> Ncat;
+		is >> withpinv;
 		is >> fixncomp;
 		is >> empmix;
 		is >> mixtype;

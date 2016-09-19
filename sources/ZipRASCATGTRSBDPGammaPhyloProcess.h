@@ -67,9 +67,10 @@ class ZipRASCATGTRSBDPGammaPhyloProcess : public virtual RASCATGTRSBDPGammaPhylo
 
 	public:
 
-	ZipRASCATGTRSBDPGammaPhyloProcess(int nratecat, string inrrtype, int inkappaprior)	{
+	ZipRASCATGTRSBDPGammaPhyloProcess(int nratecat, int inwithpinv, string inrrtype, int inkappaprior)	{
 
 		Ncat = nratecat;
+		withpinv = inwithpinv;
 		rrtype = inrrtype;
 		kappaprior = inkappaprior;
 	}
@@ -82,6 +83,7 @@ class ZipRASCATGTRSBDPGammaPhyloProcess : public virtual RASCATGTRSBDPGammaPhylo
 
 		// specific
 		is >> Ncat;
+		is >> withpinv;
 		is >> kappaprior;
 		is >> rrtype;
 

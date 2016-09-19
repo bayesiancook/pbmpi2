@@ -23,10 +23,12 @@ class DGamRateProcess : public virtual RateProcess {
 
 	public:
 
-	DGamRateProcess() : Ncat(0), rate(0), fixalpha(false), meanalpha(1), varalpha(1), alphamin(0.2) {}
+	DGamRateProcess() : Ncat(0), rate(0), fixalpha(false), meanalpha(1), varalpha(1), alphamin(0.2), pinv(0.01), withpinv(false), fixpinv(false), meanpinv(0.5), invconcpinv(2) {}
+
 	virtual ~DGamRateProcess() {}
 
 	double GetAlpha() {return alpha;}
+	double GetPinv() {return pinv;}
 
 	int GetNrate(int site)	{
 		return Ncat;
@@ -50,12 +52,21 @@ class DGamRateProcess : public virtual RateProcess {
 		return fixalpha;
 	}
 
+	void SetFixPinv(bool in)	{
+		fixpinv = in;
+	}
+
+	bool FixPinv()	{
+		return fixpinv;
+	}
+
 	virtual void BackupRate() {
 		bkalpha = alpha;
+		bkpinv = pinv;
 	}
 
 	virtual void RestoreRate() {
-		SetAlpha(bkalpha);
+		SetRateParams(bkalpha,bkpinv);
 	}
 
 	double GetRate(int site, int cat = 0)	{
@@ -68,7 +79,17 @@ class DGamRateProcess : public virtual RateProcess {
 
 	double GetRateWeight(int site, int cat)	{
 		if (SumOverRateAllocations())	{
-			return 1.0/Ncat;
+			if (withpinv)	{
+				if (! cat)	{
+					return pinv;
+				}
+				else	{
+					return (1.0 - pinv) / (Ncat-1);
+				}
+			}
+			else	{
+				return 1.0/Ncat;
+			}
 		}
 		return 1.0;
 	}
@@ -92,30 +113,34 @@ class DGamRateProcess : public virtual RateProcess {
 	double GetPriorMeanRate()	{
 		double total = 0;
 		for (int k=0; k<GetNcat(); k++)	{
-			total += rate[k];
+			total += GetRateWeight(0,k) * rate[k];
 		}
-		return total / GetNcat();
+		return total;
 	}
 
 	virtual double Move(double tuning = 1, int nrep = 1)	{
 		GlobalUpdateSiteRateSuffStat();
 		chronorate.Start();
-		return MoveAlpha(tuning, nrep);
+		return MoveRateParams(tuning, nrep);
 		chronorate.Stop();
 	}
 
 	double NonMPIMove(double tuning = 1, int nrep = 1)	{
 		UpdateSiteRateSuffStat();
-		NonMPIMoveAlpha(tuning, nrep);
+		NonMPIMoveRateParams(tuning, nrep);
 		return 1;
 	}
 
 	// uses suffisicent stats
-	double MoveAlpha(double tuning, int nrep);
-	double NonMPIMoveAlpha(double tuning, int nrep);
+	double MoveRateParams(double tuning, int nrep);
+	double NonMPIMoveRateParams(double tuning, int nrep);
+
+	double MoveAlpha(double tuning);
+	double MovePinv(double tuning);
 	
-	void SetAlpha(double inalpha)	{
+	void SetRateParams(double inalpha, double inpinv)	{
 		alpha = inalpha;
+		pinv = inpinv;
 		UpdateDiscreteCategories();
 	}
 
@@ -129,7 +154,12 @@ class DGamRateProcess : public virtual RateProcess {
 	protected:
 
 	void SetNcat(int inncat)	{
-		Ncat = inncat;
+		if (withpinv)	{
+			Ncat = inncat + 1;
+		}
+		else	{
+			Ncat = inncat;
+		}
 	}
 
 	virtual void Create();
@@ -148,8 +178,10 @@ class DGamRateProcess : public virtual RateProcess {
 	double* rate;
 	double alpha;
 	double bkalpha;
+	
 	int* ratesuffstatcount;
 	double* ratesuffstatbeta;
+	int Ninv;
 
 	int Ncat;
 	bool fixalpha;
@@ -161,6 +193,12 @@ class DGamRateProcess : public virtual RateProcess {
 
 	double alphamin;
 
+	double pinv;
+	double bkpinv;
+	bool withpinv;
+	bool fixpinv;
+	double meanpinv;
+	double invconcpinv;
 };
 
 #endif

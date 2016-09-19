@@ -74,9 +74,10 @@ class RASCATGTRFiniteGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloPro
 
 	RASCATGTRFiniteGammaPhyloProcess() {}
 
-	RASCATGTRFiniteGammaPhyloProcess(int nratecat, int ncat, int infixncomp, int inempmix, string inmixtype, string inrrtype)	{
+	RASCATGTRFiniteGammaPhyloProcess(int nratecat, int inwithpinv, int ncat, int infixncomp, int inempmix, string inmixtype, string inrrtype)	{
 
 		Ncat = nratecat;
+		withpinv = inwithpinv;
 		Ncomponent = ncat;
 		fixncomp = infixncomp;
 		empmix = inempmix;
@@ -92,6 +93,7 @@ class RASCATGTRFiniteGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloPro
 
 		// specific
 		is >> Ncat;
+		is >> withpinv;
 		is >> fixncomp;
 		is >> empmix;
 		is >> mixtype;
@@ -114,7 +116,11 @@ class RASCATGTRFiniteGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloPro
 	virtual void SlaveUpdateParameters();
 
 	void TraceHeader(ostream& os)	{
-		os << "#iter\ttime\ttopo\tloglik\tlength\talpha\tNmode\tstatent\tstatalpha";
+		os << "#iter\ttime\ttopo\tloglik\tlength\talpha";
+		if (withpinv)	{
+			os << "\tpinv";
+		}
+		os << "\tNmode\tstatent\tstatalpha";
 		if (! fixrr)	{
 			os << "\trrent\trrmean";
 		}
@@ -138,6 +144,9 @@ class RASCATGTRFiniteGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloPro
 		os << '\t' << GetLogLikelihood();
 		os << '\t' << GetRenormTotalLength();
 		os << '\t' << GetAlpha();
+		if (withpinv)	{
+			os << '\t' << GetPinv();
+		}
 		os << '\t' << GetNDisplayedComponent();
 		os << '\t' << GetStatEnt();
 		if (empmix == 2)	{

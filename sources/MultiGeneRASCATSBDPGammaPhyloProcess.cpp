@@ -9,7 +9,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
 	if (GetMyid())	{
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == myid)	{
-				process[gene] = new RASCATSBDPGammaPhyloProcess(Ncat,kappaprior);
+				process[gene] = new RASCATSBDPGammaPhyloProcess(Ncat,0,kappaprior);
 				process[gene]->SetParameters(genename[gene],treefile,iscodon,codetype,sis,sisfrac,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,roottax1,roottax2,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,dirpriortype,Nstatcomp,priorempmix,priormixtype,fixstatweight,fixstatalpha,fixstatcenter,reshuffle);
 				process[gene]->SetName(name);
 				process[gene]->SetMPI(0,1);
@@ -186,7 +186,8 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	int index = 0;
-	SetAlpha(dvector[index]);
+	// SetAlpha(dvector[index]);
+	SetRateParams(dvector[index],0);
 	index++;
 	meanalpha = dvector[index];
 	index++;
@@ -221,7 +222,8 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::SlaveUpdateParameters() {
 				GetProcess(gene)->SetKappaHyperParams(kappamean,kapparelvar);
 			}
 			if (GlobalAlpha())	{
-				GetProcess(gene)->SetAlpha(GetAlpha());
+				GetProcess(gene)->SetRateParams(GetAlpha(),0);
+				// GetProcess(gene)->SetAlpha(GetAlpha());
 			}
 			else	{
 				GetProcess(gene)->meanalpha = meanalpha;

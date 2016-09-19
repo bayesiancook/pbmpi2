@@ -48,7 +48,7 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 
 	RASCATSBDPGammaPhyloProcess() {}
 
-	RASCATSBDPGammaPhyloProcess(int nratecat, int inkappaprior) : RASCATGammaPhyloProcess(nratecat, inkappaprior)	{}
+	RASCATSBDPGammaPhyloProcess(int nratecat, int inwithpinv, int inkappaprior) : RASCATGammaPhyloProcess(nratecat, inwithpinv, inkappaprior)	{}
 
 	RASCATSBDPGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
 
@@ -58,6 +58,7 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 
 		// specific
 		is >> Ncat;
+		is >> withpinv;
 		is >> kappaprior;
 
 		Open(is);

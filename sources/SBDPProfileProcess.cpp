@@ -733,7 +733,8 @@ void SBDPProfileProcess::SlaveMixMove()	{
 							cumul[mode] = total;
 						}
 						if (isnan(total))	{
-							cerr << "nan\n";
+							cerr << "in SBDPProfileProcess: nan\n";
+							exit(1);
 						}
 
 						// double M = exp(mean- max);
@@ -954,7 +955,8 @@ double SBDPProfileProcess::MixMove(int nrep, int nallocrep, double epsilon, int 
 						cumul[mode] = total;
 					}
 					if (isnan(total))	{
-						cerr << "nan\n";
+						cerr << "in SBDPProfileProcess: nan\n";
+						exit(1);
 					}
 
 					// double M = exp(mean- max);

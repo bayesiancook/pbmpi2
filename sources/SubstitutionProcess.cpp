@@ -234,15 +234,19 @@ void SubstitutionProcess::Offset(double*** t, bool condalloc)	{
 							max = tmp[k];
 						}
 					}
+					/*
 					if (max == 0)	{
 						max = 1e-12;
-						/*
-						cerr << "error in pruning: null likelihood\n";
-						exit(1);
-						*/
 					}
-					for (int k=0; k<GetNstate(i); k++)	{
-						tmp[k] /= max;
+					*/
+					if (max < 0)	{
+						cerr << "error in pruning (offset function): null likelihood\n";
+						exit(1);
+					}
+					if (max > 0)	{
+						for (int k=0; k<GetNstate(i); k++)	{
+							tmp[k] /= max;
+						}
 					}
 					tmp[GetNstate(i)] += log(max);
 				}

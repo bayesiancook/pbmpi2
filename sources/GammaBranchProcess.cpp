@@ -277,6 +277,11 @@ double GammaBranchProcess::MPIMoveBranchLengths()	{
 				beta = 1.0 / branchscaling[branchalloc[i]];
 			}
 			blarray[i] = rnd::GetRandom().Gamma(branchalpha + GetBranchLengthSuffStatCount(i), beta + GetBranchLengthSuffStatBeta(i));
+			if (isnan(blarray[i]))	{
+				cerr << "in GammaBranchProcess::MoveBL: nan bl\n";
+				cerr << beta << '\t' << GetBranchLengthSuffStatBeta(i) << '\n';
+				exit(1);
+			}
 		}
 	}
 	return 1.0;

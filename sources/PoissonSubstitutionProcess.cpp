@@ -117,6 +117,14 @@ BranchSitePath* PoissonSubstitutionProcess::SampleSitePath(int site, int stateup
 	int m = 0;
 	int mmax = 1000;
 	
+	if (!l)	{
+		if (stateup != statedown)	{
+			cerr << "error in PoissonSubstitutionProcess::SampleSitePath: efflength == 0 but stateup != statedown\n";
+			exit(1);
+		}
+		return new BranchSitePath(0,statedown);
+	}
+
 	if (stateup == statedown)	{
 		double fact = pi * exp(-l);
 		double total = exp(-l);

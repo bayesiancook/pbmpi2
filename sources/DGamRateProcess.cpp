@@ -116,7 +116,17 @@ double DGamRateProcess::LogRatePrior()	{
 double DGamRateProcess::RateSuffStatLogProb()	{
 	double total = 0;
 	for (int k=0; k<GetNcat(); k++)	{
-		total += ratesuffstatcount[k] * log(rate[k]) - ratesuffstatbeta[k] * rate[k];
+		if (ratesuffstatcount[k] > 0)	{
+			total += ratesuffstatcount[k] * log(rate[k]);
+		}
+		total -= ratesuffstatbeta[k] * rate[k];
+	}
+	if (isnan(total))	{
+		cerr << "in DGamRateProcess::RateSuffStatLogProb: nan log prob\n";
+		for (int k=0; k<GetNcat(); k++)	{
+			cerr << rate[k] << '\t' << log(rate[k]) << '\t' << ratesuffstatcount[k] << '\t' << ratesuffstatbeta[k] << '\t' << ratesuffstatcount[k] * log(rate[k]) << '\n';
+		}
+		exit(1);
 	}
 	return total;
 }

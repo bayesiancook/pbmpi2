@@ -132,8 +132,10 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon, int fo
 		for (int i=0; i<GetNstate(); i++)	{
 			total += in[j][i];
 		}
-		for (int i=0; i<GetNstate(); i++)	{
-			in[j][i] /= total;
+		if (total)	{
+			for (int i=0; i<GetNstate(); i++)	{
+				in[j][i] /= total;
+			}
 		}
 	}
 
@@ -162,6 +164,10 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon, int fo
 		for (int k=0; k<GetNstate(); k++)	{
 			tot += bgfreq[i][k];
 		}
+		if (! tot)	{
+			cerr << "bgfreq: tot is 0\n";
+			exit(1);
+		}
 		for (int k=0; k<GetNstate(); k++)	{
 			bgfreq[i][k] /= tot;
 		}
@@ -180,8 +186,19 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon, int fo
 					tmpfreq[k] += in[j][i] * bgfreq[i][k];
 				}
 			}
+			double tot = 0;
 			for (int i=0; i<GetNstate(); i++)	{
-				in[j][i] = epsilon * tmpfreq[i] + (1-epsilon)*in[j][i];
+				tot += tmpfreq[i];
+			}
+			if (! tot)	{
+				for (int i=0; i<GetNstate(); i++)	{
+					in[j][i] = epsilon * globfreq[i] + (1-epsilon)*in[j][i];
+				}
+			}
+			else	{
+				for (int i=0; i<GetNstate(); i++)	{
+					in[j][i] = epsilon * tmpfreq[i] + (1-epsilon)*in[j][i];
+				}
 			}
 		}
 	}
@@ -189,6 +206,23 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon, int fo
 		for (int j=0; j<GetNsite(); j++)	{
 			for (int i=0; i<GetNstate(); i++)	{
 				in[j][i] = epsilon * globfreq[i] + (1-epsilon)*in[j][i];
+				if (isnan(in[j][i]))	{
+					cerr << "nan site freq: " << in[j][i] << '\n';
+					cerr << "before pseudocount\n";
+					exit(1);
+				}
+				if (in[j][i] <= 0)	{
+					cerr << "site freq negative: " << in[j][i] << '\n';
+					exit(1);
+				}
+				if (isnan(in[j][i]))	{
+					cerr << "nan site freq: " << in[j][i] << '\n';
+					exit(1);
+				}
+				if (isinf(in[j][i]))	{
+					cerr << "inf site freq: " << in[j][i] << '\n';
+					exit(1);
+				}
 			}
 		}
 	}

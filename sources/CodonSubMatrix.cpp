@@ -85,6 +85,11 @@ double CodonSubMatrix::NonSynRate()	{
 	double total = 0;
 	for (int i=0; i<GetNstate(); i++)	{
 		total += mStationary[i] * RateAwayNonsyn(i);
+		if (isnan(total))	{
+			cerr << "in CodonSubMatrix::NonSynRate: nan\n";
+			cerr << i << '\t' << mStationary[i] << '\t' << RateAwayNonsyn(i) << '\n';
+			exit(1);
+		}
 	}
 	return total;
 }
@@ -288,6 +293,11 @@ void HBAACodonMutSelProfileSubMatrix::ComputeStationary()	{
 	for (int i=0; i<GetNstate(); i++)	{
 		int aa = GetCodonStateSpace()->Translation(i);
 		mStationary[i] *= exp((*Ne) * log(aaprofile[aa])) / aanorm[aa];
+		if (isnan(mStationary[i]))	{
+			cerr << "in HBA::ComputeStationary: nan\n";
+			cerr << aa << '\t' << *Ne << '\t' << aaprofile[aa] << '\t' << aanorm[aa] << '\n';
+			exit(1);
+		}
 		total += mStationary[i];
 	}
 	for (int i=0; i<GetNstate(); i++)	{

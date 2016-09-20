@@ -430,6 +430,16 @@ class SequenceAlignment	{
 		return ret;
 	}
 	
+	int GetNumberConstantColumns()	{
+		int ret = 0;
+		for (int i=0; i<GetNsite(); i++)	{
+			if (ConstantColumn(i))	{
+				ret++;
+			}
+		}
+		return ret;
+	}
+
 	bool ConstantColumn(int site)	{
 		bool ret = true;
 		int tax = 0;
@@ -478,7 +488,7 @@ class SequenceAlignment	{
 
 	void GetEmpiricalFreq(double* in);
 
-	void GetSiteEmpiricalFreq(double** in, double pseudocountepsilon = 0);
+	void GetSiteEmpiricalFreq(double** in, double pseudocountepsilon = 0, int focus = 0);
 
 	void ToStream(ostream& os);
 	void ToFasta(ostream& os);

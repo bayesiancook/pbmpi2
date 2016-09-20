@@ -88,12 +88,16 @@ double SequenceAlignment::GetMeanPairwiseDiff()	{
 	return tot;
 }
 
-void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon)	{
+void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon, int focus)	{
+
+	// raw empirical frequencies, sitewise
+
 	for (int j=0; j<GetNsite(); j++)	{
 		for (int i=0; i<GetNstate(); i++)	{
 			in[j][i] = 0;
 		}
 	}
+
 	for (int i=0; i<GetNtaxa(); i++)	{
 		for (int j=0; j<GetNsite(); j++)	{
 			if (GetState(i,j) != unknown)	{
@@ -101,6 +105,8 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon)	{
 			}
 		}
 	}
+
+	// global equilibrium frequencies
 
 	double globfreq[GetNstate()];
 	for (int i=0; i<GetNstate(); i++)	{
@@ -119,10 +125,9 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon)	{
 		globfreq[i] /= total;
 	}
 		
+	// normalize site empirical freqs 
+
 	for (int j=0; j<GetNsite(); j++)	{
-		for (int i=0; i<GetNstate(); i++)	{
-			in[j][i] += epsilon * globfreq[i];
-		}
 		double total = 0;
 		for (int i=0; i<GetNstate(); i++)	{
 			total += in[j][i];
@@ -131,6 +136,66 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon)	{
 			in[j][i] /= total;
 		}
 	}
+
+	// background empirical frequencies associated with presence of each amino-acid 
+
+	double** bgfreq = new double*[GetNstate()];
+	for (int i=0; i<GetNstate(); i++)	{
+		bgfreq[i] = new double[GetNstate()];
+		for (int k=0; k<GetNstate(); k++)	{
+			bgfreq[i][k] = 0;
+		}
+	}
+
+	for (int j=0; j<GetNsite(); j++)	{
+		for (int i=0; i<GetNstate(); i++)	{
+			if (in[j][i] > 0)	{
+				for (int k=0; k<GetNstate(); k++)	{
+					bgfreq[i][k] += in[j][k];
+				}
+			}
+		}
+	}
+
+	for (int i=0; i<GetNstate(); i++)	{
+		double tot = 0;
+		for (int k=0; k<GetNstate(); k++)	{
+			tot += bgfreq[i][k];
+		}
+		for (int k=0; k<GetNstate(); k++)	{
+			bgfreq[i][k] /= tot;
+		}
+	}
+
+	// add pseudocounts
+
+	if (focus)	{
+		for (int j=0; j<GetNsite(); j++)	{
+			double tmpfreq[GetNstate()];
+			for (int i=0; i<GetNstate(); i++)	{
+				tmpfreq[i] = 0;
+			}
+			for (int i=0; i<GetNstate(); i++)	{
+				for (int k=0; k<GetNstate(); k++)	{
+					tmpfreq[k] += in[j][i] * bgfreq[i][k];
+				}
+			}
+			for (int i=0; i<GetNstate(); i++)	{
+				in[j][i] = epsilon * tmpfreq[i] + (1-epsilon)*in[j][i];
+			}
+		}
+	}
+	else	{
+		for (int j=0; j<GetNsite(); j++)	{
+			for (int i=0; i<GetNstate(); i++)	{
+				in[j][i] = epsilon * globfreq[i] + (1-epsilon)*in[j][i];
+			}
+		}
+	}
+	for (int i=0; i<GetNstate(); i++)	{
+		delete[] bgfreq[i];
+	}
+	delete[] bgfreq;
 }
 
 void SequenceAlignment::ToFasta(ostream& os)	{

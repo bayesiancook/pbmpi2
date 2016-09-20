@@ -74,11 +74,12 @@ class Simulator : public NewickTree {
 			exit(1);
 		}
 		prmis >> pseudocount;
+		prmis >> focus;
 		aafreq = new double*[Nsite];
 		for (int i=0; i<Nsite; i++)	{
 			aafreq[i] = new double[Naa];
 		}
-		protdata->GetSiteEmpiricalFreq(aafreq,pseudocount);
+		protdata->GetSiteEmpiricalFreq(aafreq,pseudocount,focus);
 
 		// nucleotide matrix
 		Nrr = Nnuc * (Nnuc-1) / 2;
@@ -120,6 +121,7 @@ class Simulator : public NewickTree {
 		CreateMatrices();
 		UpdateMatrices();
 		nonsynrate = ComputeAverageNonSynRate();
+		cerr << "average dN:" << nonsynrate << '\n';
 
 		prmis >> tmp;
 		if (tmp != "mu")	{
@@ -310,6 +312,9 @@ class Simulator : public NewickTree {
 		sos << "tot number of subs per site : " << ((double) count) / Nsite << '\n';
 		sos << "tot number of reps per site : " << ((double) dncount) / Nsite << '\n';
 		sos << '\n';
+		sos << "fraction inv colums: " << ((double) protali->GetNumberConstantColumns()) / Nsite << '\n';
+		sos << "ref frac inv colums: " << ((double) protdata->GetNumberConstantColumns()) / Nsite << '\n';
+		sos << '\n';
 		sos << "mean diversity     : " << protali->GetMeanDiversity() << '\n';
 		sos << "ref  diversity     : " << protdata->GetMeanDiversity() << '\n';
 		sos << '\n';
@@ -339,6 +344,7 @@ class Simulator : public NewickTree {
 	int mask;
 
 	double pseudocount;
+	int focus;
 	double** aafreq;
 	HBAACodonMutSelProfileSubMatrix** Q;
 

@@ -45,7 +45,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc tracecomp bpcomp bpcomp2 
+ALL= partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc tracecomp bpcomp bpcomp2 
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean
@@ -69,6 +69,9 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 # Targets
+
+$(PROGSDIR)/partitionjackknife: PartitionJackknife.o $(OBJS)
+	$(CC) PartitionJackknife.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 $(PROGSDIR)/mccpmcmc: MultiCCPMCMC.o $(OBJS)
 	$(CC) MultiCCPMCMC.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@

@@ -58,7 +58,7 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 
 		// specific
 		is >> Ncat;
-		is >> withpinv;
+		// is >> withpinv;
 		is >> kappaprior;
 
 		Open(is);

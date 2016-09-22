@@ -97,7 +97,7 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 
 		// specific
 		is >> Ncat;
-		is >> withpinv;
+		// is >> withpinv;
 		is >> kappaprior;
 		is >> rrtype;
 

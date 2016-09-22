@@ -93,7 +93,7 @@ class RASCATGTRFiniteGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloPro
 
 		// specific
 		is >> Ncat;
-		is >> withpinv;
+		// is >> withpinv;
 		is >> fixncomp;
 		is >> empmix;
 		is >> mixtype;

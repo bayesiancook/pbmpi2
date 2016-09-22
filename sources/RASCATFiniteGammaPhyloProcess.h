@@ -80,7 +80,7 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 
 		// specific
 		is >> Ncat;
-		is >> withpinv;
+		// is >> withpinv;
 		is >> fixncomp;
 		is >> empmix;
 		is >> mixtype;

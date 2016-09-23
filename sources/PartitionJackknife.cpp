@@ -28,6 +28,7 @@ int main(int argc, char* argv[])	{
 	}
 	if (count != Nsite)	{
 		cerr << "error: non matching total size\n";
+		cerr << count << '\t' << Nsite << '\n';
 	}
 
 	int* choose = new int[N];

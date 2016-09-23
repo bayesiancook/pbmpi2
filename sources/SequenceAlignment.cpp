@@ -110,7 +110,7 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon, int fo
 
 	double globfreq[GetNstate()];
 	for (int i=0; i<GetNstate(); i++)	{
-		globfreq[i] = 0;
+		globfreq[i] = 1;
 	}
 	for (int j=0; j<GetNsite(); j++)	{
 		for (int i=0; i<GetNstate(); i++)	{
@@ -165,8 +165,10 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon, int fo
 			tot += bgfreq[i][k];
 		}
 		if (! tot)	{
-			cerr << "bgfreq: tot is 0\n";
-			exit(1);
+			if (focus)	{
+				cerr << "bgfreq: tot is 0\n";
+				exit(1);
+			}
 		}
 		for (int k=0; k<GetNstate(); k++)	{
 			bgfreq[i][k] /= tot;

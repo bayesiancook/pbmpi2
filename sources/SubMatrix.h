@@ -376,6 +376,13 @@ inline int SubMatrix::DrawFromStationary()	{
 		k++;
 		if (k == GetNstate())	{
 			cerr << "error in DrawFromStationary\n";
+			double tot = 0;
+			for (int l=0; l<GetNstate(); l++)	{
+				cerr << mStationary[l] << '\t';
+				tot += mStationary[l];
+			}
+			cerr << '\n';
+			cerr << "total : " << tot << '\t' << 1-tot << '\n';
 			exit(1);
 		}
 		tot += mStationary[k];

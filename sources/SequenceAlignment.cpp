@@ -50,6 +50,16 @@ void SequenceAlignment::GetEmpiricalFreq(double* in)	{
 	for (int i=0; i<GetNstate(); i++)	{
 		in[i] /= n;
 	}
+
+	// total count n is large: this creates numerical errors in total sum
+	// therefore, need to re-normalize once again
+	double tot = 0;
+	for (int i=0; i<GetNstate(); i++)	{
+		tot += in[i];
+	}
+	for (int i=0; i<GetNstate(); i++)	{
+		in[i] /= tot;
+	}
 }
 
 double SequenceAlignment::GetMeanPairwiseDiff()	{

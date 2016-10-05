@@ -115,9 +115,13 @@ class Simulator : public NewickTree {
 				stat[k] = new double[Naa];
 			}
 
+			/*
 			for (int gene=0; gene<Ngene; gene++)	{
 				genedata[gene]->GetSiteEmpiricalFreq(stat + genefirst[gene],pseudocount,focus);
 			}
+			*/
+			protdata->GetSiteEmpiricalFreq(stat,pseudocount,focus);
+			
 
 			alloc = new int[Nsite];
 			for (int i=0; i<Nsite; i++)	{

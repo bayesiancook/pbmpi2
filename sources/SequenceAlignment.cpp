@@ -236,6 +236,13 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon, int fo
 					exit(1);
 				}
 			}
+			double tot = 0;
+			for (int i=0; i<GetNstate(); i++)	{
+				tot += in[j][i];
+			}
+			for (int i=0; i<GetNstate(); i++)	{
+				in[j][i] /= tot;
+			}
 		}
 	}
 	for (int i=0; i<GetNstate(); i++)	{

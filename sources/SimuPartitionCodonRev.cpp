@@ -130,6 +130,10 @@ class Simulator : public NewickTree {
 		}
 		prmis >> gc;
 		prmis >> gcalpha;
+		if ((gc - gcalpha < 0) || (gc + gcalpha > 1))	{
+			cerr << "error: gc overflow\n";
+			exit(1);
+		}
 		nucstat[0] = 0.5 * (1-gc);
 		nucstat[1] = 0.5 * gc;
 		nucstat[2] = 0.5 * gc;
@@ -156,18 +160,27 @@ class Simulator : public NewickTree {
 			genenucrr[gene] = new double[Nrr];
 			genenucstat[gene] = new double[Nnuc];
 			for (int i=0; i<Nrr; i++)	{
-				double tmp = rnd::GetRandom().sGamma(rralpha * nucrr[i]);
-				genenucrr[gene][i] = tmp;
-				if (minnucrr[i] > tmp)	{
-					minnucrr[i] = tmp;
+				if (rralpha)	{
+					double tmp = rnd::GetRandom().sGamma(rralpha * nucrr[i]);
+					genenucrr[gene][i] = tmp;
+					if (minnucrr[i] > tmp)	{
+						minnucrr[i] = tmp;
+					}
+					if (maxnucrr[i] < tmp)	{
+						maxnucrr[i] = tmp;
+					}
+					meannucrr[i] += tmp;
+					varnucrr[i] += tmp * tmp;
 				}
-				if (maxnucrr[i] < tmp)	{
-					maxnucrr[i] = tmp;
+				else	{
+					genenucrr[gene][i] = nucrr[i];
 				}
-				meannucrr[i] += tmp;
-				varnucrr[i] += tmp * tmp;
 			}
 			double tot = 0;
+			double tmpgc = gc + 2 * gcalpha * (rnd::GetRandom().Uniform() - 0.5);
+			genenucstat[gene][1] = genenucstat[gene][2] = 0.5 * tmpgc;
+			genenucstat[gene][0] = genenucstat[gene][3] = 0.5 * (1 - tmpgc);
+			/*
 			for (int i=0; i<Nnuc; i++)	{
 				genenucstat[gene][i] = rnd::GetRandom().sGamma(gcalpha * nucstat[i]);
 				tot += genenucstat[gene][i];
@@ -176,6 +189,7 @@ class Simulator : public NewickTree {
 				genenucstat[gene][i] /= tot;
 			}
 			double tmpgc = genenucstat[gene][1] + genenucstat[gene][2];
+			*/
 			meangc += tmpgc;
 			vargc += tmpgc * tmpgc;
 			if (mingc > tmpgc)	{
@@ -195,11 +209,13 @@ class Simulator : public NewickTree {
 			varnucrr[i] /= Ngene;
 			varnucrr[i] -= meannucrr[i] * meannucrr[i];
 		}
-		cerr << "RR across genes:\n";
-		for (int i=0; i<Nrr; i++)	{
-			cerr << meannucrr[i] << " +/- " << sqrt(varnucrr[i]) << '\t' << minnucrr[i] << '\t' << maxnucrr[i] << '\n';
+		if (rralpha)	{
+			cerr << "RR across genes:\n";
+			for (int i=0; i<Nrr; i++)	{
+				cerr << meannucrr[i] << " +/- " << sqrt(varnucrr[i]) << '\t' << minnucrr[i] << '\t' << maxnucrr[i] << '\n';
+			}
+			cerr << '\n';
 		}
-		cerr << '\n';
 
 		omega = 1;
 

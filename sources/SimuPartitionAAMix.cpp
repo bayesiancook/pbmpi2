@@ -94,6 +94,7 @@ class Simulator : public NewickTree {
 		}
 		prmis >> mu;
 
+
 		int withempfreq = 1;
 		prmis >> tmp;
 		if (tmp != "Mixture")	{
@@ -102,72 +103,91 @@ class Simulator : public NewickTree {
 			exit(1);
 		}
 		prmis >> Ncat; 
-		prmis >> tmp;
-		if (tmp == "+F")	{
-			withempfreq = 1;
-		}
-		else if (tmp == "-F")	{
-			withempfreq = 0;
+		if (Ncat == -1)	{
+			Ncat = Nsite;
+
+			double pseudocount;
+			int focus;
+			prmis >> pseudocount >> focus;
+
+			stat = new double*[Ncat];
+			for (int k=0; k<Ncat; k++)	{
+				stat[k] = new double[Naa];
+			}
+
+			for (int gene=0; gene<Ngene; gene++)	{
+				genedata[gene]->GetSiteEmpiricalFreq(stat + genefirst[gene],pseudocount,focus);
+			}
+
+			alloc = new int[Nsite];
+			for (int i=0; i<Nsite; i++)	{
+				alloc[i] = i;
+			}
 		}
 		else	{
-			cerr << "error: does not recognize mixture type\n";
-			cerr << tmp << '\n';
-			exit(1);
+			prmis >> tmp;
+			if (tmp == "+F")	{
+				withempfreq = 1;
+			}
+			else if (tmp == "-F")	{
+				withempfreq = 0;
+			}
+			else	{
+				cerr << "error: does not recognize mixture type\n";
+				cerr << tmp << '\n';
+				exit(1);
+			}
+
+			if (withempfreq)	{
+				Ncat++;
+			}
+			mixweight = new double[Ncat];
+			prmis >> tmp;
+			if (tmp != "Weights")	{
+				cerr << "error: missing Weights keyword\n";
+				cerr << tmp << '\n';
+				exit(1);
+			}
+			double totweight = 0;
+			for (int k=0; k<Ncat; k++)	{
+				prmis >> mixweight[k];
+				totweight += mixweight[k];
+			}
+			for (int k=0; k<Ncat; k++)	{
+				mixweight[k] /= totweight;
+			}
+			
+			prmis >> tmp;
+			if (tmp != "Stats")	{
+				cerr << "error: missing Weights keyword\n";
+				cerr << tmp << '\n';
+				exit(1);
+			}
+			stat = new double*[Ncat];
+			for (int k=0; k<Ncat; k++)	{
+				stat[k] = new double[Naa];
+			}
+			for (int k=withempfreq; k<Ncat; k++)	{
+				double tot = 0;
+				for (int i=0; i<Naa; i++)	{
+					prmis >> stat[k][i];
+					tot += stat[k][i];
+				}
+				for (int i=0; i<Naa; i++)	{
+					stat[k][i] /= tot;
+				}
+			}
+			if (withempfreq)	{
+				protdata->GetEmpiricalFreq(stat[0]);
+			}
+			alloc = new int[Nsite];
+			for (int i=0; i<Nsite; i++)	{
+				alloc[i] = rnd::GetRandom().FiniteDiscrete(Ncat,mixweight);
+			}
+
 		}
 
-		if (withempfreq)	{
-			Ncat++;
-		}
-		mixweight = new double[Ncat];
-		prmis >> tmp;
-		if (tmp != "Weights")	{
-			cerr << "error: missing Weights keyword\n";
-			cerr << tmp << '\n';
-			exit(1);
-		}
-		double totweight = 0;
-		for (int k=0; k<Ncat; k++)	{
-			prmis >> mixweight[k];
-			totweight += mixweight[k];
-		}
-		for (int k=0; k<Ncat; k++)	{
-			mixweight[k] /= totweight;
-		}
-		/*
-		prmis >> tmp;
-		if (tmp != "WeightAlpha")	{
-			cerr << "error: missing WeightAlpha keyword\n";
-			cerr << tmp << '\n';
-			exit(1);
-		}
-		prmis >> weightalpha;
-		*/
-		
-		prmis >> tmp;
-		if (tmp != "Stats")	{
-			cerr << "error: missing Weights keyword\n";
-			cerr << tmp << '\n';
-			exit(1);
-		}
-		stat = new double*[Ncat];
-		for (int k=0; k<Ncat; k++)	{
-			stat[k] = new double[Naa];
-		}
-		for (int k=withempfreq; k<Ncat; k++)	{
-			double tot = 0;
-			for (int i=0; i<Naa; i++)	{
-				prmis >> stat[k][i];
-				tot += stat[k][i];
-				// stat[k][i] = WLSR5StatFix[k][i];
-			}
-			for (int i=0; i<Naa; i++)	{
-				stat[k][i] /= tot;
-			}
-		}
-		if (withempfreq)	{
-			protdata->GetEmpiricalFreq(stat[0]);
-		}
-
+		// relative exchangeabilites
 		Nrrcat = 5;
 		Nrr = Naa * (Naa-1) / 2;
 		rr = new double*[Nrrcat];
@@ -205,26 +225,6 @@ class Simulator : public NewickTree {
 			generralloc[gene] = (int) (Nrrcat * rnd::GetRandom().Uniform());
 		}
 
-		// geneweight = new double*[Ngene];
-		alloc = new int[Nsite];
-		for (int gene=0; gene<Ngene; gene++)	{
-			/*
-			geneweight[gene] = new double[Ncat];
-			double tot = 0;
-			for (int k=0; k<Ncat; k++)	{
-				geneweight[gene][k] = rnd::GetRandom().sGamma(1.0);
-				tot += geneweight[gene][k];
-			}
-			for (int k=0; k<Ncat; k++)	{
-				geneweight[gene][k] /= tot;
-			}
-			*/
-			for (int i=0; i<genesize[gene]; i++)	{
-				alloc[genefirst[gene] + i] = rnd::GetRandom().FiniteDiscrete(Ncat,mixweight);
-				// alloc[genefirst[gene] + i] = rnd::GetRandom().FiniteDiscrete(Ncat,geneweight[gene]);
-			}
-		}
-
 		ofstream pos((basename + ".param").c_str());
 
 		pos << "rr categories\n";
@@ -236,23 +236,28 @@ class Simulator : public NewickTree {
 		pos << '\n';
 
 		pos << "gene rr categories\n";
-		// pos << "gene rr categories and mixture weights\n";
 		for (int gene=0; gene<Ngene; gene++)	{
 			pos << generralloc[gene];
-			/*
-			for (int k=0; k<Ncat; k++)	{
-				pos << '\t' << geneweight[gene][k];
-			}
-			*/
 			pos << '\t';
 		}
 		pos << '\n';
 
-		pos << "site-specific mixture allocations\n";
-		for (int i=0; i<Nsite; i++)	{
-			pos << alloc[i] << '\t';
+		if (Ncat != Nsite)	{
+			pos << "site-specific mixture allocations\n";
+			for (int i=0; i<Nsite; i++)	{
+				pos << alloc[i] << '\t';
+			}
+			pos << '\n';
 		}
-		pos << '\n';
+		else	{
+			pos << "site-specific eq freq\n";
+			for (int i=0; i<Nsite; i++)	{
+				for (int k=0; k<Naa; k++)	{
+					pos << stat[i][k] << '\t';
+				}
+				pos << '\n';
+			}
+		}
 		
 		rate = new double[Nsite];
 		pos << "site-specific rates\n";

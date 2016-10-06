@@ -2595,6 +2595,14 @@ void PhyloProcess::GlobalUpdateBranchLengthSuffStat()	{
 	else	{
 		UpdateBranchLengthSuffStat();
 	}
+
+	// check for nan
+	for(int j=0; j<GetNbranch(); ++j) {
+		if (isnan(branchlengthsuffstatbeta[j]))	{
+			cerr << "in PhyloProcess::GlobalUpdateBranchLengthSuffStat: nan\n";
+			exit(1);
+		}
+	}
 }
 
 void PhyloProcess::SlaveUpdateBranchLengthSuffStat()	{
@@ -2622,12 +2630,24 @@ void PhyloProcess::GlobalUpdateSiteRateSuffStat()	{
 	}
 	else	{
 		UpdateSiteRateSuffStat();
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			if (isnan(siteratesuffstatbeta[i]))	{
+				cerr << "in PhyloProcess::GlobalUpdateSiteRateSuffStat: nan ratesuffstatbeta\n";
+				exit(1);
+			}
+		}
 	}
 }
 
 void PhyloProcess::SlaveUpdateSiteRateSuffStat()	{
 
 	UpdateSiteRateSuffStat();
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (isnan(siteratesuffstatbeta[i]))	{
+			cerr << "in PhyloProcess::GlobalUpdateSiteRateSuffStat: nan ratesuffstatbeta\n";
+			exit(1);
+		}
+	}
 }
 
 

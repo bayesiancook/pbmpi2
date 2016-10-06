@@ -117,7 +117,7 @@ void SubstitutionProcess::SampleRootPaths(BranchSitePath** patharray, int* roots
 			}
 			patharray[i] = SampleRootSitePath(i,rootstate[i]);
 		}
-		}
+	}
 }
 
 //-------------------------------------------------------------------------
@@ -228,7 +228,7 @@ void SubstitutionProcess::Offset(double*** t, bool condalloc)	{
 						if (tmp[k] <0)	{
 							cerr << "error in pruning: negative prob : " << tmp[k] << "\n";
 							exit(1);
-							tmp[k] = 0;
+							// tmp[k] = 0;
 						}
 						if (max < tmp[k])	{
 							max = tmp[k];
@@ -262,11 +262,6 @@ void SubstitutionProcess::Offset(double*** t, bool condalloc)	{
 
 double SubstitutionProcess::ComputeLikelihood(double*** aux, bool condalloc)	{
 
-	/*
-	if (GetMyid() == 1)	{
-		cerr << "in compute likelihood: condalloc " << condalloc << '\n';
-	}
-	*/
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
 			if (condalloc)	{
@@ -280,13 +275,6 @@ double SubstitutionProcess::ComputeLikelihood(double*** aux, bool condalloc)	{
 				if (tot == 0)	{
 					// dirty !
 					tot = 1e-12;
-					/*
-					cerr << "pruning : 0 \n";
-					for (int k=0; k<GetNstate(i); k++)	{
-						cerr << t[k] << '\n';
-					}
-					exit(1);
-					*/
 				}
 				sitelogL[i] = log(tot) + (*t);
 				t -= nstate;
@@ -318,13 +306,6 @@ double SubstitutionProcess::ComputeLikelihood(double*** aux, bool condalloc)	{
 					if (tot == 0)	{
 						// dirty !
 						tot = 1e-12;
-						/*
-						cerr << "pruning : 0 \n";
-						for (int k=0; k<GetNstate(i); k++)	{
-							cerr << t[k] << '\n';
-						}
-						exit(1);
-						*/
 					}
 					logl[j] = log(tot) + (*t);
 					t -= nstate;

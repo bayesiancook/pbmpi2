@@ -93,79 +93,12 @@ class BranchSitePath  {
 		return (i<j) ? (2 * nstate - i - 1) * i / 2 + j - i - 1 : (2 * nstate - j - 1) * j / 2 + i - j - 1 ;
 	}
 
-	void AddRateSuffStat(int& count, double& beta, double factor, const double* rr, const double* stat, int nstate)	{
-		Plink* link = Init();
-		while (link)	{
-			int state = link->GetState();
-			double tmp = 0;
-			for (int k=0; k<nstate; k++)	{
-				if (k != state)	{
-					tmp += rr[rrindex(state,k,nstate)] * stat[k];
-				}
-			}
-			beta += GetRelativeTime(link) * factor * tmp;
-			if (link != last)	{
-				count ++;
-			}
-			link = link->Next();
-		}
-	}
+	void AddRateSuffStat(int& count, double& beta, double factor, const double* rr, const double* stat, int nstate);
+	void AddProfileSuffStat(int* count, double* beta, double factor, const double* rr, int nstate);
+	void AddRRSuffStat(int* count, double* beta, double factor, const double* stat, int nstate);
 
-	void AddProfileSuffStat(int* count, double* beta, double factor, const double* rr, int nstate)	{
-		Plink* link = Init();
-		while (link)	{
-			int state = link->GetState();
-			for (int k=0; k<nstate; k++)	{
-				if (k!=state)	{
-					beta[k] += GetRelativeTime(link) * factor * rr[rrindex(state,k,nstate)];
-				}
-			}
-			if (link != last)	{
-				count[link->Next()->GetState()] ++;
-			}
-			link = link->Next();
-		}
-	}
-
-	void AddRRSuffStat(int* count, double* beta, double factor, const double* stat, int nstate)	{
-		Plink* link = Init();
-		while (link)	{
-			int state = link->GetState();
-			for (int k=0; k<nstate; k++)	{
-				if (k!=state)	{
-					beta[rrindex(state,k,nstate)] += GetRelativeTime(link) * factor * stat[k];
-				}
-			}
-			if (link != last)	{
-				count[rrindex(state,link->Next()->GetState(),nstate)] ++;
-			}
-			link = link->Next();
-		}
-	}
-
-	void AddGeneralPathRateSuffStat(int& count, double& beta, double factor, SubMatrix* mat)	{
-		Plink* link = Init();
-		while (link)	{
-			int state = link->GetState();
-			beta -= GetRelativeTime(link) * factor * (*mat)(state,state);
-			if (link != last)	{
-				count ++;
-			}
-			link = link->Next();
-		}
-	}
-
-	void AddGeneralPathSuffStat(map<pair<int,int>,int>& paircount, map<int,double>& waitingtime, double factor)	{
-		Plink* link = Init();
-		while (link)	{
-			int state = link->GetState();
-			waitingtime[state] += GetRelativeTime(link) * factor;
-			if (link != last)	{
-				paircount[pair<int,int>(state,link->Next()->GetState())]++;
-			}
-			link = link->Next();
-		}
-	}
+	void AddGeneralPathRateSuffStat(int& count, double& beta, double factor, SubMatrix* mat);
+	void AddGeneralPathSuffStat(map<pair<int,int>,int>& paircount, map<int,double>& waitingtime, double factor);
 
 	Plink* init;
 	Plink* last;
@@ -214,7 +147,6 @@ inline void Plink::Splice()	{
 }
 
 inline void Plink::SetState(int instate) {state = instate;}
-inline void Plink::SetRelativeTime(double inrel_time) {rel_time = inrel_time;}
 inline double Plink::GetRelativeTime() {return rel_time;}
 inline int Plink::GetState() {return state;}
 
@@ -226,6 +158,10 @@ inline Plink* BranchSitePath::Init() {return init;}
 inline Plink*  BranchSitePath::Last() {return last;}
 
 inline void BranchSitePath::Append(int instate, double reltimelength)	{
+	if (isnan(reltimelength))	{
+		cerr << "in BranchSitePath::Append: nan reltime length\n";
+		exit(1);
+	}
 	last->SetRelativeTime(reltimelength);
 	Plink* link = new Plink(instate,0);
 	last->Insert(link);

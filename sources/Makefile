@@ -2,7 +2,7 @@ CC=mpic++
 CPPFLAGS= -w -O3 -c
 LDFLAGS= -O3
 SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp CodonSequenceAlignment.cpp \
-	NNI.cpp SPR.cpp CCP.cpp \
+	NNI.cpp SPR.cpp CCP.cpp BranchSitePath.cpp \
 	MultiGeneMPIModule.cpp MultiGeneRateProcess.cpp MultiGeneBranchProcess.cpp MultiGeneProfileProcess.cpp MultiGeneSBDPProfileProcess.cpp \
 	MultiGenePhyloProcess.cpp MultiGeneRASCATGTRSBDPGammaPhyloProcess.cpp MultiGeneRASCATSBDPGammaPhyloProcess.cpp \
 	StateSpace.cpp CodonStateSpace.cpp ZippedSequenceAlignment.cpp SubMatrix.cpp \
@@ -45,7 +45,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc tracecomp bpcomp bpcomp2 
+ALL= pb_mpi simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc tracecomp bpcomp bpcomp2 
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean

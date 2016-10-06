@@ -58,7 +58,8 @@ BranchSitePath* MatrixSubstitutionProcess::ResampleAcceptReject(int maxtrial, in
 	int ntrial = 0;
 	BranchSitePath* path = 0;
 
-	if (rate * totaltime == 0)	{
+	if (rate * totaltime < 1e-10)	{
+	// if (rate * totaltime == 0)	{
 		if (stateup != statedown)	{
 			cerr << "error in MatrixSubstitutionProcess::ResampleAcceptReject: stateup != statedown, efflength == 0\n";
 			exit(1);
@@ -85,6 +86,7 @@ BranchSitePath* MatrixSubstitutionProcess::ResampleAcceptReject(int maxtrial, in
 
 			t += u;
 			int newstate = matrix->DrawOneStep(state);
+			double tmp = u/totaltime;
 			path->Append(newstate,u/totaltime);
 			state = newstate;
 		}
@@ -93,10 +95,25 @@ BranchSitePath* MatrixSubstitutionProcess::ResampleAcceptReject(int maxtrial, in
 			// draw waiting time
 			double q = - rate * (*matrix)(state,state);
 			double u = -log (1 - rnd::GetRandom().Uniform()) / q;
+			if (isnan(u))	{
+				cerr << "in MatrixSubstitutionProcess:: drawing exponential number: nan\n";
+				cerr << rate << '\t' << q << '\n';
+				exit(1);
+			}
+		
+			if (isinf(u))	{
+				cerr << "in MatrixSubstitutionProcess:: drawing exponential number: inf\n";
+				cerr << rate << '\t' << q << '\n';
+				cerr << totaltime << '\n';
+				cerr << state << '\t' << stateup << '\n';
+				exit(1);
+			}
+		
 
 			t += u;
 			if (t < totaltime)	{
 				int newstate = matrix->DrawOneStep(state);
+				double tmp = u/totaltime;
 				path->Append(newstate,u/totaltime);
 				state = newstate;
 			}

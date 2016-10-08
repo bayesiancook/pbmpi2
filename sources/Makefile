@@ -45,7 +45,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= pb_mpi simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc tracecomp bpcomp bpcomp2 
+ALL= gettreelength pb_mpi readpb_mpi simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc tracecomp bpcomp bpcomp2 
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean
@@ -69,6 +69,9 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 # Targets
+
+$(PROGSDIR)/gettreelength : GetTreeLength.o $(OBJS)
+	$(CC) GetTreeLength.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 $(PROGSDIR)/simupartaamix: SimuPartitionAAMix.o $(OBJS)
 	$(CC) SimuPartitionAAMix.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@

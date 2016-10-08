@@ -172,6 +172,8 @@ void AASubSelRASCATSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	// 3 : compositional statistic
 
 	int ss = 0;
+	double cialpha = 0;
+	string trueprofiles = "None";
 	int nocc = 0;
 	int cv = 0;
 	int sitelogl = 0;
@@ -256,6 +258,14 @@ void AASubSelRASCATSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 			else if (s == "-ss")	{
 				ss = 1;
 			}
+			else if (s == "-ci")	{
+				i++;
+				cialpha = atof(argv[i]);
+			}
+			else if (s == "-true")	{
+				i++;
+				trueprofiles = argv[i];
+			}
 			else if (s == "-rr")	{
 				rr = 1;
 			}
@@ -332,7 +342,7 @@ void AASubSelRASCATSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		ReadSiteLogL(name,burnin,every,until);
 	}
 	else if (ss)	{
-		ReadSiteProfiles(name,burnin,every,until);
+		ReadSiteProfiles(name,burnin,every,until,cialpha,trueprofiles);
 	}
 	else if (rr)	{
 		ReadRelRates(name,burnin,every,until);

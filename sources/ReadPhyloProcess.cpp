@@ -2016,10 +2016,48 @@ void PhyloProcess::SlaveGetMeanDiversity()	{
 	MPI_Send(&div,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
-void PhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int until)	{
+void PhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int until, double cialpha, string trueprofiles)	{
 
+	double** truestat = 0;
+	double* truehi = 0;
+	if (trueprofiles != "None")	{
+		truestat = new double*[GetNsite()];
+		truehi = new double[GetNsite()];
+		ifstream is(trueprofiles.c_str());
+		for (int i=0; i<GetNsite(); i++)	{
+			truestat[i] = new double[GetDim()];
+			for (int k=0; k<GetDim(); k++)	{
+				is >> truestat[i][k];
+			}
+			truehi[i] = GetHI7(truestat[i]);
+		}
+	}
+
+	list<double>* hidist = 0;
+	list<double>** dist = 0;
+	double** minstat = 0;
+	double** maxstat = 0;
+	if (cialpha)	{
+		hidist = new list<double>[GetNsite()];
+		dist = new list<double>*[GetNsite()];
+		for (int i=0; i<GetNsite(); i++)	{
+			dist[i] = new list<double>[GetDim()];
+		}
+		minstat = new double*[GetNsite()];
+		maxstat = new double*[GetNsite()];
+		for (int i=0; i<GetNsite(); i++)	{
+			minstat[i] = new double[GetDim()];
+			maxstat[i] = new double[GetDim()];
+		}
+	}
+
+	double* meanhi = new double[GetNsite()];
+	double* minhi = new double[GetNsite()];
+	double* maxhi = new double[GetNsite()];
+	
 	double** sitestat = new double*[GetNsite()];
 	for (int i=0; i<GetNsite(); i++)	{
+		meanhi[i] = 0;
 		sitestat[i] = new double[GetDim()];
 		for (int k=0; k<GetDim(); k++)	{
 			sitestat[i][k] = 0;
@@ -2030,6 +2068,8 @@ void PhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int unti
 		cerr << "error: no .chain file found\n";
 		exit(1);
 	}
+
+	ofstream hhos((name + ".hindex").c_str());
 
 	cerr << "burnin : " << burnin << "\n";
 	cerr << "until : " << until << '\n';
@@ -2052,6 +2092,15 @@ void PhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int unti
 			for (int k=0; k<GetDim(); k++)	{
 				sitestat[i][k] += p[k];
 			}
+			double tmphi = GetHI7(p);
+			hhos << tmphi << '\n';
+			meanhi[i] += tmphi;
+			if (cialpha)	{
+				for (int k=0; k<GetDim(); k++)	{
+					dist[i][k].push_back(p[k]);
+				}
+				hidist[i].push_back(tmphi);
+			}
 		}
 		int nrep = 1;
 		while ((i<until) && (nrep < every))	{
@@ -2062,6 +2111,39 @@ void PhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int unti
 	}
 	cerr << '\n';
 	
+	if (cialpha)	{
+		for (int i=0; i<GetNsite(); i++)	{
+			for (int k=0; k<GetDim(); k++)	{
+				dist[i][k].sort();
+				list<double>::iterator it = dist[i][k].begin();
+				int n = ((int) (((double) dist[i][k].size()) * 0.5*cialpha));
+				for (int j=0; j<n; j++)	{
+					it++;
+				}
+				minstat[i][k] = (*it);
+				n = ((int) (((double) dist[i][k].size()) * (1 - 0.5*cialpha)));
+				it = dist[i][k].begin();
+				for (int j=0; j<n; j++)	{
+					it++;
+				}
+				maxstat[i][k] = (*it);
+			}
+			hidist[i].sort();
+			list<double>::iterator it = hidist[i].begin();
+			int n = ((int) (((double) hidist[i].size()) * 0.5*cialpha));
+			for (int j=0; j<n; j++)	{
+				it++;
+			}
+			minhi[i] = (*it);
+			n = ((int) (((double) hidist[i].size()) * (1 - 0.5*cialpha)));
+			it = hidist[i].begin();
+			for (int j=0; j<n; j++)	{
+				it++;
+			}
+			maxhi[i] = (*it);
+		}
+	}
+
 	ofstream os((name + ".siteprofiles").c_str());
 	for (int k=0; k<GetDim(); k++)	{
 		os << GetStateSpace()->GetState(k) << ' ';
@@ -2072,10 +2154,67 @@ void PhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int unti
 		os << i+1;
 		for (int k=0; k<GetDim(); k++)	{
 			sitestat[i][k] /= samplesize;
+			if (truestat)	{
+				os << '\t' << truestat[i][k];
+			}
 			os << '\t' << sitestat[i][k];
+			if (cialpha)	{
+				os << '\t' << minstat[i][k] << '\t' << maxstat[i][k];
+			}
 		}
 		os << '\n';
 	}
 	cerr << "mean site-specific profiles in " << name << ".siteprofiles\n";
 	cerr << '\n';
+
+	ofstream hos((name + ".sitehydrophobicity").c_str());
+	for (int i=0; i<GetNsite(); i++)	{
+		meanhi[i] /= samplesize;
+		if (truestat)	{
+			hos << truehi[i] << '\t';
+		}
+		hos << meanhi[i] << '\t';
+		if (cialpha)	{
+			hos << '\t' << minhi[i] << '\t' << maxhi[i];
+		}
+		hos << '\n';
+	}
+
+	if (truestat)	{
+		double cov = 0;
+		double tot = 0;
+		double err = 0;
+		for (int i=0; i<GetNsite(); i++)	{
+			for (int k=0; k<GetDim(); k++)	{
+				if ((truestat[i][k] > minstat[i][k]) && (truestat[i][k] <= maxstat[i][k]))	{
+					cov++;
+				}
+				double tmp = sitestat[i][k] - truestat[i][k];
+				err += tmp*tmp;
+				tot++;
+			}
+		}
+		cov /= tot;
+		err /= tot;
+		cerr << "coverage : " << cov << '\n';
+		cerr << "min quadratic error : " << sqrt(err) << '\n';
+	}
+
+	if (truestat)	{
+		double cov = 0;
+		double err = 0;
+		for (int i=0; i<GetNsite(); i++)	{
+			if ((truehi[i] > minhi[i]) && (truehi[i] < maxhi[i]))	{
+				cov++;
+			}
+			double tmp = truehi[i] - meanhi[i];
+			err += tmp * tmp;
+		}
+		cov /= GetNsite();
+		err /= GetNsite();
+		cerr << "hydrophobicity index:\n";
+		cerr << "coverage : " << cov << '\n';
+		cerr << "quadratic error : " << sqrt(err) << '\n';
+	}
+
 }

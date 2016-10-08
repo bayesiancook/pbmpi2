@@ -159,6 +159,8 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int until = -1;
 	int ppred = 0;
 	int ss = 0;
+	double cialpha = 0;
+	string trueprofiles = "None";
 	int map = 0;
 	// 1 : plain ppred (outputs simulated data)
 	// 2 : diversity statistic
@@ -344,6 +346,14 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 			else if (s == "-ss")	{
 				ss = 1;
 			}
+			else if (s == "-ci")	{
+				i++;
+				cialpha = atof(argv[i]);
+			}
+			else if (s == "-true")	{
+				i++;
+				trueprofiles = argv[i];
+			}
 			else if (s == "-map")	{
 				map = 1;
 			}
@@ -407,7 +417,7 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	}
 
 	if (ss)	{
-		ReadSiteProfiles(name,burnin,every,until);
+		ReadSiteProfiles(name,burnin,every,until,cialpha,trueprofiles);
 	}
 	else if (statmin)	{
 		ReadStatMin(name,burnin,every,until);

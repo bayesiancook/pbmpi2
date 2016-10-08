@@ -36,6 +36,10 @@ using namespace std;
 
 // amino acids
 
+	const int Naa = 20;
+	const int Nnuc = 4;
+	const int Ncodon = 64;
+
 	const int precision = 10000;
 	const string Alphabet = "Amino_Acids";
 	const char AminoAcids[] = {'A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y','-'};
@@ -49,10 +53,34 @@ using namespace std;
 	const int Dayhoff4Table[] = {3,-1,2,2,0,3,1,0,1,0,0,2,3,2,1,3,3,0,0,0};
 	const int unknown = -1;
 
+	// www.cgl.ucsf.edu/chimera/docs/UsersGuide/midas/hydrophob.html
+	// Kyte, Doolittle, 1982, J Mol Biol
+	const double HydrophobicityIndex[] = {1.8,2.5,-3.5,-3.5,2.8,-0.4,-3.2,4.5,-3.9,3.8,1.9,-3.5,-1.6,-3.5,-4.5,-0.8,-0.7,4.2,-0.9,-1.3};
 
-	const int Naa = 20;
-	const int Nnuc = 4;
-	const int Ncodon = 64;
+	// www.sigmaaldrich.com/life-science/metabolomics/learning-center/amino-acid-reference-chart.html#prop
+	// normalized from Sereda et al, 1994, J Chrom 676:139
+	const double HydrophobicityIndex_pH2[] = {47,52,-18,8,92,0,-42,100,-37,100,74,-41,-46,-41,-26,-7,13,79,84,49};
+	// Monera et al, 1995, Protein Sci, 1:319
+	const double HydrophobicityIndex_pH7[] = {41,49,-55,-31,100,0,8,99,-23,97,74,-28,-46,-10,-14,-5,13,76,97,63};
+	// D R Lide, 1991. Handbook of Chemistry and Physics, 72nd edition CRC Press, Boca Raton, Fl.
+	const double MolWeight[] = {89.10,121.16,133.11,147.13,165.19,75.07,155.16,131.18,146.19,131.18,149.21,132.12,115.13,146.15,174.20,105.09,119.12,117.15,204.23,181.19};
+
+	static double GetHI7(const double* stat)	{
+		double mean = 0;
+		for (int k=0; k<Naa; k++)	{
+			mean += stat[k] * HydrophobicityIndex_pH7[k];
+		}
+		return mean;
+	}
+
+	static double GETWI(const double* stat)	{
+		double mean = 0;
+		for (int k=0; k<Naa; k++)	{
+			mean += stat[k] * MolWeight[k];
+		}
+		return mean;
+	}
+
 	const string Codons[] = {"TTT","TTC","TTA","TTG","TCT","TCC","TCA","TCG","TAT","TAC","TAA","TAG","TGT","TGC","TGA","TGG","CTT","CTC","CTA","CTG","CCT","CCC","CCA","CCG","CAT","CAC","CAA","CAG","CGT","CGC","CGA","CGG","ATT","ATC","ATA","ATG","ACT","ACC","ACA","ACG","AAT","AAC","AAA","AAG","AGT","AGC","AGA","AGG","GTT","GTC","GTA","GTG","GCT","GCC","GCA","GCG","GAT","GAC","GAA","GAG","GGT","GGC","GGA","GGG"};
 	const int codonpos[][64] = {
 	{3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},

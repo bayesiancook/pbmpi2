@@ -210,6 +210,8 @@ void RASCATGTRFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	// 3 : compositional statistic
 
 	int ss = 0;
+	double cialpha = 0;
+	string trueprofiles = "None";
 	int ms = 0;
 	int cv = 0;
 	int sitelogl = 0;
@@ -290,6 +292,14 @@ void RASCATGTRFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 			else if (s == "-ss")	{
 				ss = 1;
 			}
+			else if (s == "-ci")	{
+				i++;
+				cialpha = atof(argv[i]);
+			}
+			else if (s == "-true")	{
+				i++;
+				trueprofiles = argv[i];
+			}
 			else if (s == "-ms")	{
 				ms = 1;
 			}
@@ -362,7 +372,7 @@ void RASCATGTRFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		ReadSiteRates(name,burnin,every,until);
 	}
 	else if (ss)	{
-		ReadSiteProfiles(name,burnin,every,until);
+		ReadSiteProfiles(name,burnin,every,until,cialpha,trueprofiles);
 	}
 	else if (ms)	{
 		ReadModeProfiles(name,burnin,every,until);

@@ -16,7 +16,7 @@ class Simulator : public NewickTree {
 
 	public:
 
-	Simulator(string datafile, string treefile, string partitionfile, string paramfile, int inmask, string inbasename)	{
+	Simulator(string datafile, string treefile, string partitionfile, string paramfile, string profilefile, int inmask, string inbasename)	{
 
 		mask = inmask;
 		// take tree
@@ -50,25 +50,40 @@ class Simulator : public NewickTree {
 		Nsite = protdata->GetNsite();
 		currentseq = new int[Nsite];
 
-		ifstream pis(partitionfile.c_str());
-		pis >> Ngene;
-		genesize = new int[Ngene];
-		genefirst = new int[Ngene];
-		genedata = new SequenceAlignment*[Ngene];
-		genealloc = new int[Nsite];
-		int count = 0;
-		for (int gene=0; gene<Ngene; gene++)	{
-			pis >> genesize[gene];
-			genefirst[gene] = count;
-			count += genesize[gene];
-			genedata[gene] = new SequenceAlignment(protdata,genefirst[gene],genesize[gene]);
-			for (int i=0; i<genesize[gene]; i++)	{
-				genealloc[genefirst[gene] + i] = gene;
+		if (partitionfile != "None")	{
+			ifstream pis(partitionfile.c_str());
+			pis >> Ngene;
+			genesize = new int[Ngene];
+			genefirst = new int[Ngene];
+			genedata = new SequenceAlignment*[Ngene];
+			genealloc = new int[Nsite];
+			int count = 0;
+			for (int gene=0; gene<Ngene; gene++)	{
+				pis >> genesize[gene];
+				genefirst[gene] = count;
+				count += genesize[gene];
+				genedata[gene] = new SequenceAlignment(protdata,genefirst[gene],genesize[gene]);
+				for (int i=0; i<genesize[gene]; i++)	{
+					genealloc[genefirst[gene] + i] = gene;
+				}
+			}
+			if (count != Nsite)	{
+				cerr << "error: non matching total size\n";
+				exit(1);
 			}
 		}
-		if (count != Nsite)	{
-			cerr << "error: non matching total size\n";
-			exit(1);
+		else	{
+			Ngene = 1;
+			genesize = new int[Ngene];
+			genefirst = new int[Ngene];
+			genedata = new SequenceAlignment*[Ngene];
+			genealloc = new int[Nsite];
+			genesize[0] = Nsite;
+			genefirst[0] = 0;
+			genedata[0] = protdata;
+			for (int i=0; i<Nsite; i++)	{
+				genealloc[i] = 0;
+			}
 		}
 
 		// get parameters from file
@@ -115,12 +130,26 @@ class Simulator : public NewickTree {
 				stat[k] = new double[Naa];
 			}
 
-			/*
-			for (int gene=0; gene<Ngene; gene++)	{
-				genedata[gene]->GetSiteEmpiricalFreq(stat + genefirst[gene],pseudocount,focus);
+			if (profilefile != "None")	{
+				ifstream is(profilefile.c_str());
+				for (int k=0; k<Nsite; k++)	{
+					int tmp;
+					is >> tmp;
+					for (int i=0; i<Naa; i++)	{
+						is >> stat[k][i];
+					}
+				}
 			}
-			*/
-			protdata->GetSiteEmpiricalFreq(stat,pseudocount,focus);
+			else	{
+				if (Ngene > 1)	{
+					for (int gene=0; gene<Ngene; gene++)	{
+						genedata[gene]->GetSiteEmpiricalFreq(stat + genefirst[gene],pseudocount,focus);
+					}
+				}
+				else	{
+					protdata->GetSiteEmpiricalFreq(stat,pseudocount,focus);
+				}
+			}
 			
 
 			alloc = new int[Nsite];
@@ -225,8 +254,13 @@ class Simulator : public NewickTree {
 		}
 
 		generralloc = new int[Ngene];
-		for (int gene=0; gene<Ngene; gene++)	{
-			generralloc[gene] = (int) (Nrrcat * rnd::GetRandom().Uniform());
+		if (Ngene == 1)	{
+			generralloc[0] = 0;
+		}
+		else	{
+			for (int gene=0; gene<Ngene; gene++)	{
+				generralloc[gene] = (int) (Nrrcat * rnd::GetRandom().Uniform());
+			}
 		}
 
 		ofstream pos((basename + ".param").c_str());
@@ -263,6 +297,14 @@ class Simulator : public NewickTree {
 			}
 		}
 		
+		ofstream pros((basename + ".trueprofiles").c_str());
+		for (int i=0; i<Nsite; i++)	{
+			for (int k=0; k<Naa; k++)	{
+				pros << stat[alloc[i]][k] << '\t';
+			}
+			pros << '\n';
+		}
+
 		rate = new double[Nsite];
 		pos << "site-specific rates\n";
 		for (int i=0; i<Nsite; i++)	{
@@ -519,10 +561,11 @@ int main(int argc, char* argv[])	{
 
 	string datafile = "";
 	string treefile = "";
-	string partitionfile = "";
+	string partitionfile = "None";
+	string profilefile = "None";
 	string paramfile = "";
 	string basename = "";
-	int mask = 0;
+	int mask = 1;
 
 	try	{
 
@@ -540,6 +583,9 @@ int main(int argc, char* argv[])	{
 			else if (s == "-m")	{
 				mask = 1;
 			}
+			else if (s == "-nomask")	{
+				mask = 0;
+			}
 			else if ((s == "-t") || (s == "-tree"))	{
 				i++;
 				treefile = argv[i];
@@ -551,6 +597,10 @@ int main(int argc, char* argv[])	{
 			else if ((s == "-p") || (s == "-param"))	{
 				i++;
 				paramfile = argv[i];
+			}
+			else if ((s == "-f") || (s == "-freq"))	{
+				i++;
+				profilefile = argv[i];
 			}
 			else	{
 				if (i != (argc -1))	{
@@ -566,13 +616,13 @@ int main(int argc, char* argv[])	{
 	}
 	catch(...)	{
 		cerr << '\n';
-		cerr << "simucodon -p <paramfile> -t <treefile> -d <datafile> [-m] <basename>\n";
+		cerr << "simucodon -p <paramfile> -t <treefile> -d <datafile> [-f <aaprofilefile> -part <partitionfile> -m] <basename>\n";
 		cerr << '\n';
 		exit(1);
 	}
 
 	cerr << "new sim\n";
-	Simulator* sim = new Simulator(datafile,treefile,partitionfile,paramfile,mask,basename);
+	Simulator* sim = new Simulator(datafile,treefile,partitionfile,paramfile,profilefile,mask,basename);
 
 	cerr << "simulate\n";
 	sim->Simulate();

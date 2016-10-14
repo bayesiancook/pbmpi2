@@ -19,22 +19,6 @@ class Simulator : public NewickTree {
 	Simulator(string datafile, string treefile, string partitionfile, string paramfile, string profilefile, int inmask, string inbasename)	{
 
 		mask = inmask;
-		// take tree
-
-		// take a protein datafile
-		// calculate eq freqs with pseudocount
-
-		// take GTR nucleotide mutation rate matrix
-		// relative echange rates: fixed
-		// equilibrium gc: either fixed or random
-		// normalize GTR matrix
-
-		// calculate an AA replacement rate normalizer (so that tree is non-syn length)
-
-		// mu: homothetic factor for substitution rate (around 1)
-		// Ne: relative effective population size (around 1)
-
-		// apply Halpern and Bruno formalism (as in Holder)
 
 		basename = inbasename; 
 
@@ -111,6 +95,7 @@ class Simulator : public NewickTree {
 
 
 		int withempfreq = 1;
+		int mixprior = 0;
 		prmis >> tmp;
 		if (tmp != "Mixture")	{
 			cerr << "error: missing Mixture keyword\n";
@@ -165,6 +150,10 @@ class Simulator : public NewickTree {
 			else if (tmp == "-F")	{
 				withempfreq = 0;
 			}
+			else if (tmp == "+P")	{
+				mixprior = 1;
+				withempfreq = 0;
+			}
 			else	{
 				cerr << "error: does not recognize mixture type\n";
 				cerr << tmp << '\n';
@@ -190,65 +179,145 @@ class Simulator : public NewickTree {
 				mixweight[k] /= totweight;
 			}
 			
-			prmis >> tmp;
-			if (tmp != "Stats")	{
-				cerr << "error: missing Weights keyword\n";
-				cerr << tmp << '\n';
-				exit(1);
-			}
-			stat = new double*[Ncat];
-			for (int k=0; k<Ncat; k++)	{
-				stat[k] = new double[Naa];
-			}
-			for (int k=withempfreq; k<Ncat; k++)	{
-				double tot = 0;
-				for (int i=0; i<Naa; i++)	{
-					prmis >> stat[k][i];
-					tot += stat[k][i];
+			if (mixprior)	{
+				Ncat0 = Ncat;
+				Ncat = Nsite;
+				prmis >> tmp;
+				if (tmp != "Concentrations")	{
+					cerr << "error: missing Concentrations keyword\n";
+					cerr << tmp << '\n';
+					exit(1);
 				}
-				for (int i=0; i<Naa; i++)	{
-					stat[k][i] /= tot;
+				double concfactor = 1.0;
+				prmis >> concfactor;
+				conc = new double[Ncat0];
+				for (int k=0; k<Ncat0; k++)	{
+					prmis >> conc[k];
+					conc[k] *= concfactor;
+				}
+				prmis >> tmp;
+				if (tmp != "Stats")	{
+					cerr << "error: missing Weights keyword\n";
+					cerr << tmp << '\n';
+					exit(1);
+				}
+				stat0 = new double*[Ncat0];
+				for (int k=0; k<Ncat0; k++)	{
+					stat0[k] = new double[Naa];
+				}
+				for (int k=0; k<Ncat0; k++)	{
+					double tot = 0;
+					for (int i=0; i<Naa; i++)	{
+						prmis >> stat0[k][i];
+						tot += stat0[k][i];
+					}
+					for (int i=0; i<Naa; i++)	{
+						stat0[k][i] /= tot;
+					}
+				}
+				alloc = new int[Nsite];
+				for (int i=0; i<Nsite; i++)	{
+					alloc[i] = i;
+				}
+				stat = new double*[Nsite];
+				for (int k=0; k<Nsite; k++)	{
+					stat[k] = new double[Naa];
+				}
+				for (int k=0; k<Nsite; k++)	{
+					int tmp = rnd::GetRandom().FiniteDiscrete(Ncat0,mixweight);
+					double tot = 0;
+					for (int i=0; i<Naa; i++)	{
+						stat[k][i] = rnd::GetRandom().sGamma(stat0[tmp][i] * conc[tmp]);
+						tot += stat[k][i];
+					}
+					for (int i=0; i<Naa; i++)	{
+						stat[k][i] /= tot;
+					}
 				}
 			}
-			if (withempfreq)	{
-				protdata->GetEmpiricalFreq(stat[0]);
+			else	{
+				prmis >> tmp;
+				if (tmp != "Stats")	{
+					cerr << "error: missing Weights keyword\n";
+					cerr << tmp << '\n';
+					exit(1);
+				}
+				stat = new double*[Ncat];
+				for (int k=0; k<Ncat; k++)	{
+					stat[k] = new double[Naa];
+				}
+				for (int k=withempfreq; k<Ncat; k++)	{
+					double tot = 0;
+					for (int i=0; i<Naa; i++)	{
+						prmis >> stat[k][i];
+						tot += stat[k][i];
+					}
+					for (int i=0; i<Naa; i++)	{
+						stat[k][i] /= tot;
+					}
+				}
+				if (withempfreq)	{
+					protdata->GetEmpiricalFreq(stat[0]);
+				}
+				alloc = new int[Nsite];
+				for (int i=0; i<Nsite; i++)	{
+					alloc[i] = rnd::GetRandom().FiniteDiscrete(Ncat,mixweight);
+				}
 			}
-			alloc = new int[Nsite];
-			for (int i=0; i<Nsite; i++)	{
-				alloc[i] = rnd::GetRandom().FiniteDiscrete(Ncat,mixweight);
-			}
-
 		}
 
 		// relative exchangeabilites
-		Nrrcat = 5;
+
+		Nrrcat = 0;
+		rr = 0;
 		Nrr = Naa * (Naa-1) / 2;
-		rr = new double*[Nrrcat];
-		for (int k=0; k<Nrrcat; k++)	{
-			rr[k] = new double[Nrr];
+		prmis >> tmp;
+		if (tmp != "RR")	{
+			cerr << "error: missing RR keyword\n";
+			cerr << tmp << '\n';
+			exit(1);
+		}
+		prmis >> tmp;
+		if (tmp == "Poisson")	{
+			Nrrcat = 1;
+		}
+		else if (tmp == "WAG")	{
+			Nrrcat = 1;
+			rr = new double*[Nrrcat];
+			rr[0] = new double[Nrr];
 			for (int i=0; i<Nrr; i++)	{
-				if (k == 0)	{
-					rr[k][i] = WAG_RR[i];
-				}
-				else if (k == 1)	{
-					rr[k][i] = BLOSUM62_RR[i];
-				}
-				else if (k == 2)	{
-					rr[k][i] = JTT_RR[i];
-					if (JTT_RR[i] != JTT2_RR[i])	{
-						cerr << "error: check on JTT\n";
+				rr[0][i] = WAG_RR[i];
+			}
+		}
+		else if (tmp == "Partition")	{
+			Nrrcat = 5;
+			rr = new double*[Nrrcat];
+			for (int k=0; k<Nrrcat; k++)	{
+				rr[k] = new double[Nrr];
+				for (int i=0; i<Nrr; i++)	{
+					if (k == 0)	{
+						rr[k][i] = WAG_RR[i];
+					}
+					else if (k == 1)	{
+						rr[k][i] = BLOSUM62_RR[i];
+					}
+					else if (k == 2)	{
+						rr[k][i] = JTT_RR[i];
+						if (JTT_RR[i] != JTT2_RR[i])	{
+							cerr << "error: check on JTT\n";
+							exit(1);
+						}
+					}
+					else if (k == 3)	{
+						rr[k][i] = DCmut_RR[i];
+					}
+					else if (k == 4)	{
+						rr[k][i] = mtREV_RR[i];
+					}
+					else	{
+						cerr << "error: only 5 categories\n";
 						exit(1);
 					}
-				}
-				else if (k == 3)	{
-					rr[k][i] = DCmut_RR[i];
-				}
-				else if (k == 4)	{
-					rr[k][i] = mtREV_RR[i];
-				}
-				else	{
-					cerr << "error: only 5 categories\n";
-					exit(1);
 				}
 			}
 		}
@@ -265,20 +334,23 @@ class Simulator : public NewickTree {
 
 		ofstream pos((basename + ".param").c_str());
 
-		pos << "rr categories\n";
-		pos << "0 : WAG\n";
-		pos << "1: BLOSUM62\n";
-		pos << "2: JTT\n";
-		pos << "3: DCmut\n";
-		pos << "4: mtREV\n";
-		pos << '\n';
+		if (Nrrcat == 5)	{
+			pos << "rr categories\n";
+			pos << "0 : WAG\n";
+			pos << "1: BLOSUM62\n";
+			pos << "2: JTT\n";
+			pos << "3: DCmut\n";
+			pos << "4: mtREV\n";
+			pos << '\n';
+		
 
-		pos << "gene rr categories\n";
-		for (int gene=0; gene<Ngene; gene++)	{
-			pos << generralloc[gene];
-			pos << '\t';
+			pos << "gene rr categories\n";
+			for (int gene=0; gene<Ngene; gene++)	{
+				pos << generralloc[gene];
+				pos << '\t';
+			}
+			pos << '\n';
 		}
-		pos << '\n';
 
 		if (Ncat != Nsite)	{
 			pos << "site-specific mixture allocations\n";
@@ -322,8 +394,10 @@ class Simulator : public NewickTree {
 		cerr << "Nsite: " << Nsite << '\n';
 		cerr << "Ntaxa: " << Ntaxa << '\n';
 
-		CreateMatrices();
-		UpdateMatrices();
+		if (rr)	{
+			CreateMatrices();
+			UpdateMatrices();
+		}
 
 		totlength = 0;
 		RecursiveSetBranchLengths(GetRoot());
@@ -424,8 +498,15 @@ class Simulator : public NewickTree {
 	}
 
 	void RootSimulate()	{
-		for (int i=0; i<Nsite; i++)	{
-			currentseq[i] = Q[i]->DrawFromStationary();
+		if (rr)	{
+			for (int i=0; i<Nsite; i++)	{
+				currentseq[i] = Q[i]->DrawFromStationary();
+			}
+		}
+		else	{
+			for (int i=0; i<Nsite; i++)	{
+				currentseq[i] = rnd::GetRandom().DrawFromDiscreteDistribution(stat[alloc[i]],Naa);
+			}
 		}
 	}
 
@@ -439,20 +520,29 @@ class Simulator : public NewickTree {
 
 		for (int i=0; i<Nsite; i++)	{
 			double l = bl[from->GetBranch()] * mu * rate[i];
-			int state = currentseq[i];
-			double t = 0;
 
-			while (t < l)	{
+			if (rr)	{
+				int state = currentseq[i];
+				double t = 0;
+				while (t < l)	{
 
-				double dt = Q[i]->DrawWaitingTime(state);
-				t += dt;
-				if (t < l)	{
-					int newstate = Q[i]->DrawOneStep(state);
-					count++;
-					state = newstate;
+					double dt = Q[i]->DrawWaitingTime(state);
+					t += dt;
+					if (t < l)	{
+						int newstate = Q[i]->DrawOneStep(state);
+						count++;
+						state = newstate;
+					}
+				}
+				currentseq[i] = state;
+			}
+			else	{
+				double u = rnd::GetRandom().Uniform();
+				if (u > exp(-l))	{
+					currentseq[i] = rnd::GetRandom().DrawFromDiscreteDistribution(stat[alloc[i]],Naa);
 				}
 			}
-			currentseq[i] = state;
+
 		}
 	}
 
@@ -537,6 +627,9 @@ class Simulator : public NewickTree {
 
 	double** rr;
 	double** stat;
+	double** stat0;
+	int Ncat0;
+	double* conc;
 
 	double mu;
 

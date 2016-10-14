@@ -227,6 +227,8 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int profileprior = 0;
 	int rootprior = 1;
 
+	int ssdist = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -324,6 +326,9 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 			else if (s == "-m")	{
 				nocc = 1;
 			}
+			else if (s == "-ssdist")	{
+				ssdist = 1;
+			}
 			else if ( (s == "-x") || (s == "-extract") )	{
 				i++;
 				if (i == argc) throw(0);
@@ -377,6 +382,9 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 
 	if (nocc)	{
 		ReadNocc(name,burnin,every,until);
+	}
+	else if (ssdist)	{
+		ReadProfileDistribution(name,burnin,every,until);
 	}
 	else if (testprofile)	{
 		ReadTestProfile(name,tuning,testprofile,burnin,every,until);
@@ -687,3 +695,4 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadTestProfile(string name, int nrep, doub
 	// delete arrays
 
 }
+

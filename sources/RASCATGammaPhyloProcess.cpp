@@ -198,6 +198,8 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	roottax1 = "None";
 	roottax2 = "None";
 
+	int ssdist = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -343,6 +345,9 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				i++;
 				testdatafile = argv[i];
 			}
+			else if (s == "-ssdist")	{
+				ssdist = 1;
+			}
 			else if (s == "-ss")	{
 				ss = 1;
 			}
@@ -419,6 +424,9 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	if (ss)	{
 		ReadSiteProfiles(name,burnin,every,until,cialpha,trueprofiles);
 	}
+	else if (ssdist)	{
+		ReadProfileDistribution(name,burnin,every,until);
+	}
 	else if (statmin)	{
 		ReadStatMin(name,burnin,every,until);
 	}
@@ -479,6 +487,98 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	else	{
 		Read(name,burnin,every,until);
 	}
+}
+
+void RASCATGammaPhyloProcess::ReadProfileDistribution(string name, int burnin, int every, int until)	{
+
+	double* meandirweight = new double[GetDim()];
+	for (int k=0; k<GetDim(); k++)	{
+		meandirweight[k] = 0;
+	}
+
+	/*
+	double minhi = 100;
+	double maxhi = -100;
+	for (int a=0; a<Naa; a++)	{
+		if (maxhi < HydrophobicityIndex_pH7[a])	{
+			maxhi = HydrophobicityIndex_pH7[a]);
+		}
+		if (minhi > HydrophobicityIndex_pH7[a])	{
+			minhi = HydrophobicityIndex_pH7[a]);
+		}
+	}
+	*/
+	vector<double>* hidist = 0;
+	vector<double>** dist = 0;
+
+	hidist = new vector<double>[GetNsite()];
+	dist = new vector<double>*[GetNsite()];
+	for (int i=0; i<GetNsite(); i++)	{
+		dist[i] = new vector<double>[GetDim()];
+	}
+
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		for (int k=0; k<GetDim(); k++)	{
+			meandirweight[k] += dirweight[k];
+		}
+		for (int i=0; i<GetNsite(); i++)	{
+			double* p = GetProfile(i);
+			double tmphi = GetHI7(p);
+			for (int k=0; k<GetDim(); k++)	{
+				dist[i][k].push_back(p[k]);
+			}
+			hidist[i].push_back(tmphi);
+		}
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+	
+	ofstream hos((name + ".samplehidist").c_str());
+	for (int i=0; i<GetNsite(); i++)	{
+		for (int j=0; j<samplesize; j++)	{
+			hos << hidist[i][j] << '\t';
+		}
+		hos << '\n';
+	}
+
+	ofstream dos((name + ".dirweight").c_str());
+	double total = 0;
+	for (int k=0; k<GetDim(); k++)	{
+		meandirweight[k] /= samplesize;
+		total += meandirweight[k];
+	}
+	dos << total << '\n';
+	for (int k=0; k<GetDim(); k++)	{
+		meandirweight[k] /= total;
+		dos << meandirweight[k] << '\t';
+	}
+	dos << '\n';
 }
 
 void RASCATGammaPhyloProcess::ReadStatMin(string name, int burnin, int every, int until)	{

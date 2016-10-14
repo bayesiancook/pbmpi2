@@ -246,7 +246,7 @@ void PhyloProcess::Read(string name, int burnin, int every, int until)	{
 	while ((i < until) && (i < burnin))	{
 		cerr << '.';
 		FromStream(is);
-		QuickUpdate();
+		// QuickUpdate();
 		i++;
 	}
 	cerr << '\n';
@@ -2016,7 +2016,91 @@ void PhyloProcess::SlaveGetMeanDiversity()	{
 	MPI_Send(&div,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
+void PhyloProcess::ReadProfileDistribution(string name, int burnin, int every, int until)	{
+
+	/*
+	double minhi = 100;
+	double maxhi = -100;
+	for (int a=0; a<Naa; a++)	{
+		if (maxhi < HydrophobicityIndex_pH7[a])	{
+			maxhi = HydrophobicityIndex_pH7[a]);
+		}
+		if (minhi > HydrophobicityIndex_pH7[a])	{
+			minhi = HydrophobicityIndex_pH7[a]);
+		}
+	}
+	*/
+	vector<double>* hidist = 0;
+	vector<double>** dist = 0;
+
+	hidist = new vector<double>[GetNsite()];
+	dist = new vector<double>*[GetNsite()];
+	for (int i=0; i<GetNsite(); i++)	{
+		dist[i] = new vector<double>[GetDim()];
+	}
+
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		for (int i=0; i<GetNsite(); i++)	{
+			double* p = GetProfile(i);
+			double tmphi = GetHI7(p);
+			for (int k=0; k<GetDim(); k++)	{
+				dist[i][k].push_back(p[k]);
+			}
+			hidist[i].push_back(tmphi);
+		}
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+	
+	ofstream hos((name + ".samplehidist").c_str());
+	for (int i=0; i<GetNsite(); i++)	{
+		for (int j=0; j<samplesize; j++)	{
+			hos << hidist[i][j] << '\t';
+		}
+		hos << '\n';
+	}
+}
+
 void PhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int until, double cialpha, string trueprofiles)	{
+
+	double* missingmass = new double[GetNsite()];
+	int* alphabetsize = new int[GetNsite()];
+	for (int i=0; i<GetNsite(); i++)	{
+		int tmp = 0;
+		for (int j=0; j<GetNstate(); j++)	{
+			if (observedarray[i][j])	{
+				tmp++;
+			}
+		}
+		alphabetsize[i] = tmp;
+		missingmass[i] = 0;
+	}
 
 	double** truestat = 0;
 	double* truehi = 0;
@@ -2090,6 +2174,11 @@ void PhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int unti
 		for (int i=0; i<GetNsite(); i++)	{
 			double* p = GetProfile(i);
 			for (int k=0; k<GetDim(); k++)	{
+				if (! observedarray[i][k])	{
+					missingmass[i] += p[k];
+				}
+			}
+			for (int k=0; k<GetDim(); k++)	{
 				sitestat[i][k] += p[k];
 			}
 			double tmphi = GetHI7(p);
@@ -2144,6 +2233,16 @@ void PhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int unti
 		}
 	}
 
+	ofstream mos((name + ".missingmass").c_str());
+	double meanmissingmass = 0;
+	for (int i=0; i<GetNsite(); i++)	{
+		missingmass[i] /= samplesize;
+		mos << alphabetsize[i] << '\t' << missingmass[i] << '\n';
+		meanmissingmass += missingmass[i];
+	}
+	meanmissingmass /= GetNsite();
+	cerr << "missing mass : " << meanmissingmass << '\n';
+		
 	ofstream os((name + ".siteprofiles").c_str());
 	for (int k=0; k<GetDim(); k++)	{
 		os << GetStateSpace()->GetState(k) << ' ';

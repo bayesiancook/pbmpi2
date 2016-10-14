@@ -45,7 +45,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= gettreelength pb_mpi readpb_mpi simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc tracecomp bpcomp bpcomp2 
+ALL= stickbreaking drawhindex gettreelength pb_mpi readpb_mpi simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc tracecomp bpcomp bpcomp2 
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean
@@ -69,6 +69,12 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 # Targets
+
+$(PROGSDIR)/stickbreaking: StickBreaking.o $(OBJS)
+	$(CC) StickBreaking.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+
+$(PROGSDIR)/drawhindex: DrawHindex.o $(OBJS)
+	$(CC) DrawHindex.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 $(PROGSDIR)/gettreelength : GetTreeLength.o $(OBJS)
 	$(CC) GetTreeLength.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@

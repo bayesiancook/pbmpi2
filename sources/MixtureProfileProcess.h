@@ -55,7 +55,14 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	}
 
 	// for allocation purpose
-	virtual int GetNmodeMax() {return GetNsite() > nmodemax ? nmodemax : GetNsite();}
+	virtual int GetNmodeMax() {
+		/*
+		if (Npart)	{
+			return Npart;
+		}
+		*/
+		return GetNsite() > nmodemax ? nmodemax : GetNsite();
+	}
 	virtual void SetNmodeMax(int n) {nmodemax = n;}
 
 	void GlobalChooseMultipleTryAlloc();

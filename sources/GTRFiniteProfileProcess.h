@@ -13,8 +13,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-#ifndef EXPCONGTRFINITEPROFILE_H
-#define EXPCONGTRFINITEPROFILE_H
+#ifndef GTRFINITEPROFILE_H
+#define GTRFINITEPROFILE_H
 
 #include "FiniteProfileProcess.h"
 #include "GTRMixtureProfileProcess.h"

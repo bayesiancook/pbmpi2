@@ -30,6 +30,14 @@ void FiniteProfileProcess::Create()	{
 	if (! weight)	{
 		if (Ncomponent == -1)	{
 			Ncomponent = GetNsite();
+			/*
+			if (Npart)	{
+				Ncomponent = Npart;
+			}
+			else	{
+				Ncomponent = GetNsite();
+			}
+			*/
 		}
 		DirichletMixtureProfileProcess::Create();
 		weight = new double[GetNmodeMax()];

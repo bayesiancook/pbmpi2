@@ -30,7 +30,7 @@ class MPIModule {
 
 	// protected:
 
-	MPIModule() : sitemin(0), sitemax(0), myid(0), nprocs(0), nsite(0), fmin(0), fmax(1), bkfmin(0), bkfmax(1) {
+	MPIModule() : sitemin(0), sitemax(0), myid(0), nprocs(0), nsite(0), fmin(0), fmax(1), bkfmin(0), bkfmax(1), Npart(0), partalloc(0) {
 		version = "2.0";
 		name = "noname";
 	}
@@ -42,7 +42,15 @@ class MPIModule {
 		sitemax = 0;
 		delete[] globalrank;
 		// delete[] localrank;
+
+		if (partalloc)	{
+			delete[] partalloc;
+			delete[] partnsite;
+			partalloc = 0;
+		}
 	}
+
+	void SetPartition(string partitionfile);
 
 	string GetVersion() {return version;}
 
@@ -51,6 +59,10 @@ class MPIModule {
 	// total number of sites, active or not, across processes
 	int GetNsite()	{
 		return nsite;
+	}
+
+	int GetPartNsite(int part)	{
+		return partnsite[part];
 	}
 
 	// in case of multi gene processes: perhaps could be reduced to GetNsite
@@ -175,6 +187,10 @@ class MPIModule {
 	double fmax;
 	double bkfmin;
 	double bkfmax;
+
+	int Npart;
+	int* partalloc;
+	int* partnsite;
 
 	string version;
 	string name;

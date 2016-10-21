@@ -157,3 +157,28 @@ int MPIModule::GetNactiveSite()	{
 	}
 	return count;
 }
+
+void MPIModule::SetPartition(string partitionfile)	{
+
+	if (partalloc)	{
+		cerr << "error in MPIModule::SetPartition: partition already allocated\n";
+		exit(1);
+	}
+	ifstream is(partitionfile.c_str());
+	int tmpnsite;
+	is >> tmpnsite >> Npart;
+	if (tmpnsite != nsite)	{
+		cerr << "error in MPIModule::SetPartition: number of sites defined by datafile and partition file do not match\n";
+		exit(1);
+	}
+	partalloc = new int[nsite];
+	partnsite = new int[Npart];
+	for (int part=0; part<Npart; part++)	{
+		partnsite[part] = 0;
+	}
+	for (int i=0; i<nsite; i++)	{
+		is >> partalloc[i];
+		partnsite[partalloc[i]]++;
+	}
+}
+

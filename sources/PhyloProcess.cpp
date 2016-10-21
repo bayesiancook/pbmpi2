@@ -48,6 +48,9 @@ void PhyloProcess::New(int unfold)	{
 	}
 	
 	SetTree(treefile);
+	if (partitionfile != "None")	{
+		SetPartition(partitionfile);
+	}
 
 	if (! GetMyid())	{
 	if (roottax1 != "None")	{
@@ -135,6 +138,10 @@ void PhyloProcess::Open(istream& is, int unfold)	{
 	CreateMPI(GetData()->GetNsite());
 
 	SetTreeFromString(treestring);
+
+	if (partitionfile != "None")	{
+		SetPartition(partitionfile);
+	}
 
 	Create();
 
@@ -238,12 +245,13 @@ void PhyloProcess::Monitor(ostream& os)  {
 	}
 }
 
-void PhyloProcess::SetParameters(string indatafile, string intreefile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, string inroottax1, string inroottax2, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double inblfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int inpriorempmix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter, int inreshuffle)	{
+void PhyloProcess::SetParameters(string indatafile, string intreefile, string inpartitionfile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, string inroottax1, string inroottax2, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double inblfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int inpriorempmix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter, int inreshuffle)	{
 
 	reshuffle = inreshuffle;
 
 	datafile = indatafile;
 	treefile = intreefile;
+	partitionfile = inpartitionfile;
 	iscodon = iniscodon;
 	codetype = incodetype;
 
@@ -696,6 +704,8 @@ void PhyloProcess::ToStreamHeader(ostream& os)	{
 	os << sis << '\t' << sisnfrac << '\t' << sisnrep << '\t' << sisfrac << '\t' << siscutoff << '\t' << logZ << '\n';
 	os << 0 << '\n';
 	os << dirpriortype << '\t' << Nstatcomp << '\t' << priorempmix << '\t' << priormixtype << '\t' << fixstatweight << '\t' << fixstatalpha << '\t' << fixstatcenter << '\n';
+	os << 0 << '\n';
+	os << partitionfile << '\n';
 	os << 1 << '\n';
 }
 
@@ -744,8 +754,12 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
 		is >> dirpriortype >> Nstatcomp >> priorempmix >> priormixtype >> fixstatweight >> fixstatalpha >> fixstatcenter;
 		is >> check;
 		if (! check)	{
-			cerr << "error when reading stream header \n";
-			exit(1);
+			is >> partitionfile;
+			is >> check;
+			if (! check)	{
+				cerr << "error when reading stream header \n";
+				exit(1);
+			}
 		}
 	}
 }
@@ -805,7 +819,7 @@ void PhyloProcess::Create()	{
 void PhyloProcess::CreateMissingMap()	{
 
 	missingmap = new int*[GetNbranch()];
-	for (int j=0; j<GetNnode(); j++)	{
+	for (int j=0; j<GetNbranch(); j++)	{
 		missingmap[j] = new int[GetNsite()];
 		for (int i=0; i<GetNsite(); i++)	{
 			missingmap[j][i] = -1;
@@ -822,6 +836,17 @@ void PhyloProcess::DeleteMissingMap()	{
 }
 
 void PhyloProcess::FillMissingMap()	{
+	// deactivating missing maps
+	/*
+	for (int i=0; i<GetNsite(); i++)	{
+		missingmap[0][i] = 2;
+	}
+	for (int j=1; j<GetNbranch(); j++)	{
+		for (int i=0; i<GetNsite(); i++)	{
+			missingmap[j][i] = 1;
+		}
+	}
+	*/
 	BackwardFillMissingMap(GetRoot());
 	ForwardFillMissingMap(GetRoot(),GetRoot());
 }

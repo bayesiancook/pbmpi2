@@ -130,6 +130,11 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 			omega = 0;
 		}
 	}
+	
+	void UpdateOmegaSuffStat();
+	void GlobalUpdateOmegaSuffStat();
+	void SlaveUpdateOmegaSuffStat();
+	//void UpdateSiteOmegaSuffStat();
 
 	double* omega;
 	int omegasuffstatcount;
@@ -191,7 +196,7 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 	}
 
 	virtual double OmegaSuffStatLogProb(int l)	{
-		return omegasuffstatcount[l] * log(omega[l]) - omegasuffstatbeta[l] * *omega;
+		return compomegasuffstatcount[l] * log(omega[l]) - compomegasuffstatbeta[l] * *omega;
 	}
 
 	double OmegaLogStatProb(int site, int omegaalloc)	{
@@ -205,17 +210,11 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 		if (! omega)	{
 			omega = new double[Nomega];
 			omegaalloc = new int[GetNsite()];
-			omegasuffstatbeta = new double[Nomega];
-			omegasuffstatcount = new int[Nomega];
+			compomegasuffstatbeta = new double[Nomega];
+			compomegasuffstatcount = new int[Nomega];
 			siteomegasuffstatbeta = new double[GetNsite()];
 			siteomegasuffstatcount = new int[GetNsite()];
-			//siteomegasuffstatbeta = new double*[GetNsite()];
-			//siteomegasuffstatcount = new int*[GetNsite()];
 			omegaweight = new double[Nomega];
-			//for (int i=0; i<GetNsite(); i++)	{
-			//	siteomegasuffstatbeta[i] = new double[Nomega];
-			//	siteomegasuffstatcount[i] = new int[Nomega];
-			//}
 			SampleOmega();
 		}
 	}
@@ -224,8 +223,8 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 		if (omega)	{
 			delete[] omega;
 			delete[] omegaalloc;
-			delete[] omegasuffstatbeta;
-			delete[] omegasuffstatcount;
+			delete[] compomegasuffstatbeta;
+			delete[] compomegasuffstatcount;
 			delete[] siteomegasuffstatbeta;
 			delete[] siteomegasuffstatcount;
 			delete[] omegaweight;
@@ -236,8 +235,8 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 	double* omega;
 	int* omegaalloc;
 	int Nomega;
-	double* omegasuffstatbeta;
-	int* omegasuffstatcount;
+	double* compomegasuffstatbeta;
+	int* compomegasuffstatcount;
 	double* omegaweight;
 	double omegaweightalpha;
 };

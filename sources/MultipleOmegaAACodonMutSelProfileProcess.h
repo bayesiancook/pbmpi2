@@ -34,9 +34,9 @@ class MultipleOmegaAACodonMutSelProfileProcess : public virtual AACodonMutSelPro
 		UpdateMatrices();
 	}
 
-	virtual void UpdateSiteOmegaSuffStat()	{
-		AACodonMutSelProfileProcess::UpdateSiteOmegaSuffStat();
-	}
+	//virtual void UpdateSiteOmegaSuffStat()	{
+		//AACodonMutSelProfileProcess::UpdateSiteOmegaSuffStat();
+	//}
 
 	protected:
 

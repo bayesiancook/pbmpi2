@@ -14,14 +14,14 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#ifndef AACODONMUTSELFINITEPROFILE_H
-#define AACODONMUTSELFINITEPROFILE_H
+#ifndef MULOMEGAAACODONMUTSELFINITEPROFILE_H
+#define MULOMEGAAACODONMUTSELFINITEPROFILE_H
 
 #include "FiniteProfileProcess.h"
 #include "SingleOmegaAACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixMixtureProfileProcess.h"
 
-class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, public virtual SingleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
+class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, public virtual MultipleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
 
 	// implementer les fonctions create matrix et delete matrix
 	// ainsi que CreateComponent(int k) and DeleteComponent(k)
@@ -30,13 +30,13 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 
 	public:
 
-	AACodonMutSelFiniteProfileProcess() {}
-	virtual ~AACodonMutSelFiniteProfileProcess() {}
+	MultipleOmegaAACodonMutSelFiniteProfileProcess() {}
+	virtual ~MultipleAACodonMutSelFiniteProfileProcess() {}
 
 	protected:
 
 	void Create()	{
-		SingleOmegaAACodonMutSelProfileProcess::Create();
+		MultipleOmegaAACodonMutSelProfileProcess::Create();
 		FiniteProfileProcess::Create();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
 	}
@@ -44,7 +44,7 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 	void Delete()	{
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Delete();
 		FiniteProfileProcess::Delete();
-		SingleOmegaAACodonMutSelProfileProcess::Delete();
+		MultipleOmegaAACodonMutSelProfileProcess::Delete();
 	}
 
 	void ToStream(ostream& os) {
@@ -63,8 +63,6 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 		}
 		os << '\n';
 		os << '\n';
-		//os << *omega << '\n';
-		os << GetOmega() << '\n';
 
 		os << Ncomponent << '\n';
 		for (int j=0; j<GetDim(); j++)	{
@@ -78,9 +76,17 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 			}
 			os << '\n';
 		}
+		os << Nomega << '\n';
+		for (int i=0; i<Nomega; i++)	{
+			os << omega[i] << '\t'; 	
+		}
+
+		os << '\n';
+		os << '\n';
 		for (int i=0; i<GetNsite(); i++)	{
 			if (ActiveSite(i))	{
 				os << alloc[i] << '\t';
+				os << omegaalloc[i] << '\t';
 			}
 		}
 		os << '\n';
@@ -98,7 +104,6 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 			is >> codonprofile[i];
 		}
 
-		is >> *omega;
 		is >> Ncomponent;
 		for (int j=0; j<GetDim(); j++)	{
 			is >> dirweight[j];
@@ -108,20 +113,26 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 				is >> profile[i][j];
 			}
 		}
+		is >> Nomega;
+		for (int i=0; i<Nomega; i++)	{
+			is >> omega[i]; 	
+		}
 		for (int i=0; i<GetNsite(); i++)	{
 			if (ActiveSite(i))	{
 				is >> alloc[i];
+				is >> omegaalloc[i];
 			}
 		}
 		ResampleWeights();
+		ResampleOmegaWeights();
 	}
 
-	void CreateMatrix(int k)	{
-		if (matrixarray[k])	{
-			cerr << "error in AACodonMutSelFiniteProfileProcess: matrixarray is not 0\n";
+	void CreateMatrix(int alloc, int suballoc)	{
+		if (matrixarray[alloc][suballoc])	{
+			cerr << "error in AACodonMutSelSBDPProfileProcess: matrixarray is not 0\n";
 			exit(1);
 		}
-		matrixarray[k] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[k],omega,true);
+		matrixarray[alloc][suballoc] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[alloc],GetOmegaPointer(suballoc),true);
 	}
 };
 

@@ -91,6 +91,8 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{
 	
+				siteomegasuffstatcount[i] = 0;
+				siteomegasuffstatbeta[i] = 0;
 				map<pair<int,int>, int>& paircount = GetSitePairCount(i);
 				map<int,double>& waitingtime = GetSiteWaitingTime(i);
 				CodonSubMatrix* codonmatrix = dynamic_cast<CodonSubMatrix*>(GetMatrix(i));

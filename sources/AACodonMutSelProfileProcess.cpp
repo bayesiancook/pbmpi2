@@ -189,6 +189,7 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 		MoveOmega(tuning);
 		MoveOmega(tuning*0.3);
 	}
+	// GlobalUpdateParameters();
 }
 
 double AACodonMutSelProfileProcess::MoveNucRR(double tuning)	{

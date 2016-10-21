@@ -41,6 +41,13 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	virtual void UpdateOmegaSuffStat(); done
 	*/
 
+	/*
+	using ProfileProcess::ProfileSuffStatLogProb;
+	double OmegaSuffStatLogProb()	{
+		return ProfileSuffStatLogProb();
+	}
+	*/
+
 	protected:
 
 	void Create()	{

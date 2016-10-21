@@ -171,6 +171,9 @@ void AACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
+	else	{
+		UpdateMatrices();
+	}
 }
 
 

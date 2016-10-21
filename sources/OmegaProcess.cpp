@@ -88,7 +88,7 @@ void SingleOmegaProcess::GlobalUpdateOmegaSuffStat()	{
 		double dvalue;
 		for(int i=1; i<GetNprocs(); i++) {
                 	MPI_Recv(&ivalue,1,MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
-				omegasuffstatcount += ivalue;
+			omegasuffstatcount += ivalue;
 		}
        		MPI_Barrier(MPI_COMM_WORLD);
 		for(int i=1; i<GetNprocs(); i++) {

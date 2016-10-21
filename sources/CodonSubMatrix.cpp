@@ -60,6 +60,7 @@ double CodonSubMatrix::RateAwaySyn(int i)	{
 		if (Synonymous(i,GetCodonNearestNeighbors(i,j)))	{
 			total += q[i][GetCodonNearestNeighbors(i,j)];
 		}
+		j++;
 	}
 	return total;
 }
@@ -72,6 +73,7 @@ double CodonSubMatrix::RateAwayNonsyn(int i)	{
 		if (!Synonymous(i,GetCodonNearestNeighbors(i,j)))	{
 			total += q[i][GetCodonNearestNeighbors(i,j)];
 		}
+		j++;
 	}
 	if (total < 0)	{
 		cerr << "error: negative rate away non syn\n";

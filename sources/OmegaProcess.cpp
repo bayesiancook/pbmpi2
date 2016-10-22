@@ -15,6 +15,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Parallel.h"
 #include "OmegaProcess.h"
+#include "GeneralPathSuffStatMatrixProfileProcess.h"
 #include "Random.h"
 
 double SingleOmegaProcess::LogOmegaPrior()        {
@@ -34,6 +35,17 @@ void SingleOmegaProcess::SampleOmega()        {
 	*omega = 1.0;
 }
 
+void SingleOmegaProcess::UpdateOmegaSuffStat()	{
+	UpdateSiteOmegaSuffStat();
+	omegasuffstatbeta = 0;
+	omegasuffstatcount = 0;
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			omegasuffstatbeta += siteomegasuffstatbeta[i];	
+			omegasuffstatcount += siteomegasuffstatcount[i];	
+		}
+	}
+}	
 
 double SingleOmegaProcess::MoveOmega(double tuning)        {
 
@@ -60,6 +72,42 @@ double SingleOmegaProcess::MoveOmega(double tuning)        {
 	return naccepted;	
 }
 
+void SingleOmegaProcess::GlobalUpdateOmegaSuffStat()	{
+	if (GetNprocs() > 1)	{
+		// MPI2
+		// should ask the slaves to call their UpdateRateSuffStat
+		// and then gather the statistics;
+		MPI_Status stat;
+		MESSAGE signal = UPDATE_OMEGA;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+		omegasuffstatcount = 0;
+		omegasuffstatbeta = 0;	
+
+		int ivalue;
+		double dvalue;
+		for(int i=1; i<GetNprocs(); i++) {
+                	MPI_Recv(&ivalue,1,MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+			omegasuffstatcount += ivalue;
+		}
+       		MPI_Barrier(MPI_COMM_WORLD);
+		for(int i=1; i<GetNprocs(); i++) {
+			MPI_Recv(&dvalue,1,MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+			omegasuffstatbeta += dvalue;
+       		}
+	}
+	else	{
+		UpdateOmegaSuffStat();	
+	}
+}
+
+void SingleOmegaProcess::SlaveUpdateOmegaSuffStat()	{
+	UpdateOmegaSuffStat();
+	MPI_Send(&omegasuffstatcount,1,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Send(&omegasuffstatbeta,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+			
 
 double MultipleOmegaProcess::GlobalOmegaIncrementalFiniteMove(int nrep=1)	{
 
@@ -264,12 +312,13 @@ double MultipleOmegaProcess::MoveOmegaValues(double tuning)        {
 void MultipleOmegaProcess::UpdateOmegaSuffStat()	{
 	UpdateSiteOmegaSuffStat();
 	for (int l=0; l<GetNomega(); l++)	{
-		omegasuffstatbeta[l] = 0;
-		omegasuffstatcount[l] = 0;
+		compomegasuffstatbeta[l] = 0;
+		compomegasuffstatcount[l] = 0;
 	}
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
-			omegasuffstatbeta[GetOmegaSiteAlloc(i)] += siteomegasuffstatbeta[i];	
+			compomegasuffstatbeta[GetOmegaSiteAlloc(i)] += siteomegasuffstatbeta[i];	
+			compomegasuffstatcount[GetOmegaSiteAlloc(i)] += siteomegasuffstatcount[i];	
 		}
 	}
 }	
@@ -284,8 +333,8 @@ void MultipleOmegaProcess::GlobalUpdateOmegaSuffStat()	{
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
 		for (int l=0; l<Nomega; l++)	{
-			omegasuffstatcount[l] = 0;
-			omegasuffstatbeta[l] = 0;
+			compomegasuffstatcount[l] = 0;
+			compomegasuffstatbeta[l] = 0;
 		}
 
 		int ivector[Nomega];
@@ -293,14 +342,14 @@ void MultipleOmegaProcess::GlobalUpdateOmegaSuffStat()	{
 		for(int i=1; i<GetNprocs(); i++) {
                 	MPI_Recv(ivector,Nomega,MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
 			for (int l=0; l<Nomega; l++)	{
-				omegasuffstatcount[l] += ivector[l];
+				compomegasuffstatcount[l] += ivector[l];
 			}
 		}
        		MPI_Barrier(MPI_COMM_WORLD);
 		for(int i=1; i<GetNprocs(); i++) {
 			MPI_Recv(dvector,Nomega,MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
 			for (int l=0; l<Nomega; l++)	{
-				omegasuffstatbeta[l] += dvector[l];
+				compomegasuffstatbeta[l] += dvector[l];
 			}
        		}
 	}
@@ -311,8 +360,8 @@ void MultipleOmegaProcess::GlobalUpdateOmegaSuffStat()	{
 
 void MultipleOmegaProcess::SlaveUpdateOmegaSuffStat()	{
 	UpdateOmegaSuffStat();
-	MPI_Send(omegasuffstatcount,Nomega,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(compomegasuffstatcount,Nomega,MPI_INT,0,TAG1,MPI_COMM_WORLD);
 	MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Send(omegasuffstatbeta,Nomega,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(compomegasuffstatbeta,Nomega,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 

@@ -31,18 +31,6 @@ class SingleOmegaAACodonMutSelProfileProcess : public virtual AACodonMutSelProfi
 		UpdateMatrices();
 	}
 
-
-	virtual void UpdateOmegaSuffStat()	{
-		cerr << "error: calling UpdateOmegaSuffState from SingleOmegaAACodonMutSelProfileProcess\n";
-		exit(1);
-	}
-
-	//double OmegaSuffStatLogProb()	{
-	//	//return ProfileSuffStatLogProb();
-	//	return omegasuffstatcount * log(*omega) - omegasuffstatbeta * *omega;
-	//}
-
-
 	protected:
 
 	virtual void Create()	{

@@ -63,7 +63,8 @@ class AACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, p
 		}
 		os << '\n';
 		os << '\n';
-		os << *omega << '\n';
+		//os << *omega << '\n';
+		os << GetOmega() << '\n';
 
 		os << Ncomponent << '\n';
 		for (int j=0; j<GetDim(); j++)	{

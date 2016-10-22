@@ -59,7 +59,11 @@ class GeneralPathSuffStatMatrixMixtureProfileProcess : public virtual MatrixMixt
 	virtual void GlobalUpdateModeProfileSuffStat();
 	virtual void SlaveUpdateModeProfileSuffStat();
 
+	virtual double CountProfileSuffStatLogProb(int cat);
+	virtual double BetaProfileSuffStatLogProb(int cat);
+
 	virtual double ProfileSuffStatLogProb(int cat);
+	// virtual double ProfileSuffStatLogProb0(int cat);
 
 	virtual double LogStatProb(int site, int cat);
 

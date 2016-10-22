@@ -72,6 +72,7 @@ class MatrixMixtureProfileProcess : public virtual MatrixProfileProcess, public 
 	virtual void UpdateMatrix(int k)	{
 		if (matrixarray[k])	{
 			matrixarray[k]->CorruptMatrix();
+			// matrixarray[k]->UpdateMatrix();
 		}
 	}
 

@@ -28,7 +28,7 @@ class OmegaProcess : public virtual MPIModule	{
 
 	public:
 
-	OmegaProcess() : fixomega(0), omegaprior(0) {}
+	OmegaProcess() : fixomega(0), omegaprior(0), siteomegasuffstatcount(0) {}
 	virtual ~OmegaProcess() {}
 
 	protected:
@@ -60,6 +60,16 @@ class OmegaProcess : public virtual MPIModule	{
 		exit(1);
 	}
 
+	virtual double CountOmegaSuffStatLogProb()	{
+		cerr << "in OmegaProcess::OmegaSuffStatLogProb\n";
+		exit(1);
+	}
+
+	virtual double BetaOmegaSuffStatLogProb()	{
+		cerr << "in OmegaProcess::OmegaSuffStatLogProb\n";
+		exit(1);
+	}
+
 	virtual void SampleOmega()	{
 		cerr << "in OmegaProcess::SampleOmega\n";
 		exit(1);
@@ -82,6 +92,21 @@ class OmegaProcess : public virtual MPIModule	{
 
 	virtual void UpdateSiteOmegaSuffStat()	{
 		cerr << "in OmegaProcess::UpdateSiteOmegaSuffStat\n";
+	}
+
+	virtual void Create()	{
+		if (! siteomegasuffstatcount)	{
+			siteomegasuffstatbeta = new double[GetNsite()];
+			siteomegasuffstatcount = new int[GetNsite()];
+		}
+	}
+
+	virtual void Delete()	{
+		if (siteomegasuffstatcount)	{
+			delete[] siteomegasuffstatcount;
+			delete[] siteomegasuffstatbeta;
+		}
+		siteomegasuffstatcount = 0;
 	}
 
 	int fixomega;
@@ -107,8 +132,15 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 	}
 	
 	virtual double OmegaSuffStatLogProb()	{
-		//return ProfileSuffStatLogProb();
 		return omegasuffstatcount * log(*omega) - omegasuffstatbeta * *omega;
+	}
+
+	virtual double CountOmegaSuffStatLogProb()	{
+		return omegasuffstatcount * log(*omega);
+	}
+
+	virtual double BetaOmegaSuffStatLogProb()	{
+		return - omegasuffstatbeta * *omega;
 	}
 
 	// omega
@@ -120,6 +152,7 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 
 	virtual void Create()	{
 		if (! omega)	{
+			OmegaProcess::Create();
 			omega = new double;
 		}
 	}
@@ -128,8 +161,14 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 		if (omega)	{
 			delete omega;
 			omega = 0;
+			OmegaProcess::Delete();
 		}
 	}
+	
+	void UpdateOmegaSuffStat();
+	void GlobalUpdateOmegaSuffStat();
+	void SlaveUpdateOmegaSuffStat();
+	//void UpdateSiteOmegaSuffStat();
 
 	double* omega;
 	int omegasuffstatcount;
@@ -191,7 +230,7 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 	}
 
 	virtual double OmegaSuffStatLogProb(int l)	{
-		return omegasuffstatcount[l] * log(omega[l]) - omegasuffstatbeta[l] * *omega;
+		return compomegasuffstatcount[l] * log(omega[l]) - compomegasuffstatbeta[l] * *omega;
 	}
 
 	double OmegaLogStatProb(int site, int omegaalloc)	{
@@ -203,19 +242,12 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 
 	virtual void Create()	{
 		if (! omega)	{
+			OmegaProcess::Create();
 			omega = new double[Nomega];
 			omegaalloc = new int[GetNsite()];
-			omegasuffstatbeta = new double[Nomega];
-			omegasuffstatcount = new int[Nomega];
-			siteomegasuffstatbeta = new double[GetNsite()];
-			siteomegasuffstatcount = new int[GetNsite()];
-			//siteomegasuffstatbeta = new double*[GetNsite()];
-			//siteomegasuffstatcount = new int*[GetNsite()];
+			compomegasuffstatbeta = new double[Nomega];
+			compomegasuffstatcount = new int[Nomega];
 			omegaweight = new double[Nomega];
-			//for (int i=0; i<GetNsite(); i++)	{
-			//	siteomegasuffstatbeta[i] = new double[Nomega];
-			//	siteomegasuffstatcount[i] = new int[Nomega];
-			//}
 			SampleOmega();
 		}
 	}
@@ -224,20 +256,19 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 		if (omega)	{
 			delete[] omega;
 			delete[] omegaalloc;
-			delete[] omegasuffstatbeta;
-			delete[] omegasuffstatcount;
-			delete[] siteomegasuffstatbeta;
-			delete[] siteomegasuffstatcount;
+			delete[] compomegasuffstatbeta;
+			delete[] compomegasuffstatcount;
 			delete[] omegaweight;
 			omega = 0;
+			OmegaProcess::Delete();
 		}
 	}
 
 	double* omega;
 	int* omegaalloc;
 	int Nomega;
-	double* omegasuffstatbeta;
-	int* omegasuffstatcount;
+	double* compomegasuffstatbeta;
+	int* compomegasuffstatcount;
 	double* omegaweight;
 	double omegaweightalpha;
 };

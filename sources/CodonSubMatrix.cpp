@@ -54,20 +54,26 @@ void CodonSubMatrix::ComputeStationary()	{
 
 double CodonSubMatrix::RateAwaySyn(int i)	{
 	double total = 0;
-	for (int j=0; j < (Nnuc-1)*GetCodonStateSpace()->Npos; j++)	{
-		if ((GetCodonNearestNeighbors(i,j) != -1) && (Synonymous(i,GetCodonNearestNeighbors(i,j))))	{
-			total += Q[i][GetCodonNearestNeighbors(i,j)];
+	int j = 0;		
+	double** q = GetQ();		
+	while ( (GetCodonNearestNeighbors(i,j) != -1) && (j < (Nnuc-1)*GetCodonStateSpace()->Npos) )	{
+		if (Synonymous(i,GetCodonNearestNeighbors(i,j)))	{
+			total += q[i][GetCodonNearestNeighbors(i,j)];
 		}
+		j++;
 	}
 	return total;
 }
 
 double CodonSubMatrix::RateAwayNonsyn(int i)	{
 	double total = 0;
-	for (int j=0; j < (Nnuc-1)*GetCodonStateSpace()->Npos; j++)	{
-		if ((GetCodonNearestNeighbors(i,j) != -1) && (!Synonymous(i,GetCodonNearestNeighbors(i,j))))	{
-			total += Q[i][GetCodonNearestNeighbors(i,j)];
+	int j = 0;
+	double** q = GetQ();		
+	while ( (GetCodonNearestNeighbors(i,j) != -1) && (j < (Nnuc-1)*GetCodonStateSpace()->Npos) )	{
+		if (!Synonymous(i,GetCodonNearestNeighbors(i,j)))	{
+			total += q[i][GetCodonNearestNeighbors(i,j)];
 		}
+		j++;
 	}
 	if (total < 0)	{
 		cerr << "error: negative rate away non syn\n";

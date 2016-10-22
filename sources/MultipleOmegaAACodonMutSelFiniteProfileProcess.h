@@ -14,15 +14,14 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#ifndef AACODONMUTSELSBDPPROFILE_H
-#define AACODONMUTSELSBDPPROFILE_H
+#ifndef MULOMEGAAACODONMUTSELFINITEPROFILE_H
+#define MULOMEGAAACODONMUTSELFINITEPROFILE_H
 
-#include "Parallel.h"
-#include "SBDPProfileProcess.h"
+#include "FiniteProfileProcess.h"
 #include "SingleOmegaAACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixMixtureProfileProcess.h"
 
-class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual SingleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
+class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, public virtual MultipleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
 
 	// implementer les fonctions create matrix et delete matrix
 	// ainsi que CreateComponent(int k) and DeleteComponent(k)
@@ -31,54 +30,24 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 
 	public:
 
-	AACodonMutSelSBDPProfileProcess() {}
-	virtual ~AACodonMutSelSBDPProfileProcess() {}
-
-	/*
-	// still to be implemented
-	virtual void UpdateNucStatSuffStat();
-	virtual void UpdateNucRRSuffStat();
-	virtual void UpdateOmegaSuffStat(); done
-	*/
-
-	using ProfileProcess::ProfileSuffStatLogProb;
-	using MixtureProfileProcess::BetaProfileSuffStatLogProb;
-	using MixtureProfileProcess::CountProfileSuffStatLogProb;
-	/*
-	double OmegaSuffStatLogProb()	{
-		return ProfileSuffStatLogProb();
-	}
-	*/
-
-	void CheckSuffStatLogProb()	{
-
-		double diff1 = BetaOmegaSuffStatLogProb();
-		UpdateMatrices();
-		double diff2 = BetaProfileSuffStatLogProb();
-		*omega /= 10;
-		diff1 -= BetaOmegaSuffStatLogProb();
-		UpdateMatrices();
-		diff2 -= BetaProfileSuffStatLogProb();
-		cerr << diff1 - diff2 << '\t' << diff1 << '\t' << diff2 << '\n';
-		*omega *= 10;
-		UpdateMatrices();
-	}
+	MultipleOmegaAACodonMutSelFiniteProfileProcess() {}
+	virtual ~MultipleAACodonMutSelFiniteProfileProcess() {}
 
 	protected:
 
 	void Create()	{
-		SingleOmegaAACodonMutSelProfileProcess::Create();
-		SBDPProfileProcess::Create();
+		MultipleOmegaAACodonMutSelProfileProcess::Create();
+		FiniteProfileProcess::Create();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
 	}
 	
 	void Delete()	{
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Delete();
-		SBDPProfileProcess::Delete();
-		SingleOmegaAACodonMutSelProfileProcess::Delete();
+		FiniteProfileProcess::Delete();
+		MultipleOmegaAACodonMutSelProfileProcess::Delete();
 	}
 
-	void ToStream(ostream& os)	{
+	void ToStream(ostream& os) {
 		for (int i=0; i<Nnuc; i++)	{
 			os << GetNucStat(i) << '\t';
 		}
@@ -88,16 +57,13 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 			os << GetNucRR(i) << '\t';
 		}
 		os << '\n';
-		os << '\n';
-
+		os << '\n';		
 		for (int i=0; i<GetNcodon(); i++)	{
 			os << codonprofile[i] << '\t';
 		}
 		os << '\n';
 		os << '\n';
-		os << *omega << '\n';
 
-		os << kappa << '\n';
 		os << Ncomponent << '\n';
 		for (int j=0; j<GetDim(); j++)	{
 			os << dirweight[j] << '\t';
@@ -110,27 +76,34 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 			}
 			os << '\n';
 		}
+		os << Nomega << '\n';
+		for (int i=0; i<Nomega; i++)	{
+			os << omega[i] << '\t'; 	
+		}
+
+		os << '\n';
+		os << '\n';
 		for (int i=0; i<GetNsite(); i++)	{
 			if (ActiveSite(i))	{
 				os << alloc[i] << '\t';
+				os << omegaalloc[i] << '\t';
 			}
 		}
 		os << '\n';
-
 	}
-	void FromStream(istream& is)	{
+
+	void FromStream(istream& is) {
 		for (int i=0; i<Nnuc; i++)	{
 			is >> nucstat[i];
 		}
 		for (int i=0; i<GetNnucrr(); i++)	{
 			is >> nucrr[i];
 		}
+
 		for (int i=0; i<GetNcodon(); i++)	{
 			is >> codonprofile[i];
 		}
 
-		is >> *omega;
-		is >> kappa;
 		is >> Ncomponent;
 		for (int j=0; j<GetDim(); j++)	{
 			is >> dirweight[j];
@@ -140,23 +113,27 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 				is >> profile[i][j];
 			}
 		}
+		is >> Nomega;
+		for (int i=0; i<Nomega; i++)	{
+			is >> omega[i]; 	
+		}
 		for (int i=0; i<GetNsite(); i++)	{
 			if (ActiveSite(i))	{
 				is >> alloc[i];
+				is >> omegaalloc[i];
 			}
 		}
 		ResampleWeights();
+		ResampleOmegaWeights();
 	}
 
-
-	void CreateMatrix(int k)	{
-		if (matrixarray[k])	{
+	void CreateMatrix(int alloc, int suballoc)	{
+		if (matrixarray[alloc][suballoc])	{
 			cerr << "error in AACodonMutSelSBDPProfileProcess: matrixarray is not 0\n";
 			exit(1);
 		}
-		matrixarray[k] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[k],omega,true);
+		matrixarray[alloc][suballoc] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[alloc],GetOmegaPointer(suballoc),true);
 	}
-
 };
 
 #endif

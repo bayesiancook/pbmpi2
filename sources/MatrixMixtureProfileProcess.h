@@ -82,6 +82,12 @@ class MatrixMixtureProfileProcess : public virtual MatrixProfileProcess, public 
 		UpdateMatrix(k);
 	}
 
+	virtual void CreateComponent(int k)	{
+		occupancy[k] = 0;
+		SampleStat(k);
+		UpdateComponent(k);
+	}
+
 	SubMatrix** matrixarray;
 };
 

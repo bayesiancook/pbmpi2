@@ -37,6 +37,14 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 		return profile[alloc[site]];
 	}
 
+	/*
+	virtual void CreateComponent(int k)	{
+		occupancy[k] = 0;
+		SampleStat(k);
+		UpdateComponent(k);
+	}
+	*/
+
 	// number of components of the mixture
 	int GetNcomponent() { return Ncomponent;}
 

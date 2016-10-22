@@ -19,7 +19,7 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	PoissonDPProfileProcess.cpp PoissonSBDPProfileProcess.cpp \
 	FiniteProfileProcess.cpp PoissonFiniteProfileProcess.cpp \
 	CodonMutSelProfileProcess.cpp \
-	GeneralPathSuffStatSiteMatrixMixtureProfileProcess.cpp AACodonMutSelSiteSBDPPhyloProcess.cpp MultipleOmegaAACodonMutSelSBDPPhyloProcess.cpp \
+	AACodonMutSelSiteSBDPPhyloProcess.cpp MultipleOmegaAACodonMutSelSBDPPhyloProcess.cpp \
 	OmegaProcess.cpp AACodonMutSelProfileProcess.cpp \
 	SubstitutionProcess.cpp Propagate.cpp \
 	PoissonSubstitutionProcess.cpp MatrixSubstitutionProcess.cpp \

@@ -49,10 +49,12 @@ class GeneralPathSuffStatMatrixMixtureProfileProcess : public virtual MatrixMixt
 		// DeleteMatrix(k);
 	}
 
+	/*
 	// necessary to keep track of componentwise sufficient statistics 
 	// when updating the structure of the mixture
 	void AddSite(int site, int cat);
 	void RemoveSite(int site, int cat);
+	*/
 
 	// collects site-specific suffstats and pools them componentwise
 	virtual void UpdateModeProfileSuffStat();

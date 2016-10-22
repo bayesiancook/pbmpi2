@@ -150,7 +150,9 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		}
 
 		GlobalUpdateParameters();
+		cerr << "profileprocessmove\n";
 		AACodonMutSelSiteSBDPProfileProcess::Move(tuning,1,15);
+		cerr << "profileprocessmove ok\n";
 		chronosuffstat.Stop();
 
 		chronounfold.Start();
@@ -168,9 +170,15 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		AACodonMutSelSiteSBDPSubstitutionProcess::Create();
 		GeneralPathSuffStatMatrixPhyloProcess::Create();
 		GammaBranchProcess::Create();
+		if (GetMyid())	{
+			CreateSiteMatrices();
+		}
 	}
 
 	virtual void Delete()	{
+		if (GetMyid())	{
+			DeleteSiteMatrices();
+		}
 		GammaBranchProcess::Delete();
 		GeneralPathSuffStatMatrixPhyloProcess::Delete();
 		AACodonMutSelSiteSBDPSubstitutionProcess::Delete();

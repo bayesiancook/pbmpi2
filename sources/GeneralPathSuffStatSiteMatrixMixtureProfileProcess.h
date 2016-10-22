@@ -68,7 +68,7 @@ class GeneralPathSuffStatSiteMatrixMixtureProfileProcess : public virtual SiteMa
 	virtual double GlobalMoveProfile(double tuning = 1, int n = 1, int nrep = 1);
 	virtual void SlaveMoveProfile();
 
-	// componentwise
+	// per site!!
 	map<int,int>* profilerootcount;
 	map< pair<int,int>, int>* profilepaircount;
 	map<int,double>* profilewaitingtime;

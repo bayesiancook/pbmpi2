@@ -39,7 +39,12 @@ void MixtureProfileProcess::Create()	{
 		}
 		alloc = new int[GetNsite()];
 		for (int i=0; i<GetNsite(); i++)	{
-			alloc[i] = -1;
+			if (ActiveSite(i))	{
+				alloc[i] = 0;
+			}
+			else	{
+				alloc[i] = -1;
+			}
 		}
 		occupancy = new int[GetNmodeMax()];
 		logstatprior = new double[GetNmodeMax()];

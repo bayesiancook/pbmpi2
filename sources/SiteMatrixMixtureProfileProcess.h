@@ -56,13 +56,11 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixProfileProcess, pub
 			for (int i=0; i<GetNsite(); i++)	{
 				matrixarray[i] = 0;
 			}
-			CreateMatrices();
 		}
 	}
 
 	virtual void Delete()	{
 		if (matrixarray)	{
-			DeleteMatrices();
 			delete[] matrixarray;
 			matrixarray = 0;
 			MixtureProfileProcess::Delete();
@@ -70,7 +68,16 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixProfileProcess, pub
 	}
 
 	virtual void CreateMatrices()	{
-		// for (int i=0; i<GetNsite(); i++)	{
+		cerr << "in SiteMatrixMixtureProfileProcess::CreateMatrices\n";
+		exit(1);
+	}
+
+	virtual void DeleteMatrices()	{
+		cerr << "in SiteMatrixMixtureProfileProcess::DeleteMatrices\n";
+		exit(1);
+	}
+
+	virtual void CreateSiteMatrices()	{
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{
 				CreateMatrix(i);
@@ -78,7 +85,7 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixProfileProcess, pub
 		}
 	}
 
-	virtual void DeleteMatrices()	{
+	virtual void DeleteSiteMatrices()	{
 		for (int i=0; i<GetNsite(); i++)	{
 			DeleteMatrix(i);
 		}

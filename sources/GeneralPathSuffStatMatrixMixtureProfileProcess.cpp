@@ -349,7 +349,7 @@ double GeneralPathSuffStatMatrixMixtureProfileProcess::LogStatProb(int site, int
 	const double* stat = matrixarray[cat]->GetStationary();
 	int rootstate = GetSiteRootState(site);
 	if (rootstate != -1)	{
-		total += log(rootstate);
+		total += log(stat[rootstate]);
 
 		map<int,double>& waitingtime = GetSiteWaitingTime(site);
 		for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{

@@ -99,9 +99,20 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	// log likelihoods based on sufficient statistics (substitution mappings)
 	//------
 
+	double CountProfileSuffStatLogProb();
+	double BetaProfileSuffStatLogProb();
 	double ProfileSuffStatLogProb();
 	// the component suff stat log prob is yet to be implemented in subclasses
 	virtual double ProfileSuffStatLogProb(int cat) = 0;
+	virtual double CountProfileSuffStatLogProb(int cat) 	{
+		cerr << "in count\n";
+		exit(1);
+	}
+
+	virtual double BetaProfileSuffStatLogProb(int cat) {
+		cerr << "in beta\n";
+		exit(1);
+	}
 
 	// suffstat lnL of site <site> when allocated to component <cat>
 	virtual double LogStatProb(int site, int cat) = 0;

@@ -325,6 +325,26 @@ double MixtureProfileProcess::ProfileSuffStatLogProb()	{
 	return total;
 }
 
+double MixtureProfileProcess::CountProfileSuffStatLogProb()	{
+
+	// simply, sum over all components
+	double total = 0;
+	for (int i=0; i<GetNcomponent(); i++)	{
+		total += CountProfileSuffStatLogProb(i);
+	}
+	return total;
+}
+
+double MixtureProfileProcess::BetaProfileSuffStatLogProb()	{
+
+	// simply, sum over all components
+	double total = 0;
+	for (int i=0; i<GetNcomponent(); i++)	{
+		total += BetaProfileSuffStatLogProb(i);
+	}
+	return total;
+}
+
 void MixtureProfileProcess::SwapComponents(int cat1, int cat2)	{
 
 	int tmp = occupancy[cat1];

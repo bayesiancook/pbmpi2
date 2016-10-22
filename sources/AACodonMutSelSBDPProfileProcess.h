@@ -41,12 +41,28 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	virtual void UpdateOmegaSuffStat(); done
 	*/
 
-	/*
 	using ProfileProcess::ProfileSuffStatLogProb;
+	using MixtureProfileProcess::BetaProfileSuffStatLogProb;
+	using MixtureProfileProcess::CountProfileSuffStatLogProb;
+	/*
 	double OmegaSuffStatLogProb()	{
 		return ProfileSuffStatLogProb();
 	}
 	*/
+
+	void CheckSuffStatLogProb()	{
+
+		double diff1 = BetaOmegaSuffStatLogProb();
+		UpdateMatrices();
+		double diff2 = BetaProfileSuffStatLogProb();
+		*omega /= 10;
+		diff1 -= BetaOmegaSuffStatLogProb();
+		UpdateMatrices();
+		diff2 -= BetaProfileSuffStatLogProb();
+		cerr << diff1 - diff2 << '\t' << diff1 << '\t' << diff2 << '\n';
+		*omega *= 10;
+		UpdateMatrices();
+	}
 
 	protected:
 

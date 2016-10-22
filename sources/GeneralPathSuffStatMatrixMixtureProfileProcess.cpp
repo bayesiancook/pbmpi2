@@ -258,7 +258,25 @@ void GeneralPathSuffStatMatrixMixtureProfileProcess::UpdateModeProfileSuffStat()
 	}
 }
 
+/*
 double GeneralPathSuffStatMatrixMixtureProfileProcess::ProfileSuffStatLogProb(int cat)	{
+
+	double tot1 = ProfileSuffStatLogProb0(cat);
+	SubMatrix* mat = matrixarray[cat];
+	mat->CorruptMatrix();
+	mat->UpdateMatrix();
+	double tot2 = ProfileSuffStatLogProb0(cat);
+	if (fabs(tot2-tot1) > 1e-6)	{
+		cerr << "error in GPSS ProfileSuffStatLogProb\n";
+		cerr << tot1 << '\t' << tot2 << '\n';
+		exit(1);
+	}
+	return tot1;
+}
+*/
+
+double GeneralPathSuffStatMatrixMixtureProfileProcess::ProfileSuffStatLogProb(int cat)	{
+// double GeneralPathSuffStatMatrixMixtureProfileProcess::ProfileSuffStatLogProb0(int cat)	{
 
 	double total = 0;
 	SubMatrix* mat = matrixarray[cat];
@@ -279,6 +297,48 @@ double GeneralPathSuffStatMatrixMixtureProfileProcess::ProfileSuffStatLogProb(in
 		total += i->second * log((*mat)(i->first.first, i->first.second));
 	}
 	profilesuffstatlogprob[cat] = total;
+	return total;
+}
+
+double GeneralPathSuffStatMatrixMixtureProfileProcess::CountProfileSuffStatLogProb(int cat)	{
+
+	double total = 0;
+	SubMatrix* mat = matrixarray[cat];
+	if (! mat)	{
+		cerr << "error : null matrix\n";
+		cerr << cat << '\t' << Ncomponent << '\n';
+		cerr << occupancy[cat] << '\n';
+		exit(1);
+	}
+	const double* stat = matrixarray[cat]->GetStationary();
+	for (map<int,int>::iterator i = profilerootcount[cat].begin(); i!= profilerootcount[cat].end(); i++)	{
+		total += i->second * log(stat[i->first]);
+	}
+	/*
+	for (map<int,double>::iterator i = profilewaitingtime[cat].begin(); i!= profilewaitingtime[cat].end(); i++)	{
+		total += i->second * (*mat)(i->first,i->first);
+	}
+	*/
+	for (map<pair<int,int>, int>::iterator i = profilepaircount[cat].begin(); i!= profilepaircount[cat].end(); i++)	{
+		total += i->second * log((*mat)(i->first.first, i->first.second));
+	}
+	profilesuffstatlogprob[cat] = total;
+	return total;
+}
+
+double GeneralPathSuffStatMatrixMixtureProfileProcess::BetaProfileSuffStatLogProb(int cat)	{
+
+	double total = 0;
+	SubMatrix* mat = matrixarray[cat];
+	if (! mat)	{
+		cerr << "error : null matrix\n";
+		cerr << cat << '\t' << Ncomponent << '\n';
+		cerr << occupancy[cat] << '\n';
+		exit(1);
+	}
+	for (map<int,double>::iterator i = profilewaitingtime[cat].begin(); i!= profilewaitingtime[cat].end(); i++)	{
+		total += i->second * (*mat)(i->first,i->first);
+	}
 	return total;
 }
 

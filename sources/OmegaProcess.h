@@ -60,6 +60,16 @@ class OmegaProcess : public virtual MPIModule	{
 		exit(1);
 	}
 
+	virtual double CountOmegaSuffStatLogProb()	{
+		cerr << "in OmegaProcess::OmegaSuffStatLogProb\n";
+		exit(1);
+	}
+
+	virtual double BetaOmegaSuffStatLogProb()	{
+		cerr << "in OmegaProcess::OmegaSuffStatLogProb\n";
+		exit(1);
+	}
+
 	virtual void SampleOmega()	{
 		cerr << "in OmegaProcess::SampleOmega\n";
 		exit(1);
@@ -122,8 +132,15 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 	}
 	
 	virtual double OmegaSuffStatLogProb()	{
-		//return ProfileSuffStatLogProb();
 		return omegasuffstatcount * log(*omega) - omegasuffstatbeta * *omega;
+	}
+
+	virtual double CountOmegaSuffStatLogProb()	{
+		return omegasuffstatcount * log(*omega);
+	}
+
+	virtual double BetaOmegaSuffStatLogProb()	{
+		return - omegasuffstatbeta * *omega;
 	}
 
 	// omega

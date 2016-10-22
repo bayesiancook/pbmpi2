@@ -87,6 +87,11 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 	double NucRRSuffStatLogProb();
 	*/
 
+	virtual void CheckSuffStatLogProb() {
+		cerr << "in default check\n";
+		exit(1);
+	}
+
 	virtual void UpdateSiteOmegaSuffStat()	{
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{

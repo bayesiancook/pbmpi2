@@ -45,8 +45,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= pb_mpi stickbreaking drawhindex gettreelength pb_mpi readpb_mpi simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc bpcomp bpcomp2
-#ALL= pb_mpi stickbreaking drawhindex gettreelength pb_mpi readpb_mpi simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc bpcomp bpcomp2 tracecomp
+ALL= pb_mpi stickbreaking drawhindex gettreelength pb_mpi readpb_mpi simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc bpcomp bpcomp2 tracecomp
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean

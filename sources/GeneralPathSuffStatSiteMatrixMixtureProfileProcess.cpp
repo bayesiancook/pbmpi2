@@ -24,38 +24,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 
-void GeneralPathSuffStatSiteMatrixMixtureProfileProcess::Create()	{
-	if (! profilepaircount)	{
-		SiteMatrixMixtureProfileProcess::Create();
-		profilepaircount = new map< pair<int,int>, int>[GetNsite()];
-		profilewaitingtime = new map<int,double>[GetNsite()];
-		profilerootcount = new map<int,int>[GetNsite()];
-	}
-}
-
-void GeneralPathSuffStatSiteMatrixMixtureProfileProcess::Delete() {
-	if (profilepaircount)	{
-		delete[] profilepaircount;
-		delete[] profilerootcount;
-		delete[] profilewaitingtime;
-		profilepaircount = 0;
-		profilerootcount = 0;
-		profilewaitingtime = 0;
-		SiteMatrixMixtureProfileProcess::Delete();
-	}
-}
-
-void GeneralPathSuffStatSiteMatrixMixtureProfileProcess::AddSite(int site, int cat)	{
-	alloc[site] = cat;
-	occupancy[cat] ++;
-}
-
-void GeneralPathSuffStatSiteMatrixMixtureProfileProcess::RemoveSite(int site, int cat)	{
-	if (cat != -1)	{
-		occupancy[cat] --;
-	}
-}
-
 double GeneralPathSuffStatSiteMatrixMixtureProfileProcess::LogStatProb(int site, int cat)	{
 
 	// calculate based on zip matrix

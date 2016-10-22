@@ -364,16 +364,3 @@ double GeneralPathSuffStatMatrixMixtureProfileProcess::LogStatProb(int site, int
 	return total;
 }
 
-
-void GeneralPathSuffStatMatrixMixtureProfileProcess::AddSite(int site, int cat)	{
-	alloc[site] = cat;
-	occupancy[cat] ++;
-}
-
-void GeneralPathSuffStatMatrixMixtureProfileProcess::RemoveSite(int site, int cat)	{
-	if (cat != -1)	{
-		occupancy[cat] --;
-	}
-}
-
-

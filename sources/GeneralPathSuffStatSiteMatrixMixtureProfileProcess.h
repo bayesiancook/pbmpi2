@@ -24,23 +24,14 @@ class GeneralPathSuffStatSiteMatrixMixtureProfileProcess : public virtual SiteMa
 
 	public:
 
-	GeneralPathSuffStatSiteMatrixMixtureProfileProcess() : profilerootcount(0), profilepaircount(0) , profilewaitingtime(0) {}
+	GeneralPathSuffStatSiteMatrixMixtureProfileProcess() {}
 	virtual ~GeneralPathSuffStatSiteMatrixMixtureProfileProcess() {}
 
 	protected:
 
-	virtual void Create();
-	virtual void Delete();
-
 	virtual void CreateComponent(int k)	{
 		occupancy[k] = 0;
 		SampleStat(k);
-		// useful?
-		if (activesuffstat)	{
-			profilepaircount[k].clear();
-			profilerootcount[k].clear();
-			profilewaitingtime[k].clear();
-		}
 		// CreateMatrix(k);
 		UpdateMatrix(k);
 	}
@@ -48,11 +39,6 @@ class GeneralPathSuffStatSiteMatrixMixtureProfileProcess : public virtual SiteMa
 	virtual void DeleteComponent(int k)	{
 		// DeleteMatrix(k);
 	}
-
-	// necessary to keep track of componentwise sufficient statistics 
-	// when updating the structure of the mixture
-	void AddSite(int site, int cat);
-	void RemoveSite(int site, int cat);
 
 	virtual void UpdateModeProfileSuffStat() {}
 	virtual void GlobalUpdateModeProfileSuffStat() {}
@@ -67,11 +53,6 @@ class GeneralPathSuffStatSiteMatrixMixtureProfileProcess : public virtual SiteMa
 
 	virtual double GlobalMoveProfile(double tuning = 1, int n = 1, int nrep = 1);
 	virtual void SlaveMoveProfile();
-
-	// per site!!
-	map<int,int>* profilerootcount;
-	map< pair<int,int>, int>* profilepaircount;
-	map<int,double>* profilewaitingtime;
 
 };
 

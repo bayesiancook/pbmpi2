@@ -40,28 +40,34 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	virtual void UpdateOmegaSuffStat(); done
 	*/
 
+	/*
 	using ProfileProcess::ProfileSuffStatLogProb;
 	using MixtureProfileProcess::BetaProfileSuffStatLogProb;
 	using MixtureProfileProcess::CountProfileSuffStatLogProb;
-	/*
 	double OmegaSuffStatLogProb()	{
 		return ProfileSuffStatLogProb();
 	}
 	*/
 
+	/*
 	void CheckSuffStatLogProb()	{
 
-		double diff1 = BetaOmegaSuffStatLogProb();
+		double diff1 = OmegaSuffStatLogProb();
 		UpdateMatrices();
-		double diff2 = BetaProfileSuffStatLogProb();
+		double diff2 = ProfileSuffStatLogProb();
 		*omega /= 10;
-		diff1 -= BetaOmegaSuffStatLogProb();
+		diff1 -= OmegaSuffStatLogProb();
 		UpdateMatrices();
-		diff2 -= BetaProfileSuffStatLogProb();
-		cerr << diff1 - diff2 << '\t' << diff1 << '\t' << diff2 << '\n';
+		diff2 -= ProfileSuffStatLogProb();
+		if (fabs(diff1 - diff2) > 1e-6)	{
+			cerr << "error in check suff stat log prob\n";
+			cerr << diff1 - diff2 << '\t' << diff1 << '\t' << diff2 << '\t' << omegasuffstatcount << '\t' << omegasuffstatbeta << '\n';
+			exit(1);
+		}
 		*omega *= 10;
 		UpdateMatrices();
 	}
+	*/
 
 	protected:
 

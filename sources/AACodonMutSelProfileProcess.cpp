@@ -190,6 +190,7 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 		MoveOmega(tuning);
 		MoveOmega(tuning*0.3);
 	}
+
 	// GlobalUpdateParameters();
 }
 
@@ -352,5 +353,44 @@ double AACodonMutSelProfileProcess::GetCodonProfileEntropy()	{
 		}
 	}
 	return ent;
+}
+
+void AACodonMutSelProfileProcess::UpdateSiteOmegaSuffStat()	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+
+			siteomegasuffstatcount[i] = 0;
+			siteomegasuffstatbeta[i] = 0;
+			map<pair<int,int>, int>& paircount = GetSitePairCount(i);
+			map<int,double>& waitingtime = GetSiteWaitingTime(i);
+			AACodonMutSelProfileSubMatrix* codonmatrix = dynamic_cast<AACodonMutSelProfileSubMatrix*>(GetMatrix(i));
+			if (! codonmatrix)	{
+				cerr << "error: dynamic cast\n";
+				exit(1);
+			}
+			/*
+			if (fabs(codonmatrix->GetOmega() - GetSiteOmega(i)) > 1e-6)	{
+				cerr << "error: non matching omega : \n";
+				double tmp = 0;
+				cerr << codonmatrix->GetOmega() << '\t' << GetSiteOmega(i) << '\n';
+				cerr << GetSiteOmega(i) << '\n';
+				// cerr << GetSiteOmega(i) << '\t' << GetSiteOmega(0) << '\t' << GetSiteOmega(i) << '\t' << GetSiteOmega(0) << '\n';
+				cerr << "site : " << i << '\t' << GetNsite() << '\n';
+				cerr << GetSiteOmega(0) << '\n';
+				exit(1);
+			}
+			*/
+			for (map<int,double>::iterator j = waitingtime.begin(); j!= waitingtime.end(); j++)	{
+				siteomegasuffstatbeta[i] += j->second * codonmatrix->RateAwayNonsyn(j->first) / codonmatrix->GetOmega();
+				// siteomegasuffstatbeta[i] += j->second * codonmatrix->RateAwayNonsyn(j->first) / GetSiteOmega(i);
+			}
+
+			for (map<pair<int,int>, int>::iterator j = paircount.begin(); j!= paircount.end(); j++)	{
+				if (! codonmatrix->Synonymous(j->first.first,j->first.second) )	{
+					siteomegasuffstatcount[i] += j->second;
+				}
+			}
+		}
+	}
 }
 

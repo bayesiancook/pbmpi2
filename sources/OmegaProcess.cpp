@@ -111,7 +111,7 @@ void SingleOmegaProcess::SlaveUpdateOmegaSuffStat()	{
 
 double MultipleOmegaProcess::GlobalOmegaIncrementalFiniteMove(int nrep=1)	{
 
-		// send command and arguments
+	// send command and arguments
 	MESSAGE signal = REALLOCOMEGA_MOVE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(&nrep,1,MPI_INT,0,MPI_COMM_WORLD);

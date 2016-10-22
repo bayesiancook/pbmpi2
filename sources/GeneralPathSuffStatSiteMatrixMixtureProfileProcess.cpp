@@ -76,16 +76,19 @@ double GeneralPathSuffStatSiteMatrixMixtureProfileProcess::LogStatProb(int site,
 	double** q = mat->GetQ();
 	int nstate = mat->GetNstate();
 
-	total += log(stat[GetSiteRootState(site)]);
+	int rootstate = GetSiteRootState(site);
+	if (rootstate != -1)	{
+		total += log(rootstate);
 
-	map<int,double>& waitingtime = GetSiteWaitingTime(site);
-	for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
-		total += i->second * q[i->first][i->first];
-	}
+		map<int,double>& waitingtime = GetSiteWaitingTime(site);
+		for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
+			total += i->second * q[i->first][i->first];
+		}
 
-	map<pair<int,int>, int>& paircount = GetSitePairCount(site);
-	for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
-		total += i->second * log(q[i->first.first][i->first.second]);
+		map<pair<int,int>, int>& paircount = GetSitePairCount(site);
+		for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
+			total += i->second * log(q[i->first.first][i->first.second]);
+		}
 	}
 
 	RemoveSite(site,cat);

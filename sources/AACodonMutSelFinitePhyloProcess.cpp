@@ -86,6 +86,12 @@ void AACodonMutSelFinitePhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 	switch(signal) {
 
+		case UPDATE_OMEGA:
+			SlaveUpdateOmegaSuffStat();
+			break;
+		case STATFIX:
+			SlaveGetStatFix();
+			break;
 		case REALLOC_MOVE:
 			SlaveIncrementalFiniteMove();
 			break;

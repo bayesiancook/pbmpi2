@@ -17,7 +17,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef MULOMEGAAACODONMUTSELSBDPPROFILE_H
 #define MULOMEGAAACODONMUTSELSBDPPROFILE_H
 
-#include "Parallel.h"
 #include "SBDPProfileProcess.h"
 #include "MultipleOmegaAACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMultipleMatrixMixtureProfileProcess.h"

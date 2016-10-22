@@ -18,10 +18,10 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define MULOMEGAAACODONMUTSELFINITEPROFILE_H
 
 #include "FiniteProfileProcess.h"
-#include "SingleOmegaAACodonMutSelProfileProcess.h"
-#include "GeneralPathSuffStatMatrixMixtureProfileProcess.h"
+#include "MultipleOmegaAACodonMutSelProfileProcess.h"
+#include "GeneralPathSuffStatMultipleMatrixMixtureProfileProcess.h"
 
-class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, public virtual MultipleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
+class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, public virtual MultipleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMultipleMatrixMixtureProfileProcess	{
 
 	// implementer les fonctions create matrix et delete matrix
 	// ainsi que CreateComponent(int k) and DeleteComponent(k)
@@ -31,18 +31,18 @@ class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProf
 	public:
 
 	MultipleOmegaAACodonMutSelFiniteProfileProcess() {}
-	virtual ~MultipleAACodonMutSelFiniteProfileProcess() {}
+	virtual ~MultipleOmegaAACodonMutSelFiniteProfileProcess() {}
 
 	protected:
 
 	void Create()	{
 		MultipleOmegaAACodonMutSelProfileProcess::Create();
 		FiniteProfileProcess::Create();
-		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
+		GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::Create();
 	}
 	
 	void Delete()	{
-		GeneralPathSuffStatMatrixMixtureProfileProcess::Delete();
+		GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::Delete();
 		FiniteProfileProcess::Delete();
 		MultipleOmegaAACodonMutSelProfileProcess::Delete();
 	}
@@ -129,7 +129,7 @@ class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProf
 
 	void CreateMatrix(int alloc, int suballoc)	{
 		if (matrixarray[alloc][suballoc])	{
-			cerr << "error in AACodonMutSelSBDPProfileProcess: matrixarray is not 0\n";
+			cerr << "error in AACodonMutSelFiniteProfileProcess: matrixarray is not 0\n";
 			exit(1);
 		}
 		matrixarray[alloc][suballoc] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[alloc],GetOmegaPointer(suballoc),true);

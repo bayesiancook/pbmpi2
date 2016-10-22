@@ -20,7 +20,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "GeneralPathSuffStatMatrixPhyloProcess.h"
 #include "GammaBranchProcess.h"
 
-class MultipleAACodonMutSelFinitePhyloProcess : public virtual MultipleOmegaAACodonMutSelFiniteSubstitutionProcess, public virtual GeneralPathSuffStatMatrixPhyloProcess, public virtual GammaBranchProcess	{
+class MultipleOmegaAACodonMutSelFinitePhyloProcess : public virtual MultipleOmegaAACodonMutSelFiniteSubstitutionProcess, public virtual GeneralPathSuffStatMatrixPhyloProcess, public virtual GammaBranchProcess	{
 
 	public:
 
@@ -37,7 +37,7 @@ class MultipleAACodonMutSelFinitePhyloProcess : public virtual MultipleOmegaAACo
 		mixtype = inmixtype;
 	}
 
-	MultipleAACodonMutSelFinitePhyloProcess(istream& is, int inmyid, int innprocs)	{
+	MultipleOmegaAACodonMutSelFinitePhyloProcess(istream& is, int inmyid, int innprocs)	{
 
 		// generic
 		FromStreamHeader(is);
@@ -55,7 +55,7 @@ class MultipleAACodonMutSelFinitePhyloProcess : public virtual MultipleOmegaAACo
 		Open(is);
 	}
 
-	virtual ~MultipleAACodonMutSelFinitePhyloProcess()	{
+	virtual ~MultipleOmegaAACodonMutSelFinitePhyloProcess()	{
 		Delete();
 	}
 
@@ -110,12 +110,12 @@ class MultipleAACodonMutSelFinitePhyloProcess : public virtual MultipleOmegaAACo
 
 	void ToStream(ostream& os)	{
 		GammaBranchProcess::ToStream(os);
-		MultipleAACodonMutSelFiniteProfileProcess::ToStream(os);
+		MultipleOmegaAACodonMutSelFiniteProfileProcess::ToStream(os);
 	}
 
 	void FromStream(istream& is)	{
 		GammaBranchProcess::FromStream(is);
-		MultipleAACodonMutSelFiniteProfileProcess::FromStream(is);
+		MultipleOmegaAACodonMutSelFiniteProfileProcess::FromStream(is);
 		GlobalUpdateParameters();
 	}
 
@@ -144,7 +144,7 @@ class MultipleAACodonMutSelFinitePhyloProcess : public virtual MultipleOmegaAACo
 		}
 
 		GlobalUpdateParameters();
-		MultipleAACodonMutSelFiniteProfileProcess::Move(tuning,1,10);
+		MultipleOmegaAACodonMutSelFiniteProfileProcess::Move(tuning,1,10);
 		chronosuffstat.Stop();
 
 		chronounfold.Start();
@@ -163,14 +163,14 @@ class MultipleAACodonMutSelFinitePhyloProcess : public virtual MultipleOmegaAACo
 	}
 
 	virtual void Create()	{
-		MultipleAACodonMutSelFiniteSubstitutionProcess::Create();
+		MultipleOmegaAACodonMutSelFiniteSubstitutionProcess::Create();
 		GeneralPathSuffStatMatrixPhyloProcess::Create();
 		GammaBranchProcess::Create();
 	}
 
 	virtual void Delete()	{
 		GeneralPathSuffStatMatrixPhyloProcess::Delete();
-		MultipleAACodonMutSelFiniteSubstitutionProcess::Delete();
+		MultipleOmegaAACodonMutSelFiniteSubstitutionProcess::Delete();
 		GammaBranchProcess::Delete();
 	}
 

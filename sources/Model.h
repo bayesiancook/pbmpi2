@@ -27,6 +27,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "AACodonMutSelFinitePhyloProcess.h"
 #include "AACodonMutSelSBDPPhyloProcess.h"
 #include "MultipleOmegaAACodonMutSelSBDPPhyloProcess.h"
+#include "MultipleOmegaAACodonMutSelFinitePhyloProcess.h"
 #include "AACodonMutSelSiteSBDPPhyloProcess.h"
 #include "AACodonMutSelMVNSiteSpecificPhyloProcess.h"
 #include "CodonMutSelFinitePhyloProcess.h"

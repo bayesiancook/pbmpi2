@@ -35,6 +35,14 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixProfileProcess, pub
 		return matrixarray[site];
 	}
 
+	virtual void CreateComponent(int k)	{
+		occupancy[k] = 0;
+		SampleStat(k);
+		UpdateComponent(k);
+	}
+
+	virtual void DeleteComponent(int k) {}
+
 	virtual void UpdateMatrices()	{
 		// for (int i=0; i<GetNsite(); i++)	{
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{

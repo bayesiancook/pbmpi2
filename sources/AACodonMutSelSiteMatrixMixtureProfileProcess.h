@@ -13,46 +13,36 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-#ifndef GENPATHSSSITEMATMIXTUREPROFILE_H
-#define GENPATHSSSITEMATMIXTUREPROFILE_H
 
+#ifndef AACODONMUTSELSITEMATMIX_H
+#define AACODONMUTSELSITEMATMIX_H
+
+#include "AACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixProfileProcess.h"
 #include "SiteMatrixMixtureProfileProcess.h"
 
-// general subclass for all Matrix Mixture mixtures using generic sufficient statistics
-class GeneralPathSuffStatSiteMatrixMixtureProfileProcess : public virtual SiteMatrixMixtureProfileProcess, public virtual GeneralPathSuffStatMatrixProfileProcess  {
+class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSelProfileProcess, public virtual SiteMatrixMixtureProfileProcess, public virtual GeneralPathSuffStatMatrixProfileProcess	{
 
 	public:
 
-	GeneralPathSuffStatSiteMatrixMixtureProfileProcess() {}
-	virtual ~GeneralPathSuffStatSiteMatrixMixtureProfileProcess() {}
+	AACodonMutSelSiteMatrixMixtureProfileProcess() {}
+	virtual ~AACodonMutSelSiteMatrixMixtureProfileProcess() {}
 
-	protected:
+	virtual void Create() {}
+	virtual void Delete() {}
 
-	virtual void CreateComponent(int k)	{
-		occupancy[k] = 0;
-		SampleStat(k);
-		// CreateMatrix(k);
-		UpdateMatrix(k);
-	}
-
-	virtual void DeleteComponent(int k)	{
-		// DeleteMatrix(k);
+	SubMatrix* GetMatrix(int site)	{
+		return matrixarray[site];
 	}
 
 	virtual void UpdateModeProfileSuffStat() {}
 	virtual void GlobalUpdateModeProfileSuffStat() {}
 	virtual void SlaveUpdateModeProfileSuffStat() {}
 
-	virtual double ProfileSuffStatLogProb(int cat);
-	virtual double ProfileSuffStatLogProb();
-	virtual void GlobalProfileSuffStatLogProb();
-	virtual void SlaveProfileSuffStatLogProb();
+	virtual double ProfileSuffStatLogProb(int cat) {}
+	virtual double ProfileSuffStatLogProb() {}
 
-	virtual double LogStatProb(int site, int cat);
-
-	virtual double GlobalMoveProfile(double tuning = 1, int n = 1, int nrep = 1);
-	virtual void SlaveMoveProfile();
+	virtual double LogStatProb(int site, int cat) {}
 
 };
 

@@ -101,9 +101,6 @@ void AACodonMutSelSiteSBDPPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 	switch(signal) {
 
-		case PROFILESSLOGPROB:
-			SlaveProfileSuffStatLogProb();
-			break;
 		case PROFILE_MOVE:
 			SlaveMoveProfile();
 			break;

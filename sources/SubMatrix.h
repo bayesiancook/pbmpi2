@@ -219,7 +219,8 @@ inline const double* SubMatrix::GetStationary() {
 inline double** SubMatrix::GetQ()	{
 
 	if (! ArrayUpdated())	{
-		ComputeFullArray();
+		UpdateMatrix();
+		// ComputeFullArray();
 	}
 	return Q;
 }

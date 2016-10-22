@@ -52,6 +52,18 @@ SubMatrix::SubMatrix(int inNstate, bool innormalise) : Nstate(inNstate), normali
 	Create();
 }
 
+
+/*
+inline double** SubMatrix::GetQ()	{
+
+	if (! ArrayUpdated())	{
+		UpdateMatrix();
+		// ComputeFullArray();
+	}
+	return Q;
+}
+*/
+
 void SubMatrix::Create()	{
 
 	Q = new double*[Nstate];
@@ -376,6 +388,7 @@ double** SubMatrix::GetInvEigenVect() {
 // ---------------------------------------------------------------------------
 
 void SubMatrix::UpdateMatrix()	{
+
 	UpdateStationary();
 	ComputeFullArray();
 	for (int k=0; k<Nstate; k++)	{

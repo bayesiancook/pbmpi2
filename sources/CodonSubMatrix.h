@@ -45,8 +45,8 @@ class CodonSubMatrix : public SubMatrix	{
 		return statespace->CodonNearestNeighbors[i][j];
 	}
 
-	double RateAwaySyn(int i);
-	double RateAwayNonsyn(int i);
+	virtual double RateAwaySyn(int i);
+	virtual double RateAwayNonsyn(int i);
 	double NonSynRate();
 	
 	protected:
@@ -94,6 +94,10 @@ class AACodonMutSelProfileSubMatrix : public CodonSubMatrix	{
 
 	double* GetAAProfile() {return aaprofile;}
 	double* GetCodonProfile() {return codonprofile;}
+
+	double GetOmega() {return *omega;}
+
+	// virtual double RateAwayNonsyn(int i);
 
 	protected:
 

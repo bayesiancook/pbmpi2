@@ -24,11 +24,10 @@ class MultipleOmegaAACodonMutSelFinitePhyloProcess : public virtual MultipleOmeg
 
 	public:
 
-	MultipleOmegaAACodonMutSelFinitePhyloProcess(int ncat, int infixncomp, int inempmix, string inmixtype, int infixcodonprofile, int inNomega, int infixomega, int inomegaprior)	{
+	MultipleOmegaAACodonMutSelFinitePhyloProcess(int ncat, int infixncomp, int inempmix, string inmixtype, int infixcodonprofile, int inNomega, int inomegaprior)	{
 
 		fixcodonprofile = infixcodonprofile;
 		Nomega = inNomega;
-		fixomega = infixomega;
 		omegaprior = inomegaprior;
 
 		Ncomponent = ncat;
@@ -46,7 +45,6 @@ class MultipleOmegaAACodonMutSelFinitePhyloProcess : public virtual MultipleOmeg
 		// specific
 		is >> fixcodonprofile;
 		is >> Nomega;
-		is >> fixomega;
 		is >> omegaprior;
 		is >> fixncomp;
 		is >> empmix;
@@ -63,7 +61,6 @@ class MultipleOmegaAACodonMutSelFinitePhyloProcess : public virtual MultipleOmeg
 		PhyloProcess::ToStreamHeader(os);
 		os << fixcodonprofile << '\n';
 		os << Nomega << '\n';
-		os << fixomega << '\n';
 		os << omegaprior << '\n';
 		os << fixncomp << '\n';
 		os << empmix << '\n';

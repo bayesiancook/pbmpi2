@@ -32,7 +32,9 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	RASCATFiniteGammaPhyloProcess.cpp RASCATGTRFiniteGammaPhyloProcess.cpp \
 	RASCATGTRDPGammaPhyloProcess.cpp RASCATGTRSBDPGammaPhyloProcess.cpp \
 	GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.cpp \
-	GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.cpp AACodonMutSelFinitePhyloProcess.cpp CodonMutSelFinitePhyloProcess.cpp\
+	GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.cpp \
+	AACodonMutSelFinitePhyloProcess.cpp MultipleOmegaAACodonMutSelFinitePhyloProcess.cpp \
+	CodonMutSelFinitePhyloProcess.cpp\
 	CodonMutSelSBDPPhyloProcess.cpp \
 	AACodonMutSelSiteMatrixMixtureProfileProcess.cpp AACodonMutSelSBDPPhyloProcess.cpp \
 	AASubSelSubMatrix.cpp AASubSelRASCATSBDPGammaPhyloProcess.cpp \

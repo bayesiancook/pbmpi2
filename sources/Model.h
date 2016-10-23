@@ -227,6 +227,10 @@ class Model	{
 				type = "MULOMEGAAACODONMUTSELSBDP";
 				process = new MultipleOmegaAACodonMutSelSBDPPhyloProcess(fixcodonprofile,Nomega,fixomega,omegaprior,kappaprior);
 			}
+			else if (mixturetype == 7)	{
+				type = "MULOMEGAAACODONMUTSELFINITE";
+				process = new MultipleOmegaAACodonMutSelFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,Nomega,omegaprior);
+			}
 			else	{
 				cerr << "mixture type " << mixturetype << " not recognized or not yet implemented.\n";
 				exit(1);

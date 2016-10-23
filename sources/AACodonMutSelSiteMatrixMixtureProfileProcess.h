@@ -27,26 +27,44 @@ class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSe
 	AACodonMutSelSiteMatrixMixtureProfileProcess() {}
 	virtual ~AACodonMutSelSiteMatrixMixtureProfileProcess() {}
 
-	virtual void Create() {
-		if (! omega0)	{
-			AACodonMutSelProfileProcess::Create();
-			GeneralPathSuffStatSiteMatrixMixtureProfileProcess::Create();
-			omega0 = new double;
-			*omega0 = 1;
+	AACodonMutSelProfileSubMatrix* GetComponentCodonMatrix(int k)	{
+
+		AACodonMutSelProfileSubMatrix* codonmatrix = dynamic_cast<AACodonMutSelProfileSubMatrix*>(matrixarray[k]);
+		if (! codonmatrix)	{
+			cerr << "error in AACodonMutSelProfileSubMatrix::GetComponentCodonMatrix: null matrix\n";
+			cerr << matrixarray[k] << '\n';
+			exit(1);
 		}
+		return codonmatrix;
 	}
 
-	virtual void Delete() {
-		if (omega0)	{
-			delete omega0;
-			omega0 = 0;
-			GeneralPathSuffStatSiteMatrixMixtureProfileProcess::Delete();
-			AACodonMutSelProfileProcess::Delete();
+	protected:
+
+	virtual void Create();
+	virtual void Delete();
+
+	virtual void CreateComponent(int k)	{
+		occupancy[k] = 0;
+		SampleStat(k);
+		// useful?
+		if (activesuffstat)	{
+			profilepaircount[k].clear();
+			profilerootcount[k].clear();
+			profilewaitingtime[k].clear();
+			profilenonsynwaitingtime[k].clear();
 		}
+		// CreateMatrix(k);
+		UpdateMatrix(k);
 	}
 
-	virtual void UpdateModeProfileSuffStat(){}
-	virtual double LogStatProb(int site, int cat){}
+	virtual void DeleteComponent(int k)	{
+		// DeleteMatrix(k);
+	}
+
+	virtual void UpdateModeProfileSuffStat();
+	virtual void GlobalUpdateModeProfileSuffStat();
+	virtual void SlaveUpdateModeProfileSuffStat();
+	virtual double LogStatProb(int site, int cat);
 
 	virtual void CreateMatrix(int k)	{
 		if (matrixarray[k])	{
@@ -65,6 +83,8 @@ class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSe
 	}
 
 	double* omega0;
+	// componentwise
+	map<int,double>* profilenonsynwaitingtime;
 
 };
 

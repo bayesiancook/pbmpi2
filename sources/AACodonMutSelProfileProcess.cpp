@@ -43,6 +43,7 @@ void AACodonMutSelProfileProcess::Create()	{
 		SampleNucRR();
 		SampleNucStat();
 		SampleCodonProfile();
+		SampleOmega();
 	}
 	else	{
 		cerr << "Create of AAMutSelProfileProcess, nucrr and/or nucstat and/or codonprofile are/is not 0.\n";
@@ -363,11 +364,7 @@ void AACodonMutSelProfileProcess::UpdateSiteOmegaSuffStat()	{
 			siteomegasuffstatbeta[i] = 0;
 			map<pair<int,int>, int>& paircount = GetSitePairCount(i);
 			map<int,double>& waitingtime = GetSiteWaitingTime(i);
-			AACodonMutSelProfileSubMatrix* codonmatrix = dynamic_cast<AACodonMutSelProfileSubMatrix*>(GetMatrix(i));
-			if (! codonmatrix)	{
-				cerr << "error: dynamic cast\n";
-				exit(1);
-			}
+			AACodonMutSelProfileSubMatrix* codonmatrix = GetCodonMatrix(i);
 			/*
 			if (fabs(codonmatrix->GetOmega() - GetSiteOmega(i)) > 1e-6)	{
 				cerr << "error: non matching omega : \n";

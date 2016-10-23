@@ -96,75 +96,85 @@ double CodonSubMatrix::NonSynRate()	{
 	return total;
 }
 
+/*
+void AACodonMutSelProfileSubMatrix::CreateFixProbs()	{
+
+	fixprobs = new double*[GetNstate()];
+	for (int i=0; i<GetNstate(); i++)	{
+		fixprobs[i] = new double[GetNstate()];
+	}
+}
+
+void AACodonMutSelProfileSubMatrix::DeleteFixProbs()	{
+
+	for (int i=0; i<GetNstate(); i++)	{
+		delete[] fixprobs[i];
+	}
+	delete[] fixprobs;
+}
+*/
+	
 void AACodonMutSelProfileSubMatrix::ComputeArray(int i)	{
 
-	int one = 1.0;
-	if ((*omega - one)> 1e-6)	{
-		cerr << "omega: " << *omega << "\n";
-		exit(1);
-	}
-
+	double norm = GetNucRate();
 	double total = 0;
-	double deltaF;
-	double mutrate = 0;
 	for (int j=0; j<GetNstate(); j++)       {
+		double nucrate = 0;
+		double deltaF = 0;
+		double pfix = 0;
 		if (i!=j)       {
 			int pos = GetDifferingPosition(i,j);
 			if ((pos != -1) && (pos != 3))  {
 				int a = GetCodonPosition(pos,i);
 				int b = GetCodonPosition(pos,j);
-				if (a == b)     {
-					cerr << "identical states\n";
-					cerr << GetCodonStateSpace()->GetState(i) << '\t' << GetCodonStateSpace()->GetState(j) << '\n';
-					cerr << pos << '\n';
-					exit(1);
-				}
-				Q[i][j] = nucrr[GetNucRRIndex(a,b)] * nucstat[b];
-				mutrate = Q[i][j];
-				if (mutrate < 0)	{
-					cerr << "error: negative mutation rate \n";
-					cerr << a << '\t' << b << '\t' << GetNucRRIndex(a,b) << '\n';
-					cerr << nucrr[GetNucRRIndex(a,b)] << '\t' << nucstat[b] << '\n';
-				}
+
+				nucrate = nucrr[GetNucRRIndex(a,b)] * nucstat[b] / norm;
+				Q[i][j] = nucrate;
+
 				if (! Synonymous(i,j))  {
-					deltaF = log((aaprofile)[GetCodonStateSpace()->Translation(j)] / (aaprofile)[GetCodonStateSpace()->Translation(i)]) +
-							log( (codonprofile)[j] / (codonprofile)[i] );
+
 					Q[i][j] *= *omega;
 
-					//cerr << "in ComputeArray, omega is " << *omega << "\n";	
-					//cerr << "Q[" << i << "][" << j << "]: " << Q[i][j] << "\n";
-					//cerr.flush();
+					deltaF = log((aaprofile)[GetCodonStateSpace()->Translation(j)] / (aaprofile)[GetCodonStateSpace()->Translation(i)]) +
+							log( (codonprofile)[j] / (codonprofile)[i] );
 				}
 				else	{
 					deltaF = log( (codonprofile)[j] / (codonprofile)[i] );
-
 				}
 
 				if (fabs(deltaF) < TOOSMALL)        {
-					Q[i][j] /= ( 1.0 - (deltaF / 2) );
+					pfix = 1.0 / (1.0 - (deltaF/2));
 				}
 				else if (deltaF > TOOLARGE)	{
-					Q[i][j] *= deltaF;
+					pfix = deltaF;
 				}
 				else if (deltaF < TOOLARGENEGATIVE)	{
-					Q[i][j] = 0.0;
-					//Q[i][j] = 1e-10;
+					pfix = 0.0;
 				}
 				else    {
-					Q[i][j] *=  (deltaF)/(1.0 - exp(-deltaF));
-				}	
+					pfix = (deltaF)/(1.0 - exp(-deltaF));
+				}
+
+				Q[i][j] *= pfix;
+				// fixprobs[i][j] = pfix;
 			}
 			else    {
 				Q[i][j] = 0;
 			}
 			total += Q[i][j];
 
-
-
-			if (Q[i][j] < 0)        {
-				cerr << "negative entry in matrix\n";
+			if ((Q[i][j] < 0) || (isinf(Q[i][j])) || (isnan(Q[i][j])))        {
+				if (Q[i][j] < 0)	{
+					cerr << "negative entry in matrix\n";
+				}
+				if (isinf(Q[i][j]))	{
+					cerr << "inf Q[i][j]\n";
+				}
+				if (isnan(Q[i][j]))	{
+					cerr << "nan Q[i][j]\n";
+				}
 				cerr << Q[i][j] << '\n';
-				cerr << "mut rate : " << mutrate << '\n';
+				cerr << "mut rate : " << nucrate << '\n';
 				cerr << "deltaF: " << deltaF << "\n";
 				cerr << "omega : " << *omega << '\n';
 				cerr << "codonprofile[" << i << "]: " << codonprofile[i] << "\n";
@@ -173,32 +183,9 @@ void AACodonMutSelProfileSubMatrix::ComputeArray(int i)	{
 				cerr << "aaprofile[" << GetCodonStateSpace()->Translation(i) << "]: " << (aaprofile)[GetCodonStateSpace()->Translation(i)] << "\n";
 				exit(1);
 			}
-			if (isinf(Q[i][j]))	{
-				cerr << "inf Q[i][j]\n";
-				cerr << "deltaF: " << deltaF << "\n";
-				cerr << "codonprofile[" << i << "]: " << codonprofile[i] << "\n";
-				cerr << "codonprofile[" << j << "]: " << codonprofile[j] << "\n";
-				cerr << "aaprofile[" << GetCodonStateSpace()->Translation(j) << "]: " << (aaprofile)[GetCodonStateSpace()->Translation(j)] << "\n";
-				cerr << "aaprofile[" << GetCodonStateSpace()->Translation(i) << "]: " << (aaprofile)[GetCodonStateSpace()->Translation(i)] << "\n";
-				exit(1);
-			}
-			if (isnan(Q[i][j]))	{
-				cerr << "nan Q[i][j]\n";
-				cerr << "deltaF: " << deltaF << "\n";
-				cerr << "codonprofile[" << i << "]: " << codonprofile[i] << "\n";
-				cerr << "codonprofile[" << j << "]: " << codonprofile[j] << "\n";
-				cerr << "aaprofile[" << GetCodonStateSpace()->Translation(j) << "]: " << (aaprofile)[GetCodonStateSpace()->Translation(j)] << "\n";
-				cerr << "aaprofile[" << GetCodonStateSpace()->Translation(i) << "]: " << (aaprofile)[GetCodonStateSpace()->Translation(i)] << "\n";
-				exit(1);
-			}
-			
 		}
 	}
 	Q[i][i] = -total;
-	if (total <0)   {
-		cerr << "negative rate away\n";
-		exit(1);
-	}
 }
 
 void AACodonMutSelProfileSubMatrix::ComputeStationary()	{
@@ -210,33 +197,18 @@ void AACodonMutSelProfileSubMatrix::ComputeStationary()	{
 				nucstat[GetCodonPosition(2,i)] *
 				codonprofile[i] *
 				aaprofile[GetCodonStateSpace()->Translation(i)];
-		//if (mStationary[i] < TOOSMALL)	{
-		//	mStationary[i] = 0;
-		//}
 		total += mStationary[i];
 	}
 
-	// re-normalize
-	
-	//double min=1;
 	for (int i=0; i<GetNstate(); i++)	{
 		mStationary[i] /= total;
-		//if (mStationary[i] < min) min = mStationary[i];
 	}
-	//cout << "smallest stat: " << min << "\n";
-	//cout.flush();	
 }
 
-double AACodonMutSelProfileSubMatrix::GetRate()	{
+double AACodonMutSelProfileSubMatrix::GetNucRate()	{
 	
-	if (! ArrayUpdated())	{
-		UpdateStationary();
-		for (int k=0; k<Nstate; k++)	{
-			ComputeArray(k);
-		}
-	}
-	for (int k=0; k<Nstate; k++)	{
-		flagarray[k] = true;
+	if (! nucnormalise)	{
+		return 1.0;
 	}
 	double norm = 0;
 	for (int i=0; i<Nnuc-1; i++)	{

@@ -33,6 +33,10 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 	AACodonMutSelProfileProcess() : nucrr(0), nucstat(0), codonprofile(0) {}
 	virtual ~AACodonMutSelProfileProcess() {}
 
+	virtual void UpdateOmega()	{
+		UpdateMatrices();
+	}
+
 	int GetNnucrr()	{
 		return Nnucrr;
 	}	
@@ -78,6 +82,17 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 	}
 
 	double GetCodonProfileEntropy();
+
+	AACodonMutSelProfileSubMatrix* GetCodonMatrix(int site)	{
+
+		AACodonMutSelProfileSubMatrix* codonmatrix = dynamic_cast<AACodonMutSelProfileSubMatrix*>(GetMatrix(site));
+		if (! codonmatrix)	{
+			cerr << "error in AACodonMutSelProfileSubMatrix::GetCodonMatrix: null matrix\n";
+			cerr << GetMatrix(site) << '\n';
+			exit(1);
+		}
+		return codonmatrix;
+	}
 
 	/*
 	virtual void UpdateNucStatSuffStat() = 0;

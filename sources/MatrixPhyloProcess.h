@@ -28,6 +28,16 @@ class MatrixPhyloProcess : public virtual PhyloProcess, public virtual MatrixSub
 	MatrixPhyloProcess() {}
 	virtual ~MatrixPhyloProcess() {}
 
+	virtual void GlobalUpdate()	{
+		UpdateMatrices();
+		GlobalUpdateConditionalLikelihoods();
+	}
+
+	virtual void Update()	{
+		UpdateMatrices();
+		UpdateConditionalLikelihoods();;
+	}
+
 	// protected:
 
 	// override PhyloProcess functions because should also create and delete all the matrices

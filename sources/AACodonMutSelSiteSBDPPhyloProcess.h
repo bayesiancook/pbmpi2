@@ -127,7 +127,22 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 
 	// primary scheduler
 
+	/*
+	using MixtureProfileProcess::ProfileSuffStatLogProb;
+	using MixtureProfileProcess::CountProfileSuffStatLogProb;
+	using MixtureProfileProcess::BetaProfileSuffStatLogProb;
+	*/
+
 	double Move(double tuning = 1.0)	{
+		/*
+		GlobalCollapse();
+		GlobalUpdateSiteProfileSuffStat();
+		GlobalUpdateModeProfileSuffStat();
+		GlobalUpdateOmegaSuffStat();
+		cerr << "suff stat log prob : " << CountProfileSuffStatLogProb() + CountOmegaSuffStatLogProb() << '\t' << BetaProfileSuffStatLogProb() << '\t' << ProfileSuffStatLogProb() << '\n';
+		exit(1);
+		*/
+
 		chronototal.Start();
 		propchrono.Start();
 		if (! fixbl)	{
@@ -144,15 +159,14 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		chronocollapse.Start();
 		GlobalCollapse();
 		chronocollapse.Stop();
+
 		if (! fixbl)	{
 			GammaBranchProcess::Move(0.1 * tuning,10);
 			GammaBranchProcess::Move(tuning,10);
 		}
 
 		GlobalUpdateParameters();
-		cerr << "profileprocessmove\n";
 		AACodonMutSelSiteSBDPProfileProcess::Move(tuning,1,15);
-		cerr << "profileprocessmove ok\n";
 		chronosuffstat.Stop();
 
 		chronounfold.Start();
@@ -163,22 +177,21 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		return 1;
 	}
 
-
 	protected:
 
 	virtual void Create()	{
 		AACodonMutSelSiteSBDPSubstitutionProcess::Create();
 		GeneralPathSuffStatMatrixPhyloProcess::Create();
 		GammaBranchProcess::Create();
-		if (GetMyid())	{
+		// if (GetMyid())	{
 			CreateSiteMatrices();
-		}
+		// }
 	}
 
 	virtual void Delete()	{
-		if (GetMyid())	{
+		// if (GetMyid())	{
 			DeleteSiteMatrices();
-		}
+		// }
 		GammaBranchProcess::Delete();
 		GeneralPathSuffStatMatrixPhyloProcess::Delete();
 		AACodonMutSelSiteSBDPSubstitutionProcess::Delete();

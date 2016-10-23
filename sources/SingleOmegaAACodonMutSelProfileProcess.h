@@ -36,7 +36,7 @@ class SingleOmegaAACodonMutSelProfileProcess : public virtual AACodonMutSelProfi
 	virtual void Create()	{
 		SingleOmegaProcess::Create();
 		AACodonMutSelProfileProcess::Create();
-		SampleOmega();
+		// SampleOmega();
 	}
 
 	virtual void Delete()	{

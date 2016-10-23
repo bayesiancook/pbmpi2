@@ -329,6 +329,14 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		return GetData()->GetTaxonSet();
 	}
 
+	virtual void Update()	{
+		UpdateConditionalLikelihoods();
+	}
+
+	virtual void GlobalUpdate()	{
+		GlobalUpdateConditionalLikelihoods();
+	}
+
 	void GlobalUpdateConditionalLikelihoods();
 	virtual void SlaveUpdateConditionalLikelihoods();
 

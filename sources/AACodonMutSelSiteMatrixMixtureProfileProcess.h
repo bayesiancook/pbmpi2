@@ -18,31 +18,87 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define AACODONMUTSELSITEMATMIX_H
 
 #include "AACodonMutSelProfileProcess.h"
-#include "GeneralPathSuffStatMatrixProfileProcess.h"
-#include "SiteMatrixMixtureProfileProcess.h"
+#include "GeneralPathSuffStatSiteMatrixMixtureProfileProcess.h"
 
-class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSelProfileProcess, public virtual SiteMatrixMixtureProfileProcess, public virtual GeneralPathSuffStatMatrixProfileProcess	{
+class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatSiteMatrixMixtureProfileProcess	{
 
 	public:
 
-	AACodonMutSelSiteMatrixMixtureProfileProcess() {}
+	AACodonMutSelSiteMatrixMixtureProfileProcess() : omega0(0) {}
 	virtual ~AACodonMutSelSiteMatrixMixtureProfileProcess() {}
 
-	virtual void Create() {}
-	virtual void Delete() {}
+	AACodonMutSelProfileSubMatrix* GetComponentCodonMatrix(int k)	{
 
-	SubMatrix* GetMatrix(int site)	{
-		return matrixarray[site];
+		AACodonMutSelProfileSubMatrix* codonmatrix = dynamic_cast<AACodonMutSelProfileSubMatrix*>(matrixarray[k]);
+		if (! codonmatrix)	{
+			cerr << "error in AACodonMutSelProfileSubMatrix::GetComponentCodonMatrix: null matrix\n";
+			cerr << matrixarray[k] << '\n';
+			exit(1);
+		}
+		return codonmatrix;
 	}
 
-	virtual void UpdateModeProfileSuffStat() {}
-	virtual void GlobalUpdateModeProfileSuffStat() {}
-	virtual void SlaveUpdateModeProfileSuffStat() {}
+	protected:
 
-	virtual double ProfileSuffStatLogProb(int cat) {}
-	virtual double ProfileSuffStatLogProb() {}
+	virtual void Create();
+	virtual void Delete();
 
-	virtual double LogStatProb(int site, int cat) {}
+	virtual void CreateComponent(int k)	{
+		occupancy[k] = 0;
+		SampleStat(k);
+		// useful?
+		if (activesuffstat)	{
+			profilepaircount[k].clear();
+			profilerootcount[k].clear();
+			profilewaitingtime[k].clear();
+			profilenonsynwaitingtime[k].clear();
+		}
+		// CreateMatrix(k);
+		UpdateMatrix(k);
+	}
+
+	virtual void DeleteComponent(int k)	{
+		// DeleteMatrix(k);
+	}
+
+	virtual void UpdateModeProfileSuffStat();
+	virtual void GlobalUpdateModeProfileSuffStat();
+	virtual void SlaveUpdateModeProfileSuffStat();
+	virtual double LogStatProb(int site, int cat);
+	virtual double ProfileSuffStatLogProb(int cat);
+	virtual double CountProfileSuffStatLogProb(int cat);
+	virtual double BetaProfileSuffStatLogProb(int cat);
+
+	virtual void CreateMatrix(int k)	{
+		if (matrixarray[k])	{
+			cerr << "error in AACodonMutSelSiteMatrixMixtureProfileProcess: matrixarray is not 0\n";
+			exit(1);
+		}
+		matrixarray[k] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[k],omega0,true);
+	}
+
+	virtual void CreateSiteMatrix(int i)	{
+		if (sitematrixarray[i])	{
+			cerr << "error in AACodonMutSelSiteMatrixMixtureProfileProcess: sitematrixarray is not 0\n";
+			exit(1);
+		}
+		sitematrixarray[i] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,GetProfile(i),GetSiteOmegaPtr(i),true);
+	}
+
+	virtual void UpdateSiteMatrix(int site)	{
+		if (sitematrixarray[site])	{
+			GetCodonMatrix(site)->SetAAProfile(GetProfile(site));
+			// GetCodonMatrix(site)->SetOmega(GetSiteOmegaPtr(site));
+
+			// useless
+			// sitematrixarray[site]->CorruptMatrix();
+		}
+	}
+	
+
+	double* omega0;
+	// componentwise
+	map<int,double>* profilenonsynwaitingtime;
 
 };
 

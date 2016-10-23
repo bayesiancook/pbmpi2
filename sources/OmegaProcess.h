@@ -90,6 +90,11 @@ class OmegaProcess : public virtual MPIModule	{
 		exit(1);
 	}
 
+	virtual double* GetSiteOmegaPtr(int site)	{
+		cerr << "in OmegaProcess::GetSiteOmega\n";
+		exit(1);
+	}
+
 	virtual void UpdateSiteOmegaSuffStat()	{
 		cerr << "in OmegaProcess::UpdateSiteOmegaSuffStat\n";
 	}
@@ -128,7 +133,11 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 	}
 
 	double GetSiteOmega(int site)	{
-		GetOmega();
+		return *omega;
+	}
+
+	double* GetSiteOmegaPtr(int site)	{
+		return omega;
 	}
 	
 	virtual double OmegaSuffStatLogProb()	{
@@ -154,6 +163,7 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 		if (! omega)	{
 			OmegaProcess::Create();
 			omega = new double;
+			*omega = 1.0;
 		}
 	}
 
@@ -205,6 +215,10 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 	double GetSiteOmega(int site)	{
 		//return omega[omegaalloc[site]];
 		return GetOmega(omegaalloc[site]);
+	}
+
+	double* GetSiteOmegaPtr(int site)	{
+		return &omega[omegaalloc[site]];
 	}
 
 	int GetOmegaSiteAlloc(int site)	{

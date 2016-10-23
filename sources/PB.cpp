@@ -1060,6 +1060,9 @@ int main(int argc, char* argv[])	{
 
 		cerr << "run started\n";
 		cerr << '\n';
+		model->TraceHeader(cerr);
+		model->Trace(cerr);
+		cerr << '\n';
 		model->Run(smc,deltansite,shortcycle,longcycle,cutoffsize,nrep);
 		if (nprocs > 1)	{
 			MESSAGE signal = KILL;

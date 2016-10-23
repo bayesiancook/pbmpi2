@@ -1,3 +1,4 @@
+// in this version, SiteMatrixMixture now combines two systems of matrices: per component and per site
 
 /********************
 
@@ -20,36 +21,19 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "MatrixProfileProcess.h"
 #include "MixtureProfileProcess.h"
 
-class SiteMatrixMixtureProfileProcess : public virtual MatrixProfileProcess, public virtual MixtureProfileProcess {
+class SiteMatrixMixtureProfileProcess : public virtual MatrixMixtureProfileProcess	{
 
 	public:
 
-	SiteMatrixMixtureProfileProcess() : matrixarray(0) {}
+	SiteMatrixMixtureProfileProcess() : sitematrixarray(0) {}
 	virtual ~SiteMatrixMixtureProfileProcess() {}
 
 	SubMatrix* GetOriginalMatrix(int site)	{
-		if (! matrixarray[site]) 	{
+		if (! sitematrixarray[site]) 	{
 			cerr << "error in get matrix : null matrix , site " << site << " and alloc : " << alloc[site] << '\n';
 			exit(1);
 		}
-		return matrixarray[site];
-	}
-
-	virtual void CreateComponent(int k)	{
-		occupancy[k] = 0;
-		SampleStat(k);
-		UpdateComponent(k);
-	}
-
-	virtual void DeleteComponent(int k) {}
-
-	virtual void UpdateMatrices()	{
-		// for (int i=0; i<GetNsite(); i++)	{
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i))	{
-				UpdateMatrix(i);
-			}
-		}
+		return sitematrixarray[site];
 	}
 
 	protected:
@@ -58,72 +42,81 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixProfileProcess, pub
 
 	// called at the beginning and the end of the run
 	virtual void Create()	{
-		if (! matrixarray)	{
-			MixtureProfileProcess::Create();
-			matrixarray = new SubMatrix*[GetNsite()];
+		if (! sitematrixarray)	{
+			MatrixMixtureProfileProcess::Create();
+			sitematrixarray = new SubMatrix*[GetNsite()];
 			for (int i=0; i<GetNsite(); i++)	{
-				matrixarray[i] = 0;
+				sitematrixarray[i] = 0;
 			}
 		}
 	}
 
 	virtual void Delete()	{
-		if (matrixarray)	{
-			delete[] matrixarray;
-			matrixarray = 0;
-			MixtureProfileProcess::Delete();
+		if (sitematrixarray)	{
+			for (int i=0; i<GetNsite(); i++)	{
+				delete sitematrixarray[i];
+			}
+			delete[] sitematrixarray;
+			sitematrixarray = 0;
+			MatrixMixtureProfileProcess::Delete();
 		}
 	}
 
-	virtual void CreateMatrices()	{
-		cerr << "in SiteMatrixMixtureProfileProcess::CreateMatrices\n";
-		exit(1);
-	}
-
-	virtual void DeleteMatrices()	{
-		cerr << "in SiteMatrixMixtureProfileProcess::DeleteMatrices\n";
-		exit(1);
-	}
-
 	virtual void CreateSiteMatrices()	{
+		if (GetMyid() == 0)	{
+			cerr << "master: CreateSiteMatrices\n";
+		}
+		if (GetMyid() == 1)	{
+			cerr << "slave : CreateSiteMatrices\n";
+		}
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{
-				CreateMatrix(i);
+				CreateSiteMatrix(i);
 			}
 		}
 	}
 
 	virtual void DeleteSiteMatrices()	{
 		for (int i=0; i<GetNsite(); i++)	{
-			DeleteMatrix(i);
+			DeleteSiteMatrix(i);
 		}
 	}
 
-	virtual void CreateMatrix(int site) = 0;
+	virtual void CreateSiteMatrix(int site) = 0;
 
-	virtual void DeleteMatrix(int site)	{
-		delete matrixarray[site];
-		matrixarray[site] = 0;
+	virtual void DeleteSiteMatrix(int site)	{
+		delete sitematrixarray[site];
+		sitematrixarray[site] = 0;
 	}
 
-	virtual void UpdateMatrix(int site)	{
-		if (matrixarray[site])	{
-			matrixarray[site]->CorruptMatrix();
+	virtual void UpdateSiteMatrix(int site) = 0;
+
+	/*
+	virtual void UpdateSiteMatrix(int site)	{
+		if (sitematrixarray[site])	{
+			sitematrixarray[site]->CorruptMatrix();
 		}
 	}
+	*/
 
-	// update component k (in particular, will be used for updating the matrix
-	// typically, after the profile has changed)
-	virtual void UpdateComponent(int k)	{
-		// for (int i=0; i<GetNsite(); i++)	{
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i) && (alloc[i] == k))	{
-				UpdateMatrix(i);
+	virtual void UpdateMatrix(int k)	{
+		MatrixMixtureProfileProcess::UpdateMatrix(k);
+		// if (GetMyid())	{
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				if (ActiveSite(i))	{
+					if (! sitematrixarray[i])	{
+						cerr << "in SiteMatrixMixtureProfileProcess::UpdateMatrix: sitematrixarray[i] not allocated\n";
+						exit(1);
+					}
+					if ((alloc[i] == k) && (sitematrixarray[i]))	{
+						UpdateSiteMatrix(i);
+					}
+				}
 			}
-		}
-	}
+		// }
+	}	
 
-	SubMatrix** matrixarray;
+	SubMatrix** sitematrixarray;
 };
 
 #endif

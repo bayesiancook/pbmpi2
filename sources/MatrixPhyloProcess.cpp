@@ -74,5 +74,6 @@ void MatrixPhyloProcess::Collapse()	{
 		SampleSubstitutionMappings(GetRoot());
 	}
 	activesuffstat = true;
+
 }
 

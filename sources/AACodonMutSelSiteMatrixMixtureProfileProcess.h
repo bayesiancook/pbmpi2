@@ -18,31 +18,53 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define AACODONMUTSELSITEMATMIX_H
 
 #include "AACodonMutSelProfileProcess.h"
-#include "GeneralPathSuffStatMatrixProfileProcess.h"
-#include "SiteMatrixMixtureProfileProcess.h"
+#include "GeneralPathSuffStatSiteMatrixMixtureProfileProcess.h"
 
-class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSelProfileProcess, public virtual SiteMatrixMixtureProfileProcess, public virtual GeneralPathSuffStatMatrixProfileProcess	{
+class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatSiteMatrixMixtureProfileProcess	{
 
 	public:
 
 	AACodonMutSelSiteMatrixMixtureProfileProcess() {}
 	virtual ~AACodonMutSelSiteMatrixMixtureProfileProcess() {}
 
-	virtual void Create() {}
-	virtual void Delete() {}
-
-	SubMatrix* GetMatrix(int site)	{
-		return matrixarray[site];
+	virtual void Create() {
+		if (! omega0)	{
+			AACodonMutSelProfileProcess::Create();
+			GeneralPathSuffStatSiteMatrixMixtureProfileProcess::Create();
+			omega0 = new double;
+			*omega0 = 1;
+		}
 	}
 
-	virtual void UpdateModeProfileSuffStat() {}
-	virtual void GlobalUpdateModeProfileSuffStat() {}
-	virtual void SlaveUpdateModeProfileSuffStat() {}
+	virtual void Delete() {
+		if (omega0)	{
+			delete omega0;
+			omega0 = 0;
+			GeneralPathSuffStatSiteMatrixMixtureProfileProcess::Delete();
+			AACodonMutSelProfileProcess::Delete();
+		}
+	}
 
-	virtual double ProfileSuffStatLogProb(int cat) {}
-	virtual double ProfileSuffStatLogProb() {}
+	virtual void UpdateModeProfileSuffStat(){}
+	virtual double LogStatProb(int site, int cat){}
 
-	virtual double LogStatProb(int site, int cat) {}
+	virtual void CreateMatrix(int k)	{
+		if (matrixarray[k])	{
+			cerr << "error in AACodonMutSelSiteMatrixMixtureProfileProcess: matrixarray is not 0\n";
+			exit(1);
+		}
+		matrixarray[k] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[k],omega0,true);
+	}
+
+	virtual void CreateSiteMatrix(int i)	{
+		if (sitematrixarray[i])	{
+			cerr << "error in AACodonMutSelSiteMatrixMixtureProfileProcess: sitematrixarray is not 0\n";
+			exit(1);
+		}
+		sitematrixarray[i] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,GetProfile(i),GetSiteOmegaPtr(i),true);
+	}
+
+	double* omega0;
 
 };
 

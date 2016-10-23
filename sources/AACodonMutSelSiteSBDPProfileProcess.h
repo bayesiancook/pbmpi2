@@ -19,9 +19,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "SBDPProfileProcess.h"
 #include "AACodonMutSelSiteMatrixMixtureProfileProcess.h"
-#include "GeneralPathSuffStatMatrixProfileProcess.h"
 
-class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual SingleOmegaProcess, public virtual AACodonMutSelSiteMatrixMixtureProfileProcess, public virtual GeneralPathSuffStatMatrixProfileProcess	{
+class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual SingleOmegaProcess, public virtual AACodonMutSelSiteMatrixMixtureProfileProcess	{
 
 	public:
 
@@ -34,11 +33,9 @@ class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, p
 		SingleOmegaProcess::Create();
 		AACodonMutSelSiteMatrixMixtureProfileProcess::Create();
 		SBDPProfileProcess::Create();
-		GeneralPathSuffStatMatrixProfileProcess::Create();
 	}
 	
 	void Delete()	{
-		GeneralPathSuffStatMatrixProfileProcess::Delete();
 		SBDPProfileProcess::Delete();
 		AACodonMutSelSiteMatrixMixtureProfileProcess::Delete();
 		SingleOmegaProcess::Delete();
@@ -115,6 +112,7 @@ class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, p
 	}
 
 
+	/*
 	void CreateMatrix(int site)	{
 		if (matrixarray[site])	{
 			cerr << "error in AACodonMutSelSSiteBDPProfileProcess: matrixarray is not 0\n";
@@ -122,6 +120,7 @@ class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, p
 		}
 		matrixarray[site] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,GetProfile(site),omega,true);
 	}
+	*/
 };
 
 #endif

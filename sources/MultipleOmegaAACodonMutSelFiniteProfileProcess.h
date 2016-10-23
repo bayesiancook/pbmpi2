@@ -18,10 +18,11 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define MULOMEGAAACODONMUTSELFINITEPROFILE_H
 
 #include "FiniteProfileProcess.h"
-#include "MultipleOmegaAACodonMutSelProfileProcess.h"
+#include "OmegaProcess.h"
+#include "AACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMultipleMatrixMixtureProfileProcess.h"
 
-class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, public virtual MultipleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMultipleMatrixMixtureProfileProcess	{
+class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProfileProcess, public virtual MultipleOmegaProcess, public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMultipleMatrixMixtureProfileProcess	{
 
 	// implementer les fonctions create matrix et delete matrix
 	// ainsi que CreateComponent(int k) and DeleteComponent(k)
@@ -44,7 +45,8 @@ class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProf
 	protected:
 
 	void Create()	{
-		MultipleOmegaAACodonMutSelProfileProcess::Create();
+		MultipleOmegaProcess::Create();
+		AACodonMutSelProfileProcess::Create();
 		FiniteProfileProcess::Create();
 		GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::Create();
 	}
@@ -52,7 +54,8 @@ class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProf
 	void Delete()	{
 		GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::Delete();
 		FiniteProfileProcess::Delete();
-		MultipleOmegaAACodonMutSelProfileProcess::Delete();
+		AACodonMutSelProfileProcess::Delete();
+		MultipleOmegaProcess::Delete();
 	}
 
 	void ToStream(ostream& os) {

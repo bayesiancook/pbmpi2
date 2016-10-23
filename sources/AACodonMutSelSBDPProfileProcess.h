@@ -18,10 +18,11 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define AACODONMUTSELSBDPPROFILE_H
 
 #include "SBDPProfileProcess.h"
-#include "SingleOmegaAACodonMutSelProfileProcess.h"
+#include "OmegaProcess.h"
+#include "AACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixMixtureProfileProcess.h"
 
-class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual SingleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
+class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual SingleOmegaProcess, public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMixtureProfileProcess	{
 
 	// implementer les fonctions create matrix et delete matrix
 	// ainsi que CreateComponent(int k) and DeleteComponent(k)
@@ -72,7 +73,8 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	protected:
 
 	void Create()	{
-		SingleOmegaAACodonMutSelProfileProcess::Create();
+		SingleOmegaProcess::Create();
+		AACodonMutSelProfileProcess::Create();
 		SBDPProfileProcess::Create();
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Create();
 	}
@@ -80,7 +82,8 @@ class AACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, publi
 	void Delete()	{
 		GeneralPathSuffStatMatrixMixtureProfileProcess::Delete();
 		SBDPProfileProcess::Delete();
-		SingleOmegaAACodonMutSelProfileProcess::Delete();
+		AACodonMutSelProfileProcess::Delete();
+		SingleOmegaProcess::Delete();
 	}
 
 	void ToStream(ostream& os)	{

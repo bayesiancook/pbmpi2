@@ -17,10 +17,11 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef AACODONMUTSELMVNSSPROFILE_H
 #define AACODONMUTSELMVNSSPROFILE_H
 
-#include "SingleOmegaAACodonMutSelProfileProcess.h"
+#include "OmegaProcess.h"
+#include "AACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess.h"
 
-class AACodonMutSelMVNSiteSpecificProfileProcess : public virtual SingleOmegaAACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess	{
+class AACodonMutSelMVNSiteSpecificProfileProcess : public virtual SingleOmegaProcess, public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess	{
 
 	public:
 
@@ -31,11 +32,13 @@ class AACodonMutSelMVNSiteSpecificProfileProcess : public virtual SingleOmegaAAC
 
 	void Create()	{
 		GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess::Create();
-		SingleOmegaAACodonMutSelProfileProcess::Create();
+		SingleOmegaProcess::Create();
+		AACodonMutSelProfileProcess::Create();
 	}
 	
 	void Delete()	{
-		SingleOmegaAACodonMutSelProfileProcess::Delete();
+		AACodonMutSelProfileProcess::Delete();
+		SingleOmegaProcess::Delete();
 		GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess::Delete();
 	}
 

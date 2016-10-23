@@ -161,22 +161,21 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		return 1;
 	}
 
-
 	protected:
 
 	virtual void Create()	{
 		AACodonMutSelSiteSBDPSubstitutionProcess::Create();
 		GeneralPathSuffStatMatrixPhyloProcess::Create();
 		GammaBranchProcess::Create();
-		if (GetMyid())	{
+		// if (GetMyid())	{
 			CreateSiteMatrices();
-		}
+		// }
 	}
 
 	virtual void Delete()	{
-		if (GetMyid())	{
+		// if (GetMyid())	{
 			DeleteSiteMatrices();
-		}
+		// }
 		GammaBranchProcess::Delete();
 		GeneralPathSuffStatMatrixPhyloProcess::Delete();
 		AACodonMutSelSiteSBDPSubstitutionProcess::Delete();

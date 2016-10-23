@@ -63,6 +63,12 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixMixtureProfileProce
 	}
 
 	virtual void CreateSiteMatrices()	{
+		if (GetMyid() == 0)	{
+			cerr << "master: CreateSiteMatrices\n";
+		}
+		if (GetMyid() == 1)	{
+			cerr << "slave : CreateSiteMatrices\n";
+		}
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{
 				CreateSiteMatrix(i);
@@ -83,23 +89,31 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixMixtureProfileProce
 		sitematrixarray[site] = 0;
 	}
 
+	virtual void UpdateSiteMatrix(int site) = 0;
+
+	/*
 	virtual void UpdateSiteMatrix(int site)	{
 		if (sitematrixarray[site])	{
 			sitematrixarray[site]->CorruptMatrix();
 		}
 	}
+	*/
 
 	virtual void UpdateMatrix(int k)	{
 		MatrixMixtureProfileProcess::UpdateMatrix(k);
-		if (GetMyid())	{
+		// if (GetMyid())	{
 			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 				if (ActiveSite(i))	{
+					if (! sitematrixarray[i])	{
+						cerr << "in SiteMatrixMixtureProfileProcess::UpdateMatrix: sitematrixarray[i] not allocated\n";
+						exit(1);
+					}
 					if ((alloc[i] == k) && (sitematrixarray[i]))	{
 						UpdateSiteMatrix(i);
 					}
 				}
 			}
-		}
+		// }
 	}	
 
 	SubMatrix** sitematrixarray;

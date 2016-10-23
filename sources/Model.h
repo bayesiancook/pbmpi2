@@ -449,7 +449,8 @@ class Model	{
 	void Run(int smc, int deltansite, int shortcycle, int longcycle, int cutoffsize, int nrep)	{
 
 		cerr << "current logL : " << process->GetLogLikelihood() << '\t';
-		process->GlobalUpdateConditionalLikelihoods();
+		process->GlobalUpdate();
+		// process->GlobalUpdateConditionalLikelihoods();
 		cerr << process->GetLogLikelihood() << '\n';
 
 		ofstream ros((name + ".run").c_str());

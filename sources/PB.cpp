@@ -1057,6 +1057,9 @@ int main(int argc, char* argv[])	{
 
 		cerr << "run started\n";
 		cerr << '\n';
+		model->TraceHeader(cerr);
+		model->Trace(cerr);
+		cerr << '\n';
 		cerr << "current seed leads to following uniform random number: " << rnd::GetRandom().Uniform() << '\n';
 		cerr << '\n';
 		model->Run(smc,deltansite,shortcycle,longcycle,cutoffsize,nrep);

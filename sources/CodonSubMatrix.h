@@ -108,7 +108,17 @@ class AACodonMutSelProfileSubMatrix : public CodonSubMatrix	{
 	double* GetAAProfile() {return aaprofile;}
 	double* GetCodonProfile() {return codonprofile;}
 
+	void SetAAProfile(double* inaaprofile)	{
+		aaprofile = inaaprofile;
+		CorruptMatrix();
+	}
+
 	double GetOmega() {return *omega;}
+
+	void SetOmegaPtr(double* inomega)	{
+		omega = inomega;
+		CorruptMatrix();
+	}
 
 	protected:
 

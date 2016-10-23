@@ -508,10 +508,13 @@ int main(int argc, char* argv[])	{
 			else if (s == "-nomega")	{
 				i++;
 				nomega = atoi(argv[i]);
-				fixomega = 0;
-				if (nomega > 1)	{
-					mixturetype = 6;
-				}
+				//fixomega = 0;
+				//if (nomega > 1)	{
+				//	mixturetype = 6;
+				//}
+			}
+			else if (s == "-finiteomegafiniteaa")	{
+				mixturetype = 7;
 			}
 			else if (s == "-dc")	{
 				dc = 1;

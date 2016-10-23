@@ -33,6 +33,14 @@ class MultipleOmegaAACodonMutSelFiniteProfileProcess : public virtual FiniteProf
 	MultipleOmegaAACodonMutSelFiniteProfileProcess() {}
 	virtual ~MultipleOmegaAACodonMutSelFiniteProfileProcess() {}
 
+	int GetNSubAlloc()	{
+		return GetNomega();
+	}
+
+	int GetSubAlloc(int site)	{
+		return GetOmegaSiteAlloc(site);
+	}
+
 	protected:
 
 	void Create()	{

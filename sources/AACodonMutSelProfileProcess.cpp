@@ -43,6 +43,7 @@ void AACodonMutSelProfileProcess::Create()	{
 		SampleNucRR();
 		SampleNucStat();
 		SampleCodonProfile();
+		SampleOmega();
 	}
 	else	{
 		cerr << "Create of AAMutSelProfileProcess, nucrr and/or nucstat and/or codonprofile are/is not 0.\n";

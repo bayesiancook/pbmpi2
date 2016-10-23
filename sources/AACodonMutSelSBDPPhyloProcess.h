@@ -127,7 +127,21 @@ class AACodonMutSelSBDPPhyloProcess : public virtual AACodonMutSelSBDPSubstituti
 
 	// primary scheduler
 
+	/*
+	using MixtureProfileProcess::ProfileSuffStatLogProb;
+	using MixtureProfileProcess::CountProfileSuffStatLogProb;
+	using MixtureProfileProcess::BetaProfileSuffStatLogProb;
+	*/
+
 	double Move(double tuning = 1.0)	{
+		/*
+		GlobalCollapse();
+		GlobalUpdateSiteProfileSuffStat();
+		GlobalUpdateModeProfileSuffStat();
+		cerr << "suff stat log prob : " << CountProfileSuffStatLogProb() << '\t' <<  BetaProfileSuffStatLogProb() << '\t' << CountProfileSuffStatLogProb() + BetaProfileSuffStatLogProb() << '\t' << ProfileSuffStatLogProb() << '\n';
+		exit(1);
+		*/
+
 		chronototal.Start();
 		propchrono.Start();
 		if (! fixbl)	{
@@ -144,6 +158,7 @@ class AACodonMutSelSBDPPhyloProcess : public virtual AACodonMutSelSBDPSubstituti
 		chronocollapse.Start();
 		GlobalCollapse();
 		chronocollapse.Stop();
+
 		if (! fixbl)	{
 			GammaBranchProcess::Move(0.1 * tuning,10);
 			GammaBranchProcess::Move(tuning,10);

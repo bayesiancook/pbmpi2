@@ -24,6 +24,7 @@ void AACodonMutSelSiteMatrixMixtureProfileProcess::Delete() {
 
 void AACodonMutSelSiteMatrixMixtureProfileProcess::GlobalUpdateModeProfileSuffStat()	{
 
+	// UpdateMatrices();
 	if (GetNprocs() > 1)	{
 
 		MESSAGE signal = UPDATE_MPROFILE;
@@ -73,9 +74,13 @@ void AACodonMutSelSiteMatrixMixtureProfileProcess::GlobalUpdateModeProfileSuffSt
 		}
 
 		MPI_Reduce(tmppairvector,pairvector,GetNcomponent()*GetNstate()*GetNstate(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+		// MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Reduce(tmprootvector,rootvector,GetNcomponent()*GetNstate(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+		// MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Reduce(tmpwaitvector,waitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+		// MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Reduce(tmpnonsynwaitvector,nonsynwaitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+		// MPI_Barrier(MPI_COMM_WORLD);
 
 		int rm = 0;
 		int pm = 0;
@@ -116,9 +121,13 @@ void AACodonMutSelSiteMatrixMixtureProfileProcess::GlobalUpdateModeProfileSuffSt
 		}
 
 		MPI_Bcast(pairvector,GetNcomponent()*GetNstate()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+		// MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Bcast(rootvector,GetNcomponent()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+		// MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Bcast(waitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+		// MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Bcast(nonsynwaitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+		// MPI_Barrier(MPI_COMM_WORLD);
 
 		delete[] pairvector;
 		delete[] tmppairvector;
@@ -199,9 +208,13 @@ void AACodonMutSelSiteMatrixMixtureProfileProcess::SlaveUpdateModeProfileSuffSta
 	}
 
 	MPI_Reduce(tmppairvector,pairvector,GetNcomponent()*GetNstate()*GetNstate(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+	// MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Reduce(tmprootvector,rootvector,GetNcomponent()*GetNstate(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+	// MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Reduce(tmpwaitvector,waitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+	// MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Reduce(tmpnonsynwaitvector,nonsynwaitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+	// MPI_Barrier(MPI_COMM_WORLD);
 
 	delete[] tmppairvector;
 	delete[] tmprootvector;
@@ -209,9 +222,13 @@ void AACodonMutSelSiteMatrixMixtureProfileProcess::SlaveUpdateModeProfileSuffSta
 	delete[] tmpnonsynwaitvector;
 
 	MPI_Bcast(pairvector,GetNcomponent()*GetNstate()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+	// MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Bcast(rootvector,GetNcomponent()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+	// MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Bcast(waitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+	// MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Bcast(nonsynwaitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+	// MPI_Barrier(MPI_COMM_WORLD);
 
 	int rm = 0;
 	int pm = 0;
@@ -236,7 +253,7 @@ void AACodonMutSelSiteMatrixMixtureProfileProcess::SlaveUpdateModeProfileSuffSta
 			wm++;
 		}
 		for (int i=0; i<GetNstate(); i++)	{
-			if (nonsynwaitvector[wm])	{
+			if (nonsynwaitvector[nswm])	{
 				profilenonsynwaitingtime[cat][i] = nonsynwaitvector[nswm];
 			}
 			nswm++;
@@ -259,6 +276,7 @@ void AACodonMutSelSiteMatrixMixtureProfileProcess::SlaveUpdateModeProfileSuffSta
 
 void AACodonMutSelSiteMatrixMixtureProfileProcess::UpdateModeProfileSuffStat()	{
 
+	// UpdateMatrices();
 	for (int i=0; i<GetNcomponent(); i++)	{
 		profilepaircount[i].clear();
 		profilerootcount[i].clear();
@@ -298,6 +316,32 @@ double AACodonMutSelSiteMatrixMixtureProfileProcess::LogStatProb(int site, int c
 	int rootstate = GetSiteRootState(site);
 	if (rootstate != -1)	{
 
+		AACodonMutSelProfileSubMatrix* mat = GetCodonMatrix(site);
+		mat->SetAAProfile(profile[cat]);
+		const double* stat = mat->GetStationary();
+
+		total += log(stat[rootstate]);
+
+		map<int,double>& waitingtime = GetSiteWaitingTime(site);
+		for (map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
+			total += i->second * (*mat)(i->first,i->first);
+		}
+
+		map<pair<int,int>, int>& paircount = GetSitePairCount(site);
+		for (map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
+			total += i->second * log((*mat)(i->first.first, i->first.second));
+		}
+	}
+	return total;
+}
+
+/*
+double AACodonMutSelSiteMatrixMixtureProfileProcess::LogStatProb(int site, int cat)	{
+
+	double total = 0;
+	int rootstate = GetSiteRootState(site);
+	if (rootstate != -1)	{
+
 		AACodonMutSelProfileSubMatrix* mat = GetComponentCodonMatrix(cat);
 		const double* stat = matrixarray[cat]->GetStationary();
 
@@ -320,4 +364,59 @@ double AACodonMutSelSiteMatrixMixtureProfileProcess::LogStatProb(int site, int c
 		}
 	}
 }
+*/
 
+double AACodonMutSelSiteMatrixMixtureProfileProcess::ProfileSuffStatLogProb(int cat)	{
+
+	double total = 0;
+	AACodonMutSelProfileSubMatrix* mat = GetComponentCodonMatrix(cat);
+	if (! mat)	{
+		cerr << "error : null matrix\n";
+		cerr << cat << '\t' << Ncomponent << '\n';
+		cerr << occupancy[cat] << '\n';
+		exit(1);
+	}
+
+	const double* stat = matrixarray[cat]->GetStationary();
+	for (map<int,int>::iterator i = profilerootcount[cat].begin(); i!= profilerootcount[cat].end(); i++)	{
+		total += i->second * log(stat[i->first]);
+	}
+	for (map<int,double>::iterator i = profilewaitingtime[cat].begin(); i!= profilewaitingtime[cat].end(); i++)	{
+		total -= i->second * mat->RateAwaySyn(i->first);
+	}
+	for (map<int,double>::iterator i = profilenonsynwaitingtime[cat].begin(); i!= profilenonsynwaitingtime[cat].end(); i++)	{
+		total -= i->second * mat->RateAwayNonsyn(i->first);
+	}
+	for (map<pair<int,int>, int>::iterator i = profilepaircount[cat].begin(); i!= profilepaircount[cat].end(); i++)	{
+		total += i->second * log((*mat)(i->first.first, i->first.second));
+	}
+	profilesuffstatlogprob[cat] = total;
+	return total;
+}
+
+double AACodonMutSelSiteMatrixMixtureProfileProcess::CountProfileSuffStatLogProb(int cat)	{
+
+	double total = 0;
+	AACodonMutSelProfileSubMatrix* mat = GetComponentCodonMatrix(cat);
+	const double* stat = matrixarray[cat]->GetStationary();
+	for (map<int,int>::iterator i = profilerootcount[cat].begin(); i!= profilerootcount[cat].end(); i++)	{
+		total += i->second * log(stat[i->first]);
+	}
+	for (map<pair<int,int>, int>::iterator i = profilepaircount[cat].begin(); i!= profilepaircount[cat].end(); i++)	{
+		total += i->second * log((*mat)(i->first.first, i->first.second));
+	}
+	return total;
+}
+
+double AACodonMutSelSiteMatrixMixtureProfileProcess::BetaProfileSuffStatLogProb(int cat)	{
+
+	double total = 0;
+	AACodonMutSelProfileSubMatrix* mat = GetComponentCodonMatrix(cat);
+	for (map<int,double>::iterator i = profilewaitingtime[cat].begin(); i!= profilewaitingtime[cat].end(); i++)	{
+		total -= i->second * mat->RateAwaySyn(i->first);
+	}
+	for (map<int,double>::iterator i = profilenonsynwaitingtime[cat].begin(); i!= profilenonsynwaitingtime[cat].end(); i++)	{
+		total -= i->second * mat->RateAwayNonsyn(i->first);
+	}
+	return total;
+}

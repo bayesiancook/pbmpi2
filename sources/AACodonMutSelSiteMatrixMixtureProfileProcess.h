@@ -65,10 +65,11 @@ class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSe
 	virtual void GlobalUpdateModeProfileSuffStat();
 	virtual void SlaveUpdateModeProfileSuffStat();
 	virtual double LogStatProb(int site, int cat);
+	virtual double ProfileSuffStatLogProb(int cat);
+	virtual double CountProfileSuffStatLogProb(int cat);
+	virtual double BetaProfileSuffStatLogProb(int cat);
 
 	virtual void CreateMatrix(int k)	{
-		cerr << "in base create comp matrix\n";
-		exit(1);
 		if (matrixarray[k])	{
 			cerr << "error in AACodonMutSelSiteMatrixMixtureProfileProcess: matrixarray is not 0\n";
 			exit(1);
@@ -77,8 +78,6 @@ class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSe
 	}
 
 	virtual void CreateSiteMatrix(int i)	{
-		cerr << "in base create site matrix\n";
-		exit(1);
 		if (sitematrixarray[i])	{
 			cerr << "error in AACodonMutSelSiteMatrixMixtureProfileProcess: sitematrixarray is not 0\n";
 			exit(1);
@@ -90,6 +89,7 @@ class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSe
 		if (sitematrixarray[site])	{
 			GetCodonMatrix(site)->SetAAProfile(GetProfile(site));
 			// GetCodonMatrix(site)->SetOmega(GetSiteOmegaPtr(site));
+
 			// useless
 			// sitematrixarray[site]->CorruptMatrix();
 		}

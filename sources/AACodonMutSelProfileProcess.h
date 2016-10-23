@@ -33,6 +33,10 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 	AACodonMutSelProfileProcess() : nucrr(0), nucstat(0), codonprofile(0) {}
 	virtual ~AACodonMutSelProfileProcess() {}
 
+	virtual void UpdateOmega()	{
+		UpdateMatrices();
+	}
+
 	int GetNnucrr()	{
 		return Nnucrr;
 	}	

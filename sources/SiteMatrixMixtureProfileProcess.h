@@ -1,3 +1,4 @@
+# in this version, SiteMatrixMixture does not inherit from MatrixMixtureProfileProcess
 
 /********************
 

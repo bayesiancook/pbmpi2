@@ -29,13 +29,14 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 	L2 = GetDim();
 	int nstate = GetData()->GetNstate();
 	//nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + 1; // check if these last terms are correct in this context...
-	nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + nomega; // check if these last terms are correct in this context...
+	nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + nomega*2; // check if these last terms are correct in this context...
 	//ni = 1 + ProfileProcess::GetNsite();
 	ni = 1 + ProfileProcess::GetNsite() * 2;
 	int* ivector = new int[ni];
 	double* dvector = new double[nd];
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
 	int index = 0;
 	for(i=0; i<nbranch; ++i) {
 		blarray[i] = dvector[index];
@@ -67,8 +68,12 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 	}
 	for (int i=0; i<nomega; i++)	{
 		omega[i] = dvector[index];
+		//cerr << "omega[" << i << "]: " << omega[i] << "\n";
+		index++;
+		omegaweight[i] = dvector[index];
 		index++;
 	}
+	//exit(1);
 	//*omega = dvector[index];
 	//index++;
 	int iindex = 0;
@@ -136,7 +141,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	L2 = GetDim();
 	int nstate = GetData()->GetNstate();
 	//nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + 1;  // check if these last terms are correct in this context...
-	nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + nomega;  // check if these last terms are correct in this context...
+	nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + nomega*2;  // check if these last terms are correct in this context...
 	ni = 1 + ProfileProcess::GetNsite() * 2; // 1 for the number of componenets, and the rest for allocations
 	int ivector[ni];
 	double dvector[nd]; 
@@ -177,9 +182,12 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 		index++;
 	}
 	for (int i=0; i<nomega; i++)	{
-		omega[i] = dvector[index];
+		dvector[index] = omega[i];
+		index++;
+		dvector[index] = omegaweight[i];
 		index++;
 	}
+
 
 	//dvector[index] = *omega;
 	//index++;
@@ -202,6 +210,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	else	{
 		UpdateMatrices();
 	}
+	
 }
 
 

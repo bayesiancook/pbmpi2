@@ -192,8 +192,9 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 	double GetMeanOmega()	{
 		double tot = 0;
 		for (int i=0; i<GetNsite(); i++)	{
-			tot += GetOmega(i);
+			tot += GetSiteOmega(i);
 		}
+		//exit(1);
 		return tot / GetNsite();
 	}
 
@@ -202,7 +203,8 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 	}
 
 	double GetSiteOmega(int site)	{
-		return omega[omegaalloc[site]];
+		//return omega[omegaalloc[site]];
+		return GetOmega(omegaalloc[site]);
 	}
 
 	int GetOmegaSiteAlloc(int site)	{

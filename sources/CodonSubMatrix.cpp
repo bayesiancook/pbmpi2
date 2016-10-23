@@ -98,6 +98,12 @@ double CodonSubMatrix::NonSynRate()	{
 
 void AACodonMutSelProfileSubMatrix::ComputeArray(int i)	{
 
+	int one = 1.0;
+	if ((*omega - one)> 1e-6)	{
+		cerr << "omega: " << *omega << "\n";
+		exit(1);
+	}
+
 	double total = 0;
 	double deltaF;
 	double mutrate = 0;

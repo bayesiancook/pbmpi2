@@ -187,8 +187,8 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 		GlobalUpdateParameters();
 		GlobalUpdateOmegaSuffStat();
 		CheckSuffStatLogProb();
-		MoveOmega(tuning);
-		MoveOmega(tuning*0.3);
+		//MoveOmega(tuning);
+		//MoveOmega(tuning*0.3);
 	}
 
 	// GlobalUpdateParameters();
@@ -382,7 +382,7 @@ void AACodonMutSelProfileProcess::UpdateSiteOmegaSuffStat()	{
 			*/
 			for (map<int,double>::iterator j = waitingtime.begin(); j!= waitingtime.end(); j++)	{
 				siteomegasuffstatbeta[i] += j->second * codonmatrix->RateAwayNonsyn(j->first) / codonmatrix->GetOmega();
-				// siteomegasuffstatbeta[i] += j->second * codonmatrix->RateAwayNonsyn(j->first) / GetSiteOmega(i);
+				//siteomegasuffstatbeta[i] += j->second * codonmatrix->RateAwayNonsyn(j->first) / GetSiteOmega(i);
 			}
 
 			for (map<pair<int,int>, int>::iterator j = paircount.begin(); j!= paircount.end(); j++)	{

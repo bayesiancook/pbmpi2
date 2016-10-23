@@ -139,7 +139,7 @@ double MultipleOmegaProcess::GlobalOmegaIncrementalFiniteMove(int nrep=1)	{
 			}
 		}
 	}
-	
+
 	// final cleanup
 	//UpdateOccupancyNumbers(); 
 	// UpdateModeProfileSuffStat();
@@ -287,6 +287,7 @@ double MultipleOmegaProcess::MoveOmegaValues(double tuning)        {
 	for (int l=0; l<GetNomega(); l++)	{
 		int naccepted = 0;
 		double bkomega = omega[l];
+
 		double deltalogprob = -LogOmegaPrior() - OmegaSuffStatLogProb();
 
 		double h = tuning * (rnd::GetRandom().Uniform() -0.5);
@@ -298,6 +299,7 @@ double MultipleOmegaProcess::MoveOmegaValues(double tuning)        {
 		deltalogprob += LogOmegaPrior() + OmegaSuffStatLogProb();
 
 		int accepted = (rnd::GetRandom().Uniform() < exp(deltalogprob));
+
 		if (accepted)	{
 			naccepted++;	
 		}

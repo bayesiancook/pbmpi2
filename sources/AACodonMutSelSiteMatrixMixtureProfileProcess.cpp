@@ -4,11 +4,11 @@
 
 void AACodonMutSelSiteMatrixMixtureProfileProcess::Create() {
 	if (! omega0)	{
+		omega0 = new double;
+		*omega0 = 1;
 		AACodonMutSelProfileProcess::Create();
 		GeneralPathSuffStatSiteMatrixMixtureProfileProcess::Create();
 		profilenonsynwaitingtime = new map<int,double>[GetNmodeMax()];
-		omega0 = new double;
-		*omega0 = 1;
 	}
 }
 

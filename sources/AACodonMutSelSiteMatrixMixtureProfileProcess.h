@@ -24,7 +24,7 @@ class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSe
 
 	public:
 
-	AACodonMutSelSiteMatrixMixtureProfileProcess() {}
+	AACodonMutSelSiteMatrixMixtureProfileProcess() : omega0(0) {}
 	virtual ~AACodonMutSelSiteMatrixMixtureProfileProcess() {}
 
 	AACodonMutSelProfileSubMatrix* GetComponentCodonMatrix(int k)	{
@@ -75,6 +75,7 @@ class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSe
 	}
 
 	virtual void CreateSiteMatrix(int i)	{
+		cerr << "in base create site matrix\n";
 		if (sitematrixarray[i])	{
 			cerr << "error in AACodonMutSelSiteMatrixMixtureProfileProcess: sitematrixarray is not 0\n";
 			exit(1);

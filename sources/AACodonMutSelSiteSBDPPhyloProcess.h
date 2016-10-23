@@ -150,9 +150,7 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		}
 
 		GlobalUpdateParameters();
-		cerr << "profileprocessmove\n";
 		AACodonMutSelSiteSBDPProfileProcess::Move(tuning,1,15);
-		cerr << "profileprocessmove ok\n";
 		chronosuffstat.Stop();
 
 		chronounfold.Start();

@@ -116,6 +116,10 @@ void AACodonMutSelProfileSubMatrix::DeleteFixProbs()	{
 	
 void AACodonMutSelProfileSubMatrix::ComputeArray(int i)	{
 
+	if (*omega < 1e-6)	{
+		cerr << "error: omega : " << *omega << '\n';
+		exit(1);
+	}
 	double norm = GetNucRate();
 	double total = 0;
 	for (int j=0; j<GetNstate(); j++)       {

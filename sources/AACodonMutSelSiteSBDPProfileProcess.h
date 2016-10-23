@@ -121,6 +121,18 @@ class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, p
 		matrixarray[site] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,GetProfile(site),omega,true);
 	}
 	*/
+	virtual void CreateSiteMatrix(int i)	{
+		if (sitematrixarray[i])	{
+			cerr << "error in AACodonMutSelSiteMatrixMixtureProfileProcess: sitematrixarray is not 0\n";
+			exit(1);
+		}
+		if (*omega < 1e-6)	{
+			cerr << "in create site matrix:small omega : " << *omega << '\n';
+			exit(1);
+		}
+		sitematrixarray[i] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,GetProfile(i),omega,true);
+	}
+
 };
 
 #endif

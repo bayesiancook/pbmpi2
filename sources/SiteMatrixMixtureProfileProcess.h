@@ -36,20 +36,6 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixMixtureProfileProce
 		return sitematrixarray[site];
 	}
 
-	virtual void UpdateMatrices()	{
-		cerr << "in SiteMatrixMixtureProfileProcess::UpdateMatrices: should we update site matrices?\n";
-		exit(1);
-	}
-
-	virtual void UpdateSiteMatrices()	{
-		// for (int i=0; i<GetNsite(); i++)	{
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i))	{
-				UpdateSiteMatrix(i);
-			}
-		}
-	}
-
 	protected:
 
 	Chrono sschrono;
@@ -103,16 +89,18 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixMixtureProfileProce
 		}
 	}
 
-	/*
-	virtual void UpdateComponent(int k)	{
-		MatrixMixtureProfileProcess::UpdateComponent(k);
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			if (ActiveSite(i) && (alloc[i] == k))	{
-				UpdateSiteMatrix(i);
+	virtual void UpdateMatrix(int k)	{
+		MatrixMixtureProfileProcess::UpdateMatrix(k);
+		if (GetMyid())	{
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				if (ActiveSite(i))	{
+					if ((alloc[i] == k) && (sitematrixarray[i]))	{
+						UpdateSiteMatrix(i);
+					}
+				}
 			}
 		}
-	}
-	*/
+	}	
 
 	SubMatrix** sitematrixarray;
 };

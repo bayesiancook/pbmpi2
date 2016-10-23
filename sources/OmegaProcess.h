@@ -163,6 +163,7 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 		if (! omega)	{
 			OmegaProcess::Create();
 			omega = new double;
+			*omega = 1.0;
 		}
 	}
 

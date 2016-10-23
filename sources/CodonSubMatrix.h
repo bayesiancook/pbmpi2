@@ -86,32 +86,48 @@ class AACodonMutSelProfileSubMatrix : public CodonSubMatrix	{
 
 	public:
 
-	AACodonMutSelProfileSubMatrix(CodonStateSpace* instatespace, double* innucrr, double* innucstat, double* incodonprofile, double* inaaprofile, double* inomega, bool innormalise) :
-		CodonSubMatrix(instatespace,innucrr,innucstat,innormalise),
+	AACodonMutSelProfileSubMatrix(CodonStateSpace* instatespace, double* innucrr, double* innucstat, double* incodonprofile, double* inaaprofile, double* inomega, bool innucnormalise) :
+		// as a submatrix, it is not normalized (normalization is done directly when computing the Q matrix)
+		CodonSubMatrix(instatespace,innucrr,innucstat,false),
+		// CodonSubMatrix(instatespace,innucrr,innucstat,innormalise),
 		codonprofile(incodonprofile),
 		aaprofile(inaaprofile),
-		omega(inomega) {}
+		omega(inomega), nucnormalise(innucnormalise) {
+			// CreateFixProbs();
+		}
+
+	~AACodonMutSelProfileSubMatrix() {
+		// DeleteFixProbs();
+	}
+
+	/*
+	void CreateFixProbs();
+	void DeleteFixProbs();
+	*/
 
 	double* GetAAProfile() {return aaprofile;}
 	double* GetCodonProfile() {return codonprofile;}
 
 	double GetOmega() {return *omega;}
 
-	// virtual double RateAwayNonsyn(int i);
-
 	protected:
 
+	// void ComputeFixProbs(int state);
 	void ComputeArray(int state);
 	void ComputeStationary();
-	double GetRate();
+	double GetNucRate();
 	double* aaprofile;
 	double* codonprofile;
 	double* omega;
+
+	// double** fixprobs;
 
 	//static const double TOOSMALL = 1e-1;
 	static const double TOOSMALL = 1e-30;
 	static const double TOOLARGE = 500;
 	static const double TOOLARGENEGATIVE = -50;
+
+	bool nucnormalise;
 
 };
 

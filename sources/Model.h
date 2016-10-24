@@ -230,7 +230,7 @@ class Model	{
 			}
 			else if (mixturetype == 6)	{
 				type = "MULOMEGAAACODONMUTSELSBDP";
-				process = new MultipleOmegaAACodonMutSelSBDPPhyloProcess(fixcodonprofile,Nomega,fixomega,omegaprior,kappaprior);
+				process = new MultipleOmegaAACodonMutSelSBDPPhyloProcess(fixcodonprofile,Nomega,omegaprior,kappaprior);
 			}
 			else if (mixturetype == 7)	{
 				type = "MULOMEGAAACODONMUTSELFINITE";

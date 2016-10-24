@@ -204,8 +204,7 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 		for (int i=0; i<GetNsite(); i++)	{
 			tot += GetSiteOmega(i);
 		}
-		//exit(1);
-		return tot / GetNsite();
+		return tot/GetNsite();
 	}
 
 	double* GetOmegaPointer(int k)	{

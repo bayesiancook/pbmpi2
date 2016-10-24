@@ -261,8 +261,15 @@ void MultipleOmegaProcess::SampleOmegaWeights()	{
 }
 
 void MultipleOmegaProcess::SampleOmegaAlloc()	{
+	//for (int i=0; i<GetNsite(); i++)	{
+	//	omegaalloc[i] = 0;
+	//}
 	for (int i=0; i<GetNsite(); i++)	{
-		omegaalloc[i] = 0;
+		if (ActiveSite(i))	{
+			int choose = rnd::GetRandom().FiniteDiscrete(GetNomega(),omegaweight);
+			//AddSite(i,choose);
+			omegaalloc[i] = choose;
+		}
 	}
 }
 

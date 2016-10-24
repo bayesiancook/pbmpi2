@@ -29,6 +29,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "MultipleOmegaAACodonMutSelSBDPPhyloProcess.h"
 #include "MultipleOmegaAACodonMutSelFinitePhyloProcess.h"
 #include "AACodonMutSelSiteSBDPPhyloProcess.h"
+#include "AACodonMutSelSiteOmegaSBDPPhyloProcess.h"
 #include "AACodonMutSelMVNSiteSpecificPhyloProcess.h"
 #include "CodonMutSelFinitePhyloProcess.h"
 #include "CodonMutSelSBDPPhyloProcess.h"
@@ -224,8 +225,14 @@ class Model	{
 				process = new AACodonMutSelMVNSiteSpecificPhyloProcess(fixcodonprofile,fixomega,omegaprior);
 			}
 			else if (mixturetype == 6)	{
-				type = "MULOMEGAAACODONMUTSELSBDP";
-				process = new MultipleOmegaAACodonMutSelSBDPPhyloProcess(fixcodonprofile,Nomega,fixomega,omegaprior,kappaprior);
+				if (Nomega == -1)	{
+					type = "SITEOMEGAAACODONMUTSELSBDP";
+					process = new AACodonMutSelSiteOmegaSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
+				}
+				else	{
+					type = "MULOMEGAAACODONMUTSELSBDP";
+					process = new MultipleOmegaAACodonMutSelSBDPPhyloProcess(fixcodonprofile,Nomega,fixomega,omegaprior,kappaprior);
+				}
 			}
 			else if (mixturetype == 7)	{
 				type = "MULOMEGAAACODONMUTSELFINITE";

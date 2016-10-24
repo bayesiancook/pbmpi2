@@ -21,7 +21,7 @@ class SiteOmegaProcess : public virtual OmegaProcess	{
 
 	public:
 
-	SiteOmegaProcess() : omegaarray(0) {}
+	SiteOmegaProcess() : omegaarray(0), integrated(1) {}
 	virtual ~SiteOmegaProcess() {}
 
 	protected:
@@ -150,9 +150,19 @@ class SiteOmegaProcess : public virtual OmegaProcess	{
 	void GlobalUpdateOmegaSuffStat();
 	void SlaveUpdateOmegaSuffStat();
 
+	double OmegaSuffStatIntegratedLogProb(int site);
+	double OmegaSuffStatIntegratedLogProb();
+	void ResampleSiteOmegas();
+	double MoveOmegaHyperIntegrated(double tuning, int nrep);
+	double MoveOmegaAlphaIntegrated(double tuning);
+	double MoveOmegaBetaIntegrated(double tuning);
+	void GlobalCollectSiteOmegaSuffStats();
+	void SlaveCollectSiteOmegaSuffStats();
+
 	double* omegaarray;
 	double omegaalpha;
 	double omegabeta;
+	int integrated;
 };
 
 #endif

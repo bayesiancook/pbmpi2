@@ -120,11 +120,26 @@ double SiteOmegaProcess::MoveOmegaBeta(double tuning)	{
 double SiteOmegaProcess::MoveOmega(double tuning)	{
 
 	double ret = 0;
-	if (GetNprocs() > 1)	{
-		ret = MPIMoveOmega(tuning);
+	if (integrated)	{
+
+		if (GetNprocs() > 1)	{
+			GlobalCollectSiteOmegaSuffStats();
+		}
+
+		MoveOmegaHyperIntegrated(tuning,10);
+		MoveOmegaHyperIntegrated(0.3*tuning,10);
+
+		if (GetNprocs() > 1)	{
+			ResampleSiteOmegas();
+		}
 	}
 	else	{
-		ret = NonMPIMoveOmega(tuning);
+		if (GetNprocs() > 1)	{
+			ret = MPIMoveOmega(tuning);
+		}
+		else	{
+			ret = NonMPIMoveOmega(tuning);
+		}
 	}
 	return ret;
 }
@@ -211,6 +226,108 @@ void SiteOmegaProcess::SlaveMixMoveOmega()	{
 	}
 
 	UpdateOmega();
+}
+
+double SiteOmegaProcess::OmegaSuffStatIntegratedLogProb(int site)	{
+
+	double ret = rnd::GetRandom().logGamma(omegaalpha + siteomegasuffstatcount[site]) - rnd::GetRandom().logGamma(omegaalpha);
+	ret += omegaalpha * log(omegabeta) - (omegaalpha + siteomegasuffstatcount[site]) * log(omegabeta + siteomegasuffstatbeta[site]);
+	return ret;
+}
+
+double SiteOmegaProcess::OmegaSuffStatIntegratedLogProb()	{
+
+	double tot = 0;
+	for (int i=0; i<GetNsite(); i++)	{
+		if (ActiveSite(i))	{
+			tot += OmegaSuffStatIntegratedLogProb(i);
+		}
+	}
+	return tot;
+}
+
+void SiteOmegaProcess::ResampleSiteOmegas()	{
+
+	for (int i=0; i<GetNsite(); i++)	{
+		if (ActiveSite(i))	{
+			omegaarray[i] = rnd::GetRandom().Gamma(omegaalpha + siteomegasuffstatcount[i],omegabeta + siteomegasuffstatbeta[i]);
+		}
+	}
+}
+
+double SiteOmegaProcess::MoveOmegaHyperIntegrated(double tuning, int nrep)	{
+
+	double nacc = 0;
+	double ntot = 0;
+	for (int rep=0; rep<nrep; rep++)	{
+		nacc += MoveOmegaAlphaIntegrated(tuning);
+		ntot++;
+		nacc += MoveOmegaBetaIntegrated(tuning);
+		ntot++;
+	}
+	return nacc/ntot;
+}
+
+double SiteOmegaProcess::MoveOmegaAlphaIntegrated(double tuning)	{
+
+	double bkomegaalpha = omegaalpha;
+	double deltalogprob = - OmegaSuffStatIntegratedLogProb() - LogOmegaHyperPrior();
+	double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
+	double e = exp(m);
+	omegaalpha *= e;
+	deltalogprob += OmegaSuffStatIntegratedLogProb() + LogOmegaHyperPrior();
+	deltalogprob += m;
+	int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
+
+	if (!accepted)	{
+		omegaalpha = bkomegaalpha;
+	}
+	return accepted;
+}
+
+double SiteOmegaProcess::MoveOmegaBetaIntegrated(double tuning)	{
+
+	double bkomegabeta = omegabeta;
+	double deltalogprob = - OmegaSuffStatIntegratedLogProb() - LogOmegaHyperPrior();
+	double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
+	double e = exp(m);
+	omegabeta *= e;
+	deltalogprob += OmegaSuffStatIntegratedLogProb() + LogOmegaHyperPrior();
+	deltalogprob += m;
+	int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
+
+	if (!accepted)	{
+		omegabeta = bkomegabeta;
+	}
+	return accepted;
+}
+
+void SiteOmegaProcess::GlobalCollectSiteOmegaSuffStats()	{
+
+	MESSAGE signal = COLLECTOMEGASUFFSTAT;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	MPI_Status stat;
+	int* itmp = new int[GetNsite()];
+	double* tmp = new double[GetNsite()];
+
+	for(int i=1; i<GetNprocs(); i++) {
+		MPI_Recv(itmp,GetNsite(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+		MPI_Recv(tmp,GetNsite(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); ++j) {
+			siteomegasuffstatcount[j] = itmp[j];
+			siteomegasuffstatbeta[j] = tmp[j];
+		}
+	}
+	delete[] tmp;
+	delete[] itmp;
+}
+
+void SiteOmegaProcess::SlaveCollectSiteOmegaSuffStats()	{
+
+	MPI_Send(siteomegasuffstatcount,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(siteomegasuffstatbeta,GetNsite(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+
 }
 
 

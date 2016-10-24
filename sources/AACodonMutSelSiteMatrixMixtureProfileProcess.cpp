@@ -338,6 +338,7 @@ double AACodonMutSelSiteMatrixMixtureProfileProcess::LogStatProb(int site, int c
 	}
 	if (isinf(total))	{
 		cerr << "in AACodonMutSelSiteMatrixMixtureProfileProcess::LogStatProb: inf\n";
+		cerr << total << '\n';
 		cerr << GetSiteOmega(site) << '\n';
 		exit(1);
 	}

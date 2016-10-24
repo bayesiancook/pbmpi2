@@ -122,6 +122,9 @@ void AACodonMutSelSiteOmegaSBDPPhyloProcess::SlaveExecute(MESSAGE signal)	{
 		case MIXMOVEOMEGA:
 			SlaveMixMoveOmega();
 			break;
+		case COLLECTOMEGASUFFSTAT:
+			SlaveCollectSiteOmegaSuffStats();
+			break;
 		default:
 			PhyloProcess::SlaveExecute(signal);
 	}

@@ -34,6 +34,16 @@ class SiteOmegaProcess : public virtual OmegaProcess	{
 		return &(omegaarray[site]);
 	}
 	
+	double GetMinOmega()	{
+		double min = 10;
+		for (int i=0; i<GetNsite(); i++)	{
+			if (min > omegaarray[i])	{
+				min = omegaarray[i];
+			}
+		}
+		return min;
+	}
+	
 	double GetMeanOmega()	{
 		double mean = 0;
 		for (int i=0; i<GetNsite(); i++)	{
@@ -43,16 +53,17 @@ class SiteOmegaProcess : public virtual OmegaProcess	{
 		return mean;
 	}
 
-	double GetVarOmega()	{
+	double GetRelVarOmega()	{
 		double mean = 0;
 		double var = 0;
 		for (int i=0; i<GetNsite(); i++)	{
 			mean += omegaarray[i];
-			mean += omegaarray[i] * omegaarray[i];
+			var += omegaarray[i] * omegaarray[i];
 		}
 		mean /= GetNsite();
 		var /= GetNsite();
 		var -= mean*mean;
+		var /= mean*mean;
 		return var;
 	}
 

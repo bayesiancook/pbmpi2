@@ -38,7 +38,6 @@ void SiteOmegaProcess::SlaveUpdateOmegaSuffStat() {
 
 double SiteOmegaProcess::MoveSiteOmega(double tuning, int site)	{
 
-	int naccepted = 0;
 	double bkomega = omegaarray[site];
 	double deltalogprob = -LogOmegaPrior(site) - OmegaSuffStatLogProb(site);
 
@@ -46,19 +45,14 @@ double SiteOmegaProcess::MoveSiteOmega(double tuning, int site)	{
 	double e = exp(h);
 	omegaarray[site] *= e;
 
-	// UpdateOmega();
 	deltalogprob += h;
 	deltalogprob += LogOmegaPrior(site) + OmegaSuffStatLogProb(site);
 
 	int accepted = (rnd::GetRandom().Uniform() < exp(deltalogprob));
-	if (accepted)	{
-		naccepted++;	
-	}
-	else	{
+	if (! accepted)	{
 		omegaarray[site] = bkomega;
-		// UpdateOmega();
 	}
-	return naccepted;	
+	return accepted;	
 }
 
 double SiteOmegaProcess::MoveSiteOmegas(double tuning, int nrep)	{
@@ -152,12 +146,13 @@ double SiteOmegaProcess::MixMoveOmega(int nmix, double tuning, int nsiterep, int
 		MoveOmegaHyper(tuning,nhyperrep);
 		MoveOmegaHyper(0.1*tuning,nhyperrep);
 	}
+	UpdateOmega();
 	return 1.0;
 }
 
 double SiteOmegaProcess::GlobalMixMoveOmega(int nmix, double tuning, int nsiterep, int nhyperrep)	{
 
-	MESSAGE signal = MIX_MOVE;
+	MESSAGE signal = MIXMOVEOMEGA;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(&nmix,1,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(&nsiterep,1,MPI_INT,0,MPI_COMM_WORLD);
@@ -191,6 +186,8 @@ double SiteOmegaProcess::GlobalMixMoveOmega(int nmix, double tuning, int nsitere
 
 	delete[] tmp;
 
+	UpdateOmega();
+
 	return 1.0;
 }
 
@@ -198,12 +195,23 @@ void SiteOmegaProcess::SlaveMixMoveOmega()	{
 
 	double tuning = 1;
 	int nrep = 1;
-	MPI_Bcast(&tuning,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	int nmix = 1;
+	MPI_Bcast(&nmix,1,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(&nrep,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&tuning,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
-	MoveSiteOmegas(tuning, nrep);
+	for (int mix=0; mix<nmix; mix++)	{
 
-	MPI_Send(omegaarray,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+		MoveSiteOmegas(tuning, nrep);
+		MPI_Send(omegaarray,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+
+		// get hyperparam
+		MPI_Bcast(&omegaalpha,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast(&omegabeta,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
+
+	UpdateOmega();
 }
+
 
 

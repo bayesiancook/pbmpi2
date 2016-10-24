@@ -211,7 +211,11 @@ class Model	{
 				process = new AACodonMutSelFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,fixomega,omegaprior);
 			}
 			else if (mixturetype == 3)	{
-				if (suffstat == 2)	{
+				if (Nomega == -1)	{
+					type = "SITEOMEGAAACODONMUTSELSBDP";
+					process = new AACodonMutSelSiteOmegaSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
+				}
+				else if (suffstat == 2)	{
 					type = "AACODONMUTSELSITESBDP";
 					process = new AACodonMutSelSiteSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
 				}
@@ -225,14 +229,8 @@ class Model	{
 				process = new AACodonMutSelMVNSiteSpecificPhyloProcess(fixcodonprofile,fixomega,omegaprior);
 			}
 			else if (mixturetype == 6)	{
-				if (Nomega == -1)	{
-					type = "SITEOMEGAAACODONMUTSELSBDP";
-					process = new AACodonMutSelSiteOmegaSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
-				}
-				else	{
-					type = "MULOMEGAAACODONMUTSELSBDP";
-					process = new MultipleOmegaAACodonMutSelSBDPPhyloProcess(fixcodonprofile,Nomega,fixomega,omegaprior,kappaprior);
-				}
+				type = "MULOMEGAAACODONMUTSELSBDP";
+				process = new MultipleOmegaAACodonMutSelSBDPPhyloProcess(fixcodonprofile,Nomega,fixomega,omegaprior,kappaprior);
 			}
 			else if (mixturetype == 7)	{
 				type = "MULOMEGAAACODONMUTSELFINITE";

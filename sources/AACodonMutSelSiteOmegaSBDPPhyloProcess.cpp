@@ -76,7 +76,7 @@ void AACodonMutSelSiteOmegaSBDPPhyloProcess::SlaveUpdateParameters()	{
 	}
 	kappa = dvector[index];
 	index++;
-	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
+	for(int i=0; i<ProfileProcess::GetNsite(); ++i) {
 		omegaarray[i] = dvector[index];
 		index++;
 	}
@@ -190,7 +190,7 @@ void AACodonMutSelSiteOmegaSBDPPhyloProcess::GlobalUpdateParameters() {
 	dvector[index] = kappa;
 	index++;
 
-	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
+	for(int i=0; i<ProfileProcess::GetNsite(); ++i) {
 		dvector[index] = omegaarray[i];
 		index++;
 	}

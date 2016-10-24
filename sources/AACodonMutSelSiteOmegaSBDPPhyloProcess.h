@@ -93,7 +93,7 @@ class AACodonMutSelSiteOmegaSBDPPhyloProcess : public virtual AACodonMutSelSiteO
 		os << '\t' << GetTotalLength();
 		os << '\t' << GetCodonProfileEntropy();
 		os << '\t' << GetMeanOmega();
-		os << '\t' << GetVarOmega();
+		os << '\t' << GetRelVarOmega();
 		os << '\t' << GetProportionOmegaGreaterThan(1.0);
 		os << '\t' << GetNDisplayedComponent();
 		os << '\t' << GetStatEnt();

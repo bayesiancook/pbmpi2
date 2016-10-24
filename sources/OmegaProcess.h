@@ -250,7 +250,7 @@ class MultipleOmegaProcess : public virtual OmegaProcess	{
 	}
 
 	virtual double OmegaSuffStatLogProb(int l)	{
-		return compomegasuffstatcount[l] * log(omega[l]) - compomegasuffstatbeta[l] * *omega;
+		return compomegasuffstatcount[l] * log(omega[l]) - compomegasuffstatbeta[l] * omega[l];
 	}
 
 	double OmegaLogStatProb(int site, int omegaalloc)	{

@@ -218,7 +218,7 @@ void SiteOmegaProcess::SlaveMixMoveOmega()	{
 	for (int mix=0; mix<nmix; mix++)	{
 
 		MoveSiteOmegas(tuning, nrep);
-		MPI_Send(omegaarray,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+		MPI_Send(omegaarray,GetNsite(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 
 		// get hyperparam
 		MPI_Bcast(&omegaalpha,1,MPI_DOUBLE,0,MPI_COMM_WORLD);

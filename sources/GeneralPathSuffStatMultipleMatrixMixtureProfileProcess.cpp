@@ -248,7 +248,7 @@ void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::SlaveUpdateModeProf
 
 	int* pairvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate()];
 	int* tmppairvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate()];
-	for (int i=0; i<GetNcomponent() * GetNSubAlloc() & GetNstate() * GetNstate(); i++)	{
+	for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate(); i++)	{
 		pairvector[i] = 0;
 		tmppairvector[i] = 0;
 	}
@@ -394,7 +394,10 @@ double GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::ProfileSuffStatLo
 	for (map<pair<int,int>, int>::iterator i = profilepaircount[cat][l].begin(); i!= profilepaircount[cat][l].end(); i++)	{
 		total += i->second * log((*mat)(i->first.first, i->first.second));
 	}
-	// profilesuffstatlogprob[cat] = total;
+	if (isnan(total))	{
+		cerr << "error: in GPSSMultipleMat ProfileSuffStatLogProb: nan\n";
+		exit(1);
+	}
 	return total;
 }
 

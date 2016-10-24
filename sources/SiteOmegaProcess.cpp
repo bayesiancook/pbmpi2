@@ -17,7 +17,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "Parallel.h"
 
 void SiteOmegaProcess::UpdateOmegaSuffStat()	{
-	UpdateSiteOmegaSuffStat();
+	// UpdateSiteOmegaSuffStat();
 }
 
 void SiteOmegaProcess::GlobalUpdateOmegaSuffStat() {

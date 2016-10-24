@@ -185,10 +185,10 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 
 	if (! fixomega)	{
 		GlobalUpdateParameters();
-		GlobalUpdateOmegaSuffStat();
+		GlobalUpdateSiteOmegaSuffStat();
 		// CheckSuffStatLogProb();
 		MoveOmega(tuning);
-		MoveOmega(tuning*0.3);
+		// MoveOmega(tuning*0.3);
 	}
 
 	GlobalUpdateParameters();

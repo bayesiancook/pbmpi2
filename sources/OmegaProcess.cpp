@@ -18,6 +18,24 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "GeneralPathSuffStatMatrixProfileProcess.h"
 #include "Random.h"
 
+void OmegaProcess::GlobalUpdateSiteOmegaSuffStat()	{
+	if (GetNprocs() > 1)	{
+		// MPI2
+		// should ask the slaves to call their UpdateRateSuffStat
+		// and then gather the statistics;
+		MPI_Status stat;
+		MESSAGE signal = UPDATE_SITEOMEGA;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	}
+	else	{
+		UpdateSiteOmegaSuffStat();
+	}
+}
+
+void OmegaProcess::SlaveUpdateSiteOmegaSuffStat()	{
+	UpdateSiteOmegaSuffStat();
+}
+
 double SingleOmegaProcess::LogOmegaPrior()        {
 
 	if (omegaprior == 0)	{
@@ -36,7 +54,7 @@ void SingleOmegaProcess::SampleOmega()        {
 }
 
 void SingleOmegaProcess::UpdateOmegaSuffStat()	{
-	UpdateSiteOmegaSuffStat();
+	// UpdateSiteOmegaSuffStat();
 	omegasuffstatbeta = 0;
 	omegasuffstatcount = 0;
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
@@ -47,7 +65,17 @@ void SingleOmegaProcess::UpdateOmegaSuffStat()	{
 	}
 }	
 
-double SingleOmegaProcess::MoveOmega(double tuning)        {
+double SingleOmegaProcess::MoveOmega(double tuning)	{
+
+	int nrep = 10;
+	GlobalUpdateOmegaSuffStat();
+	for (int rep=0; rep<nrep; rep++)	{
+		SimpleMoveOmega(tuning);
+		SimpleMoveOmega(0.3*tuning);
+	}
+}
+
+double SingleOmegaProcess::SimpleMoveOmega(double tuning)        {
 
 	int naccepted = 0;
 	double bkomega = *omega;
@@ -291,9 +319,17 @@ double MultipleOmegaProcess::LogOmegaPrior()        {
 }
 
 double MultipleOmegaProcess::MoveOmega(double tuning)        {
+
 	double total=0;
-	total += MoveOmegaValues(tuning);
+
+	GlobalUpdateOmegaSuffStat();
+
+	int nrep = 10;
+	for (int rep=0; rep<nrep; rep++)	{
+		total += MoveOmegaValues(tuning);
+	}
 	total += GlobalOmegaIncrementalFiniteMove();
+
 	return total;
 }
 
@@ -328,7 +364,7 @@ double MultipleOmegaProcess::MoveOmegaValues(double tuning)        {
 }
 	
 void MultipleOmegaProcess::UpdateOmegaSuffStat()	{
-	UpdateSiteOmegaSuffStat();
+	// UpdateSiteOmegaSuffStat();
 	for (int l=0; l<GetNomega(); l++)	{
 		compomegasuffstatbeta[l] = 0;
 		compomegasuffstatcount[l] = 0;

@@ -86,6 +86,9 @@ void AACodonMutSelFinitePhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 	switch(signal) {
 
+		case UPDATE_SITEOMEGA:
+			SlaveUpdateSiteOmegaSuffStat();
+			break;
 		case UPDATE_OMEGA:
 			SlaveUpdateOmegaSuffStat();
 			break;

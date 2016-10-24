@@ -98,6 +98,9 @@ class OmegaProcess : public virtual MPIModule	{
 	virtual void UpdateSiteOmegaSuffStat()	{
 		cerr << "in OmegaProcess::UpdateSiteOmegaSuffStat\n";
 	}
+	virtual void GlobalUpdateSiteOmegaSuffStat();
+	virtual void SlaveUpdateSiteOmegaSuffStat();
+
 
 	virtual void Create()	{
 		if (! siteomegasuffstatcount)	{
@@ -155,6 +158,7 @@ class SingleOmegaProcess : public virtual OmegaProcess	{
 	// omega
 	virtual double LogOmegaPrior();
 	virtual void SampleOmega();
+	double SimpleMoveOmega(double tuning);
 	double MoveOmega(double tuning); 
 
 	protected:

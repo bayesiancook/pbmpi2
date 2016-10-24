@@ -105,6 +105,9 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveExecute(MESSAGE signal)	
 		case UPDATE_OMEGA:
 			SlaveUpdateOmegaSuffStat();
 			break;
+		case REALLOCOMEGA_MOVE:
+			SlaveOmegaIncrementalFiniteMove();
+			break;
 		case STATFIX:
 			SlaveGetStatFix();
 			break;

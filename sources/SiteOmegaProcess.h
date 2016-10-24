@@ -56,6 +56,17 @@ class SiteOmegaProcess : public virtual OmegaProcess	{
 		return var;
 	}
 
+	double GetProportionOmegaGreaterThan(double c)	{
+		double tot = 0;
+		for (int i=0; i<GetNsite(); i++)	{
+			if (omegaarray[i] > c)	{
+				tot++;
+			}
+		}
+		tot /= GetNsite();
+		return tot;
+	}
+
 	double OmegaSuffStatLogProb(int site)	{
 		return siteomegasuffstatcount[site] * log(omegaarray[site]) - siteomegasuffstatbeta[site] * omegaarray[site];
 	}
@@ -92,7 +103,20 @@ class SiteOmegaProcess : public virtual OmegaProcess	{
 		}
 	}
 
-	double MoveOmega(double tuning) {}
+	double MoveOmega(double tuning);
+	double MPIMoveOmega(double tuning);
+	double NonMPIMoveOmega(double tuning);
+
+	
+	double MixMoveOmega(int nmix, double tuning, int nsitenrep, int nhyperrep);
+	double GlobalMixMoveOmega(int nmix, double tuning, int nsitenrep, int nhyperrep);
+	void SlaveMixMoveOmega();
+
+	double MoveSiteOmega(double tuning, int site);
+	double MoveSiteOmegas(double tuning, int nrep);
+	double MoveOmegaHyper(double tuning, int nrep);
+	double MoveOmegaAlpha(double tuning);
+	double MoveOmegaBeta(double tuning);
 
 	protected:
 
@@ -111,10 +135,9 @@ class SiteOmegaProcess : public virtual OmegaProcess	{
 		}
 	}
 	
-	void UpdateOmegaSuffStat() {}
-	void GlobalUpdateOmegaSuffStat() {}
-	void SlaveUpdateOmegaSuffStat() {}
-	//void UpdateSiteOmegaSuffStat() {}
+	void UpdateOmegaSuffStat();
+	void GlobalUpdateOmegaSuffStat();
+	void SlaveUpdateOmegaSuffStat();
 
 	double* omegaarray;
 	double omegaalpha;

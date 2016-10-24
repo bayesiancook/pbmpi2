@@ -67,7 +67,7 @@ class AACodonMutSelSiteOmegaSBDPPhyloProcess : public virtual AACodonMutSelSiteO
 	void SlaveComputeCVScore();
 
 	void TraceHeader(ostream& os)	{
-		os << "#iter\ttime\tpruning\tlnL\tlength\tcodonent\tmeanomega\tvaromega\tNmode\tstatent\tstatalpha\tnucsA\tnucsC\tnucsG\tnucsT\tnucrrAC\tnucrrAG\tnucrrAT\tnucrrCG\tnucrrCT\tnucrrGT";
+		os << "#iter\ttime\tpruning\tlnL\tlength\tcodonent\tmeanomega\tvaromega\tpos\tNmode\tstatent\tstatalpha\tnucsA\tnucsC\tnucsG\tnucsT\tnucrrAC\tnucrrAG\tnucrrAT\tnucrrCG\tnucrrCT\tnucrrGT";
 		os << '\n'; 
 	}
 
@@ -92,8 +92,9 @@ class AACodonMutSelSiteOmegaSBDPPhyloProcess : public virtual AACodonMutSelSiteO
 		os << '\t' <<  GetLogLikelihood();
 		os << '\t' << GetTotalLength();
 		os << '\t' << GetCodonProfileEntropy();
-		os << '\t' << GetVarOmega();
 		os << '\t' << GetMeanOmega();
+		os << '\t' << GetVarOmega();
+		os << '\t' << GetProportionOmegaGreaterThan(1.0);
 		os << '\t' << GetNDisplayedComponent();
 		os << '\t' << GetStatEnt();
 		os << '\t' << GetMeanDirWeight();

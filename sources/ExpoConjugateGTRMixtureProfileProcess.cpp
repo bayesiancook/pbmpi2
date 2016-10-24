@@ -69,8 +69,10 @@ void ExpoConjugateGTRMixtureProfileProcess::GlobalUpdateModeProfileSuffStat()	{
 	if (GetNprocs() > 1)	{
 		MESSAGE signal = UPDATE_MPROFILE;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
 		MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 		MPI_Reduce(alloctmpprofilesuffstatbeta,allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+
 		MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
 		MPI_Bcast(allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
@@ -87,8 +89,10 @@ void ExpoConjugateGTRMixtureProfileProcess::SlaveUpdateModeProfileSuffStat()	{
 		alloctmpprofilesuffstatcount[k] = allocprofilesuffstatcount[k];
 		alloctmpprofilesuffstatbeta[k] = allocprofilesuffstatbeta[k];
 	}
+
 	MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 	MPI_Reduce(alloctmpprofilesuffstatbeta,allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+
 	MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 

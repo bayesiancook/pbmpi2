@@ -45,14 +45,7 @@ class GeneralPathSuffStatMatrixPhyloProcess : public virtual MatrixPhyloProcess,
 	*/
 
 	map<pair<int,int>,int>& GetSitePairCount(int site) {return sitepaircount[site];}
-	int GetSiteRootState(int site) {
-		cerr << "in GetSiteRootState \n";
-		cerr.flush();
-		cerr << "site is " << site << "\n";
-		cerr << siterootstate[site];
-		cerr << "after siterootstate peek\n";
-		cerr.flush();
-		return siterootstate[site];}
+	int GetSiteRootState(int site) {return siterootstate[site];}
 	map<int,double>& GetSiteWaitingTime(int site) {return sitewaitingtime[site];}
 
 	// should also create the matrices

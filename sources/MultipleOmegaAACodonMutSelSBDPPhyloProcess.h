@@ -24,14 +24,12 @@ class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaA
 
 	public:
 
-	MultipleOmegaAACodonMutSelSBDPPhyloProcess(int infixcodonprofile, int inNomega, int infixomega, int inomegaprior, int inkappaprior)	{
+	MultipleOmegaAACodonMutSelSBDPPhyloProcess(int infixcodonprofile, int inNomega, int inomegaprior, int inkappaprior)	{
 
 		fixcodonprofile = infixcodonprofile;
 		Nomega = inNomega;
-		fixomega = infixomega;
 		omegaweightalpha = 1.0;
 		omegaprior = inomegaprior;
-
 		kappaprior = inkappaprior;
 	}
 
@@ -44,7 +42,6 @@ class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaA
 		// specific
 		is >> fixcodonprofile;
 		is >> Nomega;
-		is >> fixomega;
 		is >> omegaprior;
 		is >> kappaprior;
 
@@ -59,7 +56,6 @@ class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaA
 		PhyloProcess::ToStreamHeader(os);
 		os << fixcodonprofile << '\n';
 		os << Nomega << '\n';
-		os << fixomega << '\n';
 		os << omegaprior << '\n';
 		os << kappaprior << '\n';
 	}

@@ -188,8 +188,8 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 		GlobalUpdateParameters();
 		GlobalUpdateOmegaSuffStat();
 		CheckSuffStatLogProb();
-		//MoveOmega(tuning);
-		//MoveOmega(tuning*0.3);
+		MoveOmega(tuning);
+		MoveOmega(tuning*0.3);
 	}
 
 	// GlobalUpdateParameters();

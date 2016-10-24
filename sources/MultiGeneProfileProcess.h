@@ -19,7 +19,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "MultiGeneMPIModule.h"
 #include "ProfileProcess.h"
-#include "SBDPProfileProcess.h"
 
 class MultiGeneProfileProcess : public virtual ProfileProcess, public virtual MultiGeneMPIModule	{
 

@@ -20,7 +20,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "MultiGenePhyloProcess.h"
 #include "MultiGeneSBDPProfileProcess.h"
 #include "RASCATGTRSBDPGammaPhyloProcess.h"
-#include "ExpoConjugateGTRProfileProcess.h"
 
 class MultiGeneExpoConjugateGTRProfileProcess : public virtual ExpoConjugateGTRProfileProcess, public virtual MultiGeneProfileProcess	{
 
@@ -52,7 +51,6 @@ class MultiGeneExpoConjugateGTRProfileProcess : public virtual ExpoConjugateGTRP
 	}
 
 };
-
 
 class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual MultiGeneExpoConjugateGTRProfileProcess, public virtual MultiGeneSBDPProfileProcess, public virtual RASCATGTRSBDPGammaPhyloProcess	{
 

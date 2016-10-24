@@ -13,18 +13,18 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-#ifndef AACODONMUTSELSITESBDPPHYLO_H
-#define AACODONMUTSELSITESBDPPHYLO_H
+#ifndef AACODONMUTSELSITEOMSBDPPHYLO_H
+#define AACODONMUTSELSITEOMSBDPPHYLO_H
 
-#include "AACodonMutSelSiteSBDPSubstitutionProcess.h"
+#include "AACodonMutSelSiteOmegaSBDPSubstitutionProcess.h"
 #include "GeneralPathSuffStatMatrixPhyloProcess.h"
 #include "GammaBranchProcess.h"
 
-class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSubstitutionProcess, public virtual GeneralPathSuffStatMatrixPhyloProcess, public virtual GammaBranchProcess	{
+class AACodonMutSelSiteOmegaSBDPPhyloProcess : public virtual AACodonMutSelSiteOmegaSBDPSubstitutionProcess, public virtual GeneralPathSuffStatMatrixPhyloProcess, public virtual GammaBranchProcess	{
 
 	public:
 
-	AACodonMutSelSiteSBDPPhyloProcess(int infixcodonprofile, int infixomega, int inomegaprior, int inkappaprior)	{
+	AACodonMutSelSiteOmegaSBDPPhyloProcess(int infixcodonprofile, int infixomega, int inomegaprior, int inkappaprior)	{
 
 		fixcodonprofile = infixcodonprofile;
 		fixomega = infixomega;
@@ -33,7 +33,7 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		kappaprior = inkappaprior;
 	}
 
-	AACodonMutSelSiteSBDPPhyloProcess(istream& is, int inmyid, int innprocs)	{
+	AACodonMutSelSiteOmegaSBDPPhyloProcess(istream& is, int inmyid, int innprocs)	{
 
 		// generic
 		FromStreamHeader(is);
@@ -48,7 +48,7 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		Open(is);
 	}
 
-	virtual ~AACodonMutSelSiteSBDPPhyloProcess()	{
+	virtual ~AACodonMutSelSiteOmegaSBDPPhyloProcess()	{
 		Delete();
 	}
 
@@ -67,7 +67,7 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 	void SlaveComputeCVScore();
 
 	void TraceHeader(ostream& os)	{
-		os << "#iter\ttime\tpruning\tlnL\tlength\tcodonent\tomega\tNmode\tstatent\tstatalpha\tnucsA\tnucsC\tnucsG\tnucsT\tnucrrAC\tnucrrAG\tnucrrAT\tnucrrCG\tnucrrCT\tnucrrGT";
+		os << "#iter\ttime\tpruning\tlnL\tlength\tcodonent\tmeanomega\tvaromega\tpos\tNmode\tstatent\tstatalpha\tnucsA\tnucsC\tnucsG\tnucsT\tnucrrAC\tnucrrAG\tnucrrAT\tnucrrCG\tnucrrCT\tnucrrGT";
 		os << '\n'; 
 	}
 
@@ -92,7 +92,9 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		os << '\t' <<  GetLogLikelihood();
 		os << '\t' << GetTotalLength();
 		os << '\t' << GetCodonProfileEntropy();
-		os << '\t' << GetOmega();
+		os << '\t' << GetMeanOmega();
+		os << '\t' << GetRelVarOmega();
+		os << '\t' << GetProportionOmegaGreaterThan(1.0);
 		os << '\t' << GetNDisplayedComponent();
 		os << '\t' << GetStatEnt();
 		os << '\t' << GetMeanDirWeight();
@@ -109,11 +111,11 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 
 	void ToStream(ostream& os)	{
 		GammaBranchProcess::ToStream(os);
-		AACodonMutSelSiteSBDPProfileProcess::ToStream(os);
+		AACodonMutSelSiteOmegaSBDPProfileProcess::ToStream(os);
 	}
 	void FromStream(istream& is)	{
 		GammaBranchProcess::FromStream(is);
-		AACodonMutSelSiteSBDPProfileProcess::FromStream(is);
+		AACodonMutSelSiteOmegaSBDPProfileProcess::FromStream(is);
 		GlobalUpdateParameters();
 	}
 
@@ -166,7 +168,7 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		}
 
 		GlobalUpdateParameters();
-		AACodonMutSelSiteSBDPProfileProcess::Move(tuning,1,15);
+		AACodonMutSelSiteOmegaSBDPProfileProcess::Move(tuning,1,15);
 		chronosuffstat.Stop();
 
 		chronounfold.Start();
@@ -180,7 +182,7 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 	protected:
 
 	virtual void Create()	{
-		AACodonMutSelSiteSBDPSubstitutionProcess::Create();
+		AACodonMutSelSiteOmegaSBDPSubstitutionProcess::Create();
 		GeneralPathSuffStatMatrixPhyloProcess::Create();
 		GammaBranchProcess::Create();
 		// if (GetMyid())	{
@@ -194,7 +196,7 @@ class AACodonMutSelSiteSBDPPhyloProcess : public virtual AACodonMutSelSiteSBDPSu
 		// }
 		GammaBranchProcess::Delete();
 		GeneralPathSuffStatMatrixPhyloProcess::Delete();
-		AACodonMutSelSiteSBDPSubstitutionProcess::Delete();
+		AACodonMutSelSiteOmegaSBDPSubstitutionProcess::Delete();
 	}
 
 	virtual void SetProfileDim()	{

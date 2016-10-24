@@ -133,7 +133,8 @@ void AACodonMutSelProfileSubMatrix::ComputeArray(int i)	{
 
 				if (! Synonymous(i,j))  {
 
-					Q[i][j] *= *omega;
+					Q[i][j] *= GetOmega2();
+					// Q[i][j] *= *omega;
 
 					deltaF = log((aaprofile)[GetCodonStateSpace()->Translation(j)] / (aaprofile)[GetCodonStateSpace()->Translation(i)]) +
 							log( (codonprofile)[j] / (codonprofile)[i] );

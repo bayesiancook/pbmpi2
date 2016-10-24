@@ -115,6 +115,8 @@ class AACodonMutSelProfileSubMatrix : public CodonSubMatrix	{
 
 	double GetOmega() {return *omega;}
 
+	double GetOmega2() {return *omega + 0.0001;}
+
 	double* GetOmegaPtr() {return omega;}
 
 	void SetOmegaPtr(double* inomega)	{

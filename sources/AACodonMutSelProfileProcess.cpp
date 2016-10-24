@@ -186,12 +186,12 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 	if (! fixomega)	{
 		GlobalUpdateParameters();
 		GlobalUpdateOmegaSuffStat();
-		CheckSuffStatLogProb();
+		// CheckSuffStatLogProb();
 		MoveOmega(tuning);
 		MoveOmega(tuning*0.3);
 	}
 
-	// GlobalUpdateParameters();
+	GlobalUpdateParameters();
 }
 
 double AACodonMutSelProfileProcess::MoveNucRR(double tuning)	{

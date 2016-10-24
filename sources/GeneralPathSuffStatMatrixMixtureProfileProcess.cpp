@@ -73,21 +73,13 @@ void GeneralPathSuffStatMatrixMixtureProfileProcess::GlobalUpdateModeProfileSuff
 			tmpwaitvector[i] = 0;
 		}
 
-		for (int cat=0; cat<GetNcomponent(); cat++)	{
-			for (map<int,int>::iterator i = profilerootcount[cat].begin(); i!= profilerootcount[cat].end(); i++)	{
-				rootvector[cat*GetNstate() + i->first] = i->second;
-			}
-			for (map<int,double>::iterator i = profilewaitingtime[cat].begin(); i!= profilewaitingtime[cat].end(); i++)	{
-				waitvector[cat*GetNstate() + i->first] = i->second;
-			}
-			for (map<pair<int,int>, int>::iterator i = profilepaircount[cat].begin(); i!= profilepaircount[cat].end(); i++)	{
-				pairvector[cat*GetNstate()*GetNstate() + i->first.first*GetNstate() + i->first.second] = i->second;
-			}
-		}
-
 		MPI_Reduce(tmppairvector,pairvector,GetNcomponent()*GetNstate()*GetNstate(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 		MPI_Reduce(tmprootvector,rootvector,GetNcomponent()*GetNstate(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 		MPI_Reduce(tmpwaitvector,waitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+
+		MPI_Bcast(pairvector,GetNcomponent()*GetNstate()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(rootvector,GetNcomponent()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(waitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 		int rm = 0;
 		int pm = 0;
@@ -119,10 +111,6 @@ void GeneralPathSuffStatMatrixMixtureProfileProcess::GlobalUpdateModeProfileSuff
 			}
 		}
 
-		MPI_Bcast(pairvector,GetNcomponent()*GetNstate()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
-		MPI_Bcast(rootvector,GetNcomponent()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
-		MPI_Bcast(waitvector,GetNcomponent()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-
 		delete[] pairvector;
 		delete[] tmppairvector;
 		delete[] rootvector;
@@ -139,32 +127,23 @@ void GeneralPathSuffStatMatrixMixtureProfileProcess::GlobalUpdateModeProfileSuff
 void GeneralPathSuffStatMatrixMixtureProfileProcess::SlaveUpdateModeProfileSuffStat()	{
 
 	int* pairvector = new int[GetNcomponent() * GetNstate() * GetNstate()];
-	for (int i=0; i<GetNcomponent() * GetNstate() * GetNstate(); i++)	{
-		pairvector[i] = 0;
-	}
-
-	int* rootvector = new int[GetNcomponent() * GetNstate()];
-	for (int i=0; i<GetNcomponent() * GetNstate(); i++)	{
-		rootvector[i] = 0;
-	}
-
-	double* waitvector = new double[GetNcomponent() * GetNstate()];
-	for (int i=0; i<GetNcomponent() * GetNstate(); i++)	{
-		waitvector[i] = 0;
-	}
-
 	int* tmppairvector = new int[GetNcomponent() * GetNstate() * GetNstate()];
 	for (int i=0; i<GetNcomponent() * GetNstate() * GetNstate(); i++)	{
+		pairvector[i] = 0;
 		tmppairvector[i] = 0;
 	}
 
+	int* rootvector = new int[GetNcomponent() * GetNstate()];
 	int* tmprootvector = new int[GetNcomponent() * GetNstate()];
 	for (int i=0; i<GetNcomponent() * GetNstate(); i++)	{
+		rootvector[i] = 0;
 		tmprootvector[i] = 0;
 	}
 
+	double* waitvector = new double[GetNcomponent() * GetNstate()];
 	double* tmpwaitvector = new double[GetNcomponent() * GetNstate()];
 	for (int i=0; i<GetNcomponent() * GetNstate(); i++)	{
+		waitvector[i] = 0;
 		tmpwaitvector[i] = 0;
 	}
 

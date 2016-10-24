@@ -55,50 +55,52 @@ void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::Delete() {
 	}
 }
 
+/*
 void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::GlobalUpdateModeProfileSuffStat()	{
 
-	UpdateModeProfileSuffStat();
-
 	if (GetNprocs() > 1)	{
-	MESSAGE signal = UPDATE_MPROFILE;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MESSAGE signal = UPDATE_MPROFILE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	int* pairvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate()];
-	for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate(); i++)	{
-		pairvector[i] = 0;
-	}
+		int* pairvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate()];
+		for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate(); i++)	{
+			pairvector[i] = 0;
+		}
 
-	int* rootvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate()];
-	for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate(); i++)	{
-		rootvector[i] = 0;
-	}
+		int* rootvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate()];
+		for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate(); i++)	{
+			rootvector[i] = 0;
+		}
 
-	double* waitvector = new double[GetNcomponent() * GetNSubAlloc() * GetNstate()];
-	for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate(); i++)	{
-		waitvector[i] = 0;
-	}
+		double* waitvector = new double[GetNcomponent() * GetNSubAlloc() * GetNstate()];
+		for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate(); i++)	{
+			waitvector[i] = 0;
+		}
 
-	for (int cat=0; cat<GetNcomponent(); cat++)	{
-		for (int l=0; l<GetNSubAlloc(); l++)	{
-			for (map<int,int>::iterator i = profilerootcount[cat][l].begin(); i!= profilerootcount[cat][l].end(); i++)	{
-				rootvector[cat*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first] = i->second;
-			}
-			for (map<int,double>::iterator i = profilewaitingtime[cat][l].begin(); i!= profilewaitingtime[cat][l].end(); i++)	{
-				waitvector[cat*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first] = i->second;
-			}
-			for (map<pair<int,int>, int>::iterator i = profilepaircount[cat][l].begin(); i!= profilepaircount[cat][l].end(); i++)	{
-				pairvector[cat*GetNstate()*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first.first*GetNstate() + i->first.second] = i->second;
+		for (int cat=0; cat<GetNcomponent(); cat++)	{
+			for (int l=0; l<GetNSubAlloc(); l++)	{
+				for (map<int,int>::iterator i = profilerootcount[cat][l].begin(); i!= profilerootcount[cat][l].end(); i++)	{
+					rootvector[cat*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first] = i->second;
+				}
+				for (map<int,double>::iterator i = profilewaitingtime[cat][l].begin(); i!= profilewaitingtime[cat][l].end(); i++)	{
+					waitvector[cat*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first] = i->second;
+				}
+				for (map<pair<int,int>, int>::iterator i = profilepaircount[cat][l].begin(); i!= profilepaircount[cat][l].end(); i++)	{
+					pairvector[cat*GetNstate()*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first.first*GetNstate() + i->first.second] = i->second;
+				}
 			}
 		}
+
+		MPI_Bcast(pairvector,GetNcomponent()*GetNSubAlloc()*GetNstate()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(rootvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(waitvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+		delete[] pairvector;
+		delete[] rootvector;
+		delete[] waitvector;
 	}
-
-	MPI_Bcast(pairvector,GetNcomponent()*GetNSubAlloc()*GetNstate()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(rootvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(waitvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-
-	delete[] pairvector;
-	delete[] rootvector;
-	delete[] waitvector;
+	else	{
+		UpdateModeProfileSuffStat();
 	}
 }
 
@@ -159,13 +161,181 @@ void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::SlaveUpdateModeProf
 	delete[] rootvector;
 	delete[] waitvector;
 }
+*/
+
+void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::GlobalUpdateModeProfileSuffStat()	{
+
+	if (GetNprocs() > 1)	{
+
+		MESSAGE signal = UPDATE_MPROFILE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+		int* pairvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate()];
+		int* tmppairvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate()];
+		for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate(); i++)	{
+			pairvector[i] = 0;
+			tmppairvector[i] = 0;
+		}
+
+		int* rootvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate()];
+		int* tmprootvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate()];
+		for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate(); i++)	{
+			rootvector[i] = 0;
+			tmprootvector[i] = 0;
+		}
+
+		double* waitvector = new double[GetNcomponent() * GetNSubAlloc() * GetNstate()];
+		double* tmpwaitvector = new double[GetNcomponent() * GetNSubAlloc() * GetNstate()];
+		for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate(); i++)	{
+			waitvector[i] = 0;
+			tmpwaitvector[i] = 0;
+		}
+
+		MPI_Reduce(tmppairvector,pairvector,GetNcomponent()*GetNSubAlloc()*GetNstate()*GetNstate(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+		MPI_Reduce(tmprootvector,rootvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+		MPI_Reduce(tmpwaitvector,waitvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+
+		MPI_Bcast(pairvector,GetNcomponent()*GetNSubAlloc()*GetNstate()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(rootvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(waitvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+		int rm = 0;
+		int pm = 0;
+		int wm = 0;
+		for (int cat=0; cat<GetNcomponent(); cat++)	{
+			for (int l=0; l<GetNSubAlloc(); l++)	{
+				profilepaircount[cat][l].clear();
+				profilerootcount[cat][l].clear();
+				profilewaitingtime[cat][l].clear();
+
+				for (int i=0; i<GetNstate(); i++)	{
+					if (rootvector[rm])	{
+						profilerootcount[cat][l][i] = rootvector[rm];
+					}
+					rm++;
+				}
+				for (int i=0; i<GetNstate(); i++)	{
+					if (waitvector[wm])	{
+						profilewaitingtime[cat][l][i] = waitvector[wm];
+					}
+					wm++;
+				}
+				for (int i=0; i<GetNstate(); i++)	{
+					for (int j=0; j<GetNstate(); j++)	{
+						if (pairvector[pm])	{
+							profilepaircount[cat][l][pair<int,int>(i,j)] = pairvector[pm];
+						}
+						pm++;
+					}
+				}
+			}
+		}
+
+		delete[] pairvector;
+		delete[] tmppairvector;
+		delete[] rootvector;
+		delete[] tmprootvector;
+		delete[] waitvector;
+		delete[] tmpwaitvector;
+	}
+	else	{
+		UpdateModeProfileSuffStat();
+	}
+}
+
+
+void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::SlaveUpdateModeProfileSuffStat()	{
+
+	int* pairvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate()];
+	int* tmppairvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate() * GetNstate()];
+	for (int i=0; i<GetNcomponent() * GetNSubAlloc() & GetNstate() * GetNstate(); i++)	{
+		pairvector[i] = 0;
+		tmppairvector[i] = 0;
+	}
+
+	int* rootvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate()];
+	int* tmprootvector = new int[GetNcomponent() * GetNSubAlloc() * GetNstate()];
+	for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate(); i++)	{
+		rootvector[i] = 0;
+		tmprootvector[i] = 0;
+	}
+
+	double* waitvector = new double[GetNcomponent() * GetNSubAlloc() * GetNstate()];
+	double* tmpwaitvector = new double[GetNcomponent() * GetNSubAlloc() * GetNstate()];
+	for (int i=0; i<GetNcomponent() * GetNSubAlloc() * GetNstate(); i++)	{
+		waitvector[i] = 0;
+		tmpwaitvector[i] = 0;
+	}
+
+	UpdateModeProfileSuffStat();
+
+	for (int cat=0; cat<GetNcomponent(); cat++)	{
+		for (int l=0; l<GetNSubAlloc(); l++)	{
+			for (map<int,int>::iterator i = profilerootcount[cat][l].begin(); i!= profilerootcount[cat][l].end(); i++)	{
+				rootvector[cat*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first] = i->second;
+				tmprootvector[cat*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first] = i->second;
+			}
+			for (map<int,double>::iterator i = profilewaitingtime[cat][l].begin(); i!= profilewaitingtime[cat][l].end(); i++)	{
+				waitvector[cat*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first] = i->second;
+				tmpwaitvector[cat*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first] = i->second;
+			}
+			for (map<pair<int,int>, int>::iterator i = profilepaircount[cat][l].begin(); i!= profilepaircount[cat][l].end(); i++)	{
+				pairvector[cat*GetNstate()*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first.first*GetNstate() + i->first.second] = i->second;
+				tmppairvector[cat*GetNstate()*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first.first*GetNstate() + i->first.second] = i->second;
+			}
+		}
+	}
+
+	MPI_Reduce(tmppairvector,pairvector,GetNcomponent()*GetNSubAlloc()*GetNstate()*GetNstate(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+	MPI_Reduce(tmprootvector,rootvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+	MPI_Reduce(tmpwaitvector,waitvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+
+	delete[] tmppairvector;
+	delete[] tmprootvector;
+	delete[] tmpwaitvector;
+
+	MPI_Bcast(pairvector,GetNcomponent()*GetNSubAlloc()*GetNstate()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(rootvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(waitvector,GetNcomponent()*GetNSubAlloc()*GetNstate(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+	int rm = 0;
+	int pm = 0;
+	int wm = 0;
+	for (int cat=0; cat<GetNcomponent(); cat++)	{
+		for (int l=0; l<GetNSubAlloc(); l++)	{
+			profilepaircount[cat][l].clear();
+			profilerootcount[cat][l].clear();
+			profilewaitingtime[cat][l].clear();
+
+			for (int i=0; i<GetNstate(); i++)	{
+				if (rootvector[rm])	{
+					profilerootcount[cat][l][i] = rootvector[rm];
+				}
+				rm++;
+			}
+			for (int i=0; i<GetNstate(); i++)	{
+				if (waitvector[wm])	{
+					profilewaitingtime[cat][l][i] = waitvector[wm];
+				}
+				wm++;
+			}
+			for (int i=0; i<GetNstate(); i++)	{
+				for (int j=0; j<GetNstate(); j++)	{
+					if (pairvector[pm])	{
+						profilepaircount[cat][l][pair<int,int>(i,j)] = pairvector[pm];
+					}
+					pm++;
+				}
+			}
+		}
+	}
+
+	delete[] pairvector;
+	delete[] rootvector;
+	delete[] waitvector;
+}
 
 void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::UpdateModeProfileSuffStat()	{
-
-	if (GetMyid())	{
-		cerr << "error: slave in GPSSMultipleMatrixMixtureProfileProcess::UpdateModeProfileSuffStat\n";
-		exit(1);
-	}
 
 	for (int i=0; i<GetNcomponent(); i++)	{
 		for (int l=0; l<GetNSubAlloc(); l++)	{
@@ -174,10 +344,8 @@ void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::UpdateModeProfileSu
 			profilewaitingtime[i][l].clear();
 		}
 	}
-	for (int i=0; i<GetNsite(); i++)	{
-
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
-		
 			map<pair<int,int>, int>& paircount = GetSitePairCount(i);
 			map<int,double>& waitingtime = GetSiteWaitingTime(i);
 			int rootstate = GetSiteRootState(i);

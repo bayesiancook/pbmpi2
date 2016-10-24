@@ -332,6 +332,15 @@ double AACodonMutSelSiteMatrixMixtureProfileProcess::LogStatProb(int site, int c
 			total += i->second * log((*mat)(i->first.first, i->first.second));
 		}
 	}
+	if (isnan(total))	{
+		cerr << "in AACodonMutSelSiteMatrixMixtureProfileProcess::LogStatProb: nan\n";
+		exit(1);
+	}
+	if (isinf(total))	{
+		cerr << "in AACodonMutSelSiteMatrixMixtureProfileProcess::LogStatProb: inf\n";
+		cerr << GetSiteOmega(site) << '\n';
+		exit(1);
+	}
 	return total;
 }
 

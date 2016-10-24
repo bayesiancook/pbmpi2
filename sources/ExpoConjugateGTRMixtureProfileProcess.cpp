@@ -43,6 +43,14 @@ void ExpoConjugateGTRMixtureProfileProcess::Create()	{
 			profilesuffstatbeta[i] = allocprofilesuffstatbeta + i*GetDim();
 			tmpprofilesuffstatcount[i] = alloctmpprofilesuffstatcount + i*GetDim();
 			tmpprofilesuffstatbeta[i] = alloctmpprofilesuffstatbeta + i*GetDim();
+			// initialize to 0: this is not useful for profilesuffstat,
+			// but very important for tmpprofilesuffstat (used in an MPI_Reduce call, and thus, should be initialized)
+			for (int j=0; j<GetDim(); j++)	{
+				profilesuffstatcount[i][j] = 0;
+				profilesuffstatbeta[i][j] = 0;
+				tmpprofilesuffstatcount[i][j] = 0;
+				tmpprofilesuffstatbeta[i][j] = 0;
+			}
 		}
 	}
 }
@@ -69,6 +77,11 @@ void ExpoConjugateGTRMixtureProfileProcess::GlobalUpdateModeProfileSuffStat()	{
 	if (GetNprocs() > 1)	{
 		MESSAGE signal = UPDATE_MPROFILE;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+
+		// Achtung! MPI_Reduce includes contribution of master alloctmp arrays in the total sum
+		// for that reason, alloctmp arrays should be set to 0,
+		// ... but this is done in the constructor (see above)
 
 		MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 		MPI_Reduce(alloctmpprofilesuffstatbeta,allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);

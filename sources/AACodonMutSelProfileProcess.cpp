@@ -179,7 +179,6 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 	else	{
 		MoveNucRR(tuning,2);
 		MoveNucStat(tuning,2);
-	
 		MoveNucRR(tuning*0.1,2);
 		MoveNucStat(tuning*0.1,2);
 	}

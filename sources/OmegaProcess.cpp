@@ -240,9 +240,12 @@ void MultipleOmegaProcess::ResampleOmegaWeights()	{
 }
 
 void MultipleOmegaProcess::SampleOmega()	{
-	for (int i=0; i<GetNomega(); i++)	{
-		omega[i] = 1.0;
+	for (int k=0; k<GetNomega(); k++)	{
+		omega[k] = 1.0;
 	}
+	omegaweightalpha = 1.0;
+	SampleOmegaWeights();
+	SampleOmegaAlloc();
 }
 	
 void MultipleOmegaProcess::SampleOmegaWeights()	{
@@ -255,6 +258,12 @@ void MultipleOmegaProcess::SampleOmegaWeights()	{
 		omegaweight[k] /= total;
 	}
 
+}
+
+void MultipleOmegaProcess::SampleOmegaAlloc()	{
+	for (int i=0; i<GetNsite(); i++)	{
+		omegaalloc[i] = 0;
+	}
 }
 
 double MultipleOmegaProcess::LogOmegaPrior()        {

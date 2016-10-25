@@ -27,7 +27,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveUpdateParameters()	{
 
 	// SlaveBroadcastTree();
 
-	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nnucrr = GetNnucrr(),nnucstat = 4;
+	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nnucrr = GetNnucrr(),nnucstat = 4,nomega = GetNomega();
 	L1 = GetNmodeMax();
 	L2 = GetDim();
 	int nstate = GetData()->GetNstate();
@@ -40,9 +40,9 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveUpdateParameters()	{
 	// dirweight
 	// 1 for kappa
 	// codonprofile
-	// 1 for omega
-	nd = nbranch + nnucrr + nnucstat + L1*L2 + GetDim() + 1 + nstate + 1;
-	ni = 1 + ProfileProcess::GetNsite();
+	// nomega
+	nd = nbranch + nnucrr + nnucstat + L1*L2 + GetDim() + 1 + nstate + nomega*2; // times 2 because of omega values per se and omega weights.
+	ni = 1 + ProfileProcess::GetNsite()*2; // times 2 because of profile allocations and omega allocations.
 	int* ivector = new int[ni];
 	double* dvector = new double[nd];
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
@@ -76,12 +76,21 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveUpdateParameters()	{
 	}
 	kappa = dvector[index];
 	index++;
-	// *omega = dvector[index];
-	index++;
+	for (int i=0; i<nomega; i++)	{
+		omega[i] = dvector[index];
+		index++;
+		omegaweight[i] = dvector[index];
+		index++;
+	}
 	
-	Ncomponent = ivector[0];
+	int iindex = 0;
+	Ncomponent = ivector[iindex];
+	iindex++;
 	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
-		SBDPProfileProcess::alloc[i] = ivector[1+i];
+		SBDPProfileProcess::alloc[i] = ivector[iindex];
+		iindex++;
+		MultipleOmegaProcess::omegaalloc[i] = ivector[iindex];
+		iindex++; 
 	}
 	//GetBranchLengthsFromArray();
 	delete[] dvector;
@@ -101,6 +110,15 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 	switch(signal) {
 
+		case UPDATE_SITEOMEGA:
+			SlaveUpdateSiteOmegaSuffStat();
+			break;
+		case UPDATE_OMEGA:
+			SlaveUpdateOmegaSuffStat();
+			break;
+		case REALLOCOMEGA_MOVE:
+			SlaveOmegaIncrementalFiniteMove();
+			break;
 		case PROFILE_MOVE:
 			SlaveMoveProfile();
 			break;
@@ -129,15 +147,16 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
 	// store it in the local copies of the variables
 	// and then call
 	// SetBranchLengthsFromArray()
-	int i,j,nnucrr,nnucstat,nbranch = GetNbranch(),ni,nd,L1,L2;
+	int i,j,nnucrr,nnucstat,nbranch = GetNbranch(),ni,nd,L1,L2,nomega;
 	nnucrr = GetNnucrr();
 	nnucstat = 4;	
 	L1 = GetNmodeMax();
 	L2 = GetDim();
 	int nstate = GetData()->GetNstate();
+	nomega = GetNomega();	
 	//nd = 2 + nbranch + nnucrr + + nnucstat + L1*L2 + GetDim() + 1;
-	nd = nbranch + nnucrr + + nnucstat + L1*L2 + GetDim() + 1 + nstate + 1;
-	ni = 1 + ProfileProcess::GetNsite(); // 1 for the number of componenets, and the rest for allocations
+	nd = nbranch + nnucrr + + nnucstat + L1*L2 + GetDim() + 1 + nstate + nomega*2;
+	ni = 1 + ProfileProcess::GetNsite()*2; // 1 for the number of componenets, and the rest for allocations
 	int ivector[ni];
 	double dvector[nd]; 
 	MESSAGE signal = PARAMETER_DIFFUSION;
@@ -177,13 +196,22 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
 	}
 	dvector[index] = kappa;
 	index++;
-	// dvector[index] = *omega;
-	index++;
+	for (int i=0; i<nomega; i++)	{
+		dvector[index] = omega[i];
+		index++;
+		dvector[index] = omegaweight[i];
+		index++;
+	}
 
 	// Now the vector of ints
-	ivector[0] = GetNcomponent();
+	int iindex = 0;
+	ivector[iindex] = GetNcomponent();
+	iindex++;
 	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
-		ivector[1+i] = SBDPProfileProcess::alloc[i];
+		ivector[iindex] = SBDPProfileProcess::alloc[i];
+		iindex++;
+		ivector[iindex] = MultipleOmegaProcess::omegaalloc[i];
+		iindex++;
 	}
 
 	// Now send out the doubles and ints over the wire...

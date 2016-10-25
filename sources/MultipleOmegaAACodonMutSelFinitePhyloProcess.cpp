@@ -68,14 +68,10 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 	}
 	for (int i=0; i<nomega; i++)	{
 		omega[i] = dvector[index];
-		//cerr << "omega[" << i << "]: " << omega[i] << "\n";
 		index++;
 		omegaweight[i] = dvector[index];
 		index++;
 	}
-	//exit(1);
-	//*omega = dvector[index];
-	//index++;
 	int iindex = 0;
 	Ncomponent = ivector[iindex];
 	iindex++;
@@ -142,10 +138,10 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	int i,j,nnucrr,nnucstat,nbranch = GetNbranch(),ni,nd,L1,L2,nomega;
 	nnucrr = GetNnucrr();
 	nnucstat = 4;
-	nomega = GetNomega();	
 	L1 = GetNmodeMax();
 	L2 = GetDim();
 	int nstate = GetData()->GetNstate();
+	nomega = GetNomega();	
 	//nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + 1;  // check if these last terms are correct in this context...
 	nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + nomega*2;  // check if these last terms are correct in this context...
 	ni = 1 + ProfileProcess::GetNsite() * 2; // 1 for the number of componenets, and the rest for allocations
@@ -193,10 +189,6 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 		dvector[index] = omegaweight[i];
 		index++;
 	}
-
-
-	//dvector[index] = *omega;
-	//index++;
 
 	// Now the vector of ints
 	int iindex = 0;

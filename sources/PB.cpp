@@ -510,7 +510,7 @@ int main(int argc, char* argv[])	{
 				nomega = atoi(argv[i]);
 				//fixomega = 0;
 				//if (nomega > 1)	{
-				//	mixturetype = 6;
+					mixturetype = 6;
 				//}
 			}
 			else if (s == "-finiteomegafiniteaa")	{

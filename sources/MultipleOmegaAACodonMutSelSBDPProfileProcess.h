@@ -24,11 +24,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual MultipleOmegaProcess, public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMultipleMatrixMixtureProfileProcess	{
 
-	// implementer les fonctions create matrix et delete matrix
-	// ainsi que CreateComponent(int k) and DeleteComponent(k)
-
-	// s'inspirer de GeneralPathSuffStatGTRFiniteProfileProcess
-
 	public:
 
 	MultipleOmegaAACodonMutSelSBDPProfileProcess() {}

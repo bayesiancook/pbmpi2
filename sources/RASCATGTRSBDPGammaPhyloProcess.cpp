@@ -54,7 +54,7 @@ void RASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	nrr = GetNrr();
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	nd = 1 + nbranch + nrr + L1*L2 + GetDim() + 1;
+	nd = 2 + nbranch + nrr + L1*L2 + GetDim() + 1;
 	ni = 1 + GetNsite();
 	int ivector[ni];
 	double dvector[nd]; 
@@ -147,7 +147,7 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters()	{
 	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nrr = GetNrr();
 	L1 = GetNmodeMax();
 	L2 = GetDim();
-	nd = 1 + nbranch + nrr + L1*L2 + GetDim() + 1;
+	nd = 2 + nbranch + nrr + L1*L2 + GetDim() + 1;
 	ni = 1 + GetNsite();
 	int* ivector = new int[ni];
 	double* dvector = new double[nd];

@@ -17,11 +17,11 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef EXPCONGTRSUB_H
 #define EXPCONGTRSUB_H
 
-#include "SubstitutionProcess.h"
+#include "MatrixSubstitutionProcess.h"
 #include "ExpoConjugateGTRProfileProcess.h"
 #include "RateProcess.h"
 
-class ExpoConjugateGTRSubstitutionProcess : public virtual SubstitutionProcess, public virtual ExpoConjugateGTRProfileProcess, public virtual RateProcess	{
+class ExpoConjugateGTRSubstitutionProcess : public virtual MatrixSubstitutionProcess, public virtual ExpoConjugateGTRProfileProcess, public virtual RateProcess	{
 
 	public:
 

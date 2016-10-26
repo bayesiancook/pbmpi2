@@ -15,6 +15,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "CodonSequenceAlignment.h"
+#include "RASPARTGTRGammaPhyloProcess.h"
 #include "RASCATGTRFiniteGammaPhyloProcess.h"
 #include "RASCATGTRSBDPGammaPhyloProcess.h"
 #include "GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.h"
@@ -83,7 +84,7 @@ class Model	{
 		
 		if (partitionfile != "None")	{
 			type = "PARTGTR";
-			// process = new RASPARTGTRGammaPhyloProcess(nratecat,withpinv,rrtype);
+			process = new RASPARTGTRGammaPhyloProcess(nratecat,withpinv,rrtype);
 		}
 
 		if (multigene == 1)	{

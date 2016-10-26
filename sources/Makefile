@@ -38,6 +38,10 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	CodonMutSelSBDPPhyloProcess.cpp \
 	AACodonMutSelSiteMatrixMixtureProfileProcess.cpp AACodonMutSelSBDPPhyloProcess.cpp \
 	AASubSelSubMatrix.cpp AASubSelRASCATSBDPGammaPhyloProcess.cpp \
+	PartitionDGamRateProcess.cpp PartitionGTRProfileProcess.cpp PartitionGTRMixtureProfileProcess.cpp PartitionGTRFiniteProfileProcess.cpp \
+	ExpoConjugatePartitionGTRProfileProcess.cpp ExpoConjugatePartitionGTRMixtureProfileProcess.cpp \
+	ExpoConjugatePartitionGTRSubstitutionProcess.cpp ExpoConjugatePartitionGTRPhyloProcess.cpp \
+	RASPARTGTRGammaPhyloProcess.cpp \
 	Bipartition.cpp BipartitionList.cpp Consensus.cpp TaxaParameters.cpp PBTree.cpp TreeList.cpp PolyNode.cpp correl.cpp correlation.cpp \
 	BP2Stat.cpp BP2util.cpp
 

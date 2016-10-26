@@ -25,7 +25,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 using namespace std;
 
-double PointNormal(double prob);
+static double PointNormal(double prob);
 
 //yan modify 12.Dec.2004 (from Mr.Bayes)
 
@@ -43,7 +43,7 @@ double PointNormal(double prob);
 //     Statistics, 19:285-287 (AS32)
 //
 //------------------------------------------------------------------------------
-double IncompleteGamma (double x, double alpha, double LnGamma_alpha)   {
+static double IncompleteGamma (double x, double alpha, double LnGamma_alpha)   {
 	int 		i;
 	double		p = alpha;
         double          g = LnGamma_alpha;
@@ -129,7 +129,7 @@ double IncompleteGamma (double x, double alpha, double LnGamma_alpha)   {
 //    Machinery, 9:684.
 //
 //-----------------------------------------------------------------------------
-double LnGamma (double alpha)   {
+static double LnGamma (double alpha)   {
 	double	x = alpha;
         double  f = 0.0;
         double  z;
@@ -165,7 +165,7 @@ double LnGamma (double alpha)   {
 //  Converted into C by Ziheng Yang, Oct. 1993.
 //
 //-----------------------------------------------------------------------------
-double PointChi2 (double prob, double v)        {
+static double PointChi2 (double prob, double v)        {
 	double 		e = 0.5e-6, aa = 0.6931471805, p = prob, g,
 					xx, c, ch, a = 0.0, q = 0.0, p1 = 0.0, p2 = 0.0, t = 0.0,
 					x = 0.0, b = 0.0, s1, s2, s3, s4, s5, s6;
@@ -227,7 +227,7 @@ double PointChi2 (double prob, double v)        {
 
 }
 
-double  PointNormal (double prob)
+static double  PointNormal (double prob)
 
 {
 	double 		a0 = -0.322232431088, a1 = -1.0, a2 = -0.342242088547, a3 = -0.0204231210245,
@@ -244,6 +244,11 @@ double  PointNormal (double prob)
 
 }
 
-#define PointGamma(prob,alpha,beta) 		PointChi2(prob,2.0*(alpha))/(2.0*(beta)) //yan23.dec2004
+// #define PointGamma(prob,alpha,beta) 		PointChi2(prob,2.0*(alpha))/(2.0*(beta)) //yan23.dec2004
+static double PointGamma(double prob, double alpha, double beta)	{
+	return PointChi2(prob,2.0*(alpha))/(2.0*(beta));
+}
+
+
 
 

@@ -20,7 +20,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 class SBDPOmegaProcess : public virtual OmegaProcess	{
 
 	public:
-	SBDPOmegaProcess() : omegaarray(0), omegakappa(1), omegamovekappa(true), omegakappaprior(0), omegaV(0), maxweighterror(0) {}
+	SBDPOmegaProcess() : omegaarray(0), omegakappa(1), omegamovekappa(true), omegakappaprior(0), omegaV(0), omegamaxweighterror(0) {}
 	virtual ~SBDPOmegaProcess() {}
 
 	protected:
@@ -35,7 +35,7 @@ class SBDPOmegaProcess : public virtual OmegaProcess	{
 
 	int GetNOccupiedOmegaComponent()	{
 		int n = 0;
-		for (int k=0; k<NcomponentOmega; k++)	{
+		for (int k=0; k<GetNomegaMax(); k++)	{
 			if (omegaoccupancy[k])	{
 				n++;
 			}
@@ -44,7 +44,7 @@ class SBDPOmegaProcess : public virtual OmegaProcess	{
 	}
 		
 	double GetSiteOmega(int site)	{
-		return omegaarray[omegaalloc[site]];
+		return omegaarray[GetOmegaAlloc(site)];
 	}
 
 	int GetOmegaAlloc(int site)	{
@@ -84,10 +84,11 @@ class SBDPOmegaProcess : public virtual OmegaProcess	{
 		for (int i=0; i<GetNsite(); i++)	{
 			if (ActiveSite(i))	{
 				if (GetOmegaAlloc(i) == k)	{
-					tot += 0; // not yet sure what to do here, or if relevant at all.
+					tot += OmegaSiteSuffStatLogProb(i); 
 				}
 			}	
-		}	
+		}
+		return tot;	
 	}
 
 	virtual double OmegaSuffStatLogProb()	{
@@ -100,9 +101,19 @@ class SBDPOmegaProcess : public virtual OmegaProcess	{
 		return total;
 	}
 
-	// omega
 	double LogOmegaPrior(int component)	{
-		return omegaalpha*log(omegabeta) - rnd::GetRandom().logGamma(omegaalpha) + (omegaalpha-1)*log(omegaarray[component]) - omegabeta*omegaarray[component];
+		double temp;		
+		if (omegaprior == 0)	{ //ratio of exponential random variables
+			temp = 2 * log(1 + omegaarray[component]);
+		}
+		else if (omegaprior == 1)	{ // gamma
+			temp = omegaalpha*log(omegabeta) - rnd::GetRandom().logGamma(omegaalpha) + (omegaalpha-1)*log(omegaarray[component]) - omegabeta*omegaarray[component];
+		}
+		else	{
+			cerr << "omega prior not correctly set\n";
+			exit(1);
+		}
+		return temp;
 	}
 
 	virtual double LogOmegaPrior()	{
@@ -120,16 +131,31 @@ class SBDPOmegaProcess : public virtual OmegaProcess	{
 	}
 
 	virtual void SampleOmega()	{
-		omegaalpha = omegabeta = 1.0;
-		for (int i=0; i<GetNcomponentOmega(); i++)	{
-			omegaarray[i] = rnd::GetRandom().Gamma(omegaalpha,omegabeta);
+		if (omegaprior == 0)	{ //ratio of exponential random variables
+			double r1, r2;
+			for (int i=0; i<GetNcomponentOmega(); i++)	{
+				r1 = rnd::GetRandom().Uniform();
+				r2 = rnd::GetRandom().Uniform();
+				omegaarray[i] = r1/r2;
+			}
+			
+		}
+		else if (omegaprior == 1)	{ // gamma
+			omegaalpha = omegabeta = 1.0;
+			for (int i=0; i<GetNcomponentOmega(); i++)	{
+				omegaarray[i] = rnd::GetRandom().Gamma(omegaalpha,omegabeta);
+			}
+		}
+		else	{
+			cerr << "omega prior not correctly set\n";
+			exit(1);
 		}
 	}
 
 	virtual int GetNomegaMax() {
 		return GetNsite() > nomegamax ? nomegamax : GetNsite();
 	}
-	virtual void SetNomegaMax(int n) {nomegamax = n;}
+	virtual void SetNomegaMax(int n) {nomegamax = 1000;}
 
 	double MoveOmega(double tuning, int k);
 	double MoveCompOmega(double tuning, int k);
@@ -167,8 +193,8 @@ class SBDPOmegaProcess : public virtual OmegaProcess	{
 	}
 	
 	void UpdateOmegaSuffStat();
-	//void GlobalUpdateSiteOmegaSuffStat();
-	//void SlaveUpdateSiteOmegaSuffStat();
+	//void GlobalUpdateSiteOmegaSuffStat();  // this need to be addressed.
+	//void SlaveUpdateSiteOmegaSuffStat();	// along with with.
 
 	void ResampleOmegas();
 	void GlobalCollectSiteOmegaSuffStats();
@@ -189,7 +215,7 @@ class SBDPOmegaProcess : public virtual OmegaProcess	{
 	bool omegamovekappa;
 	int omegakappaprior;
 
-	double maxweighterror;
+	double omegamaxweighterror;
 };
 
 #endif

@@ -17,11 +17,11 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef EXPCONGTRSUB_H
 #define EXPCONGTRSUB_H
 
-#include "GTRSubstitutionProcess.h"
+#include "SubstitutionProcess.h"
 #include "ExpoConjugateGTRProfileProcess.h"
 #include "RateProcess.h"
 
-class ExpoConjugateGTRSubstitutionProcess : public virtual GTRSubstitutionProcess, public virtual ExpoConjugateGTRProfileProcess, public virtual RateProcess	{
+class ExpoConjugateGTRSubstitutionProcess : public virtual SubstitutionProcess, public virtual ExpoConjugateGTRProfileProcess, public virtual RateProcess	{
 
 	public:
 
@@ -36,11 +36,11 @@ class ExpoConjugateGTRSubstitutionProcess : public virtual GTRSubstitutionProces
 
 	void Create()	{
 		ExpoConjugateGTRProfileProcess::Create();
-		GTRSubstitutionProcess::Create();
+		SubstitutionProcess::Create();
 	}
 
 	void Delete() {
-		GTRSubstitutionProcess::Delete();
+		SubstitutionProcess::Delete();
 		ExpoConjugateGTRProfileProcess::Delete();
 	}
 

@@ -176,3 +176,32 @@ int ExpoConjugateGTRPhyloProcess::CountMapping(int i)	{
 	return total;
 }
 
+
+double ExpoConjugateGTRPhyloProcess::LengthRelRateMove(double tuning, int nrep)	{
+
+	double naccept = 0;
+	for (int rep=0; rep<nrep; rep++)	{
+		double deltalogratio = - LogRRPrior() - LogLengthPrior();
+		double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
+		double e = exp(m);
+		int nbranch = MoveAllBranches(e);
+		for (int i=0; i<GetNrr(); i++)	{
+			rr[i] /= e;
+		}
+		deltalogratio += LogRRPrior() + LogLengthPrior();
+		deltalogratio += (nbranch-GetNrr()) * m;
+
+		int accepted = (log(rnd::GetRandom().Uniform()) < deltalogratio);
+
+		if (accepted)	{
+			naccept++;
+		}
+		else	{
+			MoveAllBranches(1.0/e);
+			for (int i=0; i<GetNrr(); i++)	{
+				rr[i] *= e;
+			}
+		}	
+	}
+	return naccept / nrep;
+}

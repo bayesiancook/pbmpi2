@@ -17,12 +17,12 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef EXPCONGTRPHYLO_H
 #define EXPCONGTRPHYLO_H
 
-#include "GTRPhyloProcess.h"
+#include "PhyloProcess.h"
 #include "ExpoConjugateGTRSubstitutionProcess.h"
 #include "RateProcess.h"
 
 // this is the Exponential Conjugate version
-class ExpoConjugateGTRPhyloProcess : public virtual GTRPhyloProcess, public virtual ExpoConjugateGTRSubstitutionProcess, public virtual RateProcess {
+class ExpoConjugateGTRPhyloProcess : public virtual PhyloProcess, public virtual ExpoConjugateGTRSubstitutionProcess, public virtual RateProcess {
 
 	public:
 
@@ -34,11 +34,11 @@ class ExpoConjugateGTRPhyloProcess : public virtual GTRPhyloProcess, public virt
 	virtual void Create()	{
 		RateProcess::Create();
 		ExpoConjugateGTRSubstitutionProcess::Create();
-		GTRPhyloProcess::Create();
+		PhyloProcess::Create();
 	}
 
 	virtual void Delete()	{
-		GTRPhyloProcess::Delete();
+		PhyloProcess::Delete();
 		ExpoConjugateGTRSubstitutionProcess::Delete();
 		RateProcess::Delete();
 	}
@@ -71,6 +71,7 @@ class ExpoConjugateGTRPhyloProcess : public virtual GTRPhyloProcess, public virt
 	int* allocsiteprofilesuffstatcount;
 	double* allocsiteprofilesuffstatbeta;
 
+	double LengthRelRateMove(double tuning, int nrep);
 };
 
 #endif

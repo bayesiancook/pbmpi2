@@ -23,11 +23,11 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	OmegaProcess.cpp AACodonMutSelProfileProcess.cpp \
 	SubstitutionProcess.cpp Propagate.cpp \
 	PoissonSubstitutionProcess.cpp MatrixSubstitutionProcess.cpp \
-	ExpoConjugateGTRSubstitutionProcess.cpp GeneralPathSuffStatMatrixSubstitutionProcess.cpp \
+	ExpoConjugateGTRSubstitutionProcess.cpp GeneralPathSuffStatMatrixSubstitutionProcess.cpp ExpoConjugateGTRPhyloProcess.cpp \
 	ZipGeneralPathSuffStatMatrixMixtureProfileProcess.cpp ZipMatrixPhyloProcess.cpp ZipExpoConjugateGTRPhyloProcess.cpp ReadPhyloProcess.cpp \
 	ZipGeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.cpp ZipGeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.cpp \
-	SMC.cpp PhyloProcess.cpp PoissonPhyloProcess.cpp MatrixPhyloProcess.cpp GTRPhyloProcess.cpp \
-	ExpoConjugateGTRPhyloProcess.cpp GeneralPathSuffStatMatrixPhyloProcess.cpp \
+	SMC.cpp PhyloProcess.cpp PoissonPhyloProcess.cpp MatrixPhyloProcess.cpp \
+	GeneralPathSuffStatMatrixPhyloProcess.cpp \
 	RASCATGammaPhyloProcess.cpp RASCATSBDPGammaPhyloProcess.cpp \
 	RASCATFiniteGammaPhyloProcess.cpp RASCATGTRFiniteGammaPhyloProcess.cpp \
 	RASCATGTRDPGammaPhyloProcess.cpp RASCATGTRSBDPGammaPhyloProcess.cpp \

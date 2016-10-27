@@ -18,6 +18,13 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 void PartitionGTRFiniteProfileProcess::ToStream(ostream& os)	{
 
+	for (int i=0; i<GetNsite(); i++)	{
+		if (alloc[i] != partalloc[i])	{
+			cerr << "error: part alloc\n";
+			exit(1);
+		}
+	}
+	cerr << "alloc == partalloc\n";
 	os << Ncomponent << '\n';
 	for (int j=0; j<GetDim(); j++)	{
 		os << dirweight[j] << '\t';

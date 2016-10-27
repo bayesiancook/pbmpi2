@@ -82,11 +82,6 @@ class Model	{
 		// 4 : sbdp
 		// 5 : site specific
 		
-		if (partitionfile != "None")	{
-			type = "PARTGTR";
-			process = new RASPARTGTRGammaPhyloProcess(nratecat,withpinv,rrtype);
-		}
-
 		if (multigene == 1)	{
 
 			if (modeltype == 1)	{
@@ -130,7 +125,12 @@ class Model	{
 				// cerr << "catgtr model\n";
 			}
 			if (mixturetype == 1)	{
-				if (zip)	{
+
+				if (partitionfile != "None")	{
+					type = "PARTGTR";
+					process = new RASPARTGTRGammaPhyloProcess(nratecat,withpinv,rrtype);
+				}
+				else if (zip)	{
 					if (suffstat)	{
 						type = "ZIPCATGTRFINITE";
 						process = new ZipRASCATGTRFiniteGammaPhyloProcess(nratecat,withpinv,ncat,fixncomp,empmix,mixtype,rrtype);

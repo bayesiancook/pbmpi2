@@ -39,6 +39,8 @@ void PartitionDGamRateProcess::Create()	{
 			Ncat++;
 		}
 		RateProcess::Create();
+		alpha = new double[Npart];
+		pinv = new double[Npart];
 		rate = new double*[Npart];
 		allocratesuffstatcount = new int[Npart*GetNcat()];
 		allocratesuffstatbeta = new double[Npart*GetNcat()];
@@ -64,6 +66,8 @@ void PartitionDGamRateProcess::Delete() 	{
 	delete[] allocratesuffstatcount;
 	delete[] allocratesuffstatbeta;
 	rate = 0;
+	delete[] alpha;
+	delete[] pinv;
 	allocratesuffstatcount = 0;
 	allocratesuffstatbeta = 0;
 	ratesuffstatcount = 0;
@@ -369,7 +373,7 @@ void PartitionDGamRateProcess::GlobalUpdateRateSuffStat()	{
         }
         MPI_Barrier(MPI_COMM_WORLD);
         for(int i=1; i<GetNprocs(); i++) {
-                MPI_Recv(dvector,GetNcat(),MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+                MPI_Recv(dvector,Npart*GetNcat(),MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
                 for(int j=0; j<Npart*GetNcat(); j++) {
                         allocratesuffstatbeta[j] += dvector[j]; 
                 }

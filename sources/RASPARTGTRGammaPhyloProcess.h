@@ -77,6 +77,8 @@ class RASPARTGTRGammaPhyloProcess : public virtual ExpoConjugatePartitionGTRPhyl
 		Ncat = nratecat;
 		withpinv = inwithpinv;
 		rrtype = inrrtype;
+		fixncomp = 1;
+		mixtype = "Partition";
 	}
 
 	RASPARTGTRGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
@@ -175,8 +177,11 @@ class RASPARTGTRGammaPhyloProcess : public virtual ExpoConjugatePartitionGTRPhyl
 		propchrono.Stop();
 
 		// for (int rep=0; rep<5; rep++)	{
+			cerr << "collapse\n";
 			GlobalCollapse();
+			cerr << "augmented\n";
 			AugmentedMove(tuning);
+			cerr << "unfold\n";
 			GlobalUnfold();
 		// }
 
@@ -187,6 +192,8 @@ class RASPARTGTRGammaPhyloProcess : public virtual ExpoConjugatePartitionGTRPhyl
 
 	double AugmentedMove(double tuning = 1)	{
 
+		cerr << "move\n";
+		cerr << "lengths\n";
 		if (! FixBL())	{
 			GammaBranchProcess::Move(tuning,10);
 			GammaBranchProcess::Move(0.1*tuning,10);
@@ -194,22 +201,28 @@ class RASPARTGTRGammaPhyloProcess : public virtual ExpoConjugatePartitionGTRPhyl
 		}
 
 
+		cerr << "rate\n";
+
 		if (! FixAlpha())	{
 			PartitionDGamRateProcess::Move(tuning,10);
 			PartitionDGamRateProcess::Move(0.3*tuning,10);
 			PartitionDGamRateProcess::Move(0.03*tuning,10);
 		}
 
+		cerr << "profile\n";
 		GlobalUpdateParameters();
 		ExpoConjugatePartitionGTRFiniteProfileProcess::Move(1,1,10);
 		GlobalUpdateParameters();
 
+		cerr << "length rr\n";
 		if (! FixRR()){
 			LengthRelRateMove(1,10);
 			LengthRelRateMove(0.1,10);
 			LengthRelRateMove(0.01,10);
 		}
+		cerr << "update params\n";
 		GlobalUpdateParameters();
+		cerr << "move ok\n";
 	}
 
 

@@ -29,15 +29,12 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 void FiniteProfileProcess::Create()	{
 	if (! weight)	{
 		if (Ncomponent == -1)	{
-			Ncomponent = GetNsite();
-			/*
 			if (Npart)	{
 				Ncomponent = Npart;
 			}
 			else	{
 				Ncomponent = GetNsite();
 			}
-			*/
 		}
 		DirichletMixtureProfileProcess::Create();
 		weight = new double[GetNmodeMax()];
@@ -79,7 +76,7 @@ double FiniteProfileProcess::MPIMove(double tuning, int n, int nrep)	{
 
 		GlobalParametersMove();
 
-		if (Ncomponent > 1)	{
+		if ((Ncomponent > 1) && (!Npart))	{
 			// allocations
 			GlobalUpdateParameters();
 			GlobalUpdateSiteProfileSuffStat();
@@ -125,7 +122,7 @@ double FiniteProfileProcess::NonMPIMove(double tuning, int n, int nrep)	{
 
 		GlobalParametersMove();
 
-		if (Ncomponent > 1)	{
+		if ((Ncomponent > 1) && (!Npart))	{
 			// allocations
 			UpdateSiteProfileSuffStat();
 
@@ -415,7 +412,12 @@ void FiniteProfileProcess::SampleAlloc()	{
 		BroadcastStatFix();
 	}
 	SampleWeights();
-	if (GetNcomponent() == GetNsite())	{
+	if (Npart)	{
+		for (int i=0; i<GetNsite(); i++)	{
+			AddSite(i,partalloc[i]);
+		}
+	}
+	else if (GetNcomponent() == GetNsite())	{
 		for (int i=0; i<GetNsite(); i++)	{
 			AddSite(i,i);
 		}	

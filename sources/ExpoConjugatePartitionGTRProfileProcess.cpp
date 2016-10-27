@@ -103,10 +103,10 @@ void ExpoConjugatePartitionGTRProfileProcess::GlobalUpdateRRSuffStat()	{
 void ExpoConjugatePartitionGTRProfileProcess::SlaveUpdateRRSuffStat()	{
 
 	UpdateRRSuffStat();
-	MPI_Send(rrsuffstatcount,GetNrr()*Npart,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(allocrrsuffstatcount,GetNrr()*Npart,MPI_INT,0,TAG1,MPI_COMM_WORLD);
 	MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Send(rrsuffstatbeta,GetNrr()*Npart,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(allocrrsuffstatbeta,GetNrr()*Npart,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 
-	MPI_Bcast(rrsuffstatcount,GetNrr()*Npart,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(rrsuffstatbeta,GetNrr()*Npart,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	MPI_Bcast(allocrrsuffstatcount,GetNrr()*Npart,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(allocrrsuffstatbeta,GetNrr()*Npart,MPI_DOUBLE,0,MPI_COMM_WORLD);
 }

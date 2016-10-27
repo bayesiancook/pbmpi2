@@ -62,8 +62,8 @@ void ExpoConjugatePartitionGTRPhyloProcess::UpdateRRSuffStat()	{
 
 	for (int part=0; part<Npart; part++)	{
 		for (int k=0; k<GetNrr(); k++)	{
-			rrsuffstatcount[k] = 0;
-			rrsuffstatbeta[k] = 0;
+			rrsuffstatcount[part][k] = 0;
+			rrsuffstatbeta[part][k] = 0;
 		}
 	}
 	for (int j=1; j<GetNbranch(); j++)	{

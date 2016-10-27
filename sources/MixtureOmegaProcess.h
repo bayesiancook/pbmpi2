@@ -59,9 +59,10 @@ class MixtureOmegaProcess : public virtual OmegaProcess	{
 	virtual double LogOmegaPrior();
 
 	virtual double LogOmegaPrior(int component)	{
-		cerr << "implement MixtureProfile::LogOmegaPrior\n";
-		cerr << "for a single component\n";
-		exit(1);
+		//cerr << "implement MixtureProfile::LogOmegaPrior\n";
+		//cerr << "for a single component\n";
+		//exit(1);
+		return omegaalpha*log(omegabeta) - rnd::GetRandom().logGamma(omegaalpha) + (omegaalpha-1)*log(omega[component]) - omegabeta*omega[component];
 	}
 
 	virtual void SampleOmegaAlloc();
@@ -81,18 +82,20 @@ class MixtureOmegaProcess : public virtual OmegaProcess	{
 
 	virtual void SampleOmegas()	{
 		if (omegaprior == 0)	{ //ratio of exponential random variables
-			double r1, r2;
+			//double r1, r2;
 			for (int i=0; i<GetNomega(); i++)	{
-				r1 = rnd::GetRandom().Uniform();
-				r2 = rnd::GetRandom().Uniform();
-				omega[i] = r1/r2;
+				//r1 = rnd::GetRandom().Uniform();
+				//r2 = rnd::GetRandom().Uniform();
+				//omega[i] = r1/r2;
+				omega[i] = 1.0;
 			}
 			
 		}
 		else if (omegaprior == 1)	{ // gamma
 			omegaalpha = omegabeta = 1.0;
 			for (int i=0; i<GetNomega(); i++)	{
-				omega[i] = rnd::GetRandom().Gamma(omegaalpha,omegabeta);
+				//omega[i] = rnd::GetRandom().Gamma(omegaalpha,omegabeta);
+				omega[i] = 1.0;
 			}
 		}
 		else	{

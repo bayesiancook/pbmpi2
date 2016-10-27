@@ -1,6 +1,7 @@
 #include "MultipleOmegaProcess.h"
 #include "Parallel.h"
 
+
 double MultipleOmegaProcess::MPIMoveOmega(double tuning, int nrep)	{
 
 	double total=0;
@@ -69,6 +70,7 @@ void MultipleOmegaProcess::SampleOmega()	{
 		omega[k] = 1.0;
 	}
 	*/
+	SampleOmegaHyper();
 	SampleOmegas();
 	omegaweightalpha = 1.0;
 	SampleOmegaWeights();

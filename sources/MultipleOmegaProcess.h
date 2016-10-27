@@ -36,6 +36,17 @@ class MultipleOmegaProcess : public virtual MixtureOmegaProcess	{
 	void ResampleOmegaWeights();
 
 	protected:
+	virtual void Create()	{
+		if (! omega)	{
+			MixtureOmegaProcess::Create();
+		}
+	}
+
+	virtual void Delete()	{
+		if (omega)	{
+			MixtureOmegaProcess::Delete();
+		}
+	}
 
 	double omegaweightalpha;
 };

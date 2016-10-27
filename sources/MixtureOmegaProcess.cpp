@@ -5,7 +5,6 @@
 double MixtureOmegaProcess::MoveOmega(double tuning)	{
 
 	int nrep = 3;
-
 	double ret = 0;
 	if (GetNprocs() > 1)	{
 		ret = MPIMoveOmega(tuning,nrep);
@@ -124,8 +123,9 @@ double MixtureOmegaProcess::SlaveOmegaIncrementalFiniteMove()	{
 }
 
 double MixtureOmegaProcess::MoveCompOmega(double tuning, int component)	{
-
+	
 	double bkomega = omega[component];
+
 	double deltalogprob = -LogOmegaPrior(component) - OmegaSuffStatLogProb(component);
 
 	double h = tuning * (rnd::GetRandom().Uniform() -0.5);
@@ -204,18 +204,21 @@ double MixtureOmegaProcess::MoveOmegaBeta(double tuning)	{
 
 double MixtureOmegaProcess::LogOmegaPrior()        {
 
-	// should include gamma case
 	double total=0;
-	if (omegaprior == 0)	{
-		for (int i=0; i<GetNomega(); i++)	{
-			// ratio of exponential random variables
-			total += -2 * log(1 + omega[i]);
+	if (omegaprior == 0)	{ // ratio of exponential random variables
+		for (int k=0; k<GetNomega(); k++)	{
+			total += -2 * log(1 + omega[k]);
+		}
+	}
+	else if (omegaprior == 1)	{ // gamma
+		for (int k=0; k<GetNomega(); k++)	{		
+			total += omegaalpha*log(omegabeta) - rnd::GetRandom().logGamma(omegaalpha) + (omegaalpha-1)*log(omega[k]) - omegabeta*omega[k];
 		}
 	}
 	else	{	
-		for (int i=0; i<GetNomega(); i++)	{
+		for (int k=0; k<GetNomega(); k++)	{
 			// jeffreys
-			total += -log(omega[i]);
+			total += -log(omega[k]);
 		}
 	}
 	return total;

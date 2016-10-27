@@ -17,7 +17,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef AACODONMUTSELMVNSSPROFILE_H
 #define AACODONMUTSELMVNSSPROFILE_H
 
-#include "OmegaProcess.h"
+#include "SingleOmegaProcess.h"
 #include "AACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixMVNSiteSpecificProfileProcess.h"
 

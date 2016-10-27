@@ -31,6 +31,50 @@ class OmegaProcess : public virtual MPIModule	{
 	OmegaProcess() : fixomega(0), omegaprior(0), siteomegasuffstatcount(0) {}
 	virtual ~OmegaProcess() {}
 
+	double GetMeanOmega()	{
+		double tot = 0;
+		for (int i=0; i<GetNsite(); i++)	{
+			tot += GetSiteOmega(i);
+		}
+		return tot/GetNsite();
+	}
+
+	double GetMinOmega()	{
+		double min = 10;
+		for (int i=0; i<GetNsite(); i++)	{
+			if (min > GetSiteOmega(i))	{
+				min = GetSiteOmega(i);
+			}
+		}
+		return min;
+	}
+	
+	double GetRelVarOmega()	{
+		double mean = 0;
+		double var = 0;
+		for (int i=0; i<GetNsite(); i++)	{
+			double tmp = GetSiteOmega(i);
+			mean += tmp;
+			var += tmp * tmp;
+		}
+		mean /= GetNsite();
+		var /= GetNsite();
+		var -= mean*mean;
+		var /= mean*mean;
+		return var;
+	}
+
+	double GetProportionOmegaGreaterThan(double c)	{
+		double tot = 0;
+		for (int i=0; i<GetNsite(); i++)	{
+			if (GetSiteOmega(i) > c)	{
+				tot++;
+			}
+		}
+		tot /= GetNsite();
+		return tot;
+	}
+
 	protected:
 
 	// omega
@@ -123,175 +167,6 @@ class OmegaProcess : public virtual MPIModule	{
 	int* siteomegasuffstatcount;
 };
 
-
-class SingleOmegaProcess : public virtual OmegaProcess	{
-
-	public:
-
-	SingleOmegaProcess() : omega(0)	{}
-	virtual ~SingleOmegaProcess() {}
-
-	double GetOmega()	{
-		return *omega;
-	}
-
-	double GetSiteOmega(int site)	{
-		return *omega;
-	}
-
-	double* GetSiteOmegaPtr(int site)	{
-		return omega;
-	}
-	
-	virtual double OmegaSuffStatLogProb()	{
-		return omegasuffstatcount * log(*omega) - omegasuffstatbeta * *omega;
-	}
-
-	virtual double CountOmegaSuffStatLogProb()	{
-		return omegasuffstatcount * log(*omega);
-	}
-
-	virtual double BetaOmegaSuffStatLogProb()	{
-		return - omegasuffstatbeta * *omega;
-	}
-
-	// omega
-	virtual double LogOmegaPrior();
-	virtual void SampleOmega();
-	double SimpleMoveOmega(double tuning);
-	double MoveOmega(double tuning); 
-
-	protected:
-
-	virtual void Create()	{
-		if (! omega)	{
-			OmegaProcess::Create();
-			omega = new double;
-			*omega = 1.0;
-		}
-	}
-
-	virtual void Delete()	{
-		if (omega)	{
-			delete omega;
-			omega = 0;
-			OmegaProcess::Delete();
-		}
-	}
-	
-	void UpdateOmegaSuffStat();
-	void GlobalUpdateOmegaSuffStat();
-	void SlaveUpdateOmegaSuffStat();
-	//void UpdateSiteOmegaSuffStat();
-
-	double* omega;
-	int omegasuffstatcount;
-	double omegasuffstatbeta;
-	
-};
-
-class MultipleOmegaProcess : public virtual OmegaProcess	{
-
-	public: 
-	MultipleOmegaProcess() : omega(0) {}
-
-	virtual ~MultipleOmegaProcess() {}
-
-	int GetNomega() {return Nomega;}
-
-	double GetOmega(int k)	{
-		return omega[k];
-	}
-
-	double GetMeanOmega()	{
-		double tot = 0;
-		for (int i=0; i<GetNsite(); i++)	{
-			tot += GetSiteOmega(i);
-		}
-		return tot/GetNsite();
-	}
-
-	double* GetOmegaPointer(int k)	{
-		return &omega[k];
-	}
-
-	double GetSiteOmega(int site)	{
-		//return omega[omegaalloc[site]];
-		return GetOmega(omegaalloc[site]);
-	}
-
-	double* GetSiteOmegaPtr(int site)	{
-		return &omega[omegaalloc[site]];
-	}
-
-	int GetOmegaSiteAlloc(int site)	{
-		return omegaalloc[site];
-	}
-
-	virtual void SampleOmega();
-	virtual void SampleOmegaWeights();
-	virtual void SampleOmegaAlloc();
-	virtual double LogOmegaPrior();
-	double MoveOmega(double tuning); 
-	double MoveOmegaValues(double tuning); 
-	void ResampleOmegaWeights();
-	double GlobalOmegaIncrementalFiniteMove(int nrep);
-	double SlaveOmegaIncrementalFiniteMove();
-	void UpdateOmegaSuffStat();
-	void GlobalUpdateOmegaSuffStat();
-	void SlaveUpdateOmegaSuffStat();
-	virtual double OmegaSuffStatLogProb()	{
-
-		double total = 0;
-		for (int l=0; l<Nomega; l++)	{
-			total += OmegaSuffStatLogProb(l);
-		}
-		return total;
-	}
-
-	virtual double OmegaSuffStatLogProb(int l)	{
-		return compomegasuffstatcount[l] * log(omega[l]) - compomegasuffstatbeta[l] * omega[l];
-	}
-
-	double OmegaLogStatProb(int site, int omegaalloc)	{
-		return siteomegasuffstatcount[site] * log(omega[omegaalloc]) - siteomegasuffstatbeta[site] * omega[omegaalloc];
-	}
-
-
-	protected:
-
-	virtual void Create()	{
-		if (! omega)	{
-			OmegaProcess::Create();
-			omega = new double[Nomega];
-			omegaalloc = new int[GetNsite()];
-			compomegasuffstatbeta = new double[Nomega];
-			compomegasuffstatcount = new int[Nomega];
-			omegaweight = new double[Nomega];
-			SampleOmega();
-		}
-	}
-
-	virtual void Delete()	{
-		if (omega)	{
-			delete[] omega;
-			delete[] omegaalloc;
-			delete[] compomegasuffstatbeta;
-			delete[] compomegasuffstatcount;
-			delete[] omegaweight;
-			omega = 0;
-			OmegaProcess::Delete();
-		}
-	}
-
-	double* omega;
-	int* omegaalloc;
-	int Nomega;
-	double* compomegasuffstatbeta;
-	int* compomegasuffstatcount;
-	double* omegaweight;
-	double omegaweightalpha;
-};
 
 #endif
 

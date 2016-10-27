@@ -13,27 +13,31 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-#include "Parallel.h"
-#include "OmegaProcess.h"
-#include "GeneralPathSuffStatMatrixProfileProcess.h"
-#include "Random.h"
+#ifndef MULTIPLEOMEGA_H
+#define MULTIPLEOMEGA_H
 
-void OmegaProcess::GlobalUpdateSiteOmegaSuffStat()	{
-	if (GetNprocs() > 1)	{
-		// MPI2
-		// should ask the slaves to call their UpdateRateSuffStat
-		// and then gather the statistics;
-		MPI_Status stat;
-		MESSAGE signal = UPDATE_SITEOMEGA;
-		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-	}
-	else	{
-		UpdateSiteOmegaSuffStat();
-	}
-}
+#include "MixtureOmegaProcess.h"
 
-void OmegaProcess::SlaveUpdateSiteOmegaSuffStat()	{
-	UpdateSiteOmegaSuffStat();
-}
-			
+class MultipleOmegaProcess : public virtual MixtureOmegaProcess	{
 
+	public: 
+	MultipleOmegaProcess() : omegaweightalpha(1.0) {}
+
+	virtual ~MultipleOmegaProcess() {}
+
+	// overall sampling of the omega part of the model
+	void SampleOmega();
+
+	// moves
+	double MPIMoveOmega(double tuning, int nrep);
+	double NonMPIMoveOmega(double tuning, int nrep);
+
+	virtual void SampleOmegaWeights();
+	void ResampleOmegaWeights();
+
+	protected:
+
+	double omegaweightalpha;
+};
+
+#endif

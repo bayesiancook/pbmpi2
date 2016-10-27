@@ -30,6 +30,7 @@ class GeneralPathSuffStatMatrixProfileProcess : public virtual MatrixProfileProc
 
 	// will be implemented in phyloprocess
 	// return the sufficient statistics for a given site
+	// calculated upon calling UpdateSiteProfileSuffStat
 	virtual map<pair<int,int>,int>& GetSitePairCount(int site) = 0;
 	virtual map<int,double>& GetSiteWaitingTime(int site) = 0;
 	virtual int GetSiteRootState(int site) = 0;

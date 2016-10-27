@@ -70,6 +70,9 @@ class GeneralPathSuffStatMatrixMixtureProfileProcess : public virtual MatrixMixt
 	virtual double LogStatProb(int site, int cat);
 
 	// componentwise
+	// sum over all sites allocated to that component
+	// of root states, sitepaircounts and sitewaitingtimes
+	// those sums are calculated when calling UpdateModeProfileSuffStat
 	map<int,int>* profilerootcount;
 	map< pair<int,int>, int>* profilepaircount;
 	map<int,double>* profilewaitingtime;

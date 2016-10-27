@@ -15,12 +15,12 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #ifndef SBDPOMEGA_H
 #define SBDPOMEGA_H
 
-#include "OmegaProcess.h"
+#include "MixtureOmegaProcess.h"
 
-class SBDPOmegaProcess : public virtual OmegaProcess	{
+class SBDPOmegaProcess : public virtual MixtureOmegaProcess	{
 
 	public:
-	SBDPOmegaProcess() : omegaarray(0), omegakappa(1), omegamovekappa(true), omegakappaprior(0), omegaV(0), omegamaxweighterror(0) {}
+	SBDPOmegaProcess() : omegakappa(1), omegamovekappa(true), omegakappaprior(0), omegaV(0), omegamaxweighterror(0) {}
 	virtual ~SBDPOmegaProcess() {}
 
 	protected:
@@ -43,175 +43,55 @@ class SBDPOmegaProcess : public virtual OmegaProcess	{
 		return n;
 	}
 		
-	double GetSiteOmega(int site)	{
-		return omegaarray[GetOmegaAlloc(site)];
-	}
-
-	int GetOmegaAlloc(int site)	{
-		return omegaalloc[site];
-	}
-
-	double GetMeanOmega()	{
-		double mean = 0;
-		for (int i=0; i<GetNsite(); i++)	{
-			mean += omegaarray[omegaalloc[i]];
-		}
-		mean /= GetNsite();
-		return mean;
-	}
-
-	int GetNcomponentOmega()	{
-		return NcomponentOmega;
-	}
-
-	double GetProportionOmegaGreaterThan(double c)	{
-		double tot = 0;
-		for (int i=0; i<GetNsite(); i++)	{
-			if (omegaarray[omegaalloc[i]] > c)	{
-				tot++;
-			}
-		}
-		tot /= GetNsite();
-		return tot;
-	}
-
-	double OmegaSiteSuffStatLogProb(int site)	{
-		return siteomegasuffstatcount[site] * log(omegaarray[GetOmegaAlloc(site)]) - siteomegasuffstatbeta[site] * omegaarray[GetOmegaAlloc(site)];
-	}
-
-	double OmegaCompSuffStatLogProb(int k)	{
-		double tot = 0;
-		for (int i=0; i<GetNsite(); i++)	{
-			if (ActiveSite(i))	{
-				if (GetOmegaAlloc(i) == k)	{
-					tot += OmegaSiteSuffStatLogProb(i); 
-				}
-			}	
-		}
-		return tot;	
-	}
-
-	virtual double OmegaSuffStatLogProb()	{
-		double total = 0;
-		for (int k=0; k<GetNcomponentOmega(); k++)	{
-			if (omegaoccupancy[k])	{
-				total += OmegaCompSuffStatLogProb(k);
-			}
-		}
-		return total;
-	}
-
-	double LogOmegaPrior(int component)	{
-		double temp;		
-		if (omegaprior == 0)	{ //ratio of exponential random variables
-			temp = 2 * log(1 + omegaarray[component]);
-		}
-		else if (omegaprior == 1)	{ // gamma
-			temp = omegaalpha*log(omegabeta) - rnd::GetRandom().logGamma(omegaalpha) + (omegaalpha-1)*log(omegaarray[component]) - omegabeta*omegaarray[component];
-		}
-		else	{
-			cerr << "omega prior not correctly set\n";
-			exit(1);
-		}
-		return temp;
-	}
-
-	virtual double LogOmegaPrior()	{
-		double total = 0;
-		for (int i=0; i<GetNcomponentOmega(); i++)	{
-			if (omegaoccupancy[i])	{
-				total += LogOmegaPrior(i);
-			}
-		}
-		return total;
-	}
-
-	double LogOmegaHyperPrior()	{
-		return -omegaalpha - omegabeta;
-	}
-
-	virtual void SampleOmega()	{
-		if (omegaprior == 0)	{ //ratio of exponential random variables
-			double r1, r2;
-			for (int i=0; i<GetNcomponentOmega(); i++)	{
-				r1 = rnd::GetRandom().Uniform();
-				r2 = rnd::GetRandom().Uniform();
-				omegaarray[i] = r1/r2;
-			}
-			
-		}
-		else if (omegaprior == 1)	{ // gamma
-			omegaalpha = omegabeta = 1.0;
-			for (int i=0; i<GetNcomponentOmega(); i++)	{
-				omegaarray[i] = rnd::GetRandom().Gamma(omegaalpha,omegabeta);
-			}
-		}
-		else	{
-			cerr << "omega prior not correctly set\n";
-			exit(1);
-		}
-	}
-
 	virtual int GetNomegaMax() {
 		return GetNsite() > nomegamax ? nomegamax : GetNsite();
 	}
 	virtual void SetNomegaMax(int n) {nomegamax = 1000;}
 
-	double MoveOmega(double tuning, int k);
-	double MoveCompOmega(double tuning, int k);
-	double MPIMoveOmega(double tuning);
-	double NonMPIMoveOmega(double tuning);
 
+	// overall sampling of the omega part of the model
+	void SampleOmega();
+
+	// MOVES
+
+	double MPIMoveOmega(double tuning, int nrep);
+	double NonMPIMoveOmega(double tuning, int nrep);
+
+	virtual void SampleOmegaWeights();
+	void ResampleOmegaWeights();
+
+	// double MoveOccupiedCompAlloc(int nrep);
+	// double MoveAdjacentCompAlloc(int nrep);
 	
+	// double MoveKappa...
+
+	// are those ones really useful?
+	/*
 	double MixMoveOmega(int nmix, double tuning, int nsitenrep, int nhyperrep);
 	double GlobalMixMoveOmega(int nmix, double tuning, int nsitenrep, int nhyperrep);
 	void SlaveMixMoveOmega();
-
-	void GlobalUpdateOmegaSuffStat();
-	void SlaveUpdateOmegaSuffStat();
-
-	double MoveOmegas(double tuning, int nrep);
-	double MoveOmegaHyper(double tuning, int nrep);
-	double MoveOmegaAlpha(double tuning);
-	double MoveOmegaBeta(double tuning);
+	*/
 
 	protected:
 
 	virtual void Create()	{
-		if (! omegaarray)	{
-			OmegaProcess::Create();
-			omegaarray = new double[GetNsite()];
+		if (! omegaV)	{
+			MixtureOmegaProcess::Create();
+			// create all data structures specific to sbdp
 		}
 	}
 
 	virtual void Delete()	{
-		if (omegaarray)	{
-			delete omegaarray;
-			omegaarray = 0;
-			OmegaProcess::Delete();
+		if (omegaV)	{
+			// specific deletes
+			MixtureOmegaProcess::Delete();
 		}
 	}
 	
-	void UpdateOmegaSuffStat();
-	//void GlobalUpdateSiteOmegaSuffStat();  // this need to be addressed.
-	//void SlaveUpdateSiteOmegaSuffStat();	// along with with.
-
-	void ResampleOmegas();
-	void GlobalCollectSiteOmegaSuffStats();
-	void SlaveCollectSiteOmegaSuffStats();
-
-	int NcomponentOmega;
-	int* omegaoccupancy;
 	int nomegamax;
-
-	double* omegaarray;
-	int* omegaalloc;
-	double omegakappa;
-	double omegaalpha;
-	double omegabeta;
 	double* omegaV;
-	double* omegaweight;
-	
+	int* omegaoccupancy;
+	double omegakappa;
 	bool omegamovekappa;
 	int omegakappaprior;
 

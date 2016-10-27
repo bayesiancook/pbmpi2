@@ -34,50 +34,6 @@ class SiteOmegaProcess : public virtual OmegaProcess	{
 		return &(omegaarray[site]);
 	}
 	
-	double GetMinOmega()	{
-		double min = 10;
-		for (int i=0; i<GetNsite(); i++)	{
-			if (min > omegaarray[i])	{
-				min = omegaarray[i];
-			}
-		}
-		return min;
-	}
-	
-	double GetMeanOmega()	{
-		double mean = 0;
-		for (int i=0; i<GetNsite(); i++)	{
-			mean += omegaarray[i];
-		}
-		mean /= GetNsite();
-		return mean;
-	}
-
-	double GetRelVarOmega()	{
-		double mean = 0;
-		double var = 0;
-		for (int i=0; i<GetNsite(); i++)	{
-			mean += omegaarray[i];
-			var += omegaarray[i] * omegaarray[i];
-		}
-		mean /= GetNsite();
-		var /= GetNsite();
-		var -= mean*mean;
-		var /= mean*mean;
-		return var;
-	}
-
-	double GetProportionOmegaGreaterThan(double c)	{
-		double tot = 0;
-		for (int i=0; i<GetNsite(); i++)	{
-			if (omegaarray[i] > c)	{
-				tot++;
-			}
-		}
-		tot /= GetNsite();
-		return tot;
-	}
-
 	double OmegaSuffStatLogProb(int site)	{
 		return siteomegasuffstatcount[site] * log(omegaarray[site]) - siteomegasuffstatbeta[site] * omegaarray[site];
 	}

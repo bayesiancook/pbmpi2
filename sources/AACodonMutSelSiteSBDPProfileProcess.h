@@ -19,6 +19,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "SBDPProfileProcess.h"
 #include "AACodonMutSelSiteMatrixMixtureProfileProcess.h"
+#include "SingleOmegaProcess.h"
 
 class AACodonMutSelSiteSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual SingleOmegaProcess, public virtual AACodonMutSelSiteMatrixMixtureProfileProcess	{
 

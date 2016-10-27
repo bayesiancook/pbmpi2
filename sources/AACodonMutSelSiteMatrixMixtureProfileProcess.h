@@ -88,17 +88,28 @@ class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSe
 	virtual void UpdateSiteMatrix(int site)	{
 		if (sitematrixarray[site])	{
 			GetCodonMatrix(site)->SetAAProfile(GetProfile(site));
+			cerr << "define SetOmega in aa codon matrix\n";
+			exit(1);
 			// GetCodonMatrix(site)->SetOmega(GetSiteOmegaPtr(site));
 
-			// useless
+			// useless: done by AACodonMutSelProfileSubMatrix upon calling SetAAProfile or SetOmega anyway
 			// sitematrixarray[site]->CorruptMatrix();
 		}
 	}
 	
-
+	// an aamutsel codon matrix is created 
+	// for each component of the amino-acid profile mixture
+	// this matrix has an omega0 = 1
+	// used for calculating aa suff stat log probs
 	double* omega0;
+
 	// componentwise
+	// sum across sites (allocated to this component) of waiting times in each codon state, weighted by the site-specific omega's
 	map<int,double>* profilenonsynwaitingtime;
+
+	// in GeneralPathSuffStatMatrixMixtureProfileProcess. there is a
+	// map<int,double>* profilewaitingtime;
+	// which is the sum across sites of waiting times in each codon state
 
 };
 

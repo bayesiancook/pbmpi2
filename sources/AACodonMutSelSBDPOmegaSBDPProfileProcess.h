@@ -59,9 +59,9 @@ class AACodonMutSelSBDPOmegaSBDPProfileProcess : public virtual SBDPProfileProce
 		}
 		os << '\n';
 		os << '\n';
-		os << NcomponentOmega;
-		for (int i=0; i<NcomponentOmega; i++)	{
-			os << omegaarray[i] << '\t';
+		os << Nomega;
+		for (int i=0; i<Nomega; i++)	{
+			os << omega[i] << '\t';
 		}
 		os << '\n';
 		os << omegakappa << '\t' << omegaalpha << '\t' << omegabeta << '\n';
@@ -99,9 +99,9 @@ class AACodonMutSelSBDPOmegaSBDPProfileProcess : public virtual SBDPProfileProce
 		for (int i=0; i<GetNcodon(); i++)	{
 			is >> codonprofile[i];
 		}
-		is >> NcomponentOmega;
-		for (int i=0; i<NcomponentOmega; i++)	{
-			is >> omegaarray[i];
+		is >> Nomega;
+		for (int i=0; i<Nomega; i++)	{
+			is >> omega[i];
 		}
 
 		is >> omegakappa >> omegaalpha >> omegabeta;
@@ -123,7 +123,7 @@ class AACodonMutSelSBDPOmegaSBDPProfileProcess : public virtual SBDPProfileProce
 			}
 		}
 		ResampleWeights();
-		//ResampleOmegaWeights();
+		ResampleOmegaWeights();
 	}
 };
 

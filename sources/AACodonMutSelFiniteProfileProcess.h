@@ -18,7 +18,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define AACODONMUTSELFINITEPROFILE_H
 
 #include "FiniteProfileProcess.h"
-#include "OmegaProcess.h"
+#include "SingleOmegaProcess.h"
 #include "AACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMatrixMixtureProfileProcess.h"
 

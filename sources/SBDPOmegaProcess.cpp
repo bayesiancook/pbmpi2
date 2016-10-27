@@ -16,134 +16,93 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "SBDPOmegaProcess.h"
 #include "Parallel.h"
 
-void SBDPOmegaProcess::UpdateOmegaSuffStat()	{
-	// UpdateSiteOmegaSuffStat();  // why is this commented out?
+
+void SBDPOmegaProcess::SampleOmega()	{
+	/*
+	for (int k=0; k<GetNomega(); k++)	{
+		omega[k] = 1.0;
+	}
+	*/
+	SampleOmegas();
+	// some other things to either sample or initialize
+	SampleOmegaWeights();
+	SampleOmegaAlloc();
 }
 
-void SBDPOmegaProcess::GlobalUpdateOmegaSuffStat() {
+double SBDPOmegaProcess::MPIMoveOmega(double tuning, int nrep)	{
 
-	if (GetNprocs() > 1)	{
-		MPI_Status stat;
-		MESSAGE signal = UPDATE_OMEGA;
-		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	double total=0;
+
+	for (int rep=0; rep<nrep; rep++)	{
+
+		total += GlobalOmegaIncrementalFiniteMove(1);
+		/*
+		MoveOccupiedCompAlloc(5);
+		MoveAdjacentCompAlloc(5);
+		*/
+
+		GlobalUpdateOmegaSuffStat();
+
+		total += MoveOmegaValuesAndHyperParameters(tuning,nrep);
+
+		// Move kappa etc..
+
+		ResampleOmegaWeights();
+
+		// perhaps some broadcast here, 
+		// sync slaves and master
 	}
-	else	{
+
+	return total;
+}
+
+double SBDPOmegaProcess::NonMPIMoveOmega(double tuning, int nrep)	{
+
+	double total=0;
+
+	for (int rep=0; rep<nrep; rep++)	{
+
+		// yet to be implemented
+		// total += OmegaIncrementalFiniteMove();
+		/*
+		MoveOccupiedCompAlloc(5);
+		MoveAdjacentCompAlloc(5);
+		*/
+
 		UpdateOmegaSuffStat();
+
+		total += MoveOmegaValuesAndHyperParameters(tuning,nrep);
+
+		// Move kappa etc..
+
+		ResampleOmegaWeights();
 	}
+
+	return total;
 }
 
-void SBDPOmegaProcess::SlaveUpdateOmegaSuffStat() {
-	UpdateOmegaSuffStat();
+void SBDPOmegaProcess::SampleOmegaWeights()	{
 }
 
-double SBDPOmegaProcess::MoveCompOmega(double tuning, int component)	{
-
-	double bkomega = omegaarray[component];
-	double deltalogprob = -LogOmegaPrior(component) - OmegaCompSuffStatLogProb(component);
-
-	double h = tuning * (rnd::GetRandom().Uniform() -0.5);
-	double e = exp(h);
-	omegaarray[component] *= e;
-
-	deltalogprob += h;
-	deltalogprob += LogOmegaPrior(component) + OmegaCompSuffStatLogProb(component);
-
-	int accepted = (rnd::GetRandom().Uniform() < exp(deltalogprob));
-	if (! accepted)	{
-		omegaarray[component] = bkomega;
-	}
-	return accepted;	
+void SBDPOmegaProcess::ResampleOmegaWeights()	{
 }
+// double MoveOccupiedCompAlloc(int nrep);
+// double MoveAdjacentCompAlloc(int nrep);
+// double MoveKappa
 
-double SBDPOmegaProcess::MoveOmegas(double tuning, int nrep)	{
 
-	double nacc = 0;
-	double ntot = 0;
-	for (int rep=0; rep<nrep; rep++)	{
-		for (int k=0; k<GetNcomponentOmega(); k++)	{
-			nacc += MoveCompOmega(tuning,k);
-			ntot++;
-		}
-	}
-	return nacc/ntot;
-}
-
-double SBDPOmegaProcess::MoveOmegaHyper(double tuning, int nrep)	{
-
-	double nacc = 0;
-	double ntot = 0;
-	for (int rep=0; rep<nrep; rep++)	{
-		nacc += MoveOmegaAlpha(tuning);
-		ntot++;
-		nacc += MoveOmegaBeta(tuning);
-		ntot++;
-	}
-	return nacc/ntot;
-}
-
-double SBDPOmegaProcess::MoveOmegaAlpha(double tuning)	{
-
-	double bkomegaalpha = omegaalpha;
-	double deltalogprob = - LogOmegaPrior() - LogOmegaHyperPrior();
-	double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
-	double e = exp(m);
-	omegaalpha *= e;
-	deltalogprob += LogOmegaPrior() + LogOmegaHyperPrior();
-	deltalogprob += m;
-	int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
-
-	if (!accepted)	{
-		omegaalpha = bkomegaalpha;
-	}
-	return accepted;
-}
-
-double SBDPOmegaProcess::MoveOmegaBeta(double tuning)	{
-
-	double bkomegabeta = omegabeta;
-	double deltalogprob = - LogOmegaPrior() - LogOmegaHyperPrior();
-	double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
-	double e = exp(m);
-	omegabeta *= e;
-	deltalogprob += LogOmegaPrior() + LogOmegaHyperPrior();
-	deltalogprob += m;
-	int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
-
-	if (!accepted)	{
-		omegabeta = bkomegabeta;
-	}
-	return accepted;
-}
-
-double SBDPOmegaProcess::MoveOmega(double tuning, int k)	{
-
-	double ret = 0;
-	if (GetNprocs() > 1)	{
-		ret = MPIMoveOmega(tuning);
-	}
-	else	{
-		ret = NonMPIMoveOmega(tuning);
-	}
-	return ret;
-}
-
-double SBDPOmegaProcess::MPIMoveOmega(double tuning)	{
-
-	return GlobalMixMoveOmega(5,tuning,1,10);	
-}
-
-double SBDPOmegaProcess::NonMPIMoveOmega(double tuning)	{
-
-	return MixMoveOmega(5,tuning,1,10);	
-}
-
+/*
 double SBDPOmegaProcess::MixMoveOmega(int nmix, double tuning, int nsiterep, int nhyperrep)	{
 
 	for (int mix=0; mix<nmix; mix++)	{
-		MoveOmegas(tuning, nsiterep);
-		MoveOmegaHyper(tuning,nhyperrep);
-		MoveOmegaHyper(0.1*tuning,nhyperrep);
+
+		// to be written:
+		// reallocation move
+
+		UpdateOmegaSuffStatLogProb();
+
 	}
+
 	UpdateOmega();
 	return 1.0;
 }
@@ -156,31 +115,59 @@ double SBDPOmegaProcess::GlobalMixMoveOmega(int nmix, double tuning, int nsitere
 	MPI_Bcast(&nsiterep,1,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(&tuning,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
-	double* tmp = new double[GetNsite()];
+	int* tmp = new int[GetNsite()];
 
 	for (int mix=0; mix<nmix; mix++)	{
 
-		// slave move site omegas
+		// slave move site allocations
 
-		// collect site omegas
+		// !!!
+		// collect site allocations
+		// in fact, could be done only after the mix/nmix loop
 		MPI_Status stat;
 		for(int i=1; i<GetNprocs(); i++) {
-			MPI_Recv(tmp,GetNsite(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+			MPI_Recv(tmp,GetNsite(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
 			for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); ++j) {
 				if (ActiveSite(j))	{
-					omegaarray[j] = tmp[j];
+					omegaalloc[j] = tmp[j];
 				}
 			}
 		}
+
+		GlobalUpdateOmegaSuffStat()
+
+		// (1) pure MH
+		MoveOmegas(tuning, nsiterep);
+
+		// (2)
+		// resample omegas (Gibbs)
+
+		// prior
+		// omega[k] ~ gamma(omegaalpha, omegabeta)
+		// p(omega[k]) ~ omega[k]^(omegaalpha-1) * exp(-omegabeta*omega[k])
+
+		// likelihood
+		// p(D | omega[k]) ~ omega[k]^compomegasuffstatcount[k] * exp(- compomegasuffstatbeta[k]*omega[k])
+
+		// posterior gamma
+		// p(omega[k] | D) ~ omega[k]^(omegaalpha + compomegasuffstatcount[k] -1) * exp(- (omegabeta + compomegasuffstatbeta[k]) * omega[k])
+		// omega[k] | D ~ gamma(omegaalpha + compsuffstatcount[k], omegabeta + compsuffstatbeta[k])
 
 		// move hyperparam
 		MoveOmegaHyper(tuning,nhyperrep);
 		MoveOmegaHyper(0.1*tuning,nhyperrep);
 
+		// (3)
+		// ...
+
+		// send omegas
+
 		// send hyperparam
-		MPI_Bcast(&omegaalpha,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-		MPI_Bcast(&omegabeta,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		// MPI_Bcast(&omegaalpha,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		// MPI_Bcast(&omegabeta,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
+	// here, gather allocations
+	// and broadcast them across slaves
 
 	delete[] tmp;
 
@@ -200,8 +187,9 @@ void SBDPOmegaProcess::SlaveMixMoveOmega()	{
 
 	for (int mix=0; mix<nmix; mix++)	{
 
+		// should move only those components that have been assigned as a job to that slave
 		MoveOmegas(tuning, nrep);
-		MPI_Send(omegaarray,GetNsite(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+		MPI_Send(omegaalloc,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
 
 		// get hyperparam
 		MPI_Bcast(&omegaalpha,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
@@ -210,43 +198,6 @@ void SBDPOmegaProcess::SlaveMixMoveOmega()	{
 
 	UpdateOmega();
 }
-
-
-void SBDPOmegaProcess::ResampleOmegas()	{
-
-	for (int k=0; k<GetNcomponentOmega(); k++)	{
-		omegaarray[k] = 1.0; // just a temporary setup.
-	}
-}
-
-
-void SBDPOmegaProcess::GlobalCollectSiteOmegaSuffStats()	{
-
-	MESSAGE signal = COLLECTOMEGASUFFSTAT;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-
-	MPI_Status stat;
-	int* itmp = new int[GetNsite()];
-	double* tmp = new double[GetNsite()];
-
-	for(int i=1; i<GetNprocs(); i++) {
-		MPI_Recv(itmp,GetNsite(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
-		MPI_Recv(tmp,GetNsite(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
-		for(int j=GetProcSiteMin(i); j<GetProcSiteMax(i); ++j) {
-			siteomegasuffstatcount[j] = itmp[j];
-			siteomegasuffstatbeta[j] = tmp[j];
-		}
-	}
-	delete[] tmp;
-	delete[] itmp;
-}
-
-void SBDPOmegaProcess::SlaveCollectSiteOmegaSuffStats()	{
-
-	MPI_Send(siteomegasuffstatcount,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
-	MPI_Send(siteomegasuffstatbeta,GetNsite(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
-
-}
-
+*/
 
 

@@ -89,15 +89,11 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixMixtureProfileProce
 		sitematrixarray[site] = 0;
 	}
 
-	virtual void UpdateSiteMatrix(int site) = 0;
-
-	/*
 	virtual void UpdateSiteMatrix(int site)	{
 		if (sitematrixarray[site])	{
 			sitematrixarray[site]->CorruptMatrix();
 		}
 	}
-	*/
 
 	virtual void UpdateMatrix(int k)	{
 		MatrixMixtureProfileProcess::UpdateMatrix(k);

@@ -77,7 +77,7 @@ void AACodonMutSelSBDPOmegaSBDPPhyloProcess::SlaveUpdateParameters()	{
 	kappa = dvector[index];
 	index++;
 	for(int i=0; i<GetNomegaMax(); ++i) {
-		omegaarray[i] = dvector[index];
+		omega[i] = dvector[index];
 		index++;
 	}
 	omegaalpha = dvector[index];
@@ -88,7 +88,7 @@ void AACodonMutSelSBDPOmegaSBDPPhyloProcess::SlaveUpdateParameters()	{
 	int iindex =0;	
 	Ncomponent = ivector[iindex];
 	iindex++;
-	NcomponentOmega = ivector[iindex];
+	Nomega = ivector[iindex];
 	iindex++;
 	
 	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
@@ -130,9 +130,11 @@ void AACodonMutSelSBDPOmegaSBDPPhyloProcess::SlaveExecute(MESSAGE signal)	{
 		case UPDATE_OMEGA:
 			SlaveUpdateOmegaSuffStat();
 			break;
+		/*
 		case MIXMOVEOMEGA:
 			SlaveMixMoveOmega();
 			break;
+		*/
 		//case COLLECTOMEGASUFFSTAT:
 		//	SlaveCollectSiteOmegaSuffStats();  // Needs to be done.
 		//	break;
@@ -208,7 +210,7 @@ void AACodonMutSelSBDPOmegaSBDPPhyloProcess::GlobalUpdateParameters() {
 
 	//for(int i=0; i<ProfileProcess::GetNsite(); ++i) {
 	for(int i=0; i<GetNomegaMax(); ++i) {
-		dvector[index] = omegaarray[i];
+		dvector[index] = omega[i];
 		index++;
 	}
 	dvector[index] = omegaalpha;
@@ -220,7 +222,7 @@ void AACodonMutSelSBDPOmegaSBDPPhyloProcess::GlobalUpdateParameters() {
 	int iindex = 0;
 	ivector[iindex] = GetNcomponent();
 	iindex++;
-	ivector[iindex] = GetNcomponentOmega();
+	ivector[iindex] = GetNomega();
 	iindex++;
 	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
 		ivector[iindex] = SBDPProfileProcess::alloc[i];

@@ -505,6 +505,11 @@ int main(int argc, char* argv[])	{
 			else if (s == "-freeomega")	{
 				fixomega = 0;
 			}
+			else if (s == "-Nomega")	{
+				i++;
+				nomega = atoi(argv[i]);
+				mixturetype = 3;
+			}
 			else if (s == "-nomega")	{
 				i++;
 				nomega = atoi(argv[i]);

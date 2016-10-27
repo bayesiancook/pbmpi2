@@ -14,43 +14,32 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#ifndef MULOMEGAAACODONMUTSELSBDPPROFILE_H
-#define MULOMEGAAACODONMUTSELSBDPPROFILE_H
+#ifndef AACODONMUTSELSBDPOMSBDPPROFILE_H
+#define AACODONMUTSELSBDPOMSBDPPROFILE_H
 
 #include "SBDPProfileProcess.h"
-#include "OmegaProcess.h"
-#include "AACodonMutSelProfileProcess.h"
-#include "GeneralPathSuffStatMultipleMatrixMixtureProfileProcess.h"
+#include "SBDPOmegaProcess.h"
+#include "AACodonMutSelSiteMatrixMixtureProfileProcess.h"
 
-class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual MultipleOmegaProcess, public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMultipleMatrixMixtureProfileProcess	{
+class AACodonMutSelSBDPOmegaSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual SBDPOmegaProcess, public virtual AACodonMutSelSiteMatrixMixtureProfileProcess	{
 
 	public:
 
-	MultipleOmegaAACodonMutSelSBDPProfileProcess() {}
-	virtual ~MultipleOmegaAACodonMutSelSBDPProfileProcess() {}
+	AACodonMutSelSBDPOmegaSBDPProfileProcess() {}
+	virtual ~AACodonMutSelSBDPOmegaSBDPProfileProcess() {}
 
-	int GetNSubAlloc()	{
-		return GetNomega();
-	}
-
-	int GetSubAlloc(int site)	{
-		return GetOmegaSiteAlloc(site);
-	}
-	
 	protected:
 
 	void Create()	{
-		MultipleOmegaProcess::Create();
-		AACodonMutSelProfileProcess::Create();
+		SBDPOmegaProcess::Create();
+		AACodonMutSelSiteMatrixMixtureProfileProcess::Create();
 		SBDPProfileProcess::Create();
-		GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::Create();
 	}
 	
 	void Delete()	{
-		GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::Delete();
 		SBDPProfileProcess::Delete();
-		AACodonMutSelProfileProcess::Delete();
-		MultipleOmegaProcess::Delete();
+		AACodonMutSelSiteMatrixMixtureProfileProcess::Delete();
+		SBDPOmegaProcess::Delete();
 	}
 
 	void ToStream(ostream& os)	{
@@ -70,6 +59,13 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 		}
 		os << '\n';
 		os << '\n';
+		os << NcomponentOmega;
+		for (int i=0; i<NcomponentOmega; i++)	{
+			os << omegaarray[i] << '\t';
+		}
+		os << '\n';
+		os << omegakappa << '\t' << omegaalpha << '\t' << omegabeta << '\n';
+		os << '\n';
 
 		os << kappa << '\n';
 		os << Ncomponent << '\n';
@@ -84,22 +80,14 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 			}
 			os << '\n';
 		}
-		os << Nomega << '\n';
-		for (int i=0; i<Nomega; i++)	{
-			os << omega[i] << '\t'; 	
-		}
-
-		os << '\n';
-		os << '\n';
 		for (int i=0; i<GetNsite(); i++)	{
 			if (ActiveSite(i))	{
 				os << alloc[i] << '\t';
-				os << omegaalloc[i] << '\t';
+				os << omegaalloc[i];
 			}
 		}
 		os << '\n';
-		os << '\n';
-		
+
 	}
 	void FromStream(istream& is)	{
 		for (int i=0; i<Nnuc; i++)	{
@@ -111,6 +99,12 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 		for (int i=0; i<GetNcodon(); i++)	{
 			is >> codonprofile[i];
 		}
+		is >> NcomponentOmega;
+		for (int i=0; i<NcomponentOmega; i++)	{
+			is >> omegaarray[i];
+		}
+
+		is >> omegakappa >> omegaalpha >> omegabeta;
 
 		is >> kappa;
 		is >> Ncomponent;
@@ -122,10 +116,6 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 				is >> profile[i][j];
 			}
 		}
-		is >> Nomega;
-		for (int i=0; i<Nomega; i++)	{
-			is >> omega[i]; 	
-		}
 		for (int i=0; i<GetNsite(); i++)	{
 			if (ActiveSite(i))	{
 				is >> alloc[i];
@@ -133,16 +123,7 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 			}
 		}
 		ResampleWeights();
-		ResampleOmegaWeights();
-	}
-
-
-	void CreateMatrix(int alloc, int suballoc)	{
-		if (matrixarray[alloc][suballoc])	{
-			cerr << "error in AACodonMutSelSBDPProfileProcess: matrixarray is not 0\n";
-			exit(1);
-		}
-		matrixarray[alloc][suballoc] = new AACodonMutSelProfileSubMatrix(GetCodonStateSpace(),nucrr,nucstat,codonprofile,profile[alloc],GetOmegaPointer(suballoc),true);
+		//ResampleOmegaWeights();
 	}
 };
 

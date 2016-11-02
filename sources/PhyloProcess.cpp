@@ -753,6 +753,7 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
 	if (!check)	{
 		is >> dirpriortype >> Nstatcomp >> priorempmix >> priormixtype >> fixstatweight >> fixstatalpha >> fixstatcenter;
 		is >> check;
+		partitionfile = "None";
 		if (! check)	{
 			is >> partitionfile;
 			is >> check;

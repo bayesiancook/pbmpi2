@@ -169,6 +169,7 @@ void MPIModule::SetPartition(string partitionfile)	{
 	is >> tmpnsite >> Npart;
 	if (tmpnsite != nsite)	{
 		cerr << "error in MPIModule::SetPartition: number of sites defined by datafile and partition file do not match\n";
+		cerr << "partition file: " << partitionfile << '\n';
 		exit(1);
 	}
 	partalloc = new int[nsite];

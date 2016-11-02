@@ -73,6 +73,7 @@ class RASCATSBDPGammaPhyloProcess : public virtual RASCATGammaPhyloProcess, publ
 	virtual void SlaveGetFullLogLikelihood();
 	virtual double GetFullLogLikelihood();
 
+	virtual void ReadProfileDistribution(string name, int burnin, int every, int until, int ndisc, double cialpha, int nsample);
 	void ReadStatMin(string name, int burnin, int every, int until);
 
 	void FromStream(istream& is)	{

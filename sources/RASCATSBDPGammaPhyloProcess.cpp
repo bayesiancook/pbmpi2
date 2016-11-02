@@ -486,3 +486,214 @@ void RASCATSBDPGammaPhyloProcess::SlaveGetFullLogLikelihood()	{
 		MPI_Send(SBDPProfileProcess::alloc,GetNsite(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
 	}
 }
+
+void RASCATSBDPGammaPhyloProcess::ReadProfileDistribution(string name, int burnin, int every, int until, int ndisc, double cialpha, int nsample)	{
+
+	double minhi = 100;
+	double maxhi = -100;
+	for (int a=0; a<Naa; a++)	{
+		if (maxhi < HydrophobicityIndex_pH7[a])	{
+			maxhi = HydrophobicityIndex_pH7[a];
+		}
+		if (minhi > HydrophobicityIndex_pH7[a])	{
+			minhi = HydrophobicityIndex_pH7[a];
+		}
+	}
+
+	double mines = 1;
+	double maxes = 20;
+
+	vector<double>* hicdf = new vector<double>[ndisc+1];
+	double* higrid = new double[ndisc+1];
+	for (int l=0; l<=ndisc; l++)	{
+		higrid[l] = minhi + ((double) l) / ndisc * (maxhi - minhi);
+	}
+	double* tmphicdf = new double[ndisc+1];
+	double* meanhicdf = new double[ndisc+1];
+	for (int l=0; l<=ndisc; l++)	{
+		meanhicdf[l] = 0;
+	}
+
+	vector<double>* escdf = new vector<double>[ndisc+1];
+	double* esgrid = new double[ndisc+1];
+	for (int l=0; l<=ndisc; l++)	{
+		esgrid[l] = mines + ((double) l) / ndisc * (maxes - mines);
+	}
+	double* tmpescdf = new double[ndisc+1];
+	double* meanescdf = new double[ndisc+1];
+	for (int l=0; l<=ndisc; l++)	{
+		meanescdf[l] = 0;
+	}
+
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	ofstream mos((name + ".meandist").c_str());
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		ResampleWeights();
+		i++;
+
+		for (int l=0; l<=ndisc; l++)	{
+			tmphicdf[l] = 0;
+			tmpescdf[l] = 0;
+		}
+
+		// get spike distribution
+		ostringstream s;
+		s << name << "_" << samplesize << ".profilespikes";
+		ofstream os(s.str().c_str());
+		for (int i=0; i<GetNcomponent(); i++)	{
+			os << weight[i] << '\t' << GetHI7(profile[i]) << '\t' << GetMolWeight(profile[i]) << '\t' << GetEffSize(profile[i]) << '\t' << GetTwoMaxRatio(profile[i]) << '\t' << GetMinMaxRatio(profile[i]);
+			for (int k=0; k<GetDim(); k++)	{
+				os << '\t' << profile[i][k];
+			}
+			os << '\n';
+
+			double h = GetHI7(profile[i]);
+			for (int l=0; l<=ndisc; l++)	{
+				if (h < higrid[l])	{
+					tmphicdf[l] += weight[i];
+				}
+			}
+
+			double es = GetEffSize(profile[i]);
+			for (int l=0; l<=ndisc; l++)	{
+				if (h < esgrid[l])	{
+					tmpescdf[l] += weight[i];
+				}
+			}
+		}
+
+		for (int l=0; l<=ndisc; l++)	{
+			hicdf[l].push_back(tmphicdf[l]);
+			meanhicdf[l] += tmphicdf[l];
+		}
+			
+		for (int l=0; l<=ndisc; l++)	{
+			escdf[l].push_back(tmpescdf[l]);
+			meanescdf[l] += tmpescdf[l];
+		}
+			
+		// this is the distribution of site-specific profiles, across sites, for current MCMC point
+		ostringstream s2;
+		s2 << name << "_" << samplesize << ".siteprofiledist";
+		ofstream os2(s2.str().c_str());
+
+		for (int i=0; i<GetNsite(); i++)	{
+			double* p = GetProfile(i);
+			os2 << i << '\t' << GetHI7(p) << '\t' << GetMolWeight(p) << '\t' << GetEffSize(p) << '\t' << GetTwoMaxRatio(p) << '\t' << GetMinMaxRatio(p);
+			for (int k=0; k<GetDim(); k++)	{
+				os2 << '\t' << p[k];
+			}
+			os2 << '\n';
+		}
+
+		// this is a random sample of nsample profiles from the current mixture
+		// this random sample is saved in a separate file, for current MCMC point
+		ostringstream s3;
+		s3 << name << "_" << samplesize << ".profiledist";
+		ofstream os3(s3.str().c_str());
+
+		for (int i=0; i<nsample; i++)	{
+
+			int k = rnd::GetRandom().DrawFromDiscreteDistribution(weight,GetNcomponent());
+			double* p = profile[k];
+
+			os3 << i << '\t' << GetHI7(p) << '\t' << GetMolWeight(p) << '\t' << GetEffSize(p) << '\t' << GetTwoMaxRatio(p) << '\t' << GetMinMaxRatio(p);
+			for (int k=0; k<GetDim(); k++)	{
+				os3 << '\t' << p[k];
+			}
+			os3 << '\n';
+		}
+
+		// another random sample, thinned, and pooled with all samples across the MCMC
+		for (int i=0; i<nsample/10; i++)	{
+
+			int k = rnd::GetRandom().DrawFromDiscreteDistribution(weight,GetNcomponent());
+			double* p = profile[k];
+
+			mos << i << '\t' << GetHI7(p) << '\t' << GetMolWeight(p) << '\t' << GetEffSize(p) << '\t' << GetTwoMaxRatio(p) << '\t' << GetMinMaxRatio(p);
+			for (int k=0; k<GetDim(); k++)	{
+				mos << '\t' << p[k];
+			}
+			mos << '\n';
+		}
+
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+
+	for (int l=0; l<=ndisc; l++)	{
+		meanhicdf[l] /= samplesize;
+	}
+
+	double* minhicdf = new double[ndisc+1];
+	double* maxhicdf = new double[ndisc+1];
+
+	int nmin = ((int) ( ((double) samplesize) * 0.5*cialpha));
+	int nmax = samplesize - nmin;
+	if (nmax == samplesize)	{
+		nmax--;
+	}
+
+	for (int l=0; l<=ndisc; l++)	{
+		sort(hicdf[l].begin(),hicdf[l].end());
+		minhicdf[l] = hicdf[l][nmin];
+		maxhicdf[l] = hicdf[l][nmax];
+	}
+
+	ofstream hos((name + ".hicdf").c_str());
+	for (int l=0; l<=ndisc; l++)	{
+		hos << higrid[l] << '\t' << meanhicdf[l] << '\t' << minhicdf[l] << '\t' << maxhicdf[l] << '\n';
+	}
+
+	double* minescdf = new double[ndisc+1];
+	double* maxescdf = new double[ndisc+1];
+
+	for (int l=0; l<=ndisc; l++)	{
+		sort(escdf[l].begin(),escdf[l].end());
+		minescdf[l] = escdf[l][nmin];
+		maxescdf[l] = escdf[l][nmax];
+	}
+
+	ofstream esos((name + ".escdf").c_str());
+	for (int l=0; l<=ndisc; l++)	{
+		esos << esgrid[l] << '\t' << meanescdf[l] << '\t' << minescdf[l] << '\t' << maxescdf[l] << '\n';
+	}
+
+	delete[] meanhicdf;
+	delete[] minhicdf;
+	delete[] maxhicdf;
+	delete[] tmphicdf;
+	delete[] hicdf;
+	delete[] higrid;
+
+	delete[] meanescdf;
+	delete[] minescdf;
+	delete[] maxescdf;
+	delete[] tmpescdf;
+	delete[] escdf;
+	delete[] esgrid;
+}

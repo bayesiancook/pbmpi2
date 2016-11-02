@@ -52,7 +52,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= pb_mpi stickbreaking drawhindex gettreelength pb_mpi readpb_mpi simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity pb_mpi readpb_mpi mccpmcmc ccpmcmc bpcomp bpcomp2 tracecomp
+ALL= pb_mpi readpb_mpi hi stickbreaking drawhindex gettreelength simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity mccpmcmc ccpmcmc bpcomp bpcomp2 tracecomp
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean
@@ -82,6 +82,9 @@ $(PROGSDIR)/stickbreaking: StickBreaking.o $(OBJS)
 
 $(PROGSDIR)/drawhindex: DrawHindex.o $(OBJS)
 	$(CC) DrawHindex.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+
+$(PROGSDIR)/hi: HI.o $(OBJS)
+	$(CC) HI.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 $(PROGSDIR)/gettreelength : GetTreeLength.o $(OBJS)
 	$(CC) GetTreeLength.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@

@@ -199,6 +199,9 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	roottax2 = "None";
 
 	int ssdist = 0;
+	int meandirweight = 0;
+	int ndisc = 100;
+	int nsample = 1000;
 
 	try	{
 
@@ -345,8 +348,17 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 				i++;
 				testdatafile = argv[i];
 			}
+			else if (s == "-meandirweight")	{
+				meandirweight = 1;
+			}
 			else if (s == "-ssdist")	{
 				ssdist = 1;
+				i++;
+				ndisc = atoi(argv[i]);
+				i++;
+				cialpha = atof(argv[i]);
+				i++;
+				nsample = atoi(argv[i]);
 			}
 			else if (s == "-ss")	{
 				ss = 1;
@@ -425,7 +437,10 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 		ReadSiteProfiles(name,burnin,every,until,cialpha,trueprofiles);
 	}
 	else if (ssdist)	{
-		ReadProfileDistribution(name,burnin,every,until);
+		ReadProfileDistribution(name,burnin,every,until,ndisc,cialpha,nsample);
+	}
+	else if (meandirweight)	{
+		ReadMeanDirWeight(name,burnin,every,until);
 	}
 	else if (statmin)	{
 		ReadStatMin(name,burnin,every,until);
@@ -489,25 +504,68 @@ void RASCATGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	}
 }
 
-void RASCATGammaPhyloProcess::ReadProfileDistribution(string name, int burnin, int every, int until)	{
+void RASCATGammaPhyloProcess::ReadMeanDirWeight(string name, int burnin, int every, int until)	{
 
 	double* meandirweight = new double[GetDim()];
 	for (int k=0; k<GetDim(); k++)	{
 		meandirweight[k] = 0;
 	}
 
-	/*
-	double minhi = 100;
-	double maxhi = -100;
-	for (int a=0; a<Naa; a++)	{
-		if (maxhi < HydrophobicityIndex_pH7[a])	{
-			maxhi = HydrophobicityIndex_pH7[a]);
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		for (int k=0; k<GetDim(); k++)	{
+			meandirweight[k] += dirweight[k];
 		}
-		if (minhi > HydrophobicityIndex_pH7[a])	{
-			minhi = HydrophobicityIndex_pH7[a]);
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
 		}
 	}
-	*/
+	cerr << '\n';
+	
+	ofstream dos((name + ".dirweight").c_str());
+	double total = 0;
+	for (int k=0; k<GetDim(); k++)	{
+		meandirweight[k] /= samplesize;
+		total += meandirweight[k];
+	}
+	dos << total << '\n';
+	for (int k=0; k<GetDim(); k++)	{
+		meandirweight[k] /= total;
+		dos << meandirweight[k] << '\t';
+	}
+	dos << '\n';
+}
+
+void RASCATGammaPhyloProcess::ReadProfileDistribution(string name, int burnin, int every, int until, int ndisc, double cialpha, int nsample)	{
+
+	double* meandirweight = new double[GetDim()];
+	for (int k=0; k<GetDim(); k++)	{
+		meandirweight[k] = 0;
+	}
+
 	vector<double>* hidist = 0;
 	vector<double>** dist = 0;
 

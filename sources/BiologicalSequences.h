@@ -73,13 +73,57 @@ using namespace std;
 		return mean;
 	}
 
-	static double GETWI(const double* stat)	{
+	static double GetMolWeight(const double* stat)	{
 		double mean = 0;
 		for (int k=0; k<Naa; k++)	{
 			mean += stat[k] * MolWeight[k];
 		}
 		return mean;
 	}
+
+	static double GetEffSize(const double* pi)	{
+		double tot = 0;
+		for (int k=0; k<Naa; k++)	{
+			tot += pi[k]*pi[k];
+		}
+		return 1.0 / tot;
+	}
+
+	static double GetTwoMaxRatio(const double* pi)	{
+		double max1 = 0;
+		int imax = -1;
+		for (int k=0; k<Naa; k++)	{
+			if (pi[k] > max1)	{
+				imax = k;
+				max1 = pi[k];
+			}
+		}
+	
+		double max2 = 0;
+		for (int k=0; k<Naa; k++)	{
+			if (imax != k)	{
+				if (pi[k] > max2)	{
+					max2 = pi[k];
+				}
+			}
+		}
+		return max1 / max2;
+	}
+
+	static double GetMinMaxRatio(const double* pi)	{
+		double max = 0;
+		double min = 1.0;
+		for (int k=0; k<Naa; k++)	{
+			if (min > pi[k])	{
+				min = pi[k];
+			}
+			if (max < pi[k])	{
+				max = pi[k];
+			}
+		}
+		return min/max;
+	}
+
 
 	const string Codons[] = {"TTT","TTC","TTA","TTG","TCT","TCC","TCA","TCG","TAT","TAC","TAA","TAG","TGT","TGC","TGA","TGG","CTT","CTC","CTA","CTG","CCT","CCC","CCA","CCG","CAT","CAC","CAA","CAG","CGT","CGC","CGA","CGG","ATT","ATC","ATA","ATG","ACT","ACC","ACA","ACG","AAT","AAC","AAA","AAG","AGT","AGC","AGA","AGG","GTT","GTC","GTA","GTG","GCT","GCC","GCA","GCG","GAT","GAC","GAA","GAG","GGT","GGC","GGA","GGG"};
 	const int codonpos[][64] = {

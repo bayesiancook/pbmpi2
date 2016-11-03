@@ -36,6 +36,8 @@ class SBDPProfileProcess: public virtual DPProfileProcess	{
 		return GetNOccupiedComponent();
 	}
 
+	int GetNMajorComponents();
+
 	protected:
 
 	double GetMaxWeightError() {return maxweighterror;}

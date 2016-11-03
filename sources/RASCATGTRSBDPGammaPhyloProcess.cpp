@@ -507,6 +507,7 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadNocc(string name, int burnin, int every
 	int samplesize = 0;
 
 	list<double> nocclist;
+	list<double> nmajorlist;
 
 	while (i < until)	{
 		cerr << ".";
@@ -517,7 +518,9 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadNocc(string name, int burnin, int every
 
 		UpdateOccupancyNumbers();
 		double nocc = GetNOccupiedComponent();
+		double nmajor = GetNMajorComponents();
 		nocclist.push_back(nocc);
+		nmajorlist.push_back(nmajor);
 
 		int nrep = 1;
 		while ((i<until) && (nrep < every))	{
@@ -527,8 +530,11 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadNocc(string name, int burnin, int every
 		}
 	}
 	cerr << '\n';
-	cerr << "number of occupied component (credibility interval) : ";
+	cerr << "number of occupied components (credibility interval) : ";
 	printCI(nocclist,cerr);
+	cerr << '\n';
+	cerr << "number of major components (credibility interval) : ";
+	printCI(nmajorlist,cerr);
 	cerr << '\n';
 }
 

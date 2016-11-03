@@ -18,6 +18,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "Random.h"
 #include "Parallel.h"
 
+#include <vector>
+#include <algorithm>
 
 
 //-------------------------------------------------------------------------
@@ -26,6 +28,24 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 
+int SBDPProfileProcess::GetNMajorComponents()	{
+
+	vector<double> w;
+	ResampleWeights();
+	for (int i=0; i<GetNcomponent(); i++)	{
+		w.push_back(weight[i]);
+	}
+	sort(w.begin(),w.end());
+	int n = GetNcomponent() - 1;
+	int k = 0;
+	double totw = 0;
+	while (totw < 0.95)	{
+		k++;
+		totw += w[n];
+		n--;
+	}
+	return k;
+}
 
 void SBDPProfileProcess::Create()	{
 

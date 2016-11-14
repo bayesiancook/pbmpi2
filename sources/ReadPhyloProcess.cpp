@@ -339,6 +339,29 @@ void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	
 	}
 	cerr << "posterior mean relative site rates in " << name << ".meansiterates\n";
 
+	int* permut = new int[GetNsite()];
+	for (int i=0; i<GetNsite(); i++)	{
+		permut[i] = i;
+	}
+	for (int i=0; i<GetNsite(); i++)	{
+		for (int j=GetNsite()-1; j>i; j--)	{
+			if (meanrate[permut[i]] < meanrate[permut[j]])	{
+				int tmp = permut[i];
+				permut[i] = permut[j];
+				permut[j] = tmp;
+			}
+		}
+	}
+
+	ofstream sos((name + ".meansiterates").c_str());
+	for (int i=0; i<GetNsite(); i++)	{
+		int j = permut[i];
+		int n = 0;
+		for (int k=0; k<GetDim(); k++)	{
+			n += observedarray[j][k];
+		}
+		sos << permut[i] << '\t' << meanrate[permut[i]] << '\t' << n << '\n';
+	}
 	delete[] meanrate;
 
 }

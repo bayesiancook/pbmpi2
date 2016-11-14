@@ -303,8 +303,10 @@ void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	
 	int samplesize = 0;
 
 	double* meanrate = new double[GetNsite()];
+	double* meantotrate = new double[GetNsite()];
 	for (int i=0; i<GetNsite(); i++)	{
 		meanrate[i] = 0;
+		meantotrate[i] = 0;
 	}
 
 	while (i < until)	{
@@ -318,9 +320,9 @@ void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	
 
 		GlobalGetMeanSiteRate();
 
-		// double length = GetRenormTotalLength();
+		double length = GetRenormTotalLength();
 		for (int i=0; i<GetNsite(); i++)	{
-			// meansiterate[i] *= length;
+			meantotrate[i] += length * meansiterate[i];
 			meanrate[i] += meansiterate[i];
 		}
 
@@ -335,6 +337,7 @@ void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	
 	ofstream os((name + ".meansiterates").c_str());
 	for (int i=0; i<GetNsite(); i++)	{
 		meanrate[i] /= samplesize;
+		meantotrate[i] /= samplesize;
 		os << i << '\t' << meanrate[i] << '\n';
 	}
 	cerr << "posterior mean relative site rates in " << name << ".meansiterates\n";
@@ -345,7 +348,7 @@ void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	
 	}
 	for (int i=0; i<GetNsite(); i++)	{
 		for (int j=GetNsite()-1; j>i; j--)	{
-			if (meanrate[permut[i]] < meanrate[permut[j]])	{
+			if (meantotrate[permut[i]] < meantotrate[permut[j]])	{
 				int tmp = permut[i];
 				permut[i] = permut[j];
 				permut[j] = tmp;
@@ -360,7 +363,7 @@ void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	
 		for (int k=0; k<GetDim(); k++)	{
 			n += observedarray[j][k];
 		}
-		sos << permut[i] << '\t' << meanrate[permut[i]] << '\t' << n << '\n';
+		sos << permut[i] << '\t' << meantotrate[permut[i]] << '\t' << n << '\n';
 	}
 	delete[] meanrate;
 

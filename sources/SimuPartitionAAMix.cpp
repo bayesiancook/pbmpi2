@@ -281,6 +281,14 @@ class Simulator : public NewickTree {
 		if (tmp == "Poisson")	{
 			Nrrcat = 1;
 		}
+		else if (tmp == "LG")	{
+			Nrrcat = 1;
+			rr = new double*[Nrrcat];
+			rr[0] = new double[Nrr];
+			for (int i=0; i<Nrr; i++)	{
+				rr[0][i] = LG_RR[i];
+			}
+		}
 		else if (tmp == "WAG")	{
 			Nrrcat = 1;
 			rr = new double*[Nrrcat];

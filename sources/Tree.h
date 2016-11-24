@@ -570,6 +570,10 @@ class Tree : public NewickTree {
 		return linkmap[index];
 	}
 
+	void GetPairwiseDistances(map<pair<string,string>,double>& distmap)	{
+		RecursiveGetPairwiseDistances(distmap,GetRoot());
+	}
+
 	protected:
 
 	map<int,const Node*> nodemap;
@@ -730,6 +734,8 @@ class Tree : public NewickTree {
 		}
 		return ret;
 	}
+
+	map<string,double> RecursiveGetPairwiseDistances(map<pair<string,string>,double>& distmap, const Link* from);
 
 	Link* ParseGroup(string input, Link* from);
 	// a group is an expression of one of the two following forms:

@@ -303,6 +303,8 @@ class SequenceAlignment	{
 		}
 	}
 
+	void GetPairwiseDistances(map<pair<string,string>,double>& distmap);
+
 	virtual ~SequenceAlignment() {
 
 		if (Data)	{

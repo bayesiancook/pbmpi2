@@ -62,6 +62,28 @@ void SequenceAlignment::GetEmpiricalFreq(double* in)	{
 	}
 }
 
+void SequenceAlignment::GetPairwiseDistances(map<pair<string,string>,double>& distmap)	{
+
+	for (int j=0; j<Ntaxa; j++)	{
+		for (int k=j+1; k<Ntaxa; k++)	{
+			double diff = 0;
+			int c = 0;
+			for (int i=0; i<Nsite; i++)	{
+				if ((Data[j][i] != unknown) && (Data[k][i] != unknown))	{
+					c++;
+					if (Data[j][i] != Data[k][i])	{
+						diff++;
+					}
+				}
+			}
+			if (c)	{
+				diff /= c;
+			}
+			distmap[pair<string,string>(taxset->GetTaxon(j),taxset->GetTaxon(k))] = diff;
+		}
+	}
+}
+
 double SequenceAlignment::GetMeanPairwiseDiff()	{
 
 	double tot = 0;

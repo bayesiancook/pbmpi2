@@ -167,6 +167,41 @@ Link* Tree::GetMinLeaf(Link* from) {
 	return ret;
 }
 
+map<string,double> Tree::RecursiveGetPairwiseDistances(map<pair<string,string>,double >& distmap, const Link* from)	{
+
+	map<string,double> tipdist;
+	if (from->isLeaf())	{
+		tipdist[from->GetNode()->GetName()] = from->GetBranch()->GetLength();
+	}
+	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+		map<string,double> tmp = RecursiveGetPairwiseDistances(distmap,link->Out());
+		double l = 0;
+		if (! from->isRoot())	{
+			l = from->GetBranch()->GetLength();
+		}
+		for (map<string,double>::iterator i=tmp.begin(); i!=tmp.end(); i++)	{
+			i->second += l;
+		}
+		for (map<string,double>::iterator i=tipdist.begin(); i!=tipdist.end(); i++)	{
+			for (map<string,double>::iterator j=tmp.begin(); j!=tmp.end(); j++)	{
+				if (distmap[pair<string,string>(i->first,j->first)] != 0)	{
+					cerr << "error in recursive get pairwise distances\n";
+					exit(1);
+				}
+				distmap[pair<string,string>(i->first,j->first)] = i->second + j->second;
+			}
+		}
+		for (map<string,double>::iterator j=tmp.begin(); j!=tmp.end(); j++)	{
+			if (tipdist[j->first] != 0)	{
+				cerr << "error in recursive get pairwise distances: tipdist\n";
+				exit(1);
+			}
+			tipdist[j->first] = j->second;
+		}
+	}
+	return tipdist;
+}
+
 void Tree::MakeRandomTree()	{
 
 	int Ntaxa = taxset->GetNtaxa();

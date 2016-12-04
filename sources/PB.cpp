@@ -508,7 +508,7 @@ int main(int argc, char* argv[])	{
 			else if (s == "-Nomega")	{
 				i++;
 				nomega = atoi(argv[i]);
-				mixturetype = 3;
+				// mixturetype = 3;
 			}
 			else if (s == "-nomega")	{
 				i++;

@@ -63,12 +63,14 @@ class SiteMatrixMixtureProfileProcess : public virtual MatrixMixtureProfileProce
 	}
 
 	virtual void CreateSiteMatrices()	{
+		/*
 		if (GetMyid() == 0)	{
 			cerr << "master: CreateSiteMatrices\n";
 		}
 		if (GetMyid() == 1)	{
 			cerr << "slave : CreateSiteMatrices\n";
 		}
+		*/
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{
 				CreateSiteMatrix(i);

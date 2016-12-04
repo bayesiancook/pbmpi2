@@ -88,8 +88,10 @@ class AACodonMutSelSiteMatrixMixtureProfileProcess : public virtual AACodonMutSe
 	virtual void UpdateSiteMatrix(int site)	{
 		if (sitematrixarray[site])	{
 			GetCodonMatrix(site)->SetAAProfile(GetProfile(site));
+			/*
 			cerr << "define SetOmega in aa codon matrix\n";
 			exit(1);
+			*/
 			// GetCodonMatrix(site)->SetOmega(GetSiteOmegaPtr(site));
 
 			// useless: done by AACodonMutSelProfileSubMatrix upon calling SetAAProfile or SetOmega anyway

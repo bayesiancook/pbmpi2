@@ -268,6 +268,8 @@ void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int profileprior = 0;
 	int rootprior = 1;
 
+	int ss = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -339,6 +341,9 @@ void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 			else if (s == "-div")	{
 				ppred = 2;
 			}
+			else if (s == "-ss")	{
+				ss = 1;
+			}
 			else if ( (s == "-x") || (s == "-extract") )	{
 				i++;
 				if (i == argc) throw(0);
@@ -390,6 +395,9 @@ void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 	//if (sel)	{
 	//	ReadSDistributions(name,burnin,every,until);
 	//}
+	else if (ss)	{
+		ReadSiteProfiles(name,burnin,every,until,0,"None");
+	}
 	else if (mapstats)	{
 		ReadMapStats(name,burnin,every,until);
 	}

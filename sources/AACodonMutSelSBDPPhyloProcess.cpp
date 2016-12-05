@@ -463,14 +463,14 @@ void AACodonMutSelSBDPPhyloProcess::ReadPredictedOmega(string name, int burnin, 
 	cerr << '\n';
 	
 	double mean = 0;
-	ofstream os((name + ".siteomega").c_str());
+	ofstream os((name + ".predsiteomega").c_str());
 	os << "site\tomega\n";
 	for (int i=0; i<GetNsite(); i++)	{
 		meanomega[i] /= samplesize;
 		mean += meanomega[i];
 		os << i+1 << '\t' << meanomega[i] << '\n';
 	}
-	cerr << "mean site-specific predicted dN/dS in" << name << ".siteomega\n";
+	cerr << "mean site-specific predicted dN/dS in" << name << ".predsiteomega\n";
 	mean /= GetNsite();
 	cerr << "global mean predicted omega: " << mean << '\n';
 	cerr << '\n';

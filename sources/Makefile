@@ -52,7 +52,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= satplot pb_mpi readpb_mpi geneempfreq reroot hi stickbreaking drawhindex gettreelength simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity mccpmcmc ccpmcmc bpcomp bpcomp2 tracecomp
+ALL= logo satplot pb_mpi readpb_mpi geneempfreq reroot hi stickbreaking drawhindex gettreelength simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity mccpmcmc ccpmcmc bpcomp bpcomp2 tracecomp
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean
@@ -76,6 +76,9 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 # Targets
+
+$(PROGSDIR)/logo: MakeSequenceLogo.o $(OBJS)
+	$(CC) MakeSequenceLogo.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 $(PROGSDIR)/stickbreaking: StickBreaking.o $(OBJS)
 	$(CC) StickBreaking.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@

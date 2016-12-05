@@ -576,6 +576,27 @@ int main(int argc, char* argv[])	{
 			else if (s == "-gtr")	{
 				modeltype = 2;
 			}
+			else if (s == "-globalomega")	{
+				iscodon = 1;
+				modeltype = 5;
+				mixturetype = 1;
+				ncat = 1;
+				empmix = 1;
+				fixncomp = 1;
+				mixtype = "uniform";
+				fixomega = 0;
+			}
+			else if (s == "-siteomega")	{
+				iscodon = 1;
+				modeltype = 5;
+				mixturetype = 1;
+				ncat = 1;
+				nomega = -1;
+				empmix = 1;
+				fixncomp = 1;
+				mixtype = "uniform";
+				fixomega = 0;
+			}
 			else if (s == "-mutselc")	{
 				iscodon = 1;
 				modeltype = 4;

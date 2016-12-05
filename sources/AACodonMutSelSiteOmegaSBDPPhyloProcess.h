@@ -68,6 +68,9 @@ class AACodonMutSelSiteOmegaSBDPPhyloProcess : public virtual AACodonMutSelSiteO
 
 	void TraceHeader(ostream& os)	{
 		os << "#iter\ttime\tpruning\tlnL\tlength\tcodonent\tmeanomega\tvaromega\tpos\tNmode\tstatent\tstatalpha\tnucsA\tnucsC\tnucsG\tnucsT\tnucrrAC\tnucrrAG\tnucrrAT\tnucrrCG\tnucrrCT\tnucrrGT";
+		for (int i=0; i<GetNsite(); i++)	{
+			os << "\t" << i+1;
+		}
 		os << '\n'; 
 	}
 
@@ -100,6 +103,9 @@ class AACodonMutSelSiteOmegaSBDPPhyloProcess : public virtual AACodonMutSelSiteO
 		os << '\t' << GetMeanDirWeight();
 		os << '\t' << GetNucStat(0) << '\t' << GetNucStat(1) << '\t' << GetNucStat(2) << '\t' << GetNucStat(3);
 		os << '\t' << GetNucRR(0) << '\t' << GetNucRR(1) << '\t' << GetNucRR(2) << '\t' << GetNucRR(3) << '\t' << GetNucRR(4) << '\t' << GetNucRR(5);
+		for (int i=0; i<GetNsite(); i++)	{
+			os << '\t' << GetSiteOmega(i);
+		}
 		os << '\n';
 	}
 

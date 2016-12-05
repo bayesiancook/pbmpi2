@@ -119,6 +119,8 @@ class AACodonMutSelSBDPPhyloProcess : public virtual AACodonMutSelSBDPSubstituti
 
 	virtual void ReadPB(int argc, char* argv[]);
 	void Read(string name, int burnin, int every, int until);
+	void ReadSiteProfiles(string name, int burnin, int every, int until);
+	void ReadPredictedOmega(string name, int burnin, int every, int until);
 	void ReadMapStats(string name, int burnin, int every, int until);
 	int CountNonSynMapping(int i);
 	int CountNonSynMapping();

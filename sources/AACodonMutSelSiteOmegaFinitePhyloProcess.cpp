@@ -116,6 +116,12 @@ void AACodonMutSelSiteOmegaFinitePhyloProcess::SlaveExecute(MESSAGE signal)	{
 		case UPDATE_OMEGA:
 			SlaveUpdateOmegaSuffStat();
 			break;
+		case STATFIX:
+			SlaveGetStatFix();
+			break;
+		case REALLOC_MOVE:
+			SlaveIncrementalFiniteMove();
+			break;
 		case MIXMOVEOMEGA:
 			SlaveMixMoveOmega();
 			break;
@@ -206,6 +212,9 @@ void AACodonMutSelSiteOmegaFinitePhyloProcess::GlobalUpdateParameters() {
 	// Now send out the doubles and ints over the wire...
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
+	else	{
+		UpdateMatrices();
 	}
 }
 

@@ -94,6 +94,10 @@ class AACodonMutSelProfileProcess : public virtual GeneralPathSuffStatMatrixProf
 		return codonmatrix;
 	}
 
+	double GetPredictedOmega(int site)	{
+		return GetCodonMatrix(site)->GetPredictedOmega();
+	}
+
 	/*
 	virtual void UpdateNucStatSuffStat() = 0;
 	virtual void UpdateNucRRSuffStat() = 0;

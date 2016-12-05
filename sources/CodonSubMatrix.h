@@ -113,6 +113,8 @@ class AACodonMutSelProfileSubMatrix : public CodonSubMatrix	{
 		CorruptMatrix();
 	}
 
+	double GetPredictedOmega();
+
 	double GetOmega() {return *omega;}
 
 	double GetOmega2() {return *omega + 0.0001;}

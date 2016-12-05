@@ -269,6 +269,7 @@ void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int rootprior = 1;
 
 	int ss = 0;
+	int om = 0;
 
 	try	{
 
@@ -344,6 +345,9 @@ void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 			else if (s == "-ss")	{
 				ss = 1;
 			}
+			else if (s == "-om")	{
+				om = 1;
+			}
 			else if ( (s == "-x") || (s == "-extract") )	{
 				i++;
 				if (i == argc) throw(0);
@@ -396,7 +400,10 @@ void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 	//	ReadSDistributions(name,burnin,every,until);
 	//}
 	else if (ss)	{
-		ReadSiteProfiles(name,burnin,every,until,0,"None");
+		ReadSiteProfiles(name,burnin,every,until);
+	}
+	else if (om)	{
+		ReadPredictedOmega(name,burnin,every,until);
 	}
 	else if (mapstats)	{
 		ReadMapStats(name,burnin,every,until);
@@ -407,6 +414,137 @@ void AACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 	else	{
 		Read(name,burnin,every,until);
 	}
+}
+
+void AACodonMutSelSBDPPhyloProcess::ReadPredictedOmega(string name, int burnin, int every, int until)	{
+
+	if (GetNprocs() > 1)	{
+		cerr << "error in read predicted omega: works only under non mpi\n";
+		exit(1);
+	}
+
+	double* meanomega = new double[GetNsite()];
+	for (int i=0; i<GetNsite(); i++)	{
+		meanomega[i] = 0;
+	}
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		UpdateMatrices();
+		for (int i=0; i<GetNsite(); i++)	{
+			meanomega[i] += GetPredictedOmega(i);
+		}
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+	
+	double mean = 0;
+	ofstream os((name + ".siteomega").c_str());
+	os << "site\tomega\n";
+	for (int i=0; i<GetNsite(); i++)	{
+		meanomega[i] /= samplesize;
+		mean += meanomega[i];
+		os << i+1 << '\t' << meanomega[i] << '\n';
+	}
+	cerr << "mean site-specific predicted dN/dS in" << name << ".siteomega\n";
+	mean /= GetNsite();
+	cerr << "global mean predicted omega: " << mean << '\n';
+	cerr << '\n';
+}
+
+void AACodonMutSelSBDPPhyloProcess::ReadSiteProfiles(string name, int burnin, int every, int until)	{
+
+	double** sitestat = new double*[GetNsite()];
+	for (int i=0; i<GetNsite(); i++)	{
+		sitestat[i] = new double[GetDim()];
+		for (int k=0; k<GetDim(); k++)	{
+			sitestat[i][k] = 0;
+		}
+	}
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		for (int i=0; i<GetNsite(); i++)	{
+			double* p = GetProfile(i);
+			for (int k=0; k<GetDim(); k++)	{
+				sitestat[i][k] += p[k];
+			}
+		}
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+	cerr << '\n';
+	
+	ofstream os((name + ".siteprofiles").c_str());
+	/*
+	if (GetDim() != Naa)	{
+		cerr << "error in read site profiles: should be 20 states\n";
+		exit(1);
+	}
+	for (int k=0; k<GetDim(); k++)	{
+		os << AminoAcids[k] << ' ';
+	}
+	os << '\n';
+	os << '\n';
+	*/
+	os << GetNsite() << '\n';
+	for (int i=0; i<GetNsite(); i++)	{
+		os << i+1;
+		for (int k=0; k<GetDim(); k++)	{
+			sitestat[i][k] /= samplesize;
+			os << '\t' << sitestat[i][k];
+		}
+		os << '\n';
+	}
+	cerr << "mean site-specific profiles in " << name << ".siteprofiles\n";
+	cerr << '\n';
 }
 
 void AACodonMutSelSBDPPhyloProcess::ReadMapStats(string name, int burnin, int every, int until){

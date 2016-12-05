@@ -114,6 +114,59 @@ void AACodonMutSelProfileSubMatrix::DeleteFixProbs()	{
 }
 */
 	
+double AACodonMutSelProfileSubMatrix::GetPredictedOmega()	{
+
+	UpdateMatrix();
+	double om = 0;
+	double norm = 0;
+	for (int i=0; i<GetNstate(); i++)       {
+		double totweight = 0;
+		double totom = 0;
+		for (int j=0; j<GetNstate(); j++)       {
+
+			if (i!=j)       {
+				int pos = GetDifferingPosition(i,j);
+				if ((pos != -1) && (pos != 3))  {
+					int a = GetCodonPosition(pos,i);
+					int b = GetCodonPosition(pos,j);
+
+					double nucrate = nucrr[GetNucRRIndex(a,b)] * nucstat[b];
+
+					if (! Synonymous(i,j))  {
+						double deltaF = log((aaprofile)[GetCodonStateSpace()->Translation(j)] / (aaprofile)[GetCodonStateSpace()->Translation(i)]) +
+								log( (codonprofile)[j] / (codonprofile)[i] );
+
+						double pfix = 1.0;
+						if (fabs(deltaF) < TOOSMALL)        {
+							pfix = 1.0 / (1.0 - (deltaF/2));
+						}
+						else if (deltaF > TOOLARGE)	{
+							pfix = deltaF;
+						}
+						else if (deltaF < TOOLARGENEGATIVE)	{
+							pfix = 0.0;
+						}
+						else    {
+							pfix = (deltaF)/(1.0 - exp(-deltaF));
+						}
+
+						totweight += nucrate;
+						totom += nucrate*pfix;
+					}
+				}
+			}
+		}
+		totom /= totweight;
+		om += mStationary[i] * totom;
+		norm += mStationary[i];
+	}
+	if (fabs(norm-1) > 1e-6)	{
+		cerr << "error in GetPredictedOmega: stationaries do not sum up to 1\n";
+		exit(1);
+	}
+	return om;
+}
+
 void AACodonMutSelProfileSubMatrix::ComputeArray(int i)	{
 
 	double norm = GetNucRate();

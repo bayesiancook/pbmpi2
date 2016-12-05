@@ -129,9 +129,7 @@ double SiteOmegaProcess::MoveOmega(double tuning)	{
 		MoveOmegaHyperIntegrated(tuning,10);
 		MoveOmegaHyperIntegrated(0.3*tuning,10);
 
-		if (GetNprocs() > 1)	{
-			ResampleSiteOmegas();
-		}
+		ResampleSiteOmegas();
 	}
 	else	{
 		if (GetNprocs() > 1)	{

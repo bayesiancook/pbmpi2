@@ -52,7 +52,8 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-ALL= logo satplot pb_mpi readpb_mpi geneempfreq reroot hi stickbreaking drawhindex gettreelength simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity mccpmcmc ccpmcmc bpcomp bpcomp2 tracecomp
+ALL= pb_mpi readpb_mpi logo tracecomp
+#ALL= logo satplot pb_mpi readpb_mpi geneempfreq reroot hi stickbreaking drawhindex gettreelength simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity mccpmcmc ccpmcmc bpcomp bpcomp2 tracecomp
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean

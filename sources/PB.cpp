@@ -101,7 +101,7 @@ int main(int argc, char* argv[])	{
 
 	int suffstat = 1;
 
-	int saveall = 0;
+	int saveall = 1;
 
 	int randfix = -1;
 

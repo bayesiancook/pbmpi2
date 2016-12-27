@@ -16,9 +16,11 @@ class Simulator : public NewickTree {
 
 	public:
 
-	Simulator(string datafile, string treefile, string partitionfile, string paramfile, string profilefile, int inmask, string inbasename)	{
+	Simulator(string datafile, string treefile, string partitionfile, string rrfile, string paramfile, string profilefile, int inmask, int inrandomprofiles, int innfold, string inbasename)	{
 
 		mask = inmask;
+		randomprofiles = inrandomprofiles;
+		nfold = innfold;
 
 		basename = inbasename; 
 
@@ -31,22 +33,41 @@ class Simulator : public NewickTree {
 		}
 		statespace = protdata->GetStateSpace();
 
-		Nsite = protdata->GetNsite();
+		Nsite = protdata->GetNsite() * nfold;
 		currentseq = new int[Nsite];
 
 		if (partitionfile != "None")	{
 			ifstream pis(partitionfile.c_str());
-			pis >> Ngene;
+			int fromngene;
+			pis >> fromngene;
+			int* fromgenesize = new int[fromngene];
+			int* fromgenefirst = new int[fromngene];
+			SequenceAlignment** fromgenedata = new SequenceAlignment*[fromngene];
+			int count = 0;
+			for (int gene=0; gene<fromngene; gene++)	{
+				pis >> fromgenesize[gene];
+				fromgenefirst[gene] = count;
+				count += fromgenesize[gene];
+				fromgenedata[gene] = new SequenceAlignment(protdata,fromgenefirst[gene],fromgenesize[gene]);
+			
+			}
+
+			Ngene = fromngene*nfold;
 			genesize = new int[Ngene];
 			genefirst = new int[Ngene];
 			genedata = new SequenceAlignment*[Ngene];
 			genealloc = new int[Nsite];
-			int count = 0;
+			count = 0;
+			int genecount = 0;
 			for (int gene=0; gene<Ngene; gene++)	{
-				pis >> genesize[gene];
+				genesize[gene] = fromgenesize[genecount];
 				genefirst[gene] = count;
 				count += genesize[gene];
-				genedata[gene] = new SequenceAlignment(protdata,genefirst[gene],genesize[gene]);
+				genedata[gene] = new SequenceAlignment(fromgenedata[genecount]);
+				genecount++;
+				if (genecount == fromngene)	{
+					genecount = 0;
+				}
 				for (int i=0; i<genesize[gene]; i++)	{
 					genealloc[genefirst[gene] + i] = gene;
 				}
@@ -55,6 +76,12 @@ class Simulator : public NewickTree {
 				cerr << "error: non matching total size\n";
 				exit(1);
 			}
+			delete[] fromgenesize;
+			delete[] fromgenefirst;
+			for (int gene=0; gene<fromngene; gene++)	{
+				delete fromgenedata[gene];
+			}
+			delete[] fromgenedata;
 		}
 		else	{
 			Ngene = 1;
@@ -116,12 +143,38 @@ class Simulator : public NewickTree {
 			}
 
 			if (profilefile != "None")	{
-				ifstream is(profilefile.c_str());
-				for (int k=0; k<Nsite; k++)	{
-					int tmp;
-					is >> tmp;
-					for (int i=0; i<Naa; i++)	{
-						is >> stat[k][i];
+				if (randomprofiles)	{
+					ifstream is(profilefile.c_str());
+					int nprofile;
+					is >> nprofile;
+					double** profile = new double*[nprofile];
+					for (int k=0; k<nprofile; k++)	{
+						profile[k] = new double[Naa];
+						int tmp;
+						is >> tmp;
+						for (int i=0; i<Naa; i++)	{
+							is >> profile[k][i];
+						}
+					}
+					for (int k=0; k<Nsite; k++)	{
+						int cat = (int) (nprofile * rnd::GetRandom().Uniform());
+						for (int i=0; i<Naa; i++)	{
+							stat[k][i] = profile[cat][i];
+						}
+					}
+					for (int k=0; k<nprofile; k++)	{
+						delete[] profile[k];
+					}
+					delete[] profile;
+				}
+				else	{
+					ifstream is(profilefile.c_str());
+					for (int k=0; k<Nsite; k++)	{
+						int tmp;
+						is >> tmp;
+						for (int i=0; i<Naa; i++)	{
+							is >> stat[k][i];
+						}
 					}
 				}
 			}
@@ -271,6 +324,7 @@ class Simulator : public NewickTree {
 		Nrrcat = 0;
 		rr = 0;
 		Nrr = Naa * (Naa-1) / 2;
+
 		prmis >> tmp;
 		if (tmp != "RR")	{
 			cerr << "error: missing RR keyword\n";
@@ -335,8 +389,68 @@ class Simulator : public NewickTree {
 			generralloc[0] = 0;
 		}
 		else	{
-			for (int gene=0; gene<Ngene; gene++)	{
-				generralloc[gene] = (int) (Nrrcat * rnd::GetRandom().Uniform());
+			if (rrfile != "None")	{
+				int fromngene;
+				ifstream is(rrfile.c_str());
+				is >> fromngene;
+				string* rralloc = new string[fromngene];
+				for (int gene=0; gene<fromngene; gene++)	{
+					is >> rralloc[gene];
+				}
+				int genecount = 0;
+				for (int gene=0; gene<Ngene; gene++)	{
+					string tmp = rralloc[genecount];
+					genecount++;
+					if (genecount == fromngene)	{
+						genecount = 0;
+					}
+					if (tmp == "WAG")	{
+						generralloc[gene] = 0;
+					}
+					else if (tmp == "WAGF")	{
+						generralloc[gene] = 0;
+					}
+					else if (tmp == "BLOSUM62")	{
+						generralloc[gene] = 1;
+					}
+					else if (tmp == "BLOSUM62F")	{
+						generralloc[gene] = 1;
+					}
+					else if (tmp == "JTT")	{
+						generralloc[gene] = 2;
+					}
+					else if (tmp == "JTTF")	{
+						generralloc[gene] = 2;
+					}
+					else if (tmp == "DCMUT")	{
+						generralloc[gene] = 3;
+					}
+					else if (tmp == "DCMUTF")	{
+						generralloc[gene] = 3;
+					}
+					else if (tmp == "MTREV")	{
+						generralloc[gene] = 4;
+					}
+					else if (tmp == "MTREVF")	{
+						generralloc[gene] = 4;
+					}
+					else if (tmp == "DAYHOFF")	{
+						generralloc[gene] = 3;
+					}
+					else if (tmp == "DAYHOFFF")	{
+						generralloc[gene] = 3;
+					}
+					else	{
+						cerr << "error: did not recognize rr type: " << tmp << '\n';
+						exit(1);
+					}
+				}
+				delete[] rralloc;
+			}
+			else	{
+				for (int gene=0; gene<Ngene; gene++)	{
+					generralloc[gene] = (int) (Nrrcat * rnd::GetRandom().Uniform());
+				}
 			}
 		}
 
@@ -581,7 +695,7 @@ class Simulator : public NewickTree {
 		sos << "tot number of subs per site : " << ((double) count) / Nsite << '\n';
 		sos << '\n';
 		sos << "fraction inv colums: " << ((double) protali->GetNumberConstantColumns()) / Nsite << '\n';
-		sos << "ref frac inv colums: " << ((double) protdata->GetNumberConstantColumns()) / Nsite << '\n';
+		sos << "ref frac inv colums: " << ((double) protdata->GetNumberConstantColumns()) / protdata->GetNsite() << '\n';
 		sos << '\n';
 		sos << "mean diversity     : " << protali->GetMeanDiversity() << '\n';
 		sos << "ref  diversity     : " << protdata->GetMeanDiversity() << '\n';
@@ -589,6 +703,31 @@ class Simulator : public NewickTree {
 		sos << "mean pairwise diff : " << protali->GetMeanPairwiseDiff() << '\n';
 		sos << "ref  pairwise diff : " << protdata->GetMeanPairwiseDiff() << '\n';
 		sos << '\n';
+
+		ofstream pfos((basename + ".txt.pf").c_str());
+
+		pfos << "## BRANCHLENGTHS: linked | unlinked ##\n";
+		pfos << "branchlengths = linked;\n";
+		pfos << "\n";
+		pfos << "## MODELS OF EVOLUTION for PartitionFinder: all | raxml | mrbayes | <list> ##\n";
+		pfos << "##              for PartitionFinderProtein: all_protein | <list> ##\n";
+		pfos << "models = all_protein;\n";
+		pfos << "\n";
+		pfos << "# MODEL SELECCTION: AIC | AICc | BIC #\n";
+		pfos << "model_selection = BIC;\n";
+		pfos << "\n";
+		pfos << "## DATA BLOCKS: see manual for how to define ##\n";
+		pfos << "[data_blocks]\n";
+		for (int gene=0; gene<Ngene; gene++)	{
+			pfos << "gene" << gene << " = " << genefirst[gene]+1 << "-" << genefirst[gene]+genesize[gene] << ";\n";
+		}
+		pfos << "\n";
+		pfos << "## SCHEMES, search: all | user | greedy ##\n";
+		pfos << "[schemes]\n";
+		pfos << "search = greedy;\n";
+		pfos << "#search = hcluster;\n";
+		pfos << "\n";
+		pfos << "#user schemes go here if search=user. See manual for how to define.#\n";
 
 		delete[] data;
 		delete[] names;
@@ -607,6 +746,8 @@ class Simulator : public NewickTree {
 
 	int count;
 	int mask;
+	int randomprofiles;
+	int nfold;
 
 	int Ntaxa;
 	int Nsite;
@@ -665,8 +806,11 @@ int main(int argc, char* argv[])	{
 	string partitionfile = "None";
 	string profilefile = "None";
 	string paramfile = "";
+	string rrfile = "None";
 	string basename = "";
 	int mask = 1;
+	int randomprofiles = 0;
+	int nfold = 1;
 
 	try	{
 
@@ -695,6 +839,10 @@ int main(int argc, char* argv[])	{
 				i++;
 				partitionfile = argv[i];
 			}
+			else if (s == "-rr")	{
+				i++;
+				rrfile = argv[i];
+			}
 			else if ((s == "-p") || (s == "-param"))	{
 				i++;
 				paramfile = argv[i];
@@ -702,6 +850,13 @@ int main(int argc, char* argv[])	{
 			else if ((s == "-f") || (s == "-freq"))	{
 				i++;
 				profilefile = argv[i];
+			}
+			else if (s == "-randprof")	{
+				randomprofiles = 1;
+			}
+			else if (s == "-nfold")	{
+				i++;
+				nfold = atoi(argv[i]);
 			}
 			else	{
 				if (i != (argc -1))	{
@@ -723,7 +878,7 @@ int main(int argc, char* argv[])	{
 	}
 
 	cerr << "new sim\n";
-	Simulator* sim = new Simulator(datafile,treefile,partitionfile,paramfile,profilefile,mask,basename);
+	Simulator* sim = new Simulator(datafile,treefile,partitionfile,rrfile,paramfile,profilefile,mask,randomprofiles,nfold,basename);
 
 	cerr << "simulate\n";
 	sim->Simulate();

@@ -37,6 +37,8 @@ int main(int argc, char* argv[])	{
 	}
 	if (count != Nsite)	{
 		cerr << "error: non matching total size\n";
+		cerr << "sum over genes: " << count << '\n';
+		cerr << "concatenation : " << Nsite << '\n';
 		exit(1);
 	}
 
@@ -46,8 +48,9 @@ int main(int argc, char* argv[])	{
 	double* freq = new double[Naa];
 	for (int gene=0; gene<Ngene; gene++)	{
 		genedata[gene]->GetEmpiricalFreq(freq);
+		os << gene;
 		for (int k=0; k<Naa; k++)	{
-			os << freq[k] << '\t';
+			os << '\t' << freq[k];
 		}
 		os << '\n';
 	}

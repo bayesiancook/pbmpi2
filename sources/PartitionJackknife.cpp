@@ -5,6 +5,12 @@ MPI_Datatype Propagate_arg;
 
 int main(int argc, char* argv[])	{
 
+	if (argc == 1)	{
+		cerr << "partitionjackknife datafile partitionfile N nrep name\n";
+		cerr << "creates nrep jackknife replicates, each made of N randomly chosen genes\n";
+		exit(1);
+	}
+
 	string datafile = argv[1];
 	string partitionfile = argv[2];
 	int N = atoi(argv[3]);
@@ -49,6 +55,7 @@ int main(int argc, char* argv[])	{
 		}
 
 		SequenceAlignment* replicate = new SequenceAlignment(data,mask);
+		cerr << "rep : " << rep << '\t' << replicate->GetNsite() << " sites\n";
 		ostringstream s;
 		s << name << rep;
 		ofstream os((s.str() + ".ali").c_str());

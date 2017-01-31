@@ -16,7 +16,7 @@ class Simulator : public NewickTree {
 
 	public:
 
-	Simulator(string datafile, string treefile, string partitionfile, string rrfile, string paramfile, string profilefile, int inmask, int inrandomprofiles, int innfold, string inbasename)	{
+	Simulator(string datafile, string treefile, string partitionfile, string rrfile, string paramfile, string profilefile, int inmask, int inrandomprofiles, int innfold, int ngene, string inbasename)	{
 
 		mask = inmask;
 		randomprofiles = inrandomprofiles;
@@ -95,6 +95,16 @@ class Simulator : public NewickTree {
 			for (int i=0; i<Nsite; i++)	{
 				genealloc[i] = 0;
 			}
+		}
+
+		if (ngene != -1)	{
+			if (ngene > Ngene)	{
+				cerr << "error: number of genes smaller than requested truncation\n";
+				exit(1);
+			}
+			cerr << "truncation: " << ngene << " out of " << Ngene << '\t' << genefirst[ngene-1] + genesize[ngene-1] << '\n';
+			Ngene = ngene;
+			Nsite = genefirst[ngene-1] + genesize[ngene-1];
 		}
 
 		// get parameters from file
@@ -681,7 +691,10 @@ class Simulator : public NewickTree {
 		}
 
 		cerr << "make new ali\n";
+		cerr << Nsite << '\n';
 		SequenceAlignment* protali = new SequenceAlignment(data,names,Nsite,statespace,taxonset);
+		cerr << "ok\n";
+		cerr << protali->GetNsite() << '\n';
 		if (mask)	{
 			protali->Mask(protdata);
 		}
@@ -811,6 +824,7 @@ int main(int argc, char* argv[])	{
 	int mask = 1;
 	int randomprofiles = 0;
 	int nfold = 1;
+	int ngene = -1;
 
 	try	{
 
@@ -858,6 +872,10 @@ int main(int argc, char* argv[])	{
 				i++;
 				nfold = atoi(argv[i]);
 			}
+			else if (s == "-ngene")	{
+				i++;
+				ngene = atoi(argv[i]);
+			}
 			else	{
 				if (i != (argc -1))	{
 					throw(0);
@@ -878,7 +896,7 @@ int main(int argc, char* argv[])	{
 	}
 
 	cerr << "new sim\n";
-	Simulator* sim = new Simulator(datafile,treefile,partitionfile,rrfile,paramfile,profilefile,mask,randomprofiles,nfold,basename);
+	Simulator* sim = new Simulator(datafile,treefile,partitionfile,rrfile,paramfile,profilefile,mask,randomprofiles,nfold,ngene,basename);
 
 	cerr << "simulate\n";
 	sim->Simulate();

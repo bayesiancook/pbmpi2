@@ -355,7 +355,7 @@ class SequenceAlignment	{
 	}
 
 	void Mask(SequenceAlignment* from)	{
-		for (int i=0; i<from->GetNsite(); i++)	{
+		for (int i=0; i<GetNsite(); i++)	{
 			for (int j=0; j<Ntaxa; j++)	{
 				if (from->Data[j][i] == unknown)	{
 					Data[j][i] = unknown;

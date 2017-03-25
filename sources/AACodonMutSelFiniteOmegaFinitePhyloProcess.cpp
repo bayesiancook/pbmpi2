@@ -14,7 +14,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 #include "StringStreamUtils.h"
-#include "MultipleOmegaAACodonMutSelFinitePhyloProcess.h"
+#include "AACodonMutSelFiniteOmegaFinitePhyloProcess.h"
 #include "Parallel.h"
 #include <string.h>
 
@@ -22,7 +22,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 // MPI: these two functions are responsible for broadcasting/receiving the current state of the parameter vector
 // are model dependent
 // should be implemented in .cpp file
-void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
+void AACodonMutSelFiniteOmegaFinitePhyloProcess::SlaveUpdateParameters()	{
 
 	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nnucrr = GetNnucrr(),nnucstat = 4, nomega = GetNomega();
 	L1 = GetNmodeMax();
@@ -78,7 +78,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
 		FiniteProfileProcess::alloc[i] = ivector[iindex];
 		iindex++;
-		MultipleOmegaProcess::omegaalloc[i] = ivector[iindex];
+		FiniteOmegaProcess::omegaalloc[i] = ivector[iindex];
 		iindex++; 
 	}
 	//GetBranchLengthsFromArray();
@@ -94,7 +94,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 }
 
 
-void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveExecute(MESSAGE signal)	{
+void AACodonMutSelFiniteOmegaFinitePhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 	switch(signal) {
 
@@ -121,7 +121,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveExecute(MESSAGE signal)	
 	}
 }
 
-void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
+void AACodonMutSelFiniteOmegaFinitePhyloProcess::GlobalUpdateParameters() {
 
 	if (GetNprocs() > 1)	{
 	// MPI2
@@ -197,7 +197,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
 		ivector[iindex] = FiniteProfileProcess::alloc[i];
 		iindex++;
-		ivector[iindex] = MultipleOmegaProcess::omegaalloc[i];
+		ivector[iindex] = FiniteOmegaProcess::omegaalloc[i];
 		iindex++;
 	}
 
@@ -212,7 +212,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 }
 
 
-void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveComputeCVScore()	{
+void AACodonMutSelFiniteOmegaFinitePhyloProcess::SlaveComputeCVScore()	{
 
 	int sitemin = GetSiteMin();
 	int sitemax = GetSiteMin() + testsitemax - testsitemin;
@@ -223,7 +223,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveComputeCVScore()	{
 	
 	for (int k=0; k<GetNcomponent(); k++)	{
 		for (int i=sitemin; i<sitemax; i++)	{
-			MultipleOmegaAACodonMutSelFiniteProfileProcess::alloc[i] = k;
+			AACodonMutSelFiniteOmegaFiniteProfileProcess::alloc[i] = k;
 		}
 		UpdateComponent(k);
 		UpdateConditionalLikelihoods();
@@ -257,7 +257,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveComputeCVScore()	{
 	delete[] sitelogl;
 }
 
-void MultipleOmegaAACodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[])	{
+void AACodonMutSelFiniteOmegaFinitePhyloProcess::ReadPB(int argc, char* argv[])	{
 
 
 	// Needs updating!

@@ -53,7 +53,6 @@ CodonStateSpace::CodonStateSpace(GeneticCodeType type)	{
 
 		CodonCodeWithStops = new int[Ncodon]; 	// stops included
 		CodonCode = new int[Nstate]; 		// stops excluded
-
 		CodonPos = new int*[Npos];
 		for (int pos=0; pos<Npos; pos++)	{
 			CodonPos[pos] = new int[Nstate]; // stops excluded
@@ -262,6 +261,7 @@ int CodonStateSpace::GetDegeneracy(int codon)	{
 
 void CodonStateSpace::MakeDegeneracyMap()	{
 
+	/*
 	for (int codon =0; codon < Nstate; codon++)	{
 		cerr << codon << '\t' << GetState(codon) << '\t';
 		int pos1 = GetCodonPosition(0,codon);
@@ -285,7 +285,8 @@ void CodonStateSpace::MakeDegeneracyMap()	{
 		cerr << d << '\n';
 		degeneracy[codon] = d;
 	}
-	cerr << "ok\n";
+	*/
+	cerr << "MakeDegeneracyMap ok\n";
 };
 
 int CodonStateSpace::IsNonCTNearest(int a, int b)	{

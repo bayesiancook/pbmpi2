@@ -27,8 +27,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.h"
 #include "AACodonMutSelFinitePhyloProcess.h"
 #include "AACodonMutSelSBDPPhyloProcess.h"
-#include "MultipleOmegaAACodonMutSelSBDPPhyloProcess.h"
-#include "MultipleOmegaAACodonMutSelFinitePhyloProcess.h"
+#include "AACodonMutSelFiniteOmegaSBDPPhyloProcess.h"
+#include "AACodonMutSelFiniteOmegaFinitePhyloProcess.h"
 #include "AACodonMutSelSiteSBDPPhyloProcess.h"
 #include "AACodonMutSelSiteOmegaSBDPPhyloProcess.h"
 #include "AACodonMutSelSiteOmegaFinitePhyloProcess.h"
@@ -238,12 +238,12 @@ class Model	{
 				process = new AACodonMutSelMVNSiteSpecificPhyloProcess(fixcodonprofile,fixomega,omegaprior);
 			}
 			else if (mixturetype == 6)	{
-				type = "MULOMEGAAACODONMUTSELSBDP";
-				process = new MultipleOmegaAACodonMutSelSBDPPhyloProcess(fixcodonprofile,Nomega,omegaprior,kappaprior);
+				type = "AACODONMUTSELFINITEOMEGASBDP";
+				process = new AACodonMutSelFiniteOmegaSBDPPhyloProcess(fixcodonprofile,Nomega,omegaprior,kappaprior);
 			}
 			else if (mixturetype == 7)	{
-				type = "MULOMEGAAACODONMUTSELFINITE";
-				process = new MultipleOmegaAACodonMutSelFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,Nomega,omegaprior);
+				type = "AACODONMUTSELFINITEOMEGAFINITE";
+				process = new AACodonMutSelFiniteOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,Nomega,omegaprior);
 			}
 			else if (mixturetype == 8)	{
 				type = "AAACODONMUTSELSBDPOMEGASBDP";

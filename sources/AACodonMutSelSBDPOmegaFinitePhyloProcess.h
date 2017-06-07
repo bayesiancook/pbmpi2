@@ -24,11 +24,16 @@ class AACodonMutSelSBDPOmegaFinitePhyloProcess : public virtual AACodonMutSelSBD
 
 	public:
 
-	AACodonMutSelSBDPOmegaFinitePhyloProcess(int infixcodonprofile, int inomegaprior, int inkappaprior)	{
+	AACodonMutSelSBDPOmegaFinitePhyloProcess(int ncat, int infixncomp, int inempmix, string inmixtype, int infixcodonprofile, int inomegaprior, int inkappaprior)	{
 
 		fixcodonprofile = infixcodonprofile;
 		omegaprior = inomegaprior;
 		omegakappaprior = inkappaprior;
+
+		Ncomponent = ncat;
+		fixncomp = infixncomp;
+		empmix = inempmix;
+		mixtype = inmixtype;
 	}
 
 	AACodonMutSelSBDPOmegaFinitePhyloProcess(istream& is, int inmyid, int innprocs)	{

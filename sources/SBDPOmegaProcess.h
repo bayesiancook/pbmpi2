@@ -73,6 +73,8 @@ class SBDPOmegaProcess : public virtual MixtureOmegaProcess	{
 	*/
 
 	protected:
+	double GetOmegaMaxWeightError() {return omegamaxweighterror;}
+	void ResetOmegaMaxWeightError() {omegamaxweighterror = 0;}
 
 	virtual void Create()	{
 		if (! omegaV)	{

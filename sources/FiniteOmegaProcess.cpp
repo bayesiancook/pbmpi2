@@ -1,8 +1,8 @@
-#include "MultipleOmegaProcess.h"
+#include "FiniteOmegaProcess.h"
 #include "Parallel.h"
 
 
-double MultipleOmegaProcess::MPIMoveOmega(double tuning, int nrep)	{
+double FiniteOmegaProcess::MPIMoveOmega(double tuning, int nrep)	{
 
 	double total=0;
 
@@ -22,7 +22,7 @@ double MultipleOmegaProcess::MPIMoveOmega(double tuning, int nrep)	{
 	return total;
 }
 
-double MultipleOmegaProcess::NonMPIMoveOmega(double tuning, int nrep)	{
+double FiniteOmegaProcess::NonMPIMoveOmega(double tuning, int nrep)	{
 
 	double total=0;
 
@@ -41,7 +41,7 @@ double MultipleOmegaProcess::NonMPIMoveOmega(double tuning, int nrep)	{
 	return total;
 }
 
-void MultipleOmegaProcess::ResampleOmegaWeights()	{
+void FiniteOmegaProcess::ResampleOmegaWeights()	{
 	int omegaoccupancy[Nomega];
 	for (int l=0; l<Nomega; l++)	{
 		omegaoccupancy[l]=0;
@@ -64,7 +64,7 @@ void MultipleOmegaProcess::ResampleOmegaWeights()	{
 	}
 }
 
-void MultipleOmegaProcess::SampleOmega()	{
+void FiniteOmegaProcess::SampleOmega()	{
 	/*
 	for (int k=0; k<GetNomega(); k++)	{
 		omega[k] = 1.0;
@@ -77,7 +77,7 @@ void MultipleOmegaProcess::SampleOmega()	{
 	SampleOmegaAlloc();
 }
 	
-void MultipleOmegaProcess::SampleOmegaWeights()	{
+void FiniteOmegaProcess::SampleOmegaWeights()	{
 	double total = 0;
 	for (int k=0; k<GetNomega(); k++)	{
 		omegaweight[k] = rnd::GetRandom().sGamma(omegaweightalpha);

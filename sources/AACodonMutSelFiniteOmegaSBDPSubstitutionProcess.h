@@ -14,20 +14,23 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#ifndef MULOMEGAAACODONMUTSELFINITESUB_H
-#define MULOMEGAAACODONMUTSELFINITESUB_H
+#ifndef AACODONMUTSELFINITEOMEGASBDPSUB_H
+#define AACODONMUTSELFINITEOMEGASBDPSUB_H
 
-#include "MultipleOmegaAACodonMutSelFiniteProfileProcess.h"
+#include "AACodonMutSelFiniteOmegaSBDPProfileProcess.h"
 #include "UniformRateProcess.h"
 #include "GeneralPathSuffStatMatrixSubstitutionProcess.h"
 
 
-class MultipleOmegaAACodonMutSelFiniteSubstitutionProcess : public virtual MultipleOmegaAACodonMutSelFiniteProfileProcess, public virtual UniformRateProcess, public virtual GeneralPathSuffStatMatrixSubstitutionProcess {
+class AACodonMutSelFiniteOmegaSBDPSubstitutionProcess : public virtual AACodonMutSelFiniteOmegaSBDPProfileProcess, public virtual UniformRateProcess, public virtual GeneralPathSuffStatMatrixSubstitutionProcess {
+
+	// s'inspirer de GeneralPathSuffStatGTRSubstitutionProcess
+	// et GeneralPathSuffStatRASCATGTRSubstitutionProcess
 
 	public:
 
-	MultipleOmegaAACodonMutSelFiniteSubstitutionProcess() {}
-	virtual ~MultipleOmegaAACodonMutSelFiniteSubstitutionProcess() {}
+	AACodonMutSelFiniteOmegaSBDPSubstitutionProcess() {}
+	virtual ~AACodonMutSelFiniteOmegaSBDPSubstitutionProcess() {}
 
 	int GetNstate() {return GetNcodon();}
 
@@ -36,7 +39,7 @@ class MultipleOmegaAACodonMutSelFiniteSubstitutionProcess : public virtual Multi
 	protected:
 
 	void Create()	{
-		MultipleOmegaAACodonMutSelFiniteProfileProcess::Create();
+		AACodonMutSelFiniteOmegaSBDPProfileProcess::Create();
 		UniformRateProcess::Create();
 		GeneralPathSuffStatMatrixSubstitutionProcess::Create();
 	}
@@ -44,7 +47,7 @@ class MultipleOmegaAACodonMutSelFiniteSubstitutionProcess : public virtual Multi
 	void Delete()	{
 		GeneralPathSuffStatMatrixSubstitutionProcess::Delete();
 		UniformRateProcess::Delete();
-		MultipleOmegaAACodonMutSelFiniteProfileProcess::Delete();
+		AACodonMutSelFiniteOmegaSBDPProfileProcess::Delete();
 	}
 
 };

@@ -13,8 +13,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
+
 #include "StringStreamUtils.h"
-#include "MultipleOmegaAACodonMutSelFinitePhyloProcess.h"
+#include "AACodonMutSelSBDPOmegaFinitePhyloProcess.h"
 #include "Parallel.h"
 #include <string.h>
 
@@ -22,21 +23,30 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 // MPI: these two functions are responsible for broadcasting/receiving the current state of the parameter vector
 // are model dependent
 // should be implemented in .cpp file
-void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
+void AACodonMutSelSBDPOmegaFinitePhyloProcess::SlaveUpdateParameters()	{
 
-	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nnucrr = GetNnucrr(),nnucstat = 4, nomega = GetNomega();
+	// SlaveBroadcastTree();
+
+	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nnucrr = GetNnucrr(),nnucstat = 4;
 	L1 = GetNmodeMax();
 	L2 = GetDim();
 	int nstate = GetData()->GetNstate();
-	//nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + 1; // check if these last terms are correct in this context...
-	nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + nomega*2; // check if these last terms are correct in this context...
-	//ni = 1 + ProfileProcess::GetNsite();
-	ni = 1 + ProfileProcess::GetNsite() * 2;
+
+	// 2 for branchalpha branchbeta
+	// blarray
+	// nucrr
+	// nucstat
+	// profiles
+	// dirweight
+	// 1 for kappa
+	// codonprofile
+	// 1 for omega
+	nd = nbranch + nnucrr + nnucstat + L1*L2 + GetDim() + 1 + nstate + GetNomegaMax() + 2;
+	ni = 1 + ProfileProcess::GetNsite() * 2 + 1; // 1 for number of profiles, 2*nsite for profile and omega allocations, and 1 more for number of omega components.
 	int* ivector = new int[ni];
 	double* dvector = new double[nd];
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-
 	int index = 0;
 	for(i=0; i<nbranch; ++i) {
 		blarray[i] = dvector[index];
@@ -59,27 +69,33 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 			profile[i][j] = dvector[index];
 			index++;
 		}
-		weight[i] = dvector[index];
-		index++;
 	}
 	for (int i=0; i<GetDim(); i++)	{
 		dirweight[i] = dvector[index];
 		index++;
 	}
-	for (int i=0; i<nomega; i++)	{
+	omegakappa = dvector[index];
+	index++;
+	for(int i=0; i<GetNomegaMax(); ++i) {
 		omega[i] = dvector[index];
 		index++;
-		omegaweight[i] = dvector[index];
-		index++;
 	}
-	int iindex = 0;
+	omegaalpha = dvector[index];
+	index++;
+	omegabeta = dvector[index];
+	index++;
+
+	int iindex =0;	
 	Ncomponent = ivector[iindex];
 	iindex++;
+	Nomega = ivector[iindex];
+	iindex++;
+	
 	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
 		FiniteProfileProcess::alloc[i] = ivector[iindex];
 		iindex++;
-		MultipleOmegaProcess::omegaalloc[i] = ivector[iindex];
-		iindex++; 
+		SBDPOmegaProcess::omegaalloc[i] = ivector[iindex];
+		iindex++;
 	}
 	//GetBranchLengthsFromArray();
 	delete[] dvector;
@@ -89,23 +105,18 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 	// during allocation move on the master node.
 	// 
 	// note that CreateMatrices() in fact creates only those that are not yet allocated
+	// and also deletes those that are now obsolete
 	// CreateMatrices();
 	UpdateMatrices();
 }
 
 
-void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveExecute(MESSAGE signal)	{
+void AACodonMutSelSBDPOmegaFinitePhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 	switch(signal) {
 
-		case UPDATE_SITEOMEGA:
-			SlaveUpdateSiteOmegaSuffStat();
-			break;
-		case UPDATE_OMEGA:
-			SlaveUpdateOmegaSuffStat();
-			break;
-		case REALLOCOMEGA_MOVE:
-			SlaveOmegaIncrementalFiniteMove();
+		case PROFILE_MOVE:
+			SlaveMoveProfile();
 			break;
 		case STATFIX:
 			SlaveGetStatFix();
@@ -113,15 +124,29 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveExecute(MESSAGE signal)	
 		case REALLOC_MOVE:
 			SlaveIncrementalFiniteMove();
 			break;
-		case PROFILE_MOVE:
-			SlaveMoveProfile();
+		case NONSYNMAPPING:
+			SlaveNonSynMapping();
 			break;
+		case UPDATE_SITEOMEGA:
+			SlaveUpdateSiteOmegaSuffStat();
+			break;
+		case UPDATE_OMEGA:
+			SlaveUpdateOmegaSuffStat();
+			break;
+		/*
+		case MIXMOVEOMEGA:
+			SlaveMixMoveOmega();
+			break;
+		*/
+		//case COLLECTOMEGASUFFSTAT:
+		//	SlaveCollectSiteOmegaSuffStats();  // Needs to be done.
+		//	break;
 		default:
 			PhyloProcess::SlaveExecute(signal);
 	}
 }
 
-void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
+void AACodonMutSelSBDPOmegaFinitePhyloProcess::GlobalUpdateParameters() {
 
 	if (GetNprocs() > 1)	{
 	// MPI2
@@ -135,23 +160,26 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	// store it in the local copies of the variables
 	// and then call
 	// SetBranchLengthsFromArray()
-	int i,j,nnucrr,nnucstat,nbranch = GetNbranch(),ni,nd,L1,L2,nomega;
+	int i,j,nnucrr,nnucstat,nbranch = GetNbranch(),ni,nd,L1,L2;
 	nnucrr = GetNnucrr();
-	nnucstat = 4;
+	nnucstat = 4;	
 	L1 = GetNmodeMax();
 	L2 = GetDim();
 	int nstate = GetData()->GetNstate();
-	nomega = GetNomega();	
-	//nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + 1;  // check if these last terms are correct in this context...
-	nd = nbranch + nnucrr + nnucstat + L2 + L1*(L2+1) + nstate + nomega*2;  // check if these last terms are correct in this context...
-	ni = 1 + ProfileProcess::GetNsite() * 2; // 1 for the number of componenets, and the rest for allocations
+	//nd = 2 + nbranch + nnucrr + + nnucstat + L1*L2 + GetDim() + 1;
+	//nd = nbranch + nnucrr + + nnucstat + L1*L2 + GetDim() + 1 + nstate + ProfileProcess::GetNsite() + 2;
+	nd = nbranch + nnucrr + + nnucstat + L1*L2 + GetDim() + 1 + nstate + GetNomegaMax() + 2;
+	//ni = 1 + ProfileProcess::GetNsite(); // 1 for the number of componenets, and the rest for allocations
+	ni = 1 + ProfileProcess::GetNsite() * 2 + 1; // 1 for number of profiles, 2*nsite for profile and omega allocations, and 1 more for number of omega components.
 	int ivector[ni];
 	double dvector[nd]; 
 	MESSAGE signal = PARAMETER_DIFFUSION;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	
-	int index = 0;
+	// GlobalBroadcastTree();
 	// First we assemble the vector of doubles for distribution
+	int index = 0;
+	
 	for(i=0; i<nbranch; ++i) {
 		dvector[index] = blarray[i];
 		index++;
@@ -165,7 +193,6 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 		dvector[index] = nucstat[i];
 		index++;
 	}
-
 	for (i=0; i<nstate; i++)	{
 		dvector[index] = codonprofile[i];
 		index++;
@@ -176,28 +203,34 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 			dvector[index] = profile[i][j];
 			index++;
 		}
-		dvector[index] = weight[i];
-		index++;
 	}
 	for (int i=0; i<GetDim(); i++)	{
 		dvector[index] = dirweight[i];
 		index++;
 	}
-	for (int i=0; i<nomega; i++)	{
+	dvector[index] = omegakappa;
+	index++;
+
+	//for(int i=0; i<ProfileProcess::GetNsite(); ++i) {
+	for(int i=0; i<GetNomegaMax(); ++i) {
 		dvector[index] = omega[i];
 		index++;
-		dvector[index] = omegaweight[i];
-		index++;
 	}
+	dvector[index] = omegaalpha;
+	index++;
+	dvector[index] = omegabeta;
+	index++;
 
 	// Now the vector of ints
 	int iindex = 0;
 	ivector[iindex] = GetNcomponent();
 	iindex++;
+	ivector[iindex] = GetNomega();
+	iindex++;
 	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
 		ivector[iindex] = FiniteProfileProcess::alloc[i];
 		iindex++;
-		ivector[iindex] = MultipleOmegaProcess::omegaalloc[i];
+		ivector[iindex] = SBDPOmegaProcess::omegaalloc[i];
 		iindex++;
 	}
 
@@ -205,14 +238,9 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
-	// else	{
-		UpdateMatrices();
-	// }
-	
 }
 
-
-void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveComputeCVScore()	{
+void AACodonMutSelSBDPOmegaFinitePhyloProcess::SlaveComputeCVScore()	{
 
 	int sitemin = GetSiteMin();
 	int sitemax = GetSiteMin() + testsitemax - testsitemin;
@@ -223,7 +251,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveComputeCVScore()	{
 	
 	for (int k=0; k<GetNcomponent(); k++)	{
 		for (int i=sitemin; i<sitemax; i++)	{
-			MultipleOmegaAACodonMutSelFiniteProfileProcess::alloc[i] = k;
+			AACodonMutSelSBDPOmegaFiniteProfileProcess::alloc[i] = k;
 		}
 		UpdateComponent(k);
 		UpdateConditionalLikelihoods();
@@ -257,10 +285,7 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::SlaveComputeCVScore()	{
 	delete[] sitelogl;
 }
 
-void MultipleOmegaAACodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[])	{
-
-
-	// Needs updating!
+void AACodonMutSelSBDPOmegaFinitePhyloProcess::ReadPB(int argc, char* argv[])	{
 
 	string name = "";
 
@@ -275,11 +300,12 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[]
 	int cv = 0;
 	int sel = 0;
 	int map = 0;
+	int mapstats = 0;
 	string testdatafile = "";
 
 	int rateprior = 0;
 	int profileprior = 0;
-	int rootprior = 1;
+	int rootprior = 0;
 
 	try	{
 
@@ -295,6 +321,9 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[]
 			}
 			else if (s == "-map")	{
 				map = 1;
+			}
+			else if (s == "-mapstats")	{
+				mapstats = 1;
 			}
 			else if (s == "-cv")	{
 				cv = 1;
@@ -318,33 +347,8 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[]
 					throw(0);
 				}
 			}
-			else if (s == "-ppredprofile")	{
-				i++;
-				string tmp = argv[i];
-				if (tmp == "prior")	{
-					profileprior = 1;
-				}
-				else if ((tmp == "posterior") || (tmp == "post"))	{
-					profileprior = 0;
-				}
-				else	{
-					cerr << "error after ppredprofile: should be prior or posterior\n";
-					throw(0);
-				}
-			}
-			else if (s == "-ppredroot")	{
-				i++;
-				string tmp = argv[i];
-				if (tmp == "prior")	{
-					rootprior = 1;
-				}
-				else if ((tmp == "posterior") || (tmp == "post"))	{
-					rootprior = 0;
-				}
-				else	{
-					cerr << "error after ppredroot: should be prior or posterior\n";
-					throw(0);
-				}
+			else if (s == "-div")	{
+				ppred = 2;
 			}
 			else if ( (s == "-x") || (s == "-extract") )	{
 				i++;
@@ -397,10 +401,132 @@ void MultipleOmegaAACodonMutSelFinitePhyloProcess::ReadPB(int argc, char* argv[]
 	//if (sel)	{
 	//	ReadSDistributions(name,burnin,every,until);
 	//}
-	//else if (ppred)	{
-	//	PostPred(ppred,name,burnin,every,until);
-	//}
+	else if (mapstats)	{
+		ReadMapStats(name,burnin,every,until);
+	}
+	else if (ppred)	{
+		PostPred(ppred,name,burnin,every,until,rateprior,profileprior,rootprior);
+	}
 	else	{
 		Read(name,burnin,every,until);
 	}
+}
+
+void AACodonMutSelSBDPOmegaFinitePhyloProcess::ReadMapStats(string name, int burnin, int every, int until){
+  	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+
+	
+	ofstream ospost((name + ".nonsynpost").c_str());
+	ofstream ospred((name + ".nonsynpred").c_str());
+	ofstream ospvalue((name + ".nonsynpvalue").c_str());
+
+	int samplesize = 0;
+	int pvalue=0;
+	int obs, pred;
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+
+		MPI_Status stat;
+		MESSAGE signal = BCAST_TREE;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		GlobalBroadcastTree();
+		GlobalUpdateConditionalLikelihoods();
+		GlobalCollapse();
+
+		GlobalUpdateSiteProfileSuffStat();
+
+		// write posterior
+		obs = GlobalNonSynMapping();
+		ospost << (double) (obs) / AACodonMutSelProfileProcess::GetNsite() << "\n";
+		cerr << (double) (obs) / AACodonMutSelProfileProcess::GetNsite() << "\t";
+
+		GlobalUnfold();
+
+		//Posterior Prededictive Mappings
+		GlobalUnclamp();
+		GlobalCollapse();
+		GlobalUpdateSiteProfileSuffStat();
+		GlobalSetDataFromLeaves();
+
+		// write posterior predictive
+		pred = GlobalNonSynMapping();
+		ospred << (double) (pred) / AACodonMutSelProfileProcess::GetNsite() << "\n";
+		cerr << (double) (pred) / AACodonMutSelProfileProcess::GetNsite() << "\n";
+	
+		if (pred > obs) pvalue++;
+
+		GlobalRestoreData();
+		GlobalUnfold();
+
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+
+	ospvalue << (double) (pvalue) / samplesize << "\n";
+	cerr << '\n';
+}
+
+
+void AACodonMutSelSBDPOmegaFinitePhyloProcess::Read(string name, int burnin, int every, int until)	{
+}
+
+int AACodonMutSelSBDPOmegaFinitePhyloProcess::CountNonSynMapping()	{
+
+	int total = 0;	
+	for(int i =GetSiteMin(); i <GetSiteMax(); i++){
+		total += CountNonSynMapping(i);
+	}
+	return total;
+}
+
+int AACodonMutSelSBDPOmegaFinitePhyloProcess::CountNonSynMapping(int i)	{
+	int count = 0;
+	for(int k=0; k<GetNstate(); ++k) {
+		for(int l=0; l<GetNstate(); ++l) {
+			count+=sitepaircount[i][pair<int,int>(k,l)];
+		}
+	}
+	return count;
+}
+
+int AACodonMutSelSBDPOmegaFinitePhyloProcess::GlobalNonSynMapping()	{
+
+	MESSAGE signal = NONSYNMAPPING;
+	MPI_Status stat;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	int totalcount=0;
+	for (int i=1; i<GetNprocs(); i++)	{
+		int count;
+		MPI_Recv(&count,1,MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD, &stat);
+		totalcount += count;
+	}
+	return totalcount;
+
+}
+
+void AACodonMutSelSBDPOmegaFinitePhyloProcess::SlaveNonSynMapping()	{
+
+	int nonsyn = CountNonSynMapping();
+	MPI_Send(&nonsyn,1,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+
 }

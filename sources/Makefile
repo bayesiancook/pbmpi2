@@ -19,9 +19,9 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	PoissonDPProfileProcess.cpp PoissonSBDPProfileProcess.cpp \
 	FiniteProfileProcess.cpp PoissonFiniteProfileProcess.cpp \
 	CodonMutSelProfileProcess.cpp \
-	AACodonMutSelSBDPOmegaSBDPPhyloProcess.cpp SBDPOmegaProcess.cpp AACodonMutSelSiteOmegaFinitePhyloProcess.cpp \
-	AACodonMutSelSiteOmegaSBDPPhyloProcess.cpp SiteOmegaProcess.cpp AACodonMutSelSiteSBDPPhyloProcess.cpp MultipleOmegaAACodonMutSelSBDPPhyloProcess.cpp \
-	OmegaProcess.cpp MixtureOmegaProcess.cpp SingleOmegaProcess.cpp MultipleOmegaProcess.cpp AACodonMutSelProfileProcess.cpp \
+	AACodonMutSelSBDPOmegaSBDPPhyloProcess.cpp AACodonMutSelSBDPOmegaFinitePhyloProcess.cpp SBDPOmegaProcess.cpp AACodonMutSelSiteOmegaFinitePhyloProcess.cpp \
+	AACodonMutSelSiteOmegaSBDPPhyloProcess.cpp SiteOmegaProcess.cpp AACodonMutSelSiteSBDPPhyloProcess.cpp AACodonMutSelFiniteOmegaSBDPPhyloProcess.cpp \
+	OmegaProcess.cpp MixtureOmegaProcess.cpp SingleOmegaProcess.cpp FiniteOmegaProcess.cpp AACodonMutSelProfileProcess.cpp \
 	SubstitutionProcess.cpp Propagate.cpp \
 	PoissonSubstitutionProcess.cpp MatrixSubstitutionProcess.cpp \
 	ExpoConjugateGTRSubstitutionProcess.cpp GeneralPathSuffStatMatrixSubstitutionProcess.cpp ExpoConjugateGTRPhyloProcess.cpp \
@@ -34,7 +34,7 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	RASCATGTRDPGammaPhyloProcess.cpp RASCATGTRSBDPGammaPhyloProcess.cpp \
 	GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.cpp \
 	GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.cpp \
-	AACodonMutSelFinitePhyloProcess.cpp MultipleOmegaAACodonMutSelFinitePhyloProcess.cpp \
+	AACodonMutSelFinitePhyloProcess.cpp AACodonMutSelFiniteOmegaFinitePhyloProcess.cpp \
 	CodonMutSelFinitePhyloProcess.cpp\
 	CodonMutSelSBDPPhyloProcess.cpp \
 	AACodonMutSelSiteMatrixMixtureProfileProcess.cpp AACodonMutSelSBDPPhyloProcess.cpp \

@@ -15,7 +15,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "StringStreamUtils.h"
-#include "MultipleOmegaAACodonMutSelSBDPPhyloProcess.h"
+#include "AACodonMutSelFiniteOmegaSBDPPhyloProcess.h"
 #include "Parallel.h"
 #include <string.h>
 
@@ -23,7 +23,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 // MPI: these two functions are responsible for broadcasting/receiving the current state of the parameter vector
 // are model dependent
 // should be implemented in .cpp file
-void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveUpdateParameters()	{
+void AACodonMutSelFiniteOmegaSBDPPhyloProcess::SlaveUpdateParameters()	{
 
 	// SlaveBroadcastTree();
 
@@ -89,7 +89,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveUpdateParameters()	{
 	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
 		SBDPProfileProcess::alloc[i] = ivector[iindex];
 		iindex++;
-		MultipleOmegaProcess::omegaalloc[i] = ivector[iindex];
+		FiniteOmegaProcess::omegaalloc[i] = ivector[iindex];
 		iindex++; 
 	}
 	//GetBranchLengthsFromArray();
@@ -106,7 +106,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveUpdateParameters()	{
 }
 
 
-void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveExecute(MESSAGE signal)	{
+void AACodonMutSelFiniteOmegaSBDPPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 	switch(signal) {
 
@@ -133,7 +133,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveExecute(MESSAGE signal)	{
 	}
 }
 
-void MultipleOmegaAACodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
+void AACodonMutSelFiniteOmegaSBDPPhyloProcess::GlobalUpdateParameters() {
 
 	if (GetNprocs() > 1)	{
 	// MPI2
@@ -210,7 +210,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
 	for(i=0; i<ProfileProcess::GetNsite(); ++i) {
 		ivector[iindex] = SBDPProfileProcess::alloc[i];
 		iindex++;
-		ivector[iindex] = MultipleOmegaProcess::omegaalloc[i];
+		ivector[iindex] = FiniteOmegaProcess::omegaalloc[i];
 		iindex++;
 	}
 
@@ -220,7 +220,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
 	}
 }
 
-void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveComputeCVScore()	{
+void AACodonMutSelFiniteOmegaSBDPPhyloProcess::SlaveComputeCVScore()	{
 
 	int sitemin = GetSiteMin();
 	int sitemax = GetSiteMin() + testsitemax - testsitemin;
@@ -231,7 +231,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveComputeCVScore()	{
 	
 	for (int k=0; k<GetNcomponent(); k++)	{
 		for (int i=sitemin; i<sitemax; i++)	{
-			MultipleOmegaAACodonMutSelSBDPProfileProcess::alloc[i] = k;
+			AACodonMutSelFiniteOmegaSBDPProfileProcess::alloc[i] = k;
 		}
 		UpdateComponent(k);
 		UpdateConditionalLikelihoods();
@@ -265,7 +265,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveComputeCVScore()	{
 	delete[] sitelogl;
 }
 
-void MultipleOmegaAACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
+void AACodonMutSelFiniteOmegaSBDPPhyloProcess::ReadPB(int argc, char* argv[])	{
 
 	string name = "";
 
@@ -392,7 +392,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::ReadPB(int argc, char* argv[])	
 	}
 }
 
-void MultipleOmegaAACodonMutSelSBDPPhyloProcess::ReadMapStats(string name, int burnin, int every, int until){
+void AACodonMutSelFiniteOmegaSBDPPhyloProcess::ReadMapStats(string name, int burnin, int every, int until){
   	ifstream is((name + ".chain").c_str());
 	if (!is)	{
 		cerr << "error: no .chain file found\n";
@@ -466,7 +466,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::ReadMapStats(string name, int b
 }
 
 
-void MultipleOmegaAACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, int every, int until)	{
+void AACodonMutSelFiniteOmegaSBDPPhyloProcess::Read(string name, int burnin, int every, int until)	{
 
 	/*
 	ifstream is((name + ".chain").c_str());
@@ -475,7 +475,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, i
 		exit(1);
 	}
 	//cerr << "In AACodonMutSelDPPhyloProcess. GetDim() is : " << GetDim() << "\n";
-	int Nstate = MultipleOmegaAACodonMutSelSBDPSubstitutionProcess::GetNstate();
+	int Nstate = AACodonMutSelFiniteOmegaSBDPSubstitutionProcess::GetNstate();
 	//cerr << "Nstate is: " << Nstate << "\n";
 	//cerr.flush();
 	double TOOSMALL = 1e-20;
@@ -961,7 +961,7 @@ void MultipleOmegaAACodonMutSelSBDPPhyloProcess::Read(string name, int burnin, i
 }
 
 
-int MultipleOmegaAACodonMutSelSBDPPhyloProcess::CountNonSynMapping()	{
+int AACodonMutSelFiniteOmegaSBDPPhyloProcess::CountNonSynMapping()	{
 
 	int total = 0;	
 	for(int i =GetSiteMin(); i <GetSiteMax(); i++){
@@ -970,7 +970,7 @@ int MultipleOmegaAACodonMutSelSBDPPhyloProcess::CountNonSynMapping()	{
 	return total;
 }
 
-int MultipleOmegaAACodonMutSelSBDPPhyloProcess::CountNonSynMapping(int i)	{
+int AACodonMutSelFiniteOmegaSBDPPhyloProcess::CountNonSynMapping(int i)	{
 	int count = 0;
 	for(int k=0; k<GetNstate(); ++k) {
 		for(int l=0; l<GetNstate(); ++l) {
@@ -980,7 +980,7 @@ int MultipleOmegaAACodonMutSelSBDPPhyloProcess::CountNonSynMapping(int i)	{
 	return count;
 }
 
-int MultipleOmegaAACodonMutSelSBDPPhyloProcess::GlobalNonSynMapping()	{
+int AACodonMutSelFiniteOmegaSBDPPhyloProcess::GlobalNonSynMapping()	{
 
 	MESSAGE signal = NONSYNMAPPING;
 	MPI_Status stat;
@@ -996,7 +996,7 @@ int MultipleOmegaAACodonMutSelSBDPPhyloProcess::GlobalNonSynMapping()	{
 
 }
 
-void MultipleOmegaAACodonMutSelSBDPPhyloProcess::SlaveNonSynMapping()	{
+void AACodonMutSelFiniteOmegaSBDPPhyloProcess::SlaveNonSynMapping()	{
 
 	int nonsyn = CountNonSynMapping();
 	MPI_Send(&nonsyn,1,MPI_INT,0,TAG1,MPI_COMM_WORLD);

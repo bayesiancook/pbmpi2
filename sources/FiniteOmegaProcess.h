@@ -18,12 +18,12 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 #include "MixtureOmegaProcess.h"
 
-class MultipleOmegaProcess : public virtual MixtureOmegaProcess	{
+class FiniteOmegaProcess : public virtual MixtureOmegaProcess	{
 
 	public: 
-	MultipleOmegaProcess() : omegaweightalpha(1.0) {}
+	FiniteOmegaProcess() : omegaweightalpha(1.0) {}
 
-	virtual ~MultipleOmegaProcess() {}
+	virtual ~FiniteOmegaProcess() {}
 
 	// overall sampling of the omega part of the model
 	void SampleOmega();

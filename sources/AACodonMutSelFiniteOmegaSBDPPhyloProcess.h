@@ -13,18 +13,18 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-#ifndef MULOMEGAAACODONMUTSELSBDPPHYLO_H
-#define MULOMEGAAACODONMUTSELSBDPPHYLO_H
+#ifndef AACODONMUTSELFINITEOMEGASBDPPHYLO_H
+#define AACODONMUTSELFINITEOMEGASBDPPHYLO_H
 
-#include "MultipleOmegaAACodonMutSelSBDPSubstitutionProcess.h"
+#include "AACodonMutSelFiniteOmegaSBDPSubstitutionProcess.h"
 #include "GeneralPathSuffStatMatrixPhyloProcess.h"
 #include "GammaBranchProcess.h"
 
-class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaAACodonMutSelSBDPSubstitutionProcess, public virtual GeneralPathSuffStatMatrixPhyloProcess, public virtual GammaBranchProcess	{
+class AACodonMutSelFiniteOmegaSBDPPhyloProcess : public virtual AACodonMutSelFiniteOmegaSBDPSubstitutionProcess, public virtual GeneralPathSuffStatMatrixPhyloProcess, public virtual GammaBranchProcess	{
 
 	public:
 
-	MultipleOmegaAACodonMutSelSBDPPhyloProcess(int infixcodonprofile, int inNomega, int inomegaprior, int inkappaprior)	{
+	AACodonMutSelFiniteOmegaSBDPPhyloProcess(int infixcodonprofile, int inNomega, int inomegaprior, int inkappaprior)	{
 
 		fixcodonprofile = infixcodonprofile;
 		Nomega = inNomega;
@@ -33,7 +33,7 @@ class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaA
 		kappaprior = inkappaprior;
 	}
 
-	MultipleOmegaAACodonMutSelSBDPPhyloProcess(istream& is, int inmyid, int innprocs)	{
+	AACodonMutSelFiniteOmegaSBDPPhyloProcess(istream& is, int inmyid, int innprocs)	{
 
 		// generic
 		FromStreamHeader(is);
@@ -48,7 +48,7 @@ class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaA
 		Open(is);
 	}
 
-	virtual ~MultipleOmegaAACodonMutSelSBDPPhyloProcess()	{
+	virtual ~AACodonMutSelFiniteOmegaSBDPPhyloProcess()	{
 		Delete();
 	}
 
@@ -109,11 +109,11 @@ class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaA
 
 	void ToStream(ostream& os)	{
 		GammaBranchProcess::ToStream(os);
-		MultipleOmegaAACodonMutSelSBDPProfileProcess::ToStream(os);
+		AACodonMutSelFiniteOmegaSBDPProfileProcess::ToStream(os);
 	}
 	void FromStream(istream& is)	{
 		GammaBranchProcess::FromStream(is);
-		MultipleOmegaAACodonMutSelSBDPProfileProcess::FromStream(is);
+		AACodonMutSelFiniteOmegaSBDPProfileProcess::FromStream(is);
 		GlobalUpdateParameters();
 	}
 
@@ -150,7 +150,7 @@ class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaA
 		}
 
 		GlobalUpdateParameters();
-		MultipleOmegaAACodonMutSelSBDPProfileProcess::Move(tuning,1,15);
+		AACodonMutSelFiniteOmegaSBDPProfileProcess::Move(tuning,1,15);
 		chronosuffstat.Stop();
 
 		chronounfold.Start();
@@ -165,7 +165,7 @@ class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaA
 	protected:
 
 	virtual void Create()	{
-		MultipleOmegaAACodonMutSelSBDPSubstitutionProcess::Create();
+		AACodonMutSelFiniteOmegaSBDPSubstitutionProcess::Create();
 		GeneralPathSuffStatMatrixPhyloProcess::Create();
 		GammaBranchProcess::Create();
 	}
@@ -173,7 +173,7 @@ class MultipleOmegaAACodonMutSelSBDPPhyloProcess : public virtual MultipleOmegaA
 	virtual void Delete()	{
 		GammaBranchProcess::Delete();
 		GeneralPathSuffStatMatrixPhyloProcess::Delete();
-		MultipleOmegaAACodonMutSelSBDPSubstitutionProcess::Delete();
+		AACodonMutSelFiniteOmegaSBDPSubstitutionProcess::Delete();
 	}
 
 	virtual void SetProfileDim()	{

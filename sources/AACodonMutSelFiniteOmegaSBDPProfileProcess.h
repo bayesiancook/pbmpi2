@@ -14,20 +14,20 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#ifndef MULOMEGAAACODONMUTSELSBDPPROFILE_H
-#define MULOMEGAAACODONMUTSELSBDPPROFILE_H
+#ifndef AACODONMUTSELFINITEOMEGASBDPPROFILE_H
+#define AACODONMUTSELFINITEOMEGASBDPPROFILE_H
 
 #include "SBDPProfileProcess.h"
-#include "MultipleOmegaProcess.h"
+#include "FiniteOmegaProcess.h"
 #include "AACodonMutSelProfileProcess.h"
 #include "GeneralPathSuffStatMultipleMatrixMixtureProfileProcess.h"
 
-class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual MultipleOmegaProcess, public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMultipleMatrixMixtureProfileProcess	{
+class AACodonMutSelFiniteOmegaSBDPProfileProcess : public virtual SBDPProfileProcess, public virtual FiniteOmegaProcess, public virtual AACodonMutSelProfileProcess, public virtual GeneralPathSuffStatMultipleMatrixMixtureProfileProcess	{
 
 	public:
 
-	MultipleOmegaAACodonMutSelSBDPProfileProcess() {}
-	virtual ~MultipleOmegaAACodonMutSelSBDPProfileProcess() {}
+	AACodonMutSelFiniteOmegaSBDPProfileProcess() {}
+	virtual ~AACodonMutSelFiniteOmegaSBDPProfileProcess() {}
 
 	int GetNSubAlloc()	{
 		return GetNomega();
@@ -40,7 +40,7 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 	protected:
 
 	void Create()	{
-		MultipleOmegaProcess::Create();
+		FiniteOmegaProcess::Create();
 		AACodonMutSelProfileProcess::Create();
 		SBDPProfileProcess::Create();
 		GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::Create();
@@ -50,7 +50,7 @@ class MultipleOmegaAACodonMutSelSBDPProfileProcess : public virtual SBDPProfileP
 		GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::Delete();
 		SBDPProfileProcess::Delete();
 		AACodonMutSelProfileProcess::Delete();
-		MultipleOmegaProcess::Delete();
+		FiniteOmegaProcess::Delete();
 	}
 
 	void ToStream(ostream& os)	{

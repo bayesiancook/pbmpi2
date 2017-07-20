@@ -27,12 +27,13 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.h"
 #include "AACodonMutSelFinitePhyloProcess.h"
 #include "AACodonMutSelSBDPPhyloProcess.h"
-#include "MultipleOmegaAACodonMutSelSBDPPhyloProcess.h"
-#include "MultipleOmegaAACodonMutSelFinitePhyloProcess.h"
+#include "AACodonMutSelFiniteOmegaSBDPPhyloProcess.h"
+#include "AACodonMutSelFiniteOmegaFinitePhyloProcess.h"
 #include "AACodonMutSelSiteSBDPPhyloProcess.h"
 #include "AACodonMutSelSiteOmegaSBDPPhyloProcess.h"
 #include "AACodonMutSelSiteOmegaFinitePhyloProcess.h"
 #include "AACodonMutSelSBDPOmegaSBDPPhyloProcess.h"
+#include "AACodonMutSelSBDPOmegaFinitePhyloProcess.h"
 #include "AACodonMutSelMVNSiteSpecificPhyloProcess.h"
 #include "CodonMutSelFinitePhyloProcess.h"
 #include "CodonMutSelSBDPPhyloProcess.h"
@@ -65,7 +66,7 @@ class Model	{
 	int until;
 	int saveall;
 
-	Model(string datafile, string treefile, string partitionfile, int multigene, int globalalpha, int globalbl, int mappsuffstat, int modeltype, int nratecat, int withpinv, int mixturetype, int nmodemax, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, int dirpriortype, int nstatcomp, int priorempmix, string priormixtype, int fixstatweight, int fixstatalpha, int fixstatcenter, string rrtype, int iscodon, int sis, double sisfrac, int sisnfrac, int sisnrep, double siscutoff, int fixtopo, int fixroot, string roottax1, string roottax2, int topoburnin, int topobf, int bfburnin, double bffrac, int bfnfrac, int bfnrep, double blfactor, string blfile, int NSPR, int NMHSPR, int NTSPR, int temperedbl, int temperedgene, int temperedrate,double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, string taxon3, string taxon4, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int Nomega, int fixbl, int sumovercomponents, int omegaprior, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, int reshuffle, string inname, int myid, int nprocs)	{
+	Model(string datafile, string treefile, string partitionfile, int multigene, int globalalpha, int globalbl, int mappsuffstat, int modeltype, int nratecat, int withpinv, int mixturetype, int nmodemax, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, int dirpriortype, int nstatcomp, int priorempmix, string priormixtype, int fixstatweight, int fixstatalpha, int fixstatcenter, string rrtype, int iscodon, int sis, double sisfrac, int sisnfrac, int sisnrep, double siscutoff, int fixtopo, int fixroot, string roottax1, string roottax2, int topoburnin, int topobf, int bfburnin, double bffrac, int bfnfrac, int bfnrep, double blfactor, string blfile, int NSPR, int NMHSPR, int NTSPR, int temperedbl, int temperedgene, int temperedrate,double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, string taxon3, string taxon4, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int Nomega, int fixbl, int sumovercomponents, int omegaprior, int omegamixturetype, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, int reshuffle, string inname, int myid, int nprocs)	{
 
 		every = inevery;
 		until = inuntil;
@@ -210,9 +211,17 @@ class Model	{
 		// AACodonMutSel
 		else if (modeltype == 5) {
 			if (mixturetype == 1)	{
-				if (Nomega == -1)	{
+				if (omegamixturetype == 4)	{
 					type = "SITEOMEGAAACODONMUTSELFINITE";
 					process = new AACodonMutSelSiteOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,fixomega,omegaprior);
+				}
+				else if (omegamixturetype == 1)	{
+					type = "AACODONMUTSELFINITEOMEGAFINITE";
+					process = new AACodonMutSelFiniteOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,Nomega,omegaprior);
+				}
+				else if (omegamixturetype == 3)	{
+					type = "AAACODONMUTSELSBDPOMEGAFINITE";
+					process = new AACodonMutSelSBDPOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,omegaprior,kappaprior);
 				}
 				else	{
 					type = "AACODONMUTSELFINITE";
@@ -220,14 +229,22 @@ class Model	{
 				}
 			}
 			else if (mixturetype == 3)	{
-				if (Nomega == -1)	{
+				if (omegamixturetype == 4)	{
 					type = "SITEOMEGAAACODONMUTSELSBDP";
 					process = new AACodonMutSelSiteOmegaSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
 				}
-				else if (suffstat == 2)	{
-					type = "AACODONMUTSELSITESBDP";
-					process = new AACodonMutSelSiteSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
+				else if (omegamixturetype == 1)	{
+					type = "AACODONMUTSELFINITEOMEGASBDP";
+					process = new AACodonMutSelFiniteOmegaSBDPPhyloProcess(fixcodonprofile,Nomega,omegaprior,kappaprior);
 				}
+				else if (omegamixturetype == 3)	{
+					type = "AAACODONMUTSELSBDPOMEGASBDP";
+					process = new AACodonMutSelSBDPOmegaSBDPPhyloProcess(fixcodonprofile,omegaprior,kappaprior);
+				}
+				//else if (suffstat == 2)	{
+				//	type = "AACODONMUTSELSITESBDP";
+				//	process = new AACodonMutSelSiteSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
+				//}
 				else	{
 					type = "AACODONMUTSELSBDP";
 					process = new AACodonMutSelSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
@@ -236,18 +253,6 @@ class Model	{
 			else if (mixturetype == 5)	{
 				type = "AACODONMUTSELMVNSS";
 				process = new AACodonMutSelMVNSiteSpecificPhyloProcess(fixcodonprofile,fixomega,omegaprior);
-			}
-			else if (mixturetype == 6)	{
-				type = "MULOMEGAAACODONMUTSELSBDP";
-				process = new MultipleOmegaAACodonMutSelSBDPPhyloProcess(fixcodonprofile,Nomega,omegaprior,kappaprior);
-			}
-			else if (mixturetype == 7)	{
-				type = "MULOMEGAAACODONMUTSELFINITE";
-				process = new MultipleOmegaAACodonMutSelFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,Nomega,omegaprior);
-			}
-			else if (mixturetype == 8)	{
-				type = "AAACODONMUTSELSBDPOMEGASBDP";
-				process = new AACodonMutSelSBDPOmegaSBDPPhyloProcess(fixcodonprofile,omegaprior,kappaprior);
 			}
 			else	{
 				cerr << "mixture type " << mixturetype << " not recognized or not yet implemented.\n";

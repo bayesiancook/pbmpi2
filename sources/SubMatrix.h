@@ -338,7 +338,6 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
 inline double SubMatrix::DrawWaitingTime(int state)	{
 
 	const double* row = GetRow(state);
-	double p = -row[state] * rnd::GetRandom().Uniform();
 	double t = rnd::GetRandom().sExpo() / (-row[state]);
 	return t;
 }

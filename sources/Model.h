@@ -216,16 +216,25 @@ class Model	{
 					process = new AACodonMutSelSiteOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,fixomega,omegaprior);
 				}
 				else if (omegamixturetype == 1)	{
+					cerr << "IN AA Codon Mut Sel Finite Omega Finite AA\n";
+					//exit(1);
 					type = "AACODONMUTSELFINITEOMEGAFINITE";
 					process = new AACodonMutSelFiniteOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,Nomega,omegaprior);
 				}
 				else if (omegamixturetype == 3)	{
+					cerr << "IN AA Codon Mut Sel SBDP Omega Finite AA\n";
+					cerr << "This model not yet working...\n";
+					exit(1);
 					type = "AAACODONMUTSELSBDPOMEGAFINITE";
 					process = new AACodonMutSelSBDPOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,omegaprior,kappaprior);
 				}
-				else	{
+				else if (omegamixturetype == 0)	{
 					type = "AACODONMUTSELFINITE";
 					process = new AACodonMutSelFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,fixomega,omegaprior);
+				}
+				else	{
+					cerr << "omega mixture type " << omegamixturetype << " not recognized or not yet implemented.\n";
+					exit(1);
 				}
 			}
 			else if (mixturetype == 3)	{
@@ -234,6 +243,8 @@ class Model	{
 					process = new AACodonMutSelSiteOmegaSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
 				}
 				else if (omegamixturetype == 1)	{
+					cerr << "IN AA Codon Mut Sel Finite Omega SBDP AA\n";
+					//exit(1);
 					type = "AACODONMUTSELFINITEOMEGASBDP";
 					process = new AACodonMutSelFiniteOmegaSBDPPhyloProcess(fixcodonprofile,Nomega,omegaprior,kappaprior);
 				}
@@ -245,9 +256,13 @@ class Model	{
 				//	type = "AACODONMUTSELSITESBDP";
 				//	process = new AACodonMutSelSiteSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
 				//}
-				else	{
+				else if (omegamixturetype == 0)	{
 					type = "AACODONMUTSELSBDP";
 					process = new AACodonMutSelSBDPPhyloProcess(fixcodonprofile,fixomega,omegaprior,kappaprior);
+				}
+				else	{
+					cerr << "omega mixture type " << omegamixturetype << " not recognized or not yet implemented.\n";
+					exit(1);
 				}
 			}
 			else if (mixturetype == 5)	{

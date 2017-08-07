@@ -184,6 +184,11 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 	}
 
 	if (! fixomega)	{
+		//cerr << "###############################\n";
+		//cerr << "#   In !fixomega\n";
+		//cerr << "###############################\n";
+		//exit(1);
+
 		GlobalUpdateParameters();
 		GlobalUpdateSiteOmegaSuffStat();
 		// CheckSuffStatLogProb();

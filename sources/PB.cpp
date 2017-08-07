@@ -58,7 +58,7 @@ int main(int argc, char* argv[])	{
 	int ncat = 100;
 	int iscodon = 0;
 	int omegaprior = 0;
-	int omegamixturetype = -1; // -1 for  homogeneous omega, 1 for finite, 3 for sbdp, 4 for site-specific-gamma-distributed
+	int omegamixturetype = -1; // 0 for  homogeneous omega, 1 for finite, 3 for sbdp, 4 for site-specific-gamma-distributed
 
 
 	int dc = 0;
@@ -510,18 +510,10 @@ int main(int argc, char* argv[])	{
 			else if (s == "-Nomega")	{
 				i++;
 				nomega = atoi(argv[i]);
-				// mixturetype = 3;
 			}
 			else if (s == "-nomega")	{
 				i++;
 				nomega = atoi(argv[i]);
-				//fixomega = 0;
-				//if (nomega > 1)	{
-					mixturetype = 6;
-				//}
-			}
-			else if (s == "-finiteomegafiniteaa")	{
-				mixturetype = 7;
 			}
 			else if (s == "-dc")	{
 				dc = 1;
@@ -578,17 +570,18 @@ int main(int argc, char* argv[])	{
 			else if (s == "-gtr")	{
 				modeltype = 2;
 			}
-			else if (s == "-globalomega")	{
+			else if (s == "-globalomega")	{ // M0-like
 				iscodon = 1;
 				modeltype = 5;
 				mixturetype = 1;
+				omegamixturetype = 0;
 				ncat = 1;
 				empmix = 1;
 				fixncomp = 1;
 				mixtype = "uniform";
 				fixomega = 0;
 			}
-			else if (s == "-siteomega")	{
+			else if (s == "-siteomega")	{ // M5-like
 				iscodon = 1;
 				modeltype = 5;
 				mixturetype = 1;
@@ -873,12 +866,15 @@ int main(int argc, char* argv[])	{
 			}
 			*/
 			else if (s == "-jeffomega")	{
-				omegaprior = 1;
+				omegaprior = 2;
+			}
+			else if (s == "-globalomega")	{
+				omegamixturetype = 0;
 			}
 			else if (s == "-omegafinite")	{
 				omegamixturetype = 1;
 			}
-			else if (s == "-omegaspdp")	{
+			else if (s == "-omegasbdp")	{
 				omegamixturetype = 3;
 			}
 			else if (s == "-omegadp")	{

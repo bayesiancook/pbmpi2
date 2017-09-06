@@ -219,7 +219,7 @@ class Model	{
 					cerr << "IN AA Codon Mut Sel Finite Omega Finite AA\n";
 					//exit(1);
 					type = "AACODONMUTSELFINITEOMEGAFINITE";
-					process = new AACodonMutSelFiniteOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,Nomega,omegaprior);
+					process = new AACodonMutSelFiniteOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,fixomega,Nomega,omegaprior);
 				}
 				else if (omegamixturetype == 3)	{
 					cerr << "IN AA Codon Mut Sel SBDP Omega Finite AA\n";
@@ -246,7 +246,7 @@ class Model	{
 					cerr << "IN AA Codon Mut Sel Finite Omega SBDP AA\n";
 					//exit(1);
 					type = "AACODONMUTSELFINITEOMEGASBDP";
-					process = new AACodonMutSelFiniteOmegaSBDPPhyloProcess(fixcodonprofile,Nomega,omegaprior,kappaprior);
+					process = new AACodonMutSelFiniteOmegaSBDPPhyloProcess(fixcodonprofile,fixomega,Nomega,omegaprior,kappaprior);
 				}
 				else if (omegamixturetype == 3)	{
 					type = "AAACODONMUTSELSBDPOMEGASBDP";

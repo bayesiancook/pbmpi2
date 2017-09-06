@@ -13,8 +13,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 **********************/
 
-#ifndef MULTIPLEOMEGA_H
-#define MULTIPLEOMEGA_H
+#ifndef FINITEOMEGA_H
+#define FINITEOMEGA_H
 
 #include "MixtureOmegaProcess.h"
 

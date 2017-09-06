@@ -24,9 +24,10 @@ class AACodonMutSelFiniteOmegaFinitePhyloProcess : public virtual AACodonMutSelF
 
 	public:
 
-	AACodonMutSelFiniteOmegaFinitePhyloProcess(int ncat, int infixncomp, int inempmix, string inmixtype, int infixcodonprofile, int inNomega, int inomegaprior)	{
+	AACodonMutSelFiniteOmegaFinitePhyloProcess(int ncat, int infixncomp, int inempmix, string inmixtype, int infixcodonprofile, int infixomega, int inNomega, int inomegaprior)	{
 
 		fixcodonprofile = infixcodonprofile;
+		fixomega = infixomega;
 		Nomega = inNomega;
 		omegaprior = inomegaprior;
 
@@ -44,6 +45,7 @@ class AACodonMutSelFiniteOmegaFinitePhyloProcess : public virtual AACodonMutSelF
 
 		// specific
 		is >> fixcodonprofile;
+		is >> fixomega;
 		is >> Nomega;
 		is >> omegaprior;
 		is >> fixncomp;
@@ -60,6 +62,7 @@ class AACodonMutSelFiniteOmegaFinitePhyloProcess : public virtual AACodonMutSelF
 	void ToStreamHeader(ostream& os)	{
 		PhyloProcess::ToStreamHeader(os);
 		os << fixcodonprofile << '\n';
+		os << fixomega << '\n';
 		os << Nomega << '\n';
 		os << omegaprior << '\n';
 		os << fixncomp << '\n';

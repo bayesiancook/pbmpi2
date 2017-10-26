@@ -280,8 +280,8 @@ void GeneralPathSuffStatMultipleMatrixMixtureProfileProcess::SlaveUpdateModeProf
 				tmpwaitvector[cat*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first] = i->second;
 			}
 			for (map<pair<int,int>, int>::iterator i = profilepaircount[cat][l].begin(); i!= profilepaircount[cat][l].end(); i++)	{
-				pairvector[cat*GetNstate()*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first.first*GetNstate() + i->first.second] = i->second;
-				tmppairvector[cat*GetNstate()*GetNstate()*GetNSubAlloc() + l*GetNstate() + i->first.first*GetNstate() + i->first.second] = i->second;
+				pairvector[cat*GetNstate()*GetNstate()*GetNSubAlloc() + l*GetNstate()*GetNstate() + i->first.first*GetNstate() + i->first.second] = i->second;
+				tmppairvector[cat*GetNstate()*GetNstate()*GetNSubAlloc() + l*GetNstate()*GetNstate() + i->first.first*GetNstate() + i->first.second] = i->second;
 			}
 		}
 	}

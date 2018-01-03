@@ -53,15 +53,15 @@ void PhyloProcess::New(int unfold)	{
 	}
 
 	if (! GetMyid())	{
-	if (roottax1 != "None")	{
-		cerr << "reroot tree\n";
-		Link* newroot = GetTree()->GetLCA(roottax1,roottax2);
-		if (!newroot)	{
-			cerr << "error when rerooting\n";
-			exit(1);
-		}
-		GlobalRootAt(newroot);
-	}
+        if (roottax1 != "None")	{
+            cerr << "reroot tree\n";
+            Link* newroot = GetTree()->GetLCA(roottax1,roottax2);
+            if (!newroot)	{
+                cerr << "error when rerooting\n";
+                exit(1);
+            }
+            GlobalRootAt(newroot);
+        }
 	}
 
 	Create();

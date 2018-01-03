@@ -49,7 +49,7 @@ class GeneralPathSuffStatMatrixSiteSpecificProfileProcess : public virtual Matri
 		DeleteMatrix(k);
 	}
 
-	virtual double ProfileSuffStatLogProb(int cat);
+	virtual double ProfileSuffStatLogProb(int site);
 
 };
 

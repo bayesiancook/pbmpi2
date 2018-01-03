@@ -541,7 +541,6 @@ double FiniteProfileProcess::LogStatPrior(int cat)	{
 			total += (1.0 / statfixalpha * GetDim() * statfix[cat][k] - 1) * log(profile[cat][k]) - rnd::GetRandom().logGamma(1.0 / statfixalpha * GetDim() * statfix[cat][k]);
 		}
 		total += rnd::GetRandom().logGamma(1.0 / statfixalpha * GetDim());
-		logstatprior[cat] = total;
 	}
 	else if (empmix == 3)	{
 		total = LogStatPriorConstrained(cat);

@@ -45,7 +45,6 @@ double GeneralPathSuffStatMatrixSiteSpecificProfileProcess::ProfileSuffStatLogPr
 			total += i->second * log((*mat)(i->first.first, i->first.second));
 		}
 	}
-	profilesuffstatlogprob[site] = total;
 	return total;
 }
 

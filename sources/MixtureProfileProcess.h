@@ -213,7 +213,6 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	int* alloc;
 	int* occupancy;
 	int Ncomponent;
-	double* logstatprior;
 	double* profilesuffstatlogprob;
 
 	// sumovercomponents

@@ -354,7 +354,7 @@ class Model	{
 			// process = new RASPARTGTRGammaPhyloProcess(is,myid,nprocs);
 		}
         else if (type == "IID") {
-            process = new IIDDirichletIIDGammaPhyloProcess();
+            process = new IIDDirichletIIDGammaPhyloProcess(is,myid,nprocs);
         }
 		else if (type == "CATDP")	{
 			process = new RASCATGammaPhyloProcess(is,myid,nprocs); 

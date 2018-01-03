@@ -29,7 +29,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 void PoissonSiteSpecificProfileProcess::Create()	{
 	if (! logsum)	{
 		PoissonProfileProcess::Create();
-		SiteSpecificProfileProcess::Create();
+		DirichletSiteSpecificProfileProcess::Create();
         logsum = new double[GetDim()];
 	}
 }
@@ -39,7 +39,7 @@ void PoissonSiteSpecificProfileProcess::Delete() {
         delete[] logsum;
         logsum = 0;
 		PoissonProfileProcess::Delete();
-		SiteSpecificProfileProcess::Delete();
+		DirichletSiteSpecificProfileProcess::Delete();
 	}
 }
 

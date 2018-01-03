@@ -38,6 +38,30 @@ class DirichletSiteSpecificProfileProcess : public virtual DirichletProfileProce
 		SiteSpecificProfileProcess::Delete();
 		DirichletProfileProcess::Delete();
 	}
+
+    virtual void ToStream(ostream& os)  {
+        for (int k=0; k<GetDim(); k++)  {
+            os << dirweight[k] << '\t';
+        }
+        os << '\n';
+        for (int i=0; i<GetNsite(); i++)  {
+            for (int k=0; k<GetDim(); k++)  {
+                os << profile[i][k] << '\t';
+            }
+            os << '\n';
+        }
+    }
+
+    virtual void FromStream(istream& is)    {
+        for (int k=0; k<GetDim(); k++)  {
+            is >> dirweight[k];
+        }
+        for (int i=0; i<GetNsite(); i++)  {
+            for (int k=0; k<GetDim(); k++)  {
+                is >> profile[i][k];
+            }
+        }
+    }
 };
 
 

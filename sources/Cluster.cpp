@@ -8,30 +8,16 @@ const int Nstate = 20;
 
 class Stat	{
 
-	double* v;
+	vector<double> v;
 	int weight;
 
 	public:
 
-	Stat()	{
-		v = new double[Nstate];
-		for (int i=0; i<Nstate; i++)	{
-			v[i] = 0;
-		}
-		weight = 0;
-	}
+	Stat() : v(Nstate,0), weight(0) {}
 
-	Stat(const Stat& from)	{
-		v = new double[Nstate];
-		for (int i=0; i<Nstate; i++)	{
-			v[i] = from.v[i];
-		}
-		weight = from.weight;
-	}
+	Stat(const Stat& from) : v(from.v), weight(from.weight)	{}
 
-	~Stat()	{
-		delete[] v;
-	}
+	~Stat()	{}
 
 	int GetWeight()	{
 		return weight;
@@ -93,21 +79,29 @@ class Stat	{
 		return naa;
 	}
 
+    double GetEntropy() {
+        double tot = 0;
+        for (int i=0; i<Nstate; i++)    {
+            if (v[i] > 1e-6)    {
+                tot -= v[i]*log(v[i]);
+            }
+        }
+        return tot;
+    }
+
 	vector<int> GetSubset(double cutoff, int type)	{
 
-		vector<int> a;
+		vector<int> a(Nstate,0);
 
+        // all amino-acids with freq > cutoff
 		if (type == 0)	{
 			for (int i=0; i<Nstate; i++)	{
-				a.push_back((v[i] > cutoff));
+				a[i] = ((v[i] > cutoff));
 			}
 			return a;
 		}
 	
 		else if (type == 1)	{
-			for (int i=0; i<Nstate; i++)	{
-				a.push_back(0);
-			}
 
 			double* tmp = new double[Nstate];
 			for (int i=0; i<Nstate; i++)	{
@@ -134,25 +128,47 @@ class Stat	{
 			delete[] tmp;
 			return a;
 		}
-		// type == 2
+        else if (type == 2) {
 
-		for (int i=0; i<Nstate; i++)	{
-			a.push_back(0);
-		}
+            int naa = int(exp(GetEntropy()) + 0.5);
+            vector<double> tmp = v;
+            for (int k=0; k<naa; k++)   {
+                double max = 0;
+                int imax = 0;
+                for (int i=0; i<Nstate; i++)    {
+                    if (max < tmp[i])   {
+                        max = tmp[i];
+                        imax = i;
+                    }
+                }
+                a[imax] = 1;
+                tmp[imax] = 0;
+            }
+            return a;
+        }
+		// type == 3
 
-		int naa = 2;
+		int naa = 1;
 		int found = 0;
-		while ((naa < 5) && (! found))	{
+        double f = 0.33;
+        double g = 3;
+		while ((g * (1-cutoff) * naa < f * cutoff * (Nstate-naa)) && (! found))	{
 			int n = 0;
+            int complies = 1;
 			for (int i=0; i<Nstate; i++)	{
-				if (v[i] > cutoff/naa)	{
+				if (v[i] > f*cutoff/naa)	{
 					n++;
 				}
+                else    {
+                    if (v[i] > g*(1-cutoff)/(Nstate-naa))    {
+                        complies = 0;
+                    }
+                }
 			}
-			if (n == naa)	{
+			if ((n == naa) && (complies))	{
 				found = 1;
 				for (int i=0; i<Nstate; i++)	{
-					if (v[i] > cutoff/naa)	{
+					if (v[i] > f*cutoff/naa)	{
 						a[i] = 1;
 					}
 				}
@@ -161,6 +177,11 @@ class Stat	{
 				naa++;
 			}
 		}
+        if (! found)  {
+            for (int i=0; i<Nstate; i++)    {
+                a[i] = 0;
+            }
+        }
 		return a;
 	}
 

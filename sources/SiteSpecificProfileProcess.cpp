@@ -37,15 +37,11 @@ void SiteSpecificProfileProcess::Create()	{
 		for (int i=0; i<GetNsite(); i++)	{
 			profile[i] = allocprofile + i*GetDim();
 		}
-		logstatprior = new double[GetNsite()];
-		profilesuffstatlogprob = new double[GetNsite()];
 	}
 }
 
 void SiteSpecificProfileProcess::Delete()	{
 	if (profile)	{
-		delete[] profilesuffstatlogprob;
-		delete[] logstatprior;
 		delete[] allocprofile;
 		delete[] profile;
 		profile = 0;
@@ -121,38 +117,26 @@ double SiteSpecificProfileProcess::LogProfilePrior()	{
 
 double SiteSpecificProfileProcess::LogStatPrior()	{
 
+    double total = 0;
 	for (int i=0; i<GetNsite(); i++)	{
 		if (ActiveSite(i))	{
-			LogStatPrior(i);
-		}
-	}
-	double total = 0;
-	for (int i=0; i<GetNsite(); i++)	{
-		if (ActiveSite(i))	{
-			total += logstatprior[i];
+			total += LogStatPrior(i);
 		}
 	}
 	return total;
 }
 
 double SiteSpecificProfileProcess::LogStatPrior(int site)	{
-	double tmp = LogFrequencyStatPrior(profile[site]);
-	logstatprior[site] = tmp;
-	return tmp;
+	return LogFrequencyStatPrior(profile[site]);
 }
 
 double SiteSpecificProfileProcess::ProfileSuffStatLogProb()	{
 
 	// simply, sum over all components
-	for (int i=0; i<GetNsite(); i++)	{
-		if (ActiveSite(i))	{
-			ProfileSuffStatLogProb(i);
-		}
-	}
 	double total = 0;
 	for (int i=0; i<GetNsite(); i++)	{
 		if (ActiveSite(i))	{
-			total += profilesuffstatlogprob[i];
+			total += ProfileSuffStatLogProb(i);
 		}
 	}
 	return total;
@@ -311,3 +295,18 @@ double SiteSpecificProfileProcess::MoveProfile(int site, double tuning, int n, i
 	return naccepted / nrep;
 }
 
+void SiteSpecificProfileProcess::GlobalCollectSiteProfiles() {
+
+    if (GetNprocs() > 1)    {
+        MPI_Status stat;
+        MESSAGE signal = COLLECT_SPROFILE;
+        MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+        for(int i=1; i<GetNprocs(); i++) {
+            MPI_Recv(allocprofile+GetDim()*GetProcSiteMin(i),GetDim()*GetProcSiteNumber(i),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+        }
+    }
+}
+
+void SiteSpecificProfileProcess::SlaveCollectSiteProfiles()   {
+	MPI_Send(allocprofile+GetDim()*GetSiteMin(),GetDim()*GetSiteNumber(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}

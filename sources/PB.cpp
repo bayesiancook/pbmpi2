@@ -621,6 +621,9 @@ int main(int argc, char* argv[])	{
 			else if (s == "-olddp")	{
 				mixturetype = 2;
 			}
+            else if (s == "-iid")   {
+                mixturetype = 5;
+            }
 			else if ((s == "-finite") || (s == "-ncat"))	{
 				mixturetype = 1;
 				i++;

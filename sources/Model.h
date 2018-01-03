@@ -24,6 +24,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "RASCATGammaPhyloProcess.h"
 #include "RASCATFiniteGammaPhyloProcess.h"
 #include "RASCATSBDPGammaPhyloProcess.h"
+#include "IIDDirichletIIDGammaPhyloProcess.h"
 #include "GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.h"
 #include "AACodonMutSelFinitePhyloProcess.h"
 #include "AACodonMutSelSBDPPhyloProcess.h"
@@ -115,6 +116,10 @@ class Model	{
 				process = new RASCATGammaPhyloProcess(nratecat,withpinv,kappaprior);
 				// process = new RASCATGammaPhyloProcess(nratecat,kappaprior,dirpriortype,nstatcomp,empmixprior,mixpriortype);
 			}
+            else if (mixturetype == 5)  {
+                type = "IID";
+                process = new IIDDirichletIIDGammaPhyloProcess();
+            }
 			else	{
 				type = "CATSBDP";
 				process = new RASCATSBDPGammaPhyloProcess(nratecat,withpinv,kappaprior);
@@ -346,6 +351,9 @@ class Model	{
 		if (type == "PARTGTR")	{
 			// process = new RASPARTGTRGammaPhyloProcess(is,myid,nprocs);
 		}
+        else if (type == "IID") {
+            process = new IIDDirichletIIDGammaPhyloProcess();
+        }
 		else if (type == "CATDP")	{
 			process = new RASCATGammaPhyloProcess(is,myid,nprocs); 
 		}

@@ -499,6 +499,10 @@ class Model	{
 	}
 	*/
 
+    void VarBayes() {
+        process->VarBayes();
+    }
+
 	void Run(int smc, int deltansite, int shortcycle, int longcycle, int cutoffsize, int nrep)	{
 
 		cerr << "current logL : " << process->GetLogLikelihood() << '\t';
@@ -515,6 +519,7 @@ class Model	{
 			process->SMCBurnin(name,deltansite,shortcycle,longcycle,cutoffsize,nrep);
 			cerr << "burnin done\n";
 		}
+
 
 		while (RunningStatus() && ((until == -1) || (GetSize() < until)))	{
 

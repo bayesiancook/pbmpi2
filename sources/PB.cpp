@@ -163,6 +163,8 @@ int main(int argc, char* argv[])	{
 
 	int reshuffle = 0;
 
+    int varbayes = 0;
+
 	try	{
 
 		if (argc == 1)	{
@@ -195,6 +197,9 @@ int main(int argc, char* argv[])	{
 				i++;
 				datafile = argv[i];
 			}
+            else if (s == "-varbayes")  {
+                varbayes = 1;
+            }
 			else if (s == "-part")	{
 				i++;
 				partitionfile = argv[i];
@@ -1105,7 +1110,13 @@ int main(int argc, char* argv[])	{
 		model->TraceHeader(cerr);
 		model->Trace(cerr);
 		cerr << '\n';
-		model->Run(smc,deltansite,shortcycle,longcycle,cutoffsize,nrep);
+
+        if (varbayes)   {
+            model->VarBayes();
+        }
+        else    {
+            model->Run(smc,deltansite,shortcycle,longcycle,cutoffsize,nrep);
+        }
 		if (nprocs > 1)	{
 			MESSAGE signal = KILL;
 			MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);

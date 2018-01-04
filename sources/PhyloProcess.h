@@ -53,7 +53,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void SlavePropagate(int,int,bool,double);
 
 	// default constructor: pointers set to nil
-	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
+	PhyloProcess() :  sitecondlmap(0), condlmap(0), condlmap2(0), withoutwardcondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
 
 		reshuffle = 0;
 		reverseafterfull = 0;
@@ -310,6 +310,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		myid = inmyid;
 		nprocs = innprocs;
 	}
+
+    void SetWithOutwardConditionalLikelihoods(int in)   {
+        withoutwardcondlmap = in;
+    }
 
 	virtual void ToStreamHeader(ostream& os);
 
@@ -589,7 +593,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	// if  auxindex == -1 then create auxiliary array, otherwise use condlmap[auxindex] as the auxiliary array
 	double ComputeNodeLikelihood(const Link* from, int auxindex);
-	// double ComputeNodeLikelihood(const Link* from, int auxindex = -1);
+	double ComputeBranchLikelihood(const Link* from, int auxindex);
+    void CheckLikelihood();
+    void RecursiveComputeLikelihood(const Link* from, int auxindex, vector<double>& nodelogl, vector<double>& branchlogl);
 
 	// assumes that rate allocations have already been defined
 	// and that conditional likelihoods are updated
@@ -668,6 +674,11 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double*** GetConditionalLikelihoodVector(const Link* link)	{
 		return condlmap[GetLinkIndex(link)];
 	}
+
+	double*** GetOutwardConditionalLikelihoodVector(const Link* link)	{
+		return condlmap2[GetLinkIndex(link)];
+	}
+
 
 	void CreateMappings();
 	void DeleteMappings();
@@ -793,6 +804,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	double*** sitecondlmap;
 	double**** condlmap;
+	double**** condlmap2;
+    int withoutwardcondlmap;
 	BranchSitePath*** submap;
 	int** nodestate;
 

@@ -332,6 +332,7 @@ class Model	{
 		// process->SetTrackTopo(1);
 
 		process->SetMPI(myid,nprocs);
+        process->SetWithOutwardConditionalLikelihoods(1);
 		process->New();
 	}
 

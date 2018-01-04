@@ -118,9 +118,9 @@ void PoissonPhyloProcess::UpdateSiteRateSuffStat()	{
 			siteratesuffstatbeta[i] = 0;
 		}
 	}
-	for (int j=1; j<GetNbranch(); j++)	{
-		AddSiteRateSuffStat(siteratesuffstatcount,siteratesuffstatbeta,blarray[j],submap[j],missingmap[j]);
-	}
+    for (int j=1; j<GetNbranch(); j++)	{
+        AddSiteRateSuffStat(siteratesuffstatcount,siteratesuffstatbeta,blarray[j],submap[j],missingmap[j]);
+    }
 }
 
 int PoissonPhyloProcess::RecursiveUpdateSiteProfileSuffStat(const Link* from, int site)	{

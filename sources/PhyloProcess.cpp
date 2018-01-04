@@ -795,6 +795,13 @@ void PhyloProcess::Create()	{
 				condlmap[j] = 0;
 			}
 
+            if (withoutwardcondlmap)    {
+                condlmap2 = new double***[GetNlink()];
+                for (int j=0; j<GetNlink(); j++)	{
+                    condlmap2[j] = 0;
+                }
+            }
+
 			CreateCondSiteLogL();
 			ActivateSumOverRateAllocations();
 			CreateConditionalLikelihoods();
@@ -938,6 +945,7 @@ void PhyloProcess::Delete() {
 			DeleteMissingMap();
 			delete[] nodestate;
 			delete[] condlmap;
+            delete[] condlmap2;
 			SubstitutionProcess::Delete();
 		}
 		else	{
@@ -1052,6 +1060,13 @@ void PhyloProcess::CreateConditionalLikelihoods()	{
 			exit(1);
 		}
 		condlmap[j] =  CreateConditionalLikelihoodVector();
+        if (withoutwardcondlmap)    {
+            if (condlmap2[j])   {
+                cerr << "error: condl2 already exists\n";
+                exit(1);
+            }
+            condlmap2[j] =  CreateConditionalLikelihoodVector();
+        }
 	}
 }
 
@@ -1060,6 +1075,10 @@ void PhyloProcess::DeleteConditionalLikelihoods()	{
 	for (int j=0; j<GetNlink(); j++)	{
 		DeleteConditionalLikelihoodVector(condlmap[j]);
 		condlmap[j] = 0;
+        if (withoutwardcondlmap)    {
+            DeleteConditionalLikelihoodVector(condlmap2[j]);
+            condlmap2[j] = 0;
+        }
 	}
 }
 
@@ -1129,6 +1148,11 @@ void PhyloProcess::GlobalUnfold()	{
 	else	{
 		Unfold();
 		UpdateConditionalLikelihoods();
+        /*
+        cerr << "check likelihoods\n";
+        CheckLikelihood();
+        exit(1);
+        */
 	}
 }
 
@@ -1398,6 +1422,59 @@ void PhyloProcess::UpdateConditionalLikelihoods()	{
 	}
 }
 
+void PhyloProcess::CheckLikelihood()	{
+
+	vector<double> nodelogl;
+	vector<double> branchlogl;
+	RecursiveComputeLikelihood(GetRoot(),-1,nodelogl,branchlogl);
+	double max = 0;
+	for (unsigned int i=0; i<nodelogl.size(); i++)	{
+		double tmp = fabs(nodelogl[i] - nodelogl[0]);
+		if (max < tmp)	{
+			max = tmp;
+		}
+	}
+	for (unsigned int i=0; i<branchlogl.size(); i++)	{
+		double tmp = fabs(branchlogl[i] - branchlogl[0]);
+		if (max < tmp)	{
+			max = tmp;
+		}
+	}
+	if (max > 1e-10)	{
+		cerr << "error in check likelihoods\n";
+		cerr << max << '\n';
+		cerr.precision(25);
+        cerr << "node log likelihoods\n";
+		for (unsigned int i=0; i<nodelogl.size(); i++)	{
+			cerr << nodelogl[i] << '\n';
+		}
+        cerr << "branch log likelihoods\n";
+		for (unsigned int i=0; i<branchlogl.size(); i++)	{
+			cerr << branchlogl[i] << '\n';
+		}
+		exit(1);
+	}
+}
+
+void PhyloProcess::RecursiveComputeLikelihood(const Link* from, int auxindex, vector<double>& nodelogl, vector<double>& branchlogl)	{
+
+    // WARNING: preorder pruning does not update leaf condtional likelihood vectors (not necessary in the present case)
+    // so the following will issue an error message if tried on leaf
+    if (! from->isLeaf())   {
+        double nodelnL = ComputeNodeLikelihood(from,auxindex);
+        nodelogl.push_back(nodelnL);
+    }
+
+    if (! from->isRoot())   {
+        double branchlnL = ComputeBranchLikelihood(from,auxindex);
+        branchlogl.push_back(branchlnL);
+    }
+
+	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+        RecursiveComputeLikelihood(link->Out(),auxindex,nodelogl,branchlogl);
+	}
+}
+
 void PhyloProcess::GlobalUpdateConditionalLikelihoods()	{
 
 	if (GetNprocs() > 1)	{
@@ -1436,6 +1513,7 @@ double PhyloProcess::ComputeNodeLikelihood(const Link* from, int auxindex)	{
 	else	{
 		Reset(aux,condflag);
 	}
+
 	if (! from->isRoot())	{
 		Multiply(GetConditionalLikelihoodVector(from),aux,condflag);
 	}
@@ -1444,6 +1522,33 @@ double PhyloProcess::ComputeNodeLikelihood(const Link* from, int auxindex)	{
 			Multiply(GetConditionalLikelihoodVector(link),aux,condflag);
 		}
 	}
+	MultiplyByStationaries(aux,condflag);
+	double lnL = ComputeLikelihood(aux,condflag);
+	if (localaux)	{
+		DeleteConditionalLikelihoodVector(aux);
+	}
+	return lnL;
+}
+
+double PhyloProcess::ComputeBranchLikelihood(const Link* from, int auxindex)	{
+
+    if (from->isRoot()) {
+        cerr << "error: compute branch likelihood called on root\n";
+        exit(1);
+    }
+
+	double*** aux = 0;
+	bool localaux = false;
+	if (auxindex != -1)	{
+		aux = condlmap[auxindex];
+	}
+	else	{
+		localaux = true;
+		aux = CreateConditionalLikelihoodVector();
+	}
+
+    Propagate(GetOutwardConditionalLikelihoodVector(from->Out()),aux,GetLength(from->GetBranch()),condflag);
+    Multiply(GetOutwardConditionalLikelihoodVector(from),aux,condflag);
 	MultiplyByStationaries(aux,condflag);
 	double lnL = ComputeLikelihood(aux,condflag);
 	if (localaux)	{
@@ -1603,15 +1708,16 @@ void PhyloProcess::PostOrderPruning(const Link* from, double*** aux)	{
 		}
 		Offset(aux,condflag);
 	}
-	if (from->isRoot())	{
-		// copy aux into GetConditionalLikelihoodVector(root) ?
-		// or aux IS the conditional likelihood vector of the root ?
-	}	
+    if (withoutwardcondlmap)    {
+        Reset(GetOutwardConditionalLikelihoodVector(from),condflag);
+        Multiply(aux,GetOutwardConditionalLikelihoodVector(from),condflag);
+    }
 }
 
 void PhyloProcess::PreOrderPruning(const Link* from, double*** aux)	{
 
 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+
 		Reset(aux,condflag);
 		for (const Link* link2=link->Next(); link2!=link; link2=link2->Next())	{
 			if (! link2->isRoot())	{
@@ -1623,6 +1729,12 @@ void PhyloProcess::PreOrderPruning(const Link* from, double*** aux)	{
 		// in order for all the conditional likelihood vectors, including those at the leaves, to be updated
 		// but in practice, the leaf likelihood vectors are not used anyway (and they represent half of the whole set of likelihood vectors)
 		// so not computing them saves 50% CPU time
+
+        if (withoutwardcondlmap)    {
+            Reset(GetOutwardConditionalLikelihoodVector(link),condflag);
+            Multiply(aux,GetOutwardConditionalLikelihoodVector(link),condflag);
+        }
+
 		if (! link->Out()->isLeaf())	{
 			Propagate(aux,GetConditionalLikelihoodVector(link->Out()),GetLength(link->GetBranch()),condflag);
 		}

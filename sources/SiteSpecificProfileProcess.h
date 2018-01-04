@@ -33,6 +33,9 @@ class SiteSpecificProfileProcess: public virtual ProfileProcess	{
 
 	protected:
 
+    void GlobalCollectSiteProfiles();
+    void SlaveCollectSiteProfiles();
+
 	//------
 	// priors
 	//------
@@ -106,8 +109,6 @@ class SiteSpecificProfileProcess: public virtual ProfileProcess	{
 
 	double** profile;
 	double* allocprofile;
-	double* logstatprior;
-	double* profilesuffstatlogprob;
 
 	Chrono totchrono;
 	Chrono profilechrono;

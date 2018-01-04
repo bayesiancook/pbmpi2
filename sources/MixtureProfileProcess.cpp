@@ -47,7 +47,6 @@ void MixtureProfileProcess::Create()	{
 			}
 		}
 		occupancy = new int[GetNmodeMax()];
-		logstatprior = new double[GetNmodeMax()];
 		profilesuffstatlogprob = new double[GetNmodeMax()];
 	}
 }
@@ -101,7 +100,6 @@ void MixtureProfileProcess::Delete()	{
 			mtryalloc = 0;
 		}
 		delete[] profilesuffstatlogprob;
-		delete[] logstatprior;
 		delete[] allocprofile;
 		delete[] profile;
 		delete[] alloc;
@@ -301,20 +299,15 @@ void MixtureProfileProcess::UpdateOccupancyNumbers()	{
 
 double MixtureProfileProcess::LogStatPrior()	{
 
-	for (int i=0; i<GetNcomponent(); i++)	{
-		LogStatPrior(i);
-	}
 	double total = 0;
 	for (int i=0; i<GetNcomponent(); i++)	{
-		total += logstatprior[i];
+		total += LogStatPrior(i);
 	}
 	return total;
 }
 
 double MixtureProfileProcess::LogStatPrior(int cat)	{
-	double tmp = LogFrequencyStatPrior(profile[cat]);
-	logstatprior[cat] = tmp;
-	return tmp;
+	return LogFrequencyStatPrior(profile[cat]);
 }
 
 double MixtureProfileProcess::ProfileSuffStatLogProb()	{

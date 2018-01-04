@@ -572,3 +572,9 @@ double Random::logGamma(double alpha) {
 	return log(tot * sqrt(2 * Pi)) - alpha - 6.5 + (alpha-0.5) * log(alpha + 6.5);
 }
 
+double Random::Psi(double x, double h)    {
+
+    double eps = x * h;
+    return (logGamma(x+h) - logGamma(x-h)) / 2/h;
+}
+

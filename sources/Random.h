@@ -73,6 +73,8 @@ class Random {
 	int DrawFromLogDiscreteDistribution(double* ll, int n);
 
 	double logGamma(double a);
+    // simple numerical calculation of digamma function (derivative of logGamma)
+    double Psi(double x, double h = 1e-8);
 
 	long int GetCount() {return count;}
 

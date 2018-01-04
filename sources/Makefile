@@ -43,6 +43,7 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	ExpoConjugatePartitionGTRProfileProcess.cpp ExpoConjugatePartitionGTRMixtureProfileProcess.cpp \
 	ExpoConjugatePartitionGTRSubstitutionProcess.cpp ExpoConjugatePartitionGTRPhyloProcess.cpp \
 	RASPARTGTRGammaPhyloProcess.cpp \
+	GammaRateProcess.cpp PoissonSiteSpecificProfileProcess.cpp IIDDirichletIIDGammaPhyloProcess.cpp \
 	Bipartition.cpp BipartitionList.cpp Consensus.cpp TaxaParameters.cpp PBTree.cpp TreeList.cpp PolyNode.cpp correl.cpp correlation.cpp \
 	BP2Stat.cpp BP2util.cpp
 
@@ -52,8 +53,8 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=../data
-#ALL= pb_mpi readpb_mpi logo tracecomp
-ALL= logo satplot pb_mpi readpb_mpi geneempfreq reroot hi stickbreaking drawhindex gettreelength simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity mccpmcmc ccpmcmc bpcomp bpcomp2 tracecomp
+ALL= pb_mpi readpb_mpi logo tracecomp
+#ALL= logo satplot pb_mpi readpb_mpi geneempfreq reroot hi stickbreaking drawhindex gettreelength simupartaamix simupartcodonrev partitionjackknife simucodonrev diversity mccpmcmc ccpmcmc bpcomp bpcomp2 tracecomp
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 .PHONY: all clean

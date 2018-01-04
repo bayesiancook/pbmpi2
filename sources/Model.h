@@ -24,6 +24,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "RASCATGammaPhyloProcess.h"
 #include "RASCATFiniteGammaPhyloProcess.h"
 #include "RASCATSBDPGammaPhyloProcess.h"
+#include "IIDDirichletIIDGammaPhyloProcess.h"
 #include "GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.h"
 #include "AACodonMutSelFinitePhyloProcess.h"
 #include "AACodonMutSelSBDPPhyloProcess.h"
@@ -115,6 +116,10 @@ class Model	{
 				process = new RASCATGammaPhyloProcess(nratecat,withpinv,kappaprior);
 				// process = new RASCATGammaPhyloProcess(nratecat,kappaprior,dirpriortype,nstatcomp,empmixprior,mixpriortype);
 			}
+            else if (mixturetype == 5)  {
+                type = "IID";
+                process = new IIDDirichletIIDGammaPhyloProcess();
+            }
 			else	{
 				type = "CATSBDP";
 				process = new RASCATSBDPGammaPhyloProcess(nratecat,withpinv,kappaprior);
@@ -300,6 +305,8 @@ class Model	{
 		}
 		}
 
+        cerr << "set params\n";
+
 		process->SetParameters(datafile,treefile,partitionfile,iscodon,codetype,sis,sisfrac,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,roottax1,roottax2,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,profilepriortype,dc,fixbl,sumovercomponents,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,dirpriortype,nstatcomp,priorempmix,priormixtype,fixstatweight,fixstatalpha,fixstatcenter,reshuffle);
 
 		if (topobf == 1)	{
@@ -346,6 +353,9 @@ class Model	{
 		if (type == "PARTGTR")	{
 			// process = new RASPARTGTRGammaPhyloProcess(is,myid,nprocs);
 		}
+        else if (type == "IID") {
+            process = new IIDDirichletIIDGammaPhyloProcess(is,myid,nprocs);
+        }
 		else if (type == "CATDP")	{
 			process = new RASCATGammaPhyloProcess(is,myid,nprocs); 
 		}

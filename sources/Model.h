@@ -404,6 +404,12 @@ class Model	{
 		else if (type == "AACODONMUTSELSBDP")	{
 			process = new AACodonMutSelSBDPPhyloProcess(is,myid,nprocs);
 		}
+		else if (type == "AACODONMUTSELFINITEOMEGAFINITE")	{
+			process = new AACodonMutSelFiniteOmegaFinitePhyloProcess(is,myid,nprocs);
+		}
+		else if (type == "AACODONMUTSELFINITEOMEGASBDP")	{
+			process = new AACodonMutSelFiniteOmegaSBDPPhyloProcess(is,myid,nprocs);
+		}
 		else if (type == "AACODONMUTSELMVNSS")	{
 			process = new AACodonMutSelMVNSiteSpecificPhyloProcess(is,myid,nprocs);
 		}

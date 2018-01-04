@@ -450,4 +450,5 @@ void AACodonMutSelFiniteOmegaFinitePhyloProcess::Read(string name, int burnin, i
 	for (int site = 0; site < ProfileProcess::GetNsite(); site++)	{
 		pomegagtone_os << site+1 << "\t" << (double) (siteomegagreaterthanonecount[site])/samplesize << "\n";
 	}
+	delete siteomegagreaterthanonecount;
 }

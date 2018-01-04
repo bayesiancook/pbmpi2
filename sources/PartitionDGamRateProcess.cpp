@@ -42,16 +42,16 @@ void PartitionDGamRateProcess::Create()	{
 		alpha = new double[Npart];
 		pinv = new double[Npart];
 		rate = new double*[Npart];
-		allocratesuffstatcount = new int[Npart*GetNcat()];
+		allocratesuffstatcount = new double[Npart*GetNcat()];
 		allocratesuffstatbeta = new double[Npart*GetNcat()];
-		ratesuffstatcount = new int*[Npart];
+		ratesuffstatcount = new double*[Npart];
 		ratesuffstatbeta = new double*[Npart];
 		for (int part=0; part<Npart; part++)	{
 			rate[part] = new double[GetNcat()];
 			ratesuffstatcount[part] = allocratesuffstatcount + part*GetNcat();
 			ratesuffstatbeta[part] = allocratesuffstatbeta + part*GetNcat();
 		}
-		Ninv = new int[Npart];
+		Ninv = new double[Npart];
 	}
 }
 
@@ -363,10 +363,10 @@ void PartitionDGamRateProcess::GlobalUpdateRateSuffStat()	{
 			ratesuffstatbeta[part][i] = 0.0;
 		}
 	}
-	int ivector[Npart*GetNcat()];
+	double ivector[Npart*GetNcat()];
 	double dvector[Npart*GetNcat()];
         for(int i=1; i<GetNprocs(); i++) {
-                MPI_Recv(ivector,Npart*GetNcat(),MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+                MPI_Recv(ivector,Npart*GetNcat(),MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
                 for(int j=0; j<Npart*GetNcat(); j++) {
                         allocratesuffstatcount[j] += ivector[j];                      
                 }
@@ -383,9 +383,9 @@ void PartitionDGamRateProcess::GlobalUpdateRateSuffStat()	{
 			Ninv[part] = 0;
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
-		int* tmp = new int[Npart];
+		double* tmp = new double[Npart];
 		for(int i=1; i<GetNprocs(); i++) {
-			MPI_Recv(tmp,Npart,MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+			MPI_Recv(tmp,Npart,MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
 			for (int part=0; part<Npart; part++)	{
 				Ninv[part] += tmp[part];
 			}
@@ -424,12 +424,12 @@ void PartitionDGamRateProcess::SlaveUpdateRateSuffStat()	{
 
 	UpdateRateSuffStat();
 
-	MPI_Send(allocratesuffstatcount,Npart*GetNcat(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(allocratesuffstatcount,Npart*GetNcat(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Send(allocratesuffstatbeta,Npart*GetNcat(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	if (withpinv)	{
 		MPI_Barrier(MPI_COMM_WORLD);
-		MPI_Send(Ninv,Npart,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+		MPI_Send(Ninv,Npart,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	}
 }	
 

@@ -27,7 +27,7 @@ class ExpoConjugatePartitionGTRProfileProcess : public virtual PartitionGTRProfi
 	ExpoConjugatePartitionGTRProfileProcess() : rrsuffstatcount(0), rrsuffstatbeta(0) {}
 	virtual ~ExpoConjugatePartitionGTRProfileProcess() {}
 
-	const int* GetRRSuffStatCount(int part) {return rrsuffstatcount[part];}
+	const double* GetRRSuffStatCount(int part) {return rrsuffstatcount[part];}
 	const double* GetRRSuffStatBeta(int part) {return rrsuffstatbeta[part];}
 	// protected:
 
@@ -35,7 +35,7 @@ class ExpoConjugatePartitionGTRProfileProcess : public virtual PartitionGTRProfi
 	virtual void Delete();
 
 	// profiles
-	virtual const int* GetSiteProfileSuffStatCount(int site) = 0;
+	virtual const double* GetSiteProfileSuffStatCount(int site) = 0;
 	virtual const double* GetSiteProfileSuffStatBeta(int site) = 0;
 
 	// update of relative rates
@@ -45,9 +45,9 @@ class ExpoConjugatePartitionGTRProfileProcess : public virtual PartitionGTRProfi
 	virtual void GlobalUpdateRRSuffStat();
 	virtual void SlaveUpdateRRSuffStat();
 
-	int* allocrrsuffstatcount;
+	double* allocrrsuffstatcount;
 	double* allocrrsuffstatbeta;
-	int** rrsuffstatcount;
+	double** rrsuffstatcount;
 	double** rrsuffstatbeta;
 };
 

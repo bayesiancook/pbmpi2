@@ -130,7 +130,7 @@ class RateProcess : public virtual MPIModule {
 		cerr << "in RateProcess::GetSiteRateSuffStatBeta\n";
 		exit(1);
 	}
-	virtual int GetSiteRateSuffStatCount(int site)	{
+	virtual double GetSiteRateSuffStatCount(int site)	{
 		cerr << "in RateProcess::GetSiteRateSuffStatCount\n";
 		exit(1);
 	}

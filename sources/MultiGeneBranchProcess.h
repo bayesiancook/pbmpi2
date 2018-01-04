@@ -98,10 +98,10 @@ class MultiGeneBranchProcess : public virtual GammaBranchProcess, public virtual
 	double* allocgeneblarray;
 	double* alloctmpgeneblarray;
 
-	int** geneblcount;
-	int** tmpgeneblcount;
-	int* allocgeneblcount;
-	int* alloctmpgeneblcount;
+	double** geneblcount;
+	double** tmpgeneblcount;
+	double* allocgeneblcount;
+	double* alloctmpgeneblcount;
 
 	double** geneblbeta;
 	double** tmpgeneblbeta;

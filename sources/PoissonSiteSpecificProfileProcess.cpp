@@ -47,7 +47,7 @@ double PoissonSiteSpecificProfileProcess::ProfileSuffStatLogProb(int site)	{
 	double total = 0;
 	double priorweight = 0;
 	double postweight = 0;
-    const int* count = GetSiteProfileSuffStatCount(site);
+    const double* count = GetSiteProfileSuffStatCount(site);
 	for (int k=0; k<GetDim(); k++)	{
 		total += rnd::GetRandom().logGamma(dirweight[k] + count[k]) - rnd::GetRandom().logGamma(dirweight[k]);
 		priorweight += dirweight[k];
@@ -77,7 +77,7 @@ void PoissonSiteSpecificProfileProcess::ResampleSiteProfiles()	{
 
 void PoissonSiteSpecificProfileProcess::ResampleSiteProfile(int site)	{
 	double total = 0;
-    const int* count = GetSiteProfileSuffStatCount(site);
+    const double* count = GetSiteProfileSuffStatCount(site);
 	for (int k=0; k<GetDim(); k++)	{
 		profile[site][k] = rnd::GetRandom().sGamma(dirweight[k] + count[k]);
 		if (profile[site][k] < stateps)	{
@@ -104,7 +104,7 @@ double PoissonSiteSpecificProfileProcess::LogStatIntPrior(int site)	{
 	double total = 0;
 	int tot = 0;
 	double totweight = 0;
-    const int* count = GetSiteProfileSuffStatCount(site);
+    const double* count = GetSiteProfileSuffStatCount(site);
 	for (int k=0; k<GetDim(); k++)	{
 		total += rnd::GetRandom().logGamma(dirweight[k] + count[site][k]);
 		total -= rnd::GetRandom().logGamma(dirweight[k]);

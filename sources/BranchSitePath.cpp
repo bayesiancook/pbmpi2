@@ -9,7 +9,7 @@ void Plink::SetRelativeTime(double inrel_time) {
 	}
 }
 
-void BranchSitePath::AddRateSuffStat(int& count, double& beta, double factor, const double* rr, const double* stat, int nstate)	{
+void BranchSitePath::AddRateSuffStat(double& count, double& beta, double factor, const double* rr, const double* stat, int nstate)	{
 	Plink* link = Init();
 	while (link)	{
 		int state = link->GetState();
@@ -27,7 +27,7 @@ void BranchSitePath::AddRateSuffStat(int& count, double& beta, double factor, co
 	}
 }
 
-void BranchSitePath::AddProfileSuffStat(int* count, double* beta, double factor, const double* rr, int nstate)	{
+void BranchSitePath::AddProfileSuffStat(double* count, double* beta, double factor, const double* rr, int nstate)	{
 	Plink* link = Init();
 	while (link)	{
 		int state = link->GetState();
@@ -43,7 +43,7 @@ void BranchSitePath::AddProfileSuffStat(int* count, double* beta, double factor,
 	}
 }
 
-void BranchSitePath::AddRRSuffStat(int* count, double* beta, double factor, const double* stat, int nstate)	{
+void BranchSitePath::AddRRSuffStat(double* count, double* beta, double factor, const double* stat, int nstate)	{
 	Plink* link = Init();
 	while (link)	{
 		int state = link->GetState();
@@ -59,7 +59,7 @@ void BranchSitePath::AddRRSuffStat(int* count, double* beta, double factor, cons
 	}
 }
 
-void BranchSitePath::AddGeneralPathRateSuffStat(int& count, double& beta, double factor, SubMatrix* mat)	{
+void BranchSitePath::AddGeneralPathRateSuffStat(double& count, double& beta, double factor, SubMatrix* mat)	{
 	Plink* link = Init();
 	while (link)	{
 		int state = link->GetState();

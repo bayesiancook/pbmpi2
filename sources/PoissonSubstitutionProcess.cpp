@@ -160,7 +160,7 @@ BranchSitePath* PoissonSubstitutionProcess::SampleSitePath(int site, int stateup
 //-------------------------------------------------------------------------
 
 
-void PoissonSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, double branchlength, BranchSitePath** patharray, int* nonmissing)	{
+void PoissonSubstitutionProcess::AddSiteRateSuffStat(double* siteratesuffstatcount, double* siteratesuffstatbeta, double branchlength, BranchSitePath** patharray, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 			siteratesuffstatcount[i] += patharray[i]->GetNsub();
@@ -170,7 +170,7 @@ void PoissonSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount,
 }
 
 
-void PoissonSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
+void PoissonSubstitutionProcess::AddBranchLengthSuffStat(double& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 			count += patharray[i]->GetNsub();
@@ -180,7 +180,7 @@ void PoissonSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& bet
 }
 
 
-void PoissonSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofilesuffstatcount, BranchSitePath** patharray, bool root)	{
+void PoissonSubstitutionProcess::AddSiteProfileSuffStat(double** siteprofilesuffstatcount, BranchSitePath** patharray, bool root)	{
 	cerr << "error: in PoissonSubstitutionProcess::AddSiteProfileSuffStat: deprecated\n";
 	exit(1);
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{

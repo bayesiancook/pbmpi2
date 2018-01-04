@@ -51,8 +51,8 @@ void PoissonPhyloProcess::CreateSuffStat()	{
 		exit(1);
 	}
 	if (GetMyid() || (GetNprocs() == 1))	{
-		allocsiteprofilesuffstatcount = new int[(GetSiteMax() - GetSiteMin())*GetDim()];
-		siteprofilesuffstatcount = new int*[GetNsite()];
+		allocsiteprofilesuffstatcount = new double[(GetSiteMax() - GetSiteMin())*GetDim()];
+		siteprofilesuffstatcount = new double*[GetNsite()];
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			siteprofilesuffstatcount[i] = allocsiteprofilesuffstatcount + (i-GetSiteMin())*GetDim();
 		}

@@ -222,7 +222,7 @@ void MultiGeneRateProcess::UpdateRateSuffStat() {
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			GetRateProcess(gene)->UpdateRateSuffStat();
-			const int* count = GetRateProcess(gene)->GetRateSuffStatCount();
+			const double* count = GetRateProcess(gene)->GetRateSuffStatCount();
 			const double* beta = GetRateProcess(gene)->GetRateSuffStatBeta();
 			for(int i=0; i<GetNcat(); i++) {
 				ratesuffstatcount[i] += count[i];

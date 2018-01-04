@@ -113,7 +113,7 @@ void MultiGeneExpoConjugateGTRProfileProcess::UpdateRRSuffStat() {
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			GetGTRProfileProcess(gene)->UpdateRRSuffStat();
-			const int* count = GetGTRProfileProcess(gene)->GetRRSuffStatCount();
+			const double* count = GetGTRProfileProcess(gene)->GetRRSuffStatCount();
 			const double* beta = GetGTRProfileProcess(gene)->GetRRSuffStatBeta();
 			for(int i=0; i<GetNrr(); i++) {
 				rrsuffstatcount[i] += count[i];

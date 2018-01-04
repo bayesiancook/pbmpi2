@@ -33,7 +33,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 
 
-void ExpoConjugatePartitionGTRSubstitutionProcess::AddRRSuffStat(int* allocrrsuffstatcount, double* allocrrsuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
+void ExpoConjugatePartitionGTRSubstitutionProcess::AddRRSuffStat(double* allocrrsuffstatcount, double* allocrrsuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 		// if (ActiveSite(i))	{
@@ -42,7 +42,7 @@ void ExpoConjugatePartitionGTRSubstitutionProcess::AddRRSuffStat(int* allocrrsuf
 	}
 }
 
-void ExpoConjugatePartitionGTRSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
+void ExpoConjugatePartitionGTRSubstitutionProcess::AddSiteRateSuffStat(double* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 		// if (ActiveSite(i))	{
@@ -51,7 +51,7 @@ void ExpoConjugatePartitionGTRSubstitutionProcess::AddSiteRateSuffStat(int* site
 	}
 }
 
-void ExpoConjugatePartitionGTRSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
+void ExpoConjugatePartitionGTRSubstitutionProcess::AddBranchLengthSuffStat(double& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 		// if (ActiveSite(i))	{
@@ -60,7 +60,7 @@ void ExpoConjugatePartitionGTRSubstitutionProcess::AddBranchLengthSuffStat(int& 
 	}
 }
 
-void ExpoConjugatePartitionGTRSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofilesuffstatcount, double** siteprofilesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
+void ExpoConjugatePartitionGTRSubstitutionProcess::AddSiteProfileSuffStat(double** siteprofilesuffstatcount, double** siteprofilesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{

@@ -40,7 +40,7 @@ void DGamRateProcess::Create()	{
 		}
 		RateProcess::Create();
 		rate = new double[GetNcat()];
-		ratesuffstatcount = new int[GetNcat()];
+		ratesuffstatcount = new double[GetNcat()];
 		ratesuffstatbeta = new double[GetNcat()];
 	}
 }
@@ -274,10 +274,10 @@ void DGamRateProcess::GlobalUpdateRateSuffStat()	{
 		ratesuffstatcount[i] = 0;
 		ratesuffstatbeta[i] = 0.0;
 	}
-	int ivector[GetNcat()];
+	double ivector[GetNcat()];
 	double dvector[GetNcat()];
         for(int i=1; i<GetNprocs(); i++) {
-                MPI_Recv(ivector,GetNcat(),MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+                MPI_Recv(ivector,GetNcat(),MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
                 for(int j=0; j<GetNcat(); j++) {
                         ratesuffstatcount[j] += ivector[j];                      
                 }
@@ -292,9 +292,9 @@ void DGamRateProcess::GlobalUpdateRateSuffStat()	{
 	if (withpinv)	{
 		Ninv = 0;
 		MPI_Barrier(MPI_COMM_WORLD);
-		int tmp;
+		double tmp;
 		for(int i=1; i<GetNprocs(); i++) {
-			MPI_Recv(&tmp,1,MPI_INT,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
+			MPI_Recv(&tmp,1,MPI_DOUBLE,MPI_ANY_SOURCE,TAG1,MPI_COMM_WORLD,&stat);
 			Ninv += tmp;
 		}
 	}
@@ -335,11 +335,11 @@ void DGamRateProcess::SlaveUpdateRateSuffStat()	{
 
 	UpdateRateSuffStat();
 
-	MPI_Send(ratesuffstatcount,GetNcat(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(ratesuffstatcount,GetNcat(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Send(ratesuffstatbeta,GetNcat(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	if (withpinv)	{
 		MPI_Barrier(MPI_COMM_WORLD);
-		MPI_Send(&Ninv,1,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+		MPI_Send(&Ninv,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	}
 }	

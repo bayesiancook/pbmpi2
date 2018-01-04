@@ -31,9 +31,9 @@ void ExpoConjugateGTRPhyloProcess::CreateSuffStat()	{
 		exit(1);
 	}
 	if (GetMyid() || (GetNprocs() == 1))	{
-		allocsiteprofilesuffstatcount = new int[(GetSiteMax() - GetSiteMin())*GetDim()];
+		allocsiteprofilesuffstatcount = new double[(GetSiteMax() - GetSiteMin())*GetDim()];
 		allocsiteprofilesuffstatbeta = new double[(GetSiteMax() - GetSiteMin())*GetDim()];
-		siteprofilesuffstatcount = new int*[GetNsite()];
+		siteprofilesuffstatcount = new double*[GetNsite()];
 		siteprofilesuffstatbeta = new double*[GetNsite()];
 
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
@@ -88,7 +88,7 @@ void ExpoConjugateGTRPhyloProcess::UpdateBranchLengthSuffStat()	{
 	branchlengthsuffstatcount[0] = 0;
 	branchlengthsuffstatbeta[0] = 0;
 	for (int j=1; j<GetNbranch(); j++)	{
-		int& count = branchlengthsuffstatcount[j];
+		double& count = branchlengthsuffstatcount[j];
 		double& beta = branchlengthsuffstatbeta[j];
 		count = 0;
 		beta = 0;
@@ -167,7 +167,7 @@ int ExpoConjugateGTRPhyloProcess::CountMapping()	{
 
 int ExpoConjugateGTRPhyloProcess::CountMapping(int i)	{
 
-	const int* tmp = GetSiteProfileSuffStatCount(i);
+	const double* tmp = GetSiteProfileSuffStatCount(i);
 	int total = 0;
 	for (int k=0; k<GetNstate(i); k++)	{
 		total += tmp[k];

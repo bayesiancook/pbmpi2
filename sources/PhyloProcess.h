@@ -677,13 +677,13 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void DeleteNodeStates();
 	
 	// sufficient statistics for rates and branch lengths (do not depend on the model)
-	int GetSiteRateSuffStatCount(int site) {return siteratesuffstatcount[site];}
+	double GetSiteRateSuffStatCount(int site) {return siteratesuffstatcount[site];}
 	double GetSiteRateSuffStatBeta(int site) {return siteratesuffstatbeta[site];}
 
-	int GetBranchLengthSuffStatCount(int index) {return branchlengthsuffstatcount[index];}
+	double GetBranchLengthSuffStatCount(int index) {return branchlengthsuffstatcount[index];}
 	double GetBranchLengthSuffStatBeta(int index) {return branchlengthsuffstatbeta[index];}
 
-	const int* GetBranchLengthSuffStatCount() {return branchlengthsuffstatcount;}
+	const double* GetBranchLengthSuffStatCount() {return branchlengthsuffstatcount;}
 	const double* GetBranchLengthSuffStatBeta() {return branchlengthsuffstatbeta;}
 
 	void GlobalUpdateSiteRateSuffStat();
@@ -797,9 +797,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int** nodestate;
 
 	// sufficient statistics for rates and branch lengths (do not depend on the model)
-	int* siteratesuffstatcount;
+	double* siteratesuffstatcount;
 	double* siteratesuffstatbeta;
-	int* branchlengthsuffstatcount;
+	double* branchlengthsuffstatcount;
 	double* branchlengthsuffstatbeta;
 
 	string datafile;

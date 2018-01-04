@@ -1000,11 +1000,11 @@ void PhyloProcess::FullDeleteMappings()	{
 void PhyloProcess::CreateSuffStat()	{
 
 	if (! siteratesuffstatcount)	{
-		siteratesuffstatcount = new int[GetNsite()];
+		siteratesuffstatcount = new double[GetNsite()];
 		siteratesuffstatbeta = new double[GetNsite()];
 	}
 	if (! branchlengthsuffstatcount)	{
-		branchlengthsuffstatcount = new int[GetNbranch()];
+		branchlengthsuffstatcount = new double[GetNbranch()];
 		branchlengthsuffstatbeta = new double[GetNbranch()];
 	}
 }
@@ -2592,9 +2592,9 @@ void PhyloProcess::GlobalUpdateBranchLengthSuffStat()	{
 		branchlengthsuffstatbeta[i] = 0.0;
 	}
 
-	int ivector[GetNbranch()];
+	double ivector[GetNbranch()];
 	for(int i=1; i<GetNprocs(); i++) {
-		MPI_Recv(ivector,GetNbranch(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+		MPI_Recv(ivector,GetNbranch(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
 		for(int j=0; j<GetNbranch(); j++) {
 			branchlengthsuffstatcount[j] += ivector[j];
 		}
@@ -2642,7 +2642,7 @@ void PhyloProcess::SlaveUpdateBranchLengthSuffStat()	{
 		cerr << "error at root in slave " << GetMyid() << "\n";
 		cerr << branchlengthsuffstatbeta[0] << '\n';
 	}
-	MPI_Send(branchlengthsuffstatcount,GetNbranch(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(branchlengthsuffstatcount,GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Send(branchlengthsuffstatbeta,GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }

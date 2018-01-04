@@ -27,7 +27,7 @@ class ExpoConjugateGTRProfileProcess : public virtual GTRProfileProcess {
 	ExpoConjugateGTRProfileProcess() : rrsuffstatcount(0), rrsuffstatbeta(0) {}
 	virtual ~ExpoConjugateGTRProfileProcess() {}
 
-	const int* GetRRSuffStatCount() {return rrsuffstatcount;}
+	const double* GetRRSuffStatCount() {return rrsuffstatcount;}
 	const double* GetRRSuffStatBeta() {return rrsuffstatbeta;}
 	// protected:
 
@@ -35,7 +35,7 @@ class ExpoConjugateGTRProfileProcess : public virtual GTRProfileProcess {
 	virtual void Delete();
 
 	// profiles
-	virtual const int* GetSiteProfileSuffStatCount(int site) = 0;
+	virtual const double* GetSiteProfileSuffStatCount(int site) = 0;
 	virtual const double* GetSiteProfileSuffStatBeta(int site) = 0;
 
 	// update of relative rates
@@ -45,7 +45,7 @@ class ExpoConjugateGTRProfileProcess : public virtual GTRProfileProcess {
 	virtual void GlobalUpdateRRSuffStat();
 	virtual void SlaveUpdateRRSuffStat();
 
-	int* rrsuffstatcount;
+	double* rrsuffstatcount;
 	double* rrsuffstatbeta;
 };
 

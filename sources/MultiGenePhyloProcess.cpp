@@ -971,7 +971,7 @@ void MultiGenePhyloProcess::UpdateBranchLengthSuffStat() {
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			process[gene]->UpdateBranchLengthSuffStat();
-			const int* count = process[gene]->GetBranchLengthSuffStatCount();
+			const double* count = process[gene]->GetBranchLengthSuffStatCount();
 			const double* beta = process[gene]->GetBranchLengthSuffStatBeta();
 			for(int i=0; i<GetNbranch(); i++) {
 				branchlengthsuffstatcount[i] += count[i];

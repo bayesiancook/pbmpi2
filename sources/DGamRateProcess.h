@@ -148,7 +148,7 @@ class DGamRateProcess : public virtual RateProcess {
 	void FromStream(istream& is);
 
 	virtual void UpdateRateSuffStat();
-	const int* GetRateSuffStatCount() {return ratesuffstatcount;}
+	const double* GetRateSuffStatCount() {return ratesuffstatcount;}
 	const double* GetRateSuffStatBeta() {return ratesuffstatbeta;}
 
 	protected:
@@ -179,9 +179,9 @@ class DGamRateProcess : public virtual RateProcess {
 	double alpha;
 	double bkalpha;
 	
-	int* ratesuffstatcount;
+	double* ratesuffstatcount;
 	double* ratesuffstatbeta;
-	int Ninv;
+	double Ninv;
 
 	int Ncat;
 	bool fixalpha;

@@ -22,7 +22,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 
-void GeneralPathSuffStatMatrixSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
+void GeneralPathSuffStatMatrixSubstitutionProcess::AddBranchLengthSuffStat(double& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		// if (ActiveSite(i))	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
@@ -31,7 +31,7 @@ void GeneralPathSuffStatMatrixSubstitutionProcess::AddBranchLengthSuffStat(int& 
 	}
 }
 
-void GeneralPathSuffStatMatrixSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
+void GeneralPathSuffStatMatrixSubstitutionProcess::AddSiteRateSuffStat(double* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		// if (ActiveSite(i))	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{

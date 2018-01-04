@@ -499,7 +499,16 @@ class Model	{
 	}
 	*/
 
+    void SetVariationalMode(int blmode, int ratemode, int profilemode)  {
+        process->SetVariationalMode(blmode,ratemode,profilemode);
+    }
+
     void VarBayes() {
+        int nrep = 0;
+        for (int rep=0; rep<nrep; rep++)    {
+            Move(1,every);
+            process->Trace(cerr);
+        }
         process->VarBayes();
     }
 

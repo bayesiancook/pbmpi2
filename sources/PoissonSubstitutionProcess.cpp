@@ -165,6 +165,11 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
         if (ActiveSite(i))  {
             if (nonmissing[i] == 2)    {
+                
+                if (branchlength)   {
+                    cerr << "error: non root for missing 2\n";
+                    exit(1);
+                }
 
                 int nstate = GetNstate(i);
                 int j = ratealloc[i];
@@ -193,11 +198,16 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                     exit(1);
                 }
 
+                if (! branchlength) {
+                    cerr << "error: root for missing 1\n";
+                    exit(1);
+                }
+
                 int nstate = GetNstate(i);
                 const double* stat = GetStationary(i);
                 double rate = GetRate(i);
-                double l = rate * branchlength;
-                double e = exp(-l);
+                double length = rate * branchlength;
+                double e = exp(-length);
 
                 int j = ratealloc[i];
                 if (j)  {
@@ -217,20 +227,29 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                 for (int k=0; k<nstate; k++)    {
                     for (int l=0; l<nstate; l++)    {
                         if (k == l) {
-                            double w = d[k] * u[l] * (1 + (1-e)*stat[k]) * stat[k];
+                            double w = stat[k] * d[k] * u[l] * (e + (1-e)*stat[l]);
                             totw += w;
-                            totn += w * l * stat[k] / (e + (1-e)*stat[k]);
+                            totn += w * length * stat[k] / (e + (1-e)*stat[k]);
                             totz[l] += w * (1-e) * stat[k] / (e + (1-e)*stat[k]);
                         }
                         else    {
-                            double w = d[k] * u[l] * (1-e) * stat[k] * stat[l];
+                            double w = stat[k] * d[k] * u[l] * (1-e) * stat[l];
                             totw += w;
-                            totn += w * l / (1-e);
+                            if (length < 1e-8)  {
+                                totn += w;
+                            }
+                            else    {
+                                totn += w * length / (1-e);
+                            }
                             totz[l] += w;
                         }
                     }
                 }
                 totn /= totw;
+                if (isnan(totn))    {
+                    cerr << "totn is nan\n";
+                    exit(1);
+                }
                 for (int k=0; k<nstate; k++)    {
                     totz[k] /= totw;
                 }

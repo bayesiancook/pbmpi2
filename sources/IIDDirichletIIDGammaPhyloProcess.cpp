@@ -19,6 +19,150 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "Parallel.h"
 #include <string>
 
+void IIDDirichletIIDGammaPhyloProcess::VarBayes()    {
+
+    while(1)    {
+
+        UpdateMeanSuffStat();
+        UpdateVarLengths();
+        UpdateVarRates();
+        // UpdateVarProfiles();
+        Trace(cerr);
+    }
+}
+
+void IIDDirichletIIDGammaPhyloProcess::UpdateVarLengths() {
+
+    cerr << "before length: " << GetMeanRate() << '\t' << GetTotalLength() << '\t' << GetMeanRate() * GetTotalLength() << '\n';
+    double tot = 0;
+    for (int j=1; j<GetNbranch(); j++)  {
+        tot += branchlengthsuffstatcount[j];
+    }
+    cerr << "tot count: " << tot << '\t' << tot / GetNsite() << '\n';
+
+    double A = GetMeanRate() * GetNsite();
+	for (int j=0; j<GetNbranch(); j++)	{
+		branchlengthsuffstatbeta[j] = A;
+    }
+
+    if (blvarmode == 0)   { // EM
+        for (int j=1; j<GetNbranch(); j++)  {
+            blarray[j] = branchlengthsuffstatcount[j] / branchlengthsuffstatbeta[j];
+        }
+    }
+    else if (blvarmode == 1)   { // Mean Var Bayes
+        for (int j=1; j<GetNbranch(); j++)  {
+            blarray[j] = (branchalpha + branchlengthsuffstatcount[j]) / (branchbeta + branchlengthsuffstatbeta[j]);
+        }
+    }
+    else if (blvarmode == 2) {
+        for (int j=1; j<GetNbranch(); j++)  {
+            blarray[j] = rnd::GetRandom().Psi(branchalpha + branchlengthsuffstatcount[j]) - log(branchbeta + branchlengthsuffstatbeta[j]);
+        }
+    }
+    for (int j=1; j<GetNbranch(); j++)  {
+        if (isnan(blarray[j]))  {
+            cerr << "in varlength: nan\n";
+            exit(1);
+        }
+        if (isinf(blarray[j]))  {
+            cerr << "in var length: inf\n";
+            exit(1);
+        }
+    }
+    cerr << "after length: " << GetMeanRate() << '\t' << GetTotalLength() << '\t' << GetMeanRate() * GetTotalLength() << '\n';
+}
+
+void IIDDirichletIIDGammaPhyloProcess::UpdateVarRates() {
+
+    double B = GetTotalLength();
+    double totcount = 0;
+    for (int i=0; i<GetNsite(); i++)    {
+        siteratesuffstatbeta[i] = B;
+        totcount += siteratesuffstatcount[i];
+    }
+
+    if (ratevarmode == 0)   {
+        double tot = 0;
+        for (int i=0; i<GetNsite(); i++)    {
+            rate[i] = siteratesuffstatcount[i] / siteratesuffstatbeta[i];
+            tot += rate[i];
+        }
+    }
+    else if (ratevarmode == 1)   {
+        for (int i=0; i<GetNsite(); i++)    {
+            rate[i] = (alpha + siteratesuffstatcount[i]) / (alpha + siteratesuffstatbeta[i]);
+        }
+    }
+    else if (ratevarmode == 2)   {
+        for (int i=0; i<GetNsite(); i++)    {
+            rate[i] = exp(rnd::GetRandom().Psi(alpha + siteratesuffstatcount[i]) - log(alpha + siteratesuffstatbeta[i]));
+        }
+    }
+    else    {
+        cerr << "rate var mode not recognized\n";
+        exit(1);
+    }
+    for (int i=0; i<GetNsite(); i++)    {
+        if (isnan(rate[i])) {
+            cerr << "in varrates: nan\n";
+            exit(1);
+        }
+        if (isinf(rate[i])) {
+            cerr << "in varrates: inf\n";
+            exit(1);
+        }
+    }
+}
+
+void IIDDirichletIIDGammaPhyloProcess::UpdateVarProfiles() {
+
+    if (profilevarmode == 0)    {
+        for (int i=0; i<GetNsite(); i++)    {
+            double total = 0;
+            for (int k=0; k<GetDim(); k++)   {
+                profile[i][k] = siteprofilesuffstatcount[i][k];
+                total += profile[i][k];
+            }
+            for (int k=0; k<GetDim(); k++)  {
+                profile[i][k] /= total;
+            }
+        }
+    }
+    else if (profilevarmode == 1)   {
+        for (int i=0; i<GetNsite(); i++)    {
+            double total = 0;
+            for (int k=0; k<GetDim(); k++)  {
+                profile[i][k] = dirweight[k] + siteprofilesuffstatcount[i][k];
+                total += profile[i][k];
+            }
+            for (int k=0; k<GetDim(); k++)  {
+                profile[i][k] /= total;
+            }
+        }
+    }
+    else if (profilevarmode == 3)   {
+        for (int i=0; i<GetNsite(); i++)    {
+            double norm = 0;
+            double tot = 0;
+            for (int k=0; k<GetDim(); k++)  {
+                profile[i][k] = exp(rnd::GetRandom().Psi(dirweight[k] + siteprofilesuffstatcount[i][k]));
+                norm+= profile[i][k];
+                tot += dirweight[k] + siteprofilesuffstatcount[i][k];
+            }
+            double z = exp(rnd::GetRandom().Psi(tot));
+            if (fabs(z - norm) > 1e-6)  {
+                cerr << "in var profiles: normalization error\n";
+                exit(1);
+            }
+            for (int k=0; k<GetDim(); k++)  {
+                profile[i][k] /= norm;
+            }
+        }
+    }
+}
+
+
 void IIDDirichletIIDGammaPhyloProcess::GlobalUpdateParameters()	{
 
 	if (GetNprocs() > 1)	{

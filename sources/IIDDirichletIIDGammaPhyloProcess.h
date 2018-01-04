@@ -138,31 +138,10 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 	
 	}
 
-    virtual void VarBayes()    {
-
-        while(1)    {
-
-            UpdateMeanSuffStat();
-
-            cerr << "update mean suff stat ok\n";
-            exit(1);
-
-            int nrep = 10;
-            for (int rep=0; rep<nrep; rep++)    {
-                UpdateVarLengths();
-                UpdateVarRates();
-                Trace(cerr);
-            }
-
-            UpdateVarProfiles();
-            Trace(cerr);
-            cerr << '\n';
-        }
-    }
-
-    void UpdateVarLengths() {}
-    void UpdateVarRates() {}
-    void UpdateVarProfiles() {}
+    virtual void VarBayes();
+    void UpdateVarLengths();
+    void UpdateVarRates();
+    void UpdateVarProfiles();
 
     void UpdateSite(int i)  {
         UpdateZip(i);

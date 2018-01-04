@@ -844,19 +844,21 @@ void PhyloProcess::DeleteMissingMap()	{
 }
 
 void PhyloProcess::FillMissingMap()	{
-	// deactivating missing maps
-	/*
-	for (int i=0; i<GetNsite(); i++)	{
-		missingmap[0][i] = 2;
-	}
-	for (int j=1; j<GetNbranch(); j++)	{
-		for (int i=0; i<GetNsite(); i++)	{
-			missingmap[j][i] = 1;
-		}
-	}
-	*/
-	BackwardFillMissingMap(GetRoot());
-	ForwardFillMissingMap(GetRoot(),GetRoot());
+    int active = 0;
+    if (! active)   {
+        for (int i=0; i<GetNsite(); i++)	{
+            missingmap[0][i] = 2;
+        }
+        for (int j=1; j<GetNbranch(); j++)	{
+            for (int i=0; i<GetNsite(); i++)	{
+                missingmap[j][i] = 1;
+            }
+        }
+    }
+    else    {
+        BackwardFillMissingMap(GetRoot());
+        ForwardFillMissingMap(GetRoot(),GetRoot());
+    }
 }
 
 void PhyloProcess::BackwardFillMissingMap(const Link* from)	{

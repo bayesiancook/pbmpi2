@@ -102,23 +102,19 @@ void PoissonPhyloProcess::Collapse()	{
 
 void PoissonPhyloProcess::UpdateMeanSuffStat()  {
 
-    cerr << "in update mean suffstat\n";
-    cerr << "fill missing map\n";
     FillMissingMap();
 
-    cerr << "post order pruning\n";
     PostOrderPruning(GetRoot(),condlmap[0]);
 
-    cerr << "compute likelihood\n";
     MultiplyByStationaries(condlmap[0],condflag);
     ComputeLikelihood(condlmap[0],condflag);
-    cerr << "ln L : " << logL << '\n';
 
-    cerr << "reset suff stats\n";
+    PreOrderPruning(GetRoot(),condlmap[0]);
+
     // reset suffstats
 	for (int j=0; j<GetNbranch(); j++)	{
-		branchlengthsuffstatbeta[j] = 0;
 		branchlengthsuffstatcount[j] = 0;
+		branchlengthsuffstatbeta[j] = 0;
     }
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
@@ -130,13 +126,14 @@ void PoissonPhyloProcess::UpdateMeanSuffStat()  {
 		}
 	}
 
-    cerr << "pre-order and expectations\n";
-    RecursiveUpdateMeanSuffStat(GetRoot(),condlmap[0]);
 
+    /*
     cerr << "check likelihood\n";
     CheckLikelihood();
     cerr << "ok\n";
-    exit(1);
+    */
+
+    RecursiveUpdateMeanSuffStat(GetRoot(),condlmap[0]);
 }
 
 /*
@@ -155,6 +152,25 @@ void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from) {
 }
 */
 
+void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from, double*** aux)	{
+
+    if (from->isRoot()) {
+        // AddMeanSuffStat(0,0,aux,blarray[0],siteratesuffstatcount,branchlengthsuffstatcount[0],siteprofilesuffstatcount,missingmap[0]);
+    }
+	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+
+        int j = GetBranchIndex(link->GetBranch());
+        AddMeanSuffStat(GetOutwardConditionalLikelihoodVector(link->Out()),GetOutwardConditionalLikelihoodVector(link),aux,blarray[j],siteratesuffstatcount,branchlengthsuffstatcount[j],siteprofilesuffstatcount,missingmap[j]);
+        
+	}
+	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+		if (! link->Out()->isLeaf())	{
+			RecursiveUpdateMeanSuffStat(link->Out(),aux);
+		}
+	}
+}
+
+/*
 void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from, double*** aux)	{
 
     if (from->isRoot()) {
@@ -180,6 +196,9 @@ void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from, double**
         }
 
         Propagate(aux,GetConditionalLikelihoodVector(link->Out()),GetLength(link->GetBranch()),condflag);
+
+        Reset(aux,condflag);
+        Multiply(GetConditionalLikelihoodVector(link->Out()),aux,condflag);
         Multiply(GetOutwardConditionalLikelihoodVector(link->Out()),aux,condflag);
         MultiplyByStationaries(aux,condflag);
 
@@ -193,6 +212,7 @@ void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from, double**
 		}
 	}
 }
+*/
 
 void PoissonPhyloProcess::UpdateBranchLengthSuffStat()	{
 

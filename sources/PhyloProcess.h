@@ -104,6 +104,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		rracc = rrtry = 0;
 		fasttopoacc = fasttopotry = fasttopochange = 0;
 		ziptopoacc = ziptopotry = 0;
+
+        profilevarmode = 1;
+        blvarmode = 1;
+        ratevarmode = 1;
 	}
 
 	virtual ~PhyloProcess() {}
@@ -112,6 +116,12 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	// returns average success rate
 	virtual double Move(double tuning = 1.0) = 0;
 	virtual double AugmentedMove(double tuning = 1.0) {}
+
+    void SetVariationalMode(int inbl, int inrate, int inprofile)    {
+        blvarmode = inbl;
+        ratevarmode = inrate;
+        profilevarmode = inprofile;
+    }
 
     virtual void VarBayes() {
         cerr << "in PhyloProcess::VarBayes\n";
@@ -977,6 +987,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int rootprior;
 
 	int reshuffle;
+
+    int profilevarmode;
+    int ratevarmode;
+    int blvarmode;
 };
 
 

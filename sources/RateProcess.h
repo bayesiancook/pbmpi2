@@ -139,6 +139,10 @@ class RateProcess : public virtual MPIModule {
 		if (! ratealloc)	{
 			ratealloc = new int[GetNsite()];
 			meansiterate = new double[GetNsite()];
+            for (int i=0; i<GetNsite(); i++)    {
+                ratealloc[i] = 0;
+                meansiterate[i] = 0;
+            }
 		}
 	}
 	void Delete() {

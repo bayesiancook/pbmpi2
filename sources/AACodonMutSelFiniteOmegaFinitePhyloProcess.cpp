@@ -439,7 +439,8 @@ void AACodonMutSelFiniteOmegaFinitePhyloProcess::Read(string name, int burnin, i
 		QuickUpdate();
 		//UpdateMatrices();
 		for (int site = 0; site < ProfileProcess::GetNsite(); site++)        {
-			siteomegagreaterthanonecount[site] = 0;
+			//cerr << "site: " << site+1 << " " << MixtureOmegaProcess::GetSiteOmega(site) << "\n";
+			//cerr.flush();
 			if (MixtureOmegaProcess::GetSiteOmega(site) > 1.0)	{
 				siteomegagreaterthanonecount[site]++;
 			}

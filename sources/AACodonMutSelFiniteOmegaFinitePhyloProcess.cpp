@@ -404,3 +404,50 @@ void AACodonMutSelFiniteOmegaFinitePhyloProcess::ReadPB(int argc, char* argv[])	
 		Read(name,burnin,every,until);
 	}
 }
+
+void AACodonMutSelFiniteOmegaFinitePhyloProcess::Read(string name, int burnin, int every, int until)	{
+
+	ifstream is((name + ".chain").c_str());
+	if (! is)	{
+		cerr << "error: did not find " << name << ".chain\n";
+		exit(1);
+	}
+
+	int* siteomegagreaterthanonecount = new int[ProfileProcess::GetNsite()];
+	for (int site = 0; site < ProfileProcess::GetNsite(); site++)        {
+		siteomegagreaterthanonecount[site] = 0;
+	}
+
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "until : " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		cerr << ".";
+		cerr.flush();
+		FromStream(is);
+		i++;
+	}
+	cerr << "\nburnin complete\n";
+	cerr.flush();
+	int samplesize = 0;
+	while (i < until)	{
+		cerr << ".";
+		cerr.flush();
+		samplesize++;
+		FromStream(is);
+		i++;
+		QuickUpdate();
+		//UpdateMatrices();
+		for (int site = 0; site < ProfileProcess::GetNsite(); site++)        {
+			siteomegagreaterthanonecount[site] = 0;
+			if (MixtureOmegaProcess::GetSiteOmega(site) > 1.0)	{
+				siteomegagreaterthanonecount[site]++;
+			}
+		}
+	}
+
+	ofstream pomegagtone_os( (name + ".ppomegagtone").c_str(), std::ios::out);
+	for (int site = 0; site < ProfileProcess::GetNsite(); site++)	{
+		pomegagtone_os << site+1 << "\t" << (double) (siteomegagreaterthanonecount[site])/samplesize << "\n";
+	}
+}

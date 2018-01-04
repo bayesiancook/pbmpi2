@@ -223,8 +223,8 @@ class Model	{
 				}
 				else if (omegamixturetype == 3)	{
 					cerr << "IN AA Codon Mut Sel SBDP Omega Finite AA\n";
-					cerr << "This model not yet working...\n";
-					exit(1);
+					//cerr << "This model not yet working...\n";
+					//exit(1);
 					type = "AAACODONMUTSELSBDPOMEGAFINITE";
 					process = new AACodonMutSelSBDPOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,omegaprior,kappaprior);
 				}

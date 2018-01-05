@@ -79,7 +79,7 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 	}
 
 	void TraceHeader(ostream& os)	{
-		os << "#iter\ttime\ttopo\tloglik\tlength\talpha";
+		os << "#iter\ttime\ttopo\tloglik\tlength\trate\talpha";
 		os << "\tstatent\tstatalpha";
 		os << '\n'; 
 	}
@@ -98,7 +98,7 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 			os << '\t' << 0;
 		}
 
-		os << '\t' << GetLogLikelihood() << '\t' << GetRenormTotalLength() << '\t' << GetAlpha();
+		os << '\t' << GetLogLikelihood() << '\t' << GetRenormTotalLength() << '\t' << GetMeanRate() << '\t' << GetAlpha();
 		os << '\t' << GetStatEnt();
 		os << '\t' << GetMeanDirWeight();
 		os << '\n';
@@ -139,6 +139,7 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 	}
 
     virtual void VarBayes();
+    double GetVarLogMarginalLikelihood();
     void UpdateVarLengths();
     void UpdateVarRates();
     void UpdateVarProfiles();

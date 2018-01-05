@@ -79,6 +79,7 @@ void GammaRateProcess::SampleRate()	{
 void GammaRateProcess::SampleSiteRates()    {
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
         rate[i] = rnd::GetRandom().Gamma(alpha,alpha);
+        rate[i] = 1.0;
     }
 }
 

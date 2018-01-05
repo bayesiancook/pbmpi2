@@ -53,9 +53,11 @@ class PoissonSiteSpecificProfileProcess: public virtual PoissonProfileProcess, p
 		UpdateSiteProfileSuffStat();
         ResampleSiteProfiles();
         UpdateProfileHyperSuffStat();
+        /*
 		MoveDirWeights(1,100);
         MoveDirWeights(0.3,100);
         MoveDirWeights(0.1,100);
+        */
 		return 1.0;
 	}
 

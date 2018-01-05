@@ -107,9 +107,10 @@ void PoissonPhyloProcess::UpdateMeanSuffStat()  {
     PostOrderPruning(GetRoot(),condlmap[0]);
 
     MultiplyByStationaries(condlmap[0],condflag);
-    ComputeLikelihood(condlmap[0],condflag);
 
     PreOrderPruning(GetRoot(),condlmap[0]);
+
+    double lnL2 = ComputeNodeLikelihood(GetRoot(),0);
 
     // reset suffstats
 	for (int j=0; j<GetNbranch(); j++)	{
@@ -125,13 +126,6 @@ void PoissonPhyloProcess::UpdateMeanSuffStat()  {
 			}
 		}
 	}
-
-
-    /*
-    cerr << "check likelihood\n";
-    CheckLikelihood();
-    cerr << "ok\n";
-    */
 
     RecursiveUpdateMeanSuffStat(GetRoot(),condlmap[0]);
 }
@@ -155,12 +149,28 @@ void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from) {
 void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from, double*** aux)	{
 
     if (from->isRoot()) {
-        // AddMeanSuffStat(0,0,aux,blarray[0],siteratesuffstatcount,branchlengthsuffstatcount[0],siteprofilesuffstatcount,missingmap[0]);
+        AddMeanSuffStat(0,0,aux,blarray[0],siteratesuffstatcount,branchlengthsuffstatcount[0],siteprofilesuffstatcount,missingmap[0]);
     }
 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
 
+        /*
+        Reset(aux,condflag);
+        // Multiply(GetConditionalLikelihoodVector(link->Out()),aux,condflag);
+        // Multiply(GetOutwardConditionalLikelihoodVector(link->Out()),aux,condflag);
+        Multiply(GetConditionalLikelihoodVector(link),aux,condflag);
+        Multiply(GetOutwardConditionalLikelihoodVector(link),aux,condflag);
+        MultiplyByStationaries(aux,condflag);
+        */
+
+        /*
+        Propagate(GetOutwardConditionalLikelihoodVector(link->Out()),aux,GetLength(link->GetBranch()),condflag);
+        Multiply(GetOutwardConditionalLikelihoodVector(link),aux,condflag);
+        MultiplyByStationaries(aux,condflag);
+        */
+
         int j = GetBranchIndex(link->GetBranch());
-        AddMeanSuffStat(GetOutwardConditionalLikelihoodVector(link->Out()),GetOutwardConditionalLikelihoodVector(link),aux,blarray[j],siteratesuffstatcount,branchlengthsuffstatcount[j],siteprofilesuffstatcount,missingmap[j]);
+
+        AddMeanSuffStat(GetOutwardConditionalLikelihoodVector(link),GetOutwardConditionalLikelihoodVector(link->Out()),aux,blarray[j],siteratesuffstatcount,branchlengthsuffstatcount[j],siteprofilesuffstatcount,missingmap[j]);
         
 	}
 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{

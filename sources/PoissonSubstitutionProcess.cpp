@@ -224,17 +224,37 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                     totz[k] = 0;
                 }
 
+                double hidden = 0;
                 for (int k=0; k<nstate; k++)    {
                     for (int l=0; l<nstate; l++)    {
                         if (k == l) {
                             double w = stat[k] * d[k] * u[l] * (e + (1-e)*stat[l]);
                             totw += w;
+                            double n = length * stat[k] / (e + (1-e)*stat[k]);
+                            double z = (1-e) * stat[k] / (e + (1-e)*stat[k]);
+                            totn += w * n;
+                            totz[l] += w * z;
+                            hidden += w * (n-z);
+                            /*
                             totn += w * length * stat[k] / (e + (1-e)*stat[k]);
                             totz[l] += w * (1-e) * stat[k] / (e + (1-e)*stat[k]);
+                            */
                         }
                         else    {
                             double w = stat[k] * d[k] * u[l] * (1-e) * stat[l];
                             totw += w;
+                            double n = 0;
+                            if (length < 1e-8)  {
+                                n = 1;
+                            }
+                            else    {
+                                n = length / (1-e);
+                            }
+                            double z = 1;
+                            totn += w * n;
+                            totz[l] += w * z;
+                            hidden += w * (n-z);
+                            /*
                             if (length < 1e-8)  {
                                 totn += w;
                             }
@@ -242,6 +262,7 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                                 totn += w * length / (1-e);
                             }
                             totz[l] += w;
+                            */
                         }
                     }
                 }
@@ -250,9 +271,13 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                     cerr << "totn is nan\n";
                     exit(1);
                 }
+                double total = 0;
                 for (int k=0; k<nstate; k++)    {
+                    // totz[k] += hidden * stat[k];
                     totz[k] /= totw;
+                    total += totz[k];
                 }
+                // cerr << total - totn << '\n';
 
                 AddZipToTrueMeanProfileSuffStat(i,totz,meanprofilecount[i]);
 

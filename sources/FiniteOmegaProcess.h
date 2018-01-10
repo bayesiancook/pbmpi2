@@ -21,7 +21,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 class FiniteOmegaProcess : public virtual MixtureOmegaProcess	{
 
 	public: 
-	FiniteOmegaProcess() : omegaweightalpha(1.0) {}
+	//FiniteProfileProcess() : weight(0), fixncomp(false), empmix(0), Nfixcomp(0), statfix(0), empweight(0), statcons(0), Ncons(0), conscutoff(0)  {
+	FiniteOmegaProcess() : omegaweightalpha(1.0), Nomegafixcomp(0), omegafix(0), empomegaweight(0) {}
 
 	virtual ~FiniteOmegaProcess() {}
 
@@ -47,8 +48,13 @@ class FiniteOmegaProcess : public virtual MixtureOmegaProcess	{
 			MixtureOmegaProcess::Delete();
 		}
 	}
+	void ReadOmegaFix(string name);
 
 	double omegaweightalpha;
+	int Nomegafixcomp;
+	double* omegafix;
+	double* empomegaweight;
+	string omegamixtype;
 };
 
 #endif

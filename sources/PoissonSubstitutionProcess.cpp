@@ -273,11 +273,14 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                 }
                 double total = 0;
                 for (int k=0; k<nstate; k++)    {
-                    // totz[k] += hidden * stat[k];
+                    totz[k] += hidden * stat[k];
                     totz[k] /= totw;
                     total += totz[k];
                 }
-                // cerr << total - totn << '\n';
+                if (fabs(total - totn) > 1e-6)  {
+                    cerr << "error in total count in PoissonSubstitutionProcess::AddMeanSuffStat\n";
+                    exit(1);
+                }
 
                 AddZipToTrueMeanProfileSuffStat(i,totz,meanprofilecount[i]);
 

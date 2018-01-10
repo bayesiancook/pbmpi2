@@ -1112,7 +1112,7 @@ int main(int argc, char* argv[])	{
 		cerr << '\n';
 
         if (varbayes)   {
-            model->SetVariationalMode(1,1,1);
+            model->SetVariationalMode(2,2,2);
             model->VarBayes();
         }
         else    {

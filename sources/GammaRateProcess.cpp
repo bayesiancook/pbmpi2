@@ -31,12 +31,18 @@ void GammaRateProcess::Create()	{
 	if (! rate)	{
 		RateProcess::Create();
 		rate = new double[GetNsite()];
+		bkrate = new double[GetNsite()];
+        for (int i=0; i<GetNsite(); i++)    {
+            bkrate[i] = 1.0;
+        }
 	}
 }
 
 void GammaRateProcess::Delete() 	{
 	delete[] rate;
 	rate = 0;
+    delete[] bkrate;
+    bkrate = 0;
 	RateProcess::Delete();
 }
 
@@ -79,7 +85,6 @@ void GammaRateProcess::SampleRate()	{
 void GammaRateProcess::SampleSiteRates()    {
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
         rate[i] = rnd::GetRandom().Gamma(alpha,alpha);
-        rate[i] = 1.0;
     }
 }
 

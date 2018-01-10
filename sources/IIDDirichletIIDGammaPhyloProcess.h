@@ -108,8 +108,8 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 
 		chronototal.Start();
 		propchrono.Start();
-		BranchLengthMove(tuning);
-		BranchLengthMove(0.1 * tuning);
+		// BranchLengthMove(tuning);
+		// BranchLengthMove(0.1 * tuning);
 		if (! fixtopo)	{
 			MoveTopo();
 		}
@@ -118,8 +118,10 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 		for (int rep=0; rep<5; rep++)	{
             GlobalCollapse();
 
+            /*
             GammaBranchProcess::Move(tuning,10);
             GlobalUpdateParameters();
+            */
 
             GammaRateProcess::Move();
             GlobalUpdateParameters();
@@ -143,6 +145,10 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
     void UpdateVarLengths();
     void UpdateVarRates();
     void UpdateVarProfiles();
+
+    void AddRateCorrection(int sign);
+    void PosteriorMean(int burnin, int nrep);
+
 
     void UpdateSite(int i)  {
         UpdateZip(i);
@@ -168,6 +174,26 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 		PoissonPhyloProcess::Create();
 		IIDDirichletIIDGammaSubstitutionProcess::Create();
 		GammaBranchProcess::Create();
+
+        meanrate = new double[GetNsite()];
+        meanlograte = new double[GetNsite()];
+        alphastar = new double[GetNsite()];
+        betastar = new double[GetNsite()];
+
+        meanbl = new double[GetNbranch()];
+        meanlogbl = new double[GetNbranch()];
+        lambdastar = new double[GetNbranch()];
+        mustar = new double[GetNbranch()];
+
+        meanlogprofile = new double*[GetNsite()];
+        for (int i=0; i<GetNsite(); i++)    {
+            meanlogprofile[i] = new double[GetDim()];
+        }
+        meanlogprofilenorm = new double[GetNsite()];
+        gammastar = new double*[GetNsite()];
+        for (int i=0; i<GetNsite(); i++)    {
+            gammastar[i] = new double[GetDim()];
+        }
 	}
 		
 	virtual void Delete()	{
@@ -175,6 +201,35 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 		IIDDirichletIIDGammaSubstitutionProcess::Delete();
 		PoissonPhyloProcess::Delete();
 	}
+
+    void ComputeMeanRates();
+    void ComputeMeanLengths();
+    void ComputeMeanProfiles();
+
+    void SetNewParameters();
+
+    double GetRateLengthCorrection();
+
+    double* meanrate;
+    double* meanlograte;
+    double totmeanrate;
+    double* meanbl;
+    double* meanlogbl;
+    double totmeanlength;
+    double** meanlogprofile;
+    double* meanlogprofilenorm;
+    double totmeanlogprofilenorm;
+
+    double* alphastar;
+    double* betastar;
+    double* lambdastar;
+    double* mustar;
+    double** gammastar;
+
+    int varfreebl;
+    int varfreerate;
+    int varfreeprofile;
+
 };
 
 #endif

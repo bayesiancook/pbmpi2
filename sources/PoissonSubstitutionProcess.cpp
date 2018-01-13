@@ -266,15 +266,26 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                         }
                     }
                 }
-                totn /= totw;
+                if (totw)   {
+                    totn /= totw;
+                }
+                else    {
+                    totn = 0;
+                }
                 if (isnan(totn))    {
                     cerr << "totn is nan\n";
+                    cerr << totw << '\n';
                     exit(1);
                 }
                 double total = 0;
                 for (int k=0; k<nstate; k++)    {
                     totz[k] += hidden * stat[k];
-                    totz[k] /= totw;
+                    if (totw)   {
+                        totz[k] /= totw;
+                    }
+                    else    {
+                        totz[k] = 0;
+                    }
                     total += totz[k];
                 }
                 if (fabs(total - totn) > 1e-6)  {

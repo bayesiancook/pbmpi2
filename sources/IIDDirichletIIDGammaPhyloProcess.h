@@ -98,7 +98,8 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 			os << '\t' << 0;
 		}
 
-		os << '\t' << GetLogLikelihood() << '\t' << GetRenormTotalLength() << '\t' << GetMeanRate() << '\t' << GetAlpha();
+		os << '\t' << GetLogLikelihood() << '\t' << GetTotalLength() << '\t' << GetMeanRate() << '\t' << GetAlpha();
+		// os << '\t' << GetLogLikelihood() << '\t' << GetRenormTotalLength() << '\t' << GetMeanRate() << '\t' << GetAlpha();
 		os << '\t' << GetStatEnt();
 		os << '\t' << GetMeanDirWeight();
 		os << '\n';
@@ -118,10 +119,8 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 		for (int rep=0; rep<5; rep++)	{
             GlobalCollapse();
 
-            /*
             GammaBranchProcess::Move(tuning,10);
             GlobalUpdateParameters();
-            */
 
             GammaRateProcess::Move();
             GlobalUpdateParameters();
@@ -141,14 +140,12 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 	}
 
     virtual void VarBayes();
-    double GetVarLogMarginalLikelihood();
+    double GetVarLogMarginalLikelihood(double* sitescore = 0);
     void UpdateVarLengths();
     void UpdateVarRates();
     void UpdateVarProfiles();
 
-    void AddRateCorrection(int sign);
     void PosteriorMean(int burnin, int nrep);
-
 
     void UpdateSite(int i)  {
         UpdateZip(i);
@@ -174,7 +171,10 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 		PoissonPhyloProcess::Create();
 		IIDDirichletIIDGammaSubstitutionProcess::Create();
 		GammaBranchProcess::Create();
+        CreateArrays();
+    }
 
+    void CreateArrays() {
         meanrate = new double[GetNsite()];
         meanlograte = new double[GetNsite()];
         alphastar = new double[GetNsite()];
@@ -194,13 +194,198 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
         for (int i=0; i<GetNsite(); i++)    {
             gammastar[i] = new double[GetDim()];
         }
+
 	}
 		
+    void DeleteArrays() {
+
+    }
+
 	virtual void Delete()	{
 		GammaBranchProcess::Delete();
 		IIDDirichletIIDGammaSubstitutionProcess::Delete();
 		PoissonPhyloProcess::Delete();
 	}
+
+    void CreateParamArrays(int nrep)    {
+
+        nparam = nrep;
+        bllist = new double*[nparam];
+        ratelist = new double*[nparam];
+        profilelist = new double**[nparam];
+        for (int rep=0; rep<nparam; rep++)  {
+            bllist[rep] = new double[GetNbranch()];
+            ratelist[rep] = new double[GetNsite()];
+            profilelist[rep] = new double*[GetNsite()];
+            for (int i=0; i<GetNsite(); i++)    {
+                profilelist[rep][i] = new double[GetDim()];
+            }
+        }
+    }
+
+    void PushParam(int rep)   {
+        for (int j=1; j<GetNbranch(); j++)  {
+            bllist[rep][j] = blarray[j];
+        }
+        for (int i=0; i<GetNsite(); i++)    {
+            ratelist[rep][i] = rate[i];
+        }
+        for (int i=0; i<GetNsite(); i++)    {
+            for (int k=0; k<GetDim(); k++)  {
+                profilelist[rep][i][k] = profile[i][k];
+            }
+        }
+    }
+
+    void PopParam(int rep)   {
+        for (int j=1; j<GetNbranch(); j++)  {
+            blarray[j] = bllist[rep][j];
+        }
+        for (int i=0; i<GetNsite(); i++)    {
+            rate[i] = ratelist[rep][i];
+        }
+        for (int i=0; i<GetNsite(); i++)    {
+            for (int k=0; k<GetDim(); k++)  {
+                profile[i][k] = profilelist[rep][i][k];
+            }
+        }
+
+        totmeanrate = 0;
+        for (int i=0; i<GetNsite(); i++)    {
+            totmeanrate += rate[i];
+        }
+        totmeanlength = 0;
+        for (int j=1; j<GetNbranch(); j++)  {
+            totmeanlength += blarray[j];
+        }
+
+        UpdateZip();
+        UpdateConditionalLikelihoods();
+    }
+
+    void CreateBKArrays(int nrep)   {
+
+
+        alphalist = new double*[nrep];
+        betalist = new double*[nrep];
+        lambdalist = new double*[nrep];
+        mulist = new double*[nrep];
+        gammalist = new double**[nrep];
+
+        scorelist = new double[nrep];
+        sitescorelist = new double*[nrep];
+
+        for (int rep=0; rep<nrep; rep++)    {
+            lambdalist[rep] = new double[GetNbranch()];
+            mulist[rep] = new double[GetNbranch()];
+
+            alphalist[rep] = new double[GetNsite()];
+            betalist[rep] = new double[GetNsite()];
+            gammalist[rep] = new double*[GetNsite()];
+            for (int i=0; i<GetNsite(); i++)    {
+                gammalist[rep][i] = new double[GetDim()];
+            }
+            sitescorelist[rep] = new double[GetNsite()];
+        }
+
+        nstore = nrep;
+        bkindex = 0;
+    }
+
+    void Push(double score)    {
+        int index = bkindex;
+        if (bkindex == nstore)  {
+            double min = 0;
+            index = 0;
+            for (int rep=0; rep<nstore; rep++)  {
+                if ((!rep) || (min > scorelist[rep]))   {
+                    min = scorelist[rep];
+                    index = rep;
+                }
+            }
+            if (score < min)    {
+                index = -1;
+            }
+        }
+
+        if (index != -1)    {
+            scorelist[index] = GetVarLogMarginalLikelihood(sitescorelist[index]);
+
+            for (int i=1; i<GetNbranch(); i++)  {
+                lambdalist[index][i] = lambdastar[i];
+                mulist[index][i] = mustar[i];
+            }
+
+            for (int i=0; i<GetNsite(); i++)    {
+                alphalist[index][i] = alphastar[i];
+                betalist[index][i] = betastar[i];
+
+                for (int k=0; k<GetDim(); k++)  {
+                    gammalist[index][i][k] = gammastar[i][k];
+                }
+            }
+        }
+
+        if (bkindex < nstore)   {
+            bkindex++;
+        }
+    }
+
+    double Pop(int index, int bestpersite)  {
+
+        if (index == -1)    {
+            index = 0;
+            double max = scorelist[0];
+            for (int rep=1; rep<nstore; rep++)  {
+                if (scorelist[rep] > max)   {
+                    max = scorelist[rep];
+                    index = rep;
+                }
+            }
+        }
+
+        for (int i=1; i<GetNbranch(); i++)  {
+            lambdastar[i] = lambdalist[index][i];
+            mustar[i] = mulist[index][i];
+        }
+
+        if (bestpersite)    {
+            for (int i=0; i<GetNsite(); i++)    {
+                int lmax = 0;
+                int max = 0;
+                for (int l=0; l<nstore; l++)    {
+                    if ((!l) || (max < sitescorelist[l][i]))    {
+                        max = sitescorelist[l][i];
+                        lmax = l;
+                    }
+                }
+                alphastar[i] = alphalist[lmax][i];
+                betastar[i] = betalist[lmax][i];
+                for (int k=0; k<GetDim(); k++)  {
+                    gammastar[i][k] = gammalist[lmax][i][k];
+                }
+            }
+        }
+        else    {
+            for (int i=0; i<GetNsite(); i++)    {
+                alphastar[i] = alphalist[index][i];
+                betastar[i] = betalist[index][i];
+                for (int k=0; k<GetDim(); k++)  {
+                    gammastar[i][k] = gammalist[index][i][k];
+                }
+            }
+        }
+
+        ComputeMeanLengths();
+        ComputeMeanRates();
+        ComputeMeanProfiles();
+
+        SetNewParameters();
+
+        UpdateConditionalLikelihoods();
+        GetVarLogMarginalLikelihood();
+        return scorelist[index];
+    }
 
     void ComputeMeanRates();
     void ComputeMeanLengths();
@@ -208,7 +393,10 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 
     void SetNewParameters();
 
-    double GetRateLengthCorrection();
+    double GetRateLengthCorrection(double* sitescore = 0);
+
+    double VBEM(int nrep, double diff);
+    void InitializeState();
 
     double* meanrate;
     double* meanlograte;
@@ -230,6 +418,20 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
     int varfreerate;
     int varfreeprofile;
 
+    double** alphalist;
+    double** betalist;
+    double** lambdalist;
+    double** mulist;
+    double*** gammalist;
+    double** sitescorelist;
+    double* scorelist;
+    int bkindex;
+    int nstore;
+
+    int nparam;
+    double** bllist;
+    double** ratelist;
+    double*** profilelist;
 };
 
 #endif

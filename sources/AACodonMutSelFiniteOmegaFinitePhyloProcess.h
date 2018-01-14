@@ -120,6 +120,7 @@ class AACodonMutSelFiniteOmegaFinitePhyloProcess : public virtual AACodonMutSelF
 	}
 
 	virtual void ReadPB(int argc, char* argv[]);
+	void Read(string name, int burnin, int every, int until);
 
 	double Move(double tuning = 1.0)	{
 		chronototal.Start();

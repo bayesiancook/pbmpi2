@@ -1,4 +1,5 @@
 #include "FiniteOmegaProcess.h"
+#include "BiologicalSequences.h"
 #include "Parallel.h"
 
 
@@ -85,6 +86,25 @@ void FiniteOmegaProcess::SampleOmegaWeights()	{
 	}
 	for (int k=0; k<GetNomega(); k++)	{
 		omegaweight[k] /= total;
+	}
+
+}
+
+
+void FiniteOmegaProcess::ReadOmegaFix(string filename)	{
+	omegamixtype = filename;
+	if ((filename == "o10") || (filename == "O10"))	{
+		Nomegafixcomp = o10N;
+		omegafix = new double[Nomegafixcomp];
+		empomegaweight = new double[Nomegafixcomp];
+		for (int i=0; i<Nomegafixcomp; i++)	{
+			omegafix[i] = o10OmegaFix[i];
+			empomegaweight[i] = o10OmegaWeight[i];
+		}
+	}
+	else	{
+		cerr << "nothing else yet implemented\n";
+		exit(1);
 	}
 
 }

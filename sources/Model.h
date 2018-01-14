@@ -228,8 +228,8 @@ class Model	{
 				}
 				else if (omegamixturetype == 3)	{
 					cerr << "IN AA Codon Mut Sel SBDP Omega Finite AA\n";
-					cerr << "This model not yet working...\n";
-					exit(1);
+					//cerr << "This model not yet working...\n";
+					//exit(1);
 					type = "AAACODONMUTSELSBDPOMEGAFINITE";
 					process = new AACodonMutSelSBDPOmegaFinitePhyloProcess(ncat,fixncomp,empmix,mixtype,fixcodonprofile,omegaprior,kappaprior);
 				}
@@ -404,6 +404,12 @@ class Model	{
 		}
 		else if (type == "AACODONMUTSELSBDP")	{
 			process = new AACodonMutSelSBDPPhyloProcess(is,myid,nprocs);
+		}
+		else if (type == "AACODONMUTSELFINITEOMEGAFINITE")	{
+			process = new AACodonMutSelFiniteOmegaFinitePhyloProcess(is,myid,nprocs);
+		}
+		else if (type == "AACODONMUTSELFINITEOMEGASBDP")	{
+			process = new AACodonMutSelFiniteOmegaSBDPPhyloProcess(is,myid,nprocs);
 		}
 		else if (type == "AACODONMUTSELMVNSS")	{
 			process = new AACodonMutSelMVNSiteSpecificPhyloProcess(is,myid,nprocs);

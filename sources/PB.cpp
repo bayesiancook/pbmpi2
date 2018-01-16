@@ -889,7 +889,7 @@ int main(int argc, char* argv[])	{
 			}
 			else if (s == "-o10")	{
 				omegamixturetype = 1;
-				nomega = 3;
+				nomega = 10;
 				omegamixtype = "o10";
 				empomegamix = 1;
 				fixnomegacomp = true;

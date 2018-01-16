@@ -102,6 +102,7 @@ void FiniteOmegaProcess::SampleOmegaWeights()	{
 
 
 void FiniteOmegaProcess::ReadOmegaFix(string filename)	{
+
 	if ((filename == "o10") || (filename == "O10"))	{
 		Nomegafixcomp = o10N;
 		omegafix = new double[Nomegafixcomp];
@@ -115,6 +116,8 @@ void FiniteOmegaProcess::ReadOmegaFix(string filename)	{
 		cerr << "nothing else yet implemented\n";
 		exit(1);
 	}
+
+
 }
 
 void FiniteOmegaProcess::SetOmegaFix()	{

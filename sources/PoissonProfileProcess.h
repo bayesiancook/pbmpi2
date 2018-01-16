@@ -30,7 +30,7 @@ class PoissonProfileProcess : public virtual ProfileProcess {
 	protected:
 
 	// implemented in specialized phyloprocess subclasses
-	virtual const int* GetSiteProfileSuffStatCount(int site) = 0;
+	virtual const double* GetSiteProfileSuffStatCount(int site) = 0;
 
 };
 

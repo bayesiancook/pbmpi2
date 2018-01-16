@@ -31,12 +31,18 @@ void GammaRateProcess::Create()	{
 	if (! rate)	{
 		RateProcess::Create();
 		rate = new double[GetNsite()];
+		bkrate = new double[GetNsite()];
+        for (int i=0; i<GetNsite(); i++)    {
+            bkrate[i] = 1.0;
+        }
 	}
 }
 
 void GammaRateProcess::Delete() 	{
 	delete[] rate;
 	rate = 0;
+    delete[] bkrate;
+    bkrate = 0;
 	RateProcess::Delete();
 }
 

@@ -200,7 +200,7 @@ class PartitionDGamRateProcess : public virtual RateProcess {
 	void FromStream(istream& is);
 
 	virtual void UpdateRateSuffStat();
-	const int* GetRateSuffStatCount(int part) {return ratesuffstatcount[part];}
+	const double* GetRateSuffStatCount(int part) {return ratesuffstatcount[part];}
 	const double* GetRateSuffStatBeta(int part) {return ratesuffstatbeta[part];}
 
 	protected:
@@ -235,11 +235,11 @@ class PartitionDGamRateProcess : public virtual RateProcess {
 	double* alpha;
 	double* bkalpha;
 	
-	int** ratesuffstatcount;
+	double** ratesuffstatcount;
 	double** ratesuffstatbeta;
-	int* allocratesuffstatcount;
+	double* allocratesuffstatcount;
 	double* allocratesuffstatbeta;
-	int* Ninv;
+	double* Ninv;
 
 	int Ncat;
 	bool fixalpha;

@@ -72,7 +72,10 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 	virtual void GlobalUpdateSiteProfileSuffStat();
 	virtual void SlaveUpdateSiteProfileSuffStat();
 
-	const int* GetSiteProfileSuffStatCount(int site) {return siteprofilesuffstatcount[site];}
+	const double* GetSiteProfileSuffStatCount(int site) {return siteprofilesuffstatcount[site];}
+
+    void UpdateMeanSuffStat();
+    void RecursiveUpdateMeanSuffStat(const Link* from, double*** aux);
 
 	void SetDataFromLeaves()	{
 		SampleTrueNodeStates(GetRoot());
@@ -93,8 +96,8 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 
 	// private:
 
-	int** siteprofilesuffstatcount;
-	int* allocsiteprofilesuffstatcount;
+	double** siteprofilesuffstatcount;
+	double* allocsiteprofilesuffstatcount;
 
 	ZippedSequenceAlignment* zipdata;
 	SequenceAlignment* truedata;

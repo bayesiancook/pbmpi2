@@ -33,7 +33,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------------
 
 
-void ExpoConjugateGTRSubstitutionProcess::AddRRSuffStat(int* rrsuffstatcount, double* rrsuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
+void ExpoConjugateGTRSubstitutionProcess::AddRRSuffStat(double* rrsuffstatcount, double* rrsuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 		// if (ActiveSite(i))	{
@@ -42,7 +42,7 @@ void ExpoConjugateGTRSubstitutionProcess::AddRRSuffStat(int* rrsuffstatcount, do
 	}
 }
 
-void ExpoConjugateGTRSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
+void ExpoConjugateGTRSubstitutionProcess::AddSiteRateSuffStat(double* siteratesuffstatcount, double* siteratesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 		// if (ActiveSite(i))	{
@@ -51,7 +51,7 @@ void ExpoConjugateGTRSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffs
 	}
 }
 
-void ExpoConjugateGTRSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
+void ExpoConjugateGTRSubstitutionProcess::AddBranchLengthSuffStat(double& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 		// if (ActiveSite(i))	{
@@ -60,7 +60,7 @@ void ExpoConjugateGTRSubstitutionProcess::AddBranchLengthSuffStat(int& count, do
 	}
 }
 
-void ExpoConjugateGTRSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofilesuffstatcount, double** siteprofilesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
+void ExpoConjugateGTRSubstitutionProcess::AddSiteProfileSuffStat(double** siteprofilesuffstatcount, double** siteprofilesuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
@@ -75,7 +75,7 @@ void ExpoConjugateGTRSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofi
 }
 
 /*
-void ExpoConjugateGTRSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofilesuffstatcount, double** siteprofilesuffstatbeta, BranchSitePath** patharray, double branchlength, bool isroot)	{
+void ExpoConjugateGTRSubstitutionProcess::AddSiteProfileSuffStat(double** siteprofilesuffstatcount, double** siteprofilesuffstatbeta, BranchSitePath** patharray, double branchlength, bool isroot)	{
 	if (!isroot)	{
 		// non root case
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{

@@ -34,10 +34,10 @@ void MultiGeneBranchProcess::Create()	{
 		}
 
 		if (mappsuffstat)	{
-		allocgeneblcount = new int[Ngene*GetNbranch()];
-		geneblcount = new int*[Ngene];
-		alloctmpgeneblcount = new int[Ngene*GetNbranch()];
-		tmpgeneblcount  = new int*[Ngene];
+		allocgeneblcount = new double[Ngene*GetNbranch()];
+		geneblcount = new double*[Ngene];
+		alloctmpgeneblcount = new double[Ngene*GetNbranch()];
+		tmpgeneblcount  = new double*[Ngene];
 		for (int gene=0; gene<Ngene; gene++)	{
 			geneblcount[gene] = allocgeneblcount + gene*GetNbranch();
 			tmpgeneblcount[gene] = alloctmpgeneblcount + gene*GetNbranch();
@@ -443,7 +443,7 @@ void MultiGeneBranchProcess::GlobalCollectGeneLengthMappingSuffStat()	{
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Status stat;
 	for(int i=1; i<GetNprocs(); i++) {
-		MPI_Recv(alloctmpgeneblcount,Ngene*GetNbranch(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+		MPI_Recv(alloctmpgeneblcount,Ngene*GetNbranch(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
 		MPI_Recv(alloctmpgeneblbeta,Ngene*GetNbranch(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == i)	{
@@ -460,14 +460,14 @@ void MultiGeneBranchProcess::SlaveCollectGeneLengthMappingSuffStat() {
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			const double* beta = process[gene]->GetBranchLengthSuffStatBeta();
-			const int* count = process[gene]->GetBranchLengthSuffStatCount();
+			const double* count = process[gene]->GetBranchLengthSuffStatCount();
 			for (int j=1; j<GetNbranch(); j++)	{
 				tmpgeneblcount[gene][j] = count[j];
 				tmpgeneblbeta[gene][j] = beta[j];
 			}
 		}
 	}
-	MPI_Send(alloctmpgeneblcount,Ngene*GetNbranch(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(alloctmpgeneblcount,Ngene*GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	MPI_Send(alloctmpgeneblbeta,Ngene*GetNbranch(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 

@@ -332,6 +332,7 @@ class Model	{
 		// process->SetTrackTopo(1);
 
 		process->SetMPI(myid,nprocs);
+        process->SetWithOutwardConditionalLikelihoods(1);
 		process->New();
 	}
 
@@ -504,6 +505,19 @@ class Model	{
 	}
 	*/
 
+    void SetVariationalMode(int blmode, int ratemode, int profilemode)  {
+        process->SetVariationalMode(blmode,ratemode,profilemode);
+    }
+
+    void VarBayes() {
+        int nrep = 0;
+        for (int rep=0; rep<nrep; rep++)    {
+            Move(1,every);
+            process->Trace(cerr);
+        }
+        process->VarBayes();
+    }
+
 	void Run(int smc, int deltansite, int shortcycle, int longcycle, int cutoffsize, int nrep)	{
 
 		cerr << "current logL : " << process->GetLogLikelihood() << '\t';
@@ -520,6 +534,7 @@ class Model	{
 			process->SMCBurnin(name,deltansite,shortcycle,longcycle,cutoffsize,nrep);
 			cerr << "burnin done\n";
 		}
+
 
 		while (RunningStatus() && ((until == -1) || (GetSize() < until)))	{
 

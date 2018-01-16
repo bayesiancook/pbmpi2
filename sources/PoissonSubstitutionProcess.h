@@ -41,9 +41,11 @@ class PoissonSubstitutionProcess : public virtual SubstitutionProcess, public vi
 	BranchSitePath* SampleRootSitePath(int site, int rootstate);
 
 	// CPU Level 1: gathering sufficient statistics from substitution mappings
-	void AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, double branchlength, BranchSitePath** patharray, int* nonmissing);
-	void AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray, int* nonmissing);
-	void AddSiteProfileSuffStat(int** siteprofilesuffstatcount, BranchSitePath** patharray, bool root);
+	void AddSiteRateSuffStat(double* siteratesuffstatcount, double* siteratesuffstatbeta, double branchlength, BranchSitePath** patharray, int* nonmissing);
+	void AddBranchLengthSuffStat(double& count, double& beta, BranchSitePath** patharray, int* nonmissing);
+	void AddSiteProfileSuffStat(double** siteprofilesuffstatcount, BranchSitePath** patharray, bool root);
+
+    void AddMeanSuffStat(double*** down, double*** up, double*** at, double branchlength, double* meanratecount, double& meanlengthcount, double** meanprofilecount, int* nonmissing);
 
 	virtual void Delete() {
 		DeleteZip();
@@ -64,6 +66,7 @@ class PoissonSubstitutionProcess : public virtual SubstitutionProcess, public vi
 	virtual bool InOrbit(int site, int state) = 0;
 
 	void ChooseTrueStates(BranchSitePath** patharray, int* nodestateup, int* nodestatedown, bool root);
+    void AddZipToTrueMeanProfileSuffStat(int site, const double* p, double* q);
 
 	private:
 

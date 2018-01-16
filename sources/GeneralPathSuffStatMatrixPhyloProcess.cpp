@@ -157,7 +157,7 @@ void GeneralPathSuffStatMatrixPhyloProcess::UpdateBranchLengthSuffStat()	{
 	branchlengthsuffstatcount[0] = 0;
 	branchlengthsuffstatbeta[0] = 0;
 	for (int j=1; j<GetNbranch(); j++)	{
-		int& count = branchlengthsuffstatcount[j];
+		double& count = branchlengthsuffstatcount[j];
 		double& beta = branchlengthsuffstatbeta[j];
 		count = 0;
 		beta = 0;

@@ -28,9 +28,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 void ExpoConjugatePartitionGTRProfileProcess::Create()	{
 	if (! rrsuffstatcount)	{
 		PartitionGTRProfileProcess::Create();
-		allocrrsuffstatcount = new int[Nrr*Npart];
+		allocrrsuffstatcount = new double[Nrr*Npart];
 		allocrrsuffstatbeta = new double[Nrr*Npart];
-		rrsuffstatcount = new int*[Npart];
+		rrsuffstatcount = new double*[Npart];
 		rrsuffstatbeta = new double*[Npart];
 		for (int part=0; part<Npart; part++)	{
 			rrsuffstatcount[part] = allocrrsuffstatcount + part*Nrr;
@@ -76,10 +76,10 @@ void ExpoConjugatePartitionGTRProfileProcess::GlobalUpdateRRSuffStat()	{
 		}
 	}
 
-	int ivector[GetNrr()*Npart];
+	double ivector[GetNrr()*Npart];
 	double dvector[GetNrr()*Npart];
 	for(int i=1; i<GetNprocs(); i++) {
-		MPI_Recv(ivector,GetNrr()*Npart,MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+		MPI_Recv(ivector,GetNrr()*Npart,MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
 		for(int j=0; j<GetNrr()*Npart; j++) {
 			allocrrsuffstatcount[j] += ivector[j];
 		}
@@ -92,7 +92,7 @@ void ExpoConjugatePartitionGTRProfileProcess::GlobalUpdateRRSuffStat()	{
 		}
 	}
 
-	MPI_Bcast(allocrrsuffstatcount,GetNrr()*Npart,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(allocrrsuffstatcount,GetNrr()*Npart,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	MPI_Bcast(allocrrsuffstatbeta,GetNrr()*Npart,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
 	else	{
@@ -103,10 +103,10 @@ void ExpoConjugatePartitionGTRProfileProcess::GlobalUpdateRRSuffStat()	{
 void ExpoConjugatePartitionGTRProfileProcess::SlaveUpdateRRSuffStat()	{
 
 	UpdateRRSuffStat();
-	MPI_Send(allocrrsuffstatcount,GetNrr()*Npart,MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(allocrrsuffstatcount,GetNrr()*Npart,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Send(allocrrsuffstatbeta,GetNrr()*Npart,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 
-	MPI_Bcast(allocrrsuffstatcount,GetNrr()*Npart,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(allocrrsuffstatcount,GetNrr()*Npart,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	MPI_Bcast(allocrrsuffstatbeta,GetNrr()*Npart,MPI_DOUBLE,0,MPI_COMM_WORLD);
 }

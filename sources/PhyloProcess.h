@@ -53,7 +53,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void SlavePropagate(int,int,bool,double);
 
 	// default constructor: pointers set to nil
-	PhyloProcess() :  sitecondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
+	PhyloProcess() :  sitecondlmap(0), condlmap(0), condlmap2(0), withoutwardcondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
 
 		reshuffle = 0;
 		reverseafterfull = 0;
@@ -104,6 +104,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		rracc = rrtry = 0;
 		fasttopoacc = fasttopotry = fasttopochange = 0;
 		ziptopoacc = ziptopotry = 0;
+
+        profilevarmode = 1;
+        blvarmode = 1;
+        ratevarmode = 1;
 	}
 
 	virtual ~PhyloProcess() {}
@@ -112,6 +116,17 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	// returns average success rate
 	virtual double Move(double tuning = 1.0) = 0;
 	virtual double AugmentedMove(double tuning = 1.0) {}
+
+    void SetVariationalMode(int inbl, int inrate, int inprofile)    {
+        blvarmode = inbl;
+        ratevarmode = inrate;
+        profilevarmode = inprofile;
+    }
+
+    virtual void VarBayes() {
+        cerr << "in PhyloProcess::VarBayes\n";
+        exit(1);
+    }
 
 	virtual double RestrictedMoveCycle(int nrep = 1, double tuning = 1.0) {
 		cerr << "in default restricted move cycle\n";
@@ -310,6 +325,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		myid = inmyid;
 		nprocs = innprocs;
 	}
+
+    void SetWithOutwardConditionalLikelihoods(int in)   {
+        withoutwardcondlmap = in;
+    }
 
 	virtual void ToStreamHeader(ostream& os);
 
@@ -589,7 +608,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	// if  auxindex == -1 then create auxiliary array, otherwise use condlmap[auxindex] as the auxiliary array
 	double ComputeNodeLikelihood(const Link* from, int auxindex);
-	// double ComputeNodeLikelihood(const Link* from, int auxindex = -1);
+	double ComputeBranchLikelihood(const Link* from, int auxindex);
+    void CheckLikelihood();
+    void RecursiveComputeLikelihood(const Link* from, int auxindex, vector<double>& nodelogl, vector<double>& branchlogl);
 
 	// assumes that rate allocations have already been defined
 	// and that conditional likelihoods are updated
@@ -669,6 +690,11 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		return condlmap[GetLinkIndex(link)];
 	}
 
+	double*** GetOutwardConditionalLikelihoodVector(const Link* link)	{
+		return condlmap2[GetLinkIndex(link)];
+	}
+
+
 	void CreateMappings();
 	void DeleteMappings();
 	void FullDeleteMappings();
@@ -677,13 +703,13 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void DeleteNodeStates();
 	
 	// sufficient statistics for rates and branch lengths (do not depend on the model)
-	int GetSiteRateSuffStatCount(int site) {return siteratesuffstatcount[site];}
+	double GetSiteRateSuffStatCount(int site) {return siteratesuffstatcount[site];}
 	double GetSiteRateSuffStatBeta(int site) {return siteratesuffstatbeta[site];}
 
-	int GetBranchLengthSuffStatCount(int index) {return branchlengthsuffstatcount[index];}
+	double GetBranchLengthSuffStatCount(int index) {return branchlengthsuffstatcount[index];}
 	double GetBranchLengthSuffStatBeta(int index) {return branchlengthsuffstatbeta[index];}
 
-	const int* GetBranchLengthSuffStatCount() {return branchlengthsuffstatcount;}
+	const double* GetBranchLengthSuffStatCount() {return branchlengthsuffstatcount;}
 	const double* GetBranchLengthSuffStatBeta() {return branchlengthsuffstatbeta;}
 
 	void GlobalUpdateSiteRateSuffStat();
@@ -793,13 +819,15 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	double*** sitecondlmap;
 	double**** condlmap;
+	double**** condlmap2;
+    int withoutwardcondlmap;
 	BranchSitePath*** submap;
 	int** nodestate;
 
 	// sufficient statistics for rates and branch lengths (do not depend on the model)
-	int* siteratesuffstatcount;
+	double* siteratesuffstatcount;
 	double* siteratesuffstatbeta;
-	int* branchlengthsuffstatcount;
+	double* branchlengthsuffstatcount;
 	double* branchlengthsuffstatbeta;
 
 	string datafile;
@@ -959,6 +987,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	int rootprior;
 
 	int reshuffle;
+
+    int profilevarmode;
+    int ratevarmode;
+    int blvarmode;
 };
 
 

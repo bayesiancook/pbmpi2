@@ -160,7 +160,149 @@ BranchSitePath* PoissonSubstitutionProcess::SampleSitePath(int site, int stateup
 //-------------------------------------------------------------------------
 
 
-void PoissonSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount, double* siteratesuffstatbeta, double branchlength, BranchSitePath** patharray, int* nonmissing)	{
+void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, double*** at, double branchlength, double* meanratecount, double& meanlengthcount, double** meanprofilecount, int* nonmissing)   {
+
+    for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+        if (ActiveSite(i))  {
+            if (nonmissing[i] == 2)    {
+                
+                if (branchlength)   {
+                    cerr << "error: non root for missing 2\n";
+                    exit(1);
+                }
+
+                int nstate = GetNstate(i);
+                int j = ratealloc[i];
+                if (j)  {
+                    cerr << "error in PoissonSubstitutionProcess::AddMeanSuffStat: rate alloc is not 0\n";
+                    exit(1);
+                }
+
+                double* a = at[i][j];
+                double totz[nstate];
+                double tot = 0;
+                for (int k=0; k<nstate; k++)    {
+                    totz[k] = a[k];
+                    tot += totz[k];
+                }
+                for (int k=0; k<nstate; k++)    {
+                    totz[k] /= tot;
+                }
+                AddZipToTrueMeanProfileSuffStat(i,totz,meanprofilecount[i]);
+
+            }
+            else if (nonmissing[i] == 1)  {
+
+                if (! down) {
+                    cerr << "error in PoissonSubstitutionProcess::AddMeanSuffStat: non root calculation called on root\n";
+                    exit(1);
+                }
+
+                if (! branchlength) {
+                    cerr << "error: root for missing 1\n";
+                    exit(1);
+                }
+
+                int nstate = GetNstate(i);
+                const double* stat = GetStationary(i);
+                double rate = GetRate(i);
+                double length = rate * branchlength;
+                double e = exp(-length);
+
+                int j = ratealloc[i];
+                if (j)  {
+                    cerr << "error in PoissonSubstitutionProcess::AddMeanSuffStat: rate alloc is not 0\n";
+                    exit(1);
+                }
+                double* d = down[i][j];
+                double* u = up[i][j];
+
+                double totw = 0;
+                double totn = 0;
+                double totz[nstate];
+                for (int k=0; k<nstate; k++)    {
+                    totz[k] = 0;
+                }
+
+                double hidden = 0;
+                for (int k=0; k<nstate; k++)    {
+                    for (int l=0; l<nstate; l++)    {
+                        if (k == l) {
+                            double w = stat[k] * d[k] * u[l] * (e + (1-e)*stat[l]);
+                            totw += w;
+                            double n = length * stat[k] / (e + (1-e)*stat[k]);
+                            double z = (1-e) * stat[k] / (e + (1-e)*stat[k]);
+                            totn += w * n;
+                            totz[l] += w * z;
+                            hidden += w * (n-z);
+                            /*
+                            totn += w * length * stat[k] / (e + (1-e)*stat[k]);
+                            totz[l] += w * (1-e) * stat[k] / (e + (1-e)*stat[k]);
+                            */
+                        }
+                        else    {
+                            double w = stat[k] * d[k] * u[l] * (1-e) * stat[l];
+                            totw += w;
+                            double n = 0;
+                            if (length < 1e-8)  {
+                                n = 1;
+                            }
+                            else    {
+                                n = length / (1-e);
+                            }
+                            double z = 1;
+                            totn += w * n;
+                            totz[l] += w * z;
+                            hidden += w * (n-z);
+                            /*
+                            if (length < 1e-8)  {
+                                totn += w;
+                            }
+                            else    {
+                                totn += w * length / (1-e);
+                            }
+                            totz[l] += w;
+                            */
+                        }
+                    }
+                }
+                if (totw)   {
+                    totn /= totw;
+                }
+                else    {
+                    totn = 0;
+                }
+                if (isnan(totn))    {
+                    cerr << "totn is nan\n";
+                    cerr << totw << '\n';
+                    exit(1);
+                }
+                double total = 0;
+                for (int k=0; k<nstate; k++)    {
+                    totz[k] += hidden * stat[k];
+                    if (totw)   {
+                        totz[k] /= totw;
+                    }
+                    else    {
+                        totz[k] = 0;
+                    }
+                    total += totz[k];
+                }
+                if (fabs(total - totn) > 1e-6)  {
+                    cerr << "error in total count in PoissonSubstitutionProcess::AddMeanSuffStat\n";
+                    exit(1);
+                }
+
+                AddZipToTrueMeanProfileSuffStat(i,totz,meanprofilecount[i]);
+
+                meanratecount[i] += totn;
+                meanlengthcount += totn;
+            }
+        }
+    }
+}
+
+void PoissonSubstitutionProcess::AddSiteRateSuffStat(double* siteratesuffstatcount, double* siteratesuffstatbeta, double branchlength, BranchSitePath** patharray, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 			siteratesuffstatcount[i] += patharray[i]->GetNsub();
@@ -170,7 +312,7 @@ void PoissonSubstitutionProcess::AddSiteRateSuffStat(int* siteratesuffstatcount,
 }
 
 
-void PoissonSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
+void PoissonSubstitutionProcess::AddBranchLengthSuffStat(double& count, double& beta, BranchSitePath** patharray, int* nonmissing)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 			count += patharray[i]->GetNsub();
@@ -180,7 +322,7 @@ void PoissonSubstitutionProcess::AddBranchLengthSuffStat(int& count, double& bet
 }
 
 
-void PoissonSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofilesuffstatcount, BranchSitePath** patharray, bool root)	{
+void PoissonSubstitutionProcess::AddSiteProfileSuffStat(double** siteprofilesuffstatcount, BranchSitePath** patharray, bool root)	{
 	cerr << "error: in PoissonSubstitutionProcess::AddSiteProfileSuffStat: deprecated\n";
 	exit(1);
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
@@ -190,6 +332,23 @@ void PoissonSubstitutionProcess::AddSiteProfileSuffStat(int** siteprofilesuffsta
 			}
 		}
 	}
+}
+
+void PoissonSubstitutionProcess::AddZipToTrueMeanProfileSuffStat(int site, const double* p, double* q)   {
+
+    for (int k=0; k<GetOrbitSize(site); k++)    {
+        q[GetStateFromZip(site,k)] += p[k];
+    }
+    if (GetZipSize(site) > GetOrbitSize(site))  {
+        double* pi = GetProfile(site);
+        int k = GetOrbitSize(site);
+        double condp = p[k] / zipstat[site][k];
+        for (int l=0; l<GetDim(); l++)  {
+            if (! InOrbit(site,l))  {
+                q[l] += condp * pi[l];
+            }
+        }
+    }
 }
 
 void PoissonSubstitutionProcess::ChooseTrueStates(BranchSitePath** patharray, int* nodestateup, int* nodestatedown, bool root)	{

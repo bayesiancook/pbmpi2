@@ -130,7 +130,7 @@ class RateProcess : public virtual MPIModule {
 		cerr << "in RateProcess::GetSiteRateSuffStatBeta\n";
 		exit(1);
 	}
-	virtual int GetSiteRateSuffStatCount(int site)	{
+	virtual double GetSiteRateSuffStatCount(int site)	{
 		cerr << "in RateProcess::GetSiteRateSuffStatCount\n";
 		exit(1);
 	}
@@ -139,6 +139,10 @@ class RateProcess : public virtual MPIModule {
 		if (! ratealloc)	{
 			ratealloc = new int[GetNsite()];
 			meansiterate = new double[GetNsite()];
+            for (int i=0; i<GetNsite(); i++)    {
+                ratealloc[i] = 0;
+                meansiterate[i] = 0;
+            }
 		}
 	}
 	void Delete() {

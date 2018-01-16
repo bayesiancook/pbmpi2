@@ -72,13 +72,13 @@ class ExpoConjugateGTRMixtureProfileProcess : public virtual GTRMixtureProfilePr
 	virtual void SlaveUpdateModeProfileSuffStat();
 
 	// component-specific sufficient statistics
-	int** profilesuffstatcount;
+	double** profilesuffstatcount;
 	double** profilesuffstatbeta;
-	int* allocprofilesuffstatcount;
+	double* allocprofilesuffstatcount;
 	double* allocprofilesuffstatbeta;
-	int** tmpprofilesuffstatcount;
+	double** tmpprofilesuffstatcount;
 	double** tmpprofilesuffstatbeta;
-	int* alloctmpprofilesuffstatcount;
+	double* alloctmpprofilesuffstatcount;
 	double* alloctmpprofilesuffstatbeta;
 
 	double PoissonDiffLogSampling(int cat, int site);

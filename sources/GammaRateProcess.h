@@ -100,9 +100,11 @@ class GammaRateProcess : public virtual RateProcess {
 		UpdateSiteRateSuffStat();
         ResampleSiteRates();
         UpdateRateHyperSuffStat();
+        /*
 		MoveRateParams(1,100);
 		MoveRateParams(0.3,100);
 		MoveRateParams(0.1,100);
+        */
 		return 1.0;
 	}
 

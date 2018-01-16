@@ -258,7 +258,7 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 		return 0;
 	}
 
-	virtual int GetBranchLengthSuffStatCount(int index)	{
+	virtual double GetBranchLengthSuffStatCount(int index)	{
 		cerr << "in BranchProcess::GetBranchLengthSuffStatCount\n";
 		exit(1);
 		return 0;

@@ -30,7 +30,7 @@ void ExpoConjugateGTRProfileProcess::Create()	{
 		GTRProfileProcess::Create();
 	}
 	if (! rrsuffstatcount)	{
-		rrsuffstatcount = new int[Nrr];
+		rrsuffstatcount = new double[Nrr];
 		rrsuffstatbeta = new double[Nrr];
 	}
 }
@@ -66,10 +66,10 @@ void ExpoConjugateGTRProfileProcess::GlobalUpdateRRSuffStat()	{
 		rrsuffstatbeta[i] = 0.0;
 	}
 
-	int ivector[GetNrr()];
+	double ivector[GetNrr()];
 	double dvector[GetNrr()];
 	for(int i=1; i<GetNprocs(); i++) {
-		MPI_Recv(ivector,GetNrr(),MPI_INT,i,TAG1,MPI_COMM_WORLD,&stat);
+		MPI_Recv(ivector,GetNrr(),MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
 		for(int j=0; j<GetNrr(); j++) {
 			rrsuffstatcount[j] += ivector[j];
 		}

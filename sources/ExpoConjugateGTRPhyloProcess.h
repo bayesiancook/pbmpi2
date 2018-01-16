@@ -43,7 +43,7 @@ class ExpoConjugateGTRPhyloProcess : public virtual PhyloProcess, public virtual
 		RateProcess::Delete();
 	}
 
-	const int* GetSiteProfileSuffStatCount(int site) {return siteprofilesuffstatcount[site];}
+	const double* GetSiteProfileSuffStatCount(int site) {return siteprofilesuffstatcount[site];}
 	const double* GetSiteProfileSuffStatBeta(int site) {return siteprofilesuffstatbeta[site];}
 
 	// protected:
@@ -65,10 +65,10 @@ class ExpoConjugateGTRPhyloProcess : public virtual PhyloProcess, public virtual
 	int CountMapping();
 	int CountMapping(int site);
 
-	int** siteprofilesuffstatcount;
+	double** siteprofilesuffstatcount;
 	double** siteprofilesuffstatbeta;
 
-	int* allocsiteprofilesuffstatcount;
+	double* allocsiteprofilesuffstatcount;
 	double* allocsiteprofilesuffstatbeta;
 
 	double LengthRelRateMove(double tuning, int nrep);

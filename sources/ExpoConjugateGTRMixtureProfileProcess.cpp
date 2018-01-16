@@ -30,13 +30,13 @@ void ExpoConjugateGTRMixtureProfileProcess::Create()	{
 		DirichletProfileProcess::Create();
 		ExpoConjugateGTRProfileProcess::Create();
 		GTRMixtureProfileProcess::Create();
-		profilesuffstatcount = new int*[GetNmodeMax()];
+		profilesuffstatcount = new double*[GetNmodeMax()];
 		profilesuffstatbeta = new double*[GetNmodeMax()];
-		allocprofilesuffstatcount = new int[GetNmodeMax() * GetDim()];
+		allocprofilesuffstatcount = new double[GetNmodeMax() * GetDim()];
 		allocprofilesuffstatbeta = new double[GetNmodeMax() * GetDim()];
-		tmpprofilesuffstatcount = new int*[GetNmodeMax()];
+		tmpprofilesuffstatcount = new double*[GetNmodeMax()];
 		tmpprofilesuffstatbeta = new double*[GetNmodeMax()];
-		alloctmpprofilesuffstatcount = new int[GetNmodeMax() * GetDim()];
+		alloctmpprofilesuffstatcount = new double[GetNmodeMax() * GetDim()];
 		alloctmpprofilesuffstatbeta = new double[GetNmodeMax() * GetDim()];
 		for (int i=0; i<GetNmodeMax(); i++)	{
 			profilesuffstatcount[i] = allocprofilesuffstatcount + i*GetDim();
@@ -83,10 +83,10 @@ void ExpoConjugateGTRMixtureProfileProcess::GlobalUpdateModeProfileSuffStat()	{
 		// for that reason, alloctmp arrays should be set to 0,
 		// ... but this is done in the constructor (see above)
 
-		MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+		MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 		MPI_Reduce(alloctmpprofilesuffstatbeta,allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 
-		MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 		MPI_Bcast(allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
 
@@ -103,10 +103,10 @@ void ExpoConjugateGTRMixtureProfileProcess::SlaveUpdateModeProfileSuffStat()	{
 		alloctmpprofilesuffstatbeta[k] = allocprofilesuffstatbeta[k];
 	}
 
-	MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+	MPI_Reduce(alloctmpprofilesuffstatcount,allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 	MPI_Reduce(alloctmpprofilesuffstatbeta,allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 
-	MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(allocprofilesuffstatcount,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 	MPI_Bcast(allocprofilesuffstatbeta,Ncomponent*GetDim(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 }
@@ -121,7 +121,7 @@ void ExpoConjugateGTRMixtureProfileProcess::UpdateModeProfileSuffStat()	{
 	}
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
-			const int* count = GetSiteProfileSuffStatCount(i);
+			const double* count = GetSiteProfileSuffStatCount(i);
 			const double* beta = GetSiteProfileSuffStatBeta(i);
 			int cat = alloc[i];
 			for (int k=0; k<GetDim(); k++)	{
@@ -146,7 +146,7 @@ void ExpoConjugateGTRMixtureProfileProcess::SwapComponents(int cat1, int cat2)	{
 	MixtureProfileProcess::SwapComponents(cat1,cat2);
 	for (int k=0; k<GetDim(); k++)	{
 
-		int tmp = profilesuffstatcount[cat1][k];
+		double tmp = profilesuffstatcount[cat1][k];
 		profilesuffstatcount[cat1][k] = profilesuffstatcount[cat2][k];
 		profilesuffstatcount[cat2][k] = tmp;
 
@@ -163,7 +163,7 @@ void ExpoConjugateGTRMixtureProfileProcess::SwapComponents(int cat1, int cat2)	{
 //-------------------------------------------------------------------------
 
 double ExpoConjugateGTRMixtureProfileProcess::LogStatProb(int site, int cat)	{
-	const int* count = GetSiteProfileSuffStatCount(site);
+	const double* count = GetSiteProfileSuffStatCount(site);
 	const double* beta = GetSiteProfileSuffStatBeta(site);
 	double* pi = profile[cat];
 	double total = 0;

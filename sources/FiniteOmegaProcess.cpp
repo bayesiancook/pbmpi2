@@ -112,6 +112,15 @@ void FiniteOmegaProcess::ReadOmegaFix(string filename)	{
 			empomegaweight[i] = o10OmegaWeight[i];
 		}
 	}
+	else if ((filename == "o3n") || (filename == "O3n"))	{
+		Nomegafixcomp = o3nN;
+		omegafix = new double[Nomegafixcomp];
+		empomegaweight = new double[Nomegafixcomp];
+		for (int i=0; i<Nomegafixcomp; i++)	{
+			omegafix[i] = o3nOmegaFix[i];
+			empomegaweight[i] = o3nOmegaWeight[i];
+		}
+	}
 	else	{
 		cerr << "nothing else yet implemented\n";
 		exit(1);

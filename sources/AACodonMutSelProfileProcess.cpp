@@ -179,6 +179,7 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 	if (! fixomega)	{
 		//cerr << "###############################\n";
 		//cerr << "#   In !fixomega\n";
+		//cerr << "# fixomega = " << fixomega << "\n";
 		//cerr << "###############################\n";
 		//exit(1);
 

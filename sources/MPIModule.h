@@ -167,6 +167,7 @@ class MPIModule {
 
 	void CreateMPI(int innsite);
 	virtual void NonMPIReshuffleSites(int rand = 1);
+	virtual void NonMPIReshuffleSites(int* permut);
 	virtual void GlobalReshuffleSites(int rand = 1);
 	virtual void SlaveReshuffleSites();
 	virtual void GlobalWriteSiteRankToStream(ostream& os);

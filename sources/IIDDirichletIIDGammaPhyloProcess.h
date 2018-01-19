@@ -395,7 +395,7 @@ class IIDDirichletIIDGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 
     double GetRateLengthCorrection(double* sitescore = 0);
 
-    double VBEM(int nrep, double diff);
+    double VBEM(int nrep, double diff,double* sitescore = 0);
     void InitializeState();
 
     double* meanrate;

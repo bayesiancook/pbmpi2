@@ -23,9 +23,11 @@ void IIDDirichletIIDGammaPhyloProcess::ComputeMeanRates()   {
 
     totmeanrate = 0;
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-        meanrate[i] = alphastar[i] / betastar[i];
-        totmeanrate += meanrate[i];
-        meanlograte[i] = rnd::GetRandom().Psi(alphastar[i]) - log(betastar[i]);
+        if (ActiveSite(i))  {
+            meanrate[i] = alphastar[i] / betastar[i];
+            totmeanrate += meanrate[i];
+            meanlograte[i] = rnd::GetRandom().Psi(alphastar[i]) - log(betastar[i]);
+        }
     }
 }
 
@@ -43,18 +45,20 @@ void IIDDirichletIIDGammaPhyloProcess::ComputeMeanProfiles()    {
 
     totmeanlogprofilenorm = 0;
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-        double totgamma = 0;
-        for (int k=0; k<GetDim(); k++)  {
-            meanlogprofile[i][k] = rnd::GetRandom().Psi(gammastar[i][k]);
-            totgamma += gammastar[i][k];
+        if (ActiveSite(i))  {
+            double totgamma = 0;
+            for (int k=0; k<GetDim(); k++)  {
+                meanlogprofile[i][k] = rnd::GetRandom().Psi(gammastar[i][k]);
+                totgamma += gammastar[i][k];
+            }
+            double total = 0;
+            for (int k=0; k<GetDim(); k++)  {
+                meanlogprofile[i][k] -= rnd::GetRandom().Psi(totgamma);
+                total += exp(meanlogprofile[i][k]);
+            }
+            meanlogprofilenorm[i] = log(total);
+            totmeanlogprofilenorm += meanlogprofilenorm[i];
         }
-        double total = 0;
-        for (int k=0; k<GetDim(); k++)  {
-            meanlogprofile[i][k] -= rnd::GetRandom().Psi(totgamma);
-            total += exp(meanlogprofile[i][k]);
-        }
-        meanlogprofilenorm[i] = log(total);
-        totmeanlogprofilenorm += meanlogprofilenorm[i];
     }
 }
 
@@ -169,6 +173,209 @@ void IIDDirichletIIDGammaPhyloProcess::InitializeState()    {
         UpdateZip();
 }
 
+void IIDDirichletIIDGammaPhyloProcess::VarBayes()    {
+
+
+    cerr << name << '\n';
+
+    varfreebl = 1;
+    varfreerate = 1;
+    varfreeprofile = 1;
+
+    int nrep = 10;
+    int nsub = 3;
+    ofstream os((name + ".finalscore").c_str());
+    os.precision(12);
+    CreateBKArrays(nsub);
+
+    // CreateParamArrays(nrep);
+    // PosteriorMean(10,nrep);
+    
+    double* bksitescore = new double[GetNsite()];
+    double* sitescore = new double[GetNsite()];
+    double* sitevar = new double[GetNsite()];
+    double* sitemean = new double[GetNsite()];
+    for (int i=0; i<GetNsite(); i++)    {
+        sitemean[i] = 0;
+        sitevar[i] = 0;
+    }
+
+    for (int rep=0; rep<nrep; rep++)  {
+
+        // PopParam(rep);
+        InitializeState();
+
+        PosteriorMean(20,20);
+        SetNewParameters();
+
+        totmeanrate = 0;
+        for (int i=0; i<GetNsite(); i++)    {
+            totmeanrate += meanrate[i];
+        }
+        totmeanlength = 0;
+        for (int j=1; j<GetNbranch(); j++)  {
+            totmeanlength += meanbl[j];
+        }
+
+        double score = VBEM(0,1e-4*GetNsite());
+        os << score << '\t';
+        Trace(os);
+        os.flush();
+
+        cerr << score << '\t';
+        Trace(cerr);
+        Push(score);
+
+        GetVarLogMarginalLikelihood(sitescore);
+        for (int i=0; i<GetNsite(); i++)    {
+            sitemean[i] += sitescore[i];
+            sitevar[i] += sitescore[i]*sitescore[i];
+        }
+    }
+
+    cerr << '\n';
+
+    double varcutoff = 0.01;
+
+    double c1 = 0;
+    double c01 = 0;
+    double c001 = 0;
+    double c0001 = 0;
+    int index = 0;
+    int* permut = new int[GetNsite()];
+    for (int i=0; i<GetNsite(); i++)    {
+        permut[i] = -1;
+    }
+    for (int i=0; i<GetNsite(); i++)    {
+        sitemean[i] /= nrep;
+        sitevar[i] /= nrep;
+        sitevar[i] -= sitemean[i]*sitemean[i];
+        if (sitevar[i] > 1.0)   {
+            c1++;
+        }
+        if (sitevar[i] > 0.1)   {
+            c01++;
+        }
+        if (sitevar[i] > 0.01)   {
+            permut[i] = index++;
+            c001++;
+        }
+        if (sitevar[i] > 0.001)   {
+            c0001++;
+        }
+    }
+    for (int i=0; i<GetNsite(); i++)    {
+        if (permut[i] == -1)    {
+            permut[i] = index++;
+        }
+    }
+
+    NonMPIReshuffleSites(permut);
+
+    os << " > 1.000 : " << c1 / GetNsite() << '\n';
+    os << " > 0.100 : " << c01 / GetNsite() << '\n';
+    os << " > 0.010 : " << c001 / GetNsite() << '\n';
+    os << " > 0.001 : " << c0001 / GetNsite() << '\n';
+
+    for (int sub=0; sub<nsub; sub++)    {
+
+        double scorebefore = Pop(sub,0);
+        os << scorebefore << '\t';
+        Trace(os);
+        os.flush();
+        double score = VBEM(0,1e-6*GetNsite());
+        os << score << '\t';
+        Trace(os);
+        os.flush();
+
+        double* bkalphastar = new double[GetNsite()];
+        double* bkbetastar = new double[GetNsite()];
+        double** bkgammastar = new double*[GetNsite()];
+        for (int i=0; i<GetNsite(); i++)    {
+            bkgammastar[i] = new double[GetDim()];
+        }
+
+        for (int r=0; r<10; r++)    {
+
+            varfreebl = 0;
+
+            SetMinMax(0,0.1);
+
+            UpdateConditionalLikelihoods();
+            // double currentscore = GetVarLogMarginalLikelihood();
+            double currentscore = VBEM(0,1e-6*GetNsite(),bksitescore);
+
+            for (int l=0; l<10; l++)    {
+
+                for (int i=0; i<GetNsite(); i++)    {
+                    if (ActiveSite(i))  {
+                    // if (sitevar[i] > varcutoff) {
+                        bkalphastar[i] = alphastar[i];
+                        bkbetastar[i] = betastar[i];
+                        for (int k=0; k<GetDim(); k++)  {
+                            bkgammastar[i][k] = gammastar[i][k];
+                        }
+
+                        double tun = 4;
+                        alphastar[i] *= rnd::GetRandom().Gamma(tun,tun);
+                        betastar[i] *= rnd::GetRandom().Gamma(tun,tun);
+                        for (int k=0; k<GetDim(); k++)  {
+                            gammastar[i][k] *= rnd::GetRandom().Gamma(tun,tun);
+                        }
+                    }
+                }
+
+                ComputeMeanRates();
+                ComputeMeanProfiles();
+                SetNewParameters();
+
+                UpdateConditionalLikelihoods();
+
+                double score = VBEM(0,1e-6*GetNsite(),bksitescore);
+
+                for (int i=0; i<GetNsite(); i++)    {
+                    if (ActiveSite(i))  {
+                    // if (sitevar[i] > varcutoff) {
+                        if (sitescore[i] < bksitescore[i])   {
+                            alphastar[i] = bkalphastar[i];
+                            betastar[i] = bkbetastar[i];
+                            for (int k=0; k<GetDim(); k++)  {
+                                gammastar[i][k] = bkgammastar[i][k];
+                            }
+                            ComputeMeanLengths();
+                            ComputeMeanRates();
+                            ComputeMeanProfiles();
+
+                            SetNewParameters();
+
+                            UpdateConditionalLikelihoods();
+                            GetVarLogMarginalLikelihood();
+
+                            double rescore = VBEM(0,1e-4);
+                        }
+                        else    {
+                            bksitescore[i] = sitescore[i];
+                        }
+                    }
+                }
+            }
+
+            varfreebl = 1;
+            SetMinMax(0,1);
+
+            UpdateConditionalLikelihoods();
+            double score = VBEM(0,1e-6*GetNsite());
+
+            os << score << '\t';
+            Trace(os);
+            os.flush();
+        }
+        os << '\n';
+        os.flush();
+    }
+}
+
+/*
 void IIDDirichletIIDGammaPhyloProcess::VarBayes()    {
 
 
@@ -346,8 +553,9 @@ void IIDDirichletIIDGammaPhyloProcess::VarBayes()    {
         os.flush();
     }
 }
+*/
 
-double IIDDirichletIIDGammaPhyloProcess::VBEM(int nrep, double diffmin)  {
+double IIDDirichletIIDGammaPhyloProcess::VBEM(int nrep, double diffmin, double* sitescore)  {
 
     double logp = 0;
     int rep = 0;
@@ -375,18 +583,18 @@ double IIDDirichletIIDGammaPhyloProcess::VBEM(int nrep, double diffmin)  {
         SetNewParameters();
         UpdateZip();
         UpdateConditionalLikelihoods();
-        double tmp = GetVarLogMarginalLikelihood();
+        double tmp = GetVarLogMarginalLikelihood(sitescore);
         diff = tmp - logp;
         if (! logp) {
             diff= 1;
         }
         logp = tmp;
-        if (GetSiteMax() - GetSiteMin() > 1)    {
+        if (GetSiteMax() - GetSiteMin() == GetNsite())    {
             cerr << diff << '\t' << logL << '\t' << (logL-logp)/GetNsite() << '\t' << logp << '\t';
             Trace(cerr);
         }
     }
-    if (GetSiteMax() - GetSiteMin() > 1)    {
+    if (GetSiteMax() - GetSiteMin() == GetNsite())    {
         cerr << '\n';
     }
     return logp;
@@ -402,25 +610,33 @@ void IIDDirichletIIDGammaPhyloProcess::SetNewParameters()   {
 
     if (varfreerate && varfreeprofile)    {
         for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-            rate[i] = exp(meanlograte[i] + meanlogprofilenorm[i]);
+            if (ActiveSite(i))  {
+                rate[i] = exp(meanlograte[i] + meanlogprofilenorm[i]);
+            }
         }
     }
     else if (varfreerate)   {
         for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-            rate[i] = exp(meanlograte[i]);
+            if (ActiveSite(i))  {
+                rate[i] = exp(meanlograte[i]);
+            }
         }
     }
     else if (varfreeprofile)    {
         for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-            rate[i] = exp(meanlogprofilenorm[i]);
+            if (ActiveSite(i))  {
+                rate[i] = exp(meanlogprofilenorm[i]);
+            }
         }
     }
 
     if (varfreeprofile) {
         for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-            double tot = 0;
-            for (int k=0; k<GetDim(); k++)  {
-                profile[i][k] = exp(meanlogprofile[i][k] - meanlogprofilenorm[i]);
+            if (ActiveSite(i))  {
+                double tot = 0;
+                for (int k=0; k<GetDim(); k++)  {
+                    profile[i][k] = exp(meanlogprofile[i][k] - meanlogprofilenorm[i]);
+                }
             }
         }
     }
@@ -435,8 +651,10 @@ double IIDDirichletIIDGammaPhyloProcess::GetVarLogMarginalLikelihood(double* sit
     if (sitescore)  {
         double check = 0;
         for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-            check += sitelogL[i];
-            sitescore[i] = sitelogL[i];
+            if (ActiveSite(i))  {
+                check += sitelogL[i];
+                sitescore[i] = sitelogL[i];
+            }
         }
         if (fabs(check - logL) > 1e-7)    {
             cerr << "error in get var log marginal likelihood: site logl not correctly updated\n";
@@ -457,17 +675,19 @@ double IIDDirichletIIDGammaPhyloProcess::GetVarLogMarginalLikelihood(double* sit
 
     if (varfreerate)    {
         for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-            double a = alpha;
-            double b = alpha;
-            logprior += a*log(b) - rnd::GetRandom().logGamma(a) + (a-1)*meanlograte[i] - b*meanrate[i];
-            if (sitescore)  {
-                sitescore[i] += a*log(b) - rnd::GetRandom().logGamma(a) + (a-1)*meanlograte[i] - b*meanrate[i];
-            }
-            a = alphastar[i];
-            b = betastar[i];
-            logpost += a*log(b) - rnd::GetRandom().logGamma(a) + (a-1)*meanlograte[i] - b*meanrate[i];
-            if (sitescore)  {
-                sitescore[i] -= a*log(b) - rnd::GetRandom().logGamma(a) + (a-1)*meanlograte[i] - b*meanrate[i];
+            if (ActiveSite(i))  {
+                double a = alpha;
+                double b = alpha;
+                logprior += a*log(b) - rnd::GetRandom().logGamma(a) + (a-1)*meanlograte[i] - b*meanrate[i];
+                if (sitescore)  {
+                    sitescore[i] += a*log(b) - rnd::GetRandom().logGamma(a) + (a-1)*meanlograte[i] - b*meanrate[i];
+                }
+                a = alphastar[i];
+                b = betastar[i];
+                logpost += a*log(b) - rnd::GetRandom().logGamma(a) + (a-1)*meanlograte[i] - b*meanrate[i];
+                if (sitescore)  {
+                    sitescore[i] -= a*log(b) - rnd::GetRandom().logGamma(a) + (a-1)*meanlograte[i] - b*meanrate[i];
+                }
             }
         }
     }
@@ -475,35 +695,37 @@ double IIDDirichletIIDGammaPhyloProcess::GetVarLogMarginalLikelihood(double* sit
     if (varfreeprofile) {
         for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
 
-            double priorw = 0;
-            double postw = 0;
-            for (int k=0; k<GetDim(); k++)  {
+            if (ActiveSite(i))  {
+                double priorw = 0;
+                double postw = 0;
+                for (int k=0; k<GetDim(); k++)  {
 
-                logprior += (dirweight[k] - 1)*meanlogprofile[i][k];
-                logprior -= rnd::GetRandom().logGamma(dirweight[k]);
-                priorw += dirweight[k];
+                    logprior += (dirweight[k] - 1)*meanlogprofile[i][k];
+                    logprior -= rnd::GetRandom().logGamma(dirweight[k]);
+                    priorw += dirweight[k];
 
-                if (sitescore)  {
-                    sitescore[i] += (dirweight[k] - 1)*meanlogprofile[i][k];
-                    sitescore[i] -= rnd::GetRandom().logGamma(dirweight[k]);
+                    if (sitescore)  {
+                        sitescore[i] += (dirweight[k] - 1)*meanlogprofile[i][k];
+                        sitescore[i] -= rnd::GetRandom().logGamma(dirweight[k]);
+                    }
+
+                    logpost += (gammastar[i][k] - 1)*meanlogprofile[i][k];
+                    logpost -= rnd::GetRandom().logGamma(gammastar[i][k]);
+                    postw += gammastar[i][k];
+
+                    if (sitescore)  {
+                        sitescore[i] -= (gammastar[i][k] - 1)*meanlogprofile[i][k];
+                        sitescore[i] += rnd::GetRandom().logGamma(gammastar[i][k]);
+                    }
                 }
 
-                logpost += (gammastar[i][k] - 1)*meanlogprofile[i][k];
-                logpost -= rnd::GetRandom().logGamma(gammastar[i][k]);
-                postw += gammastar[i][k];
+                logprior += rnd::GetRandom().logGamma(priorw);
+                logpost += rnd::GetRandom().logGamma(postw);
 
                 if (sitescore)  {
-                    sitescore[i] -= (gammastar[i][k] - 1)*meanlogprofile[i][k];
-                    sitescore[i] += rnd::GetRandom().logGamma(gammastar[i][k]);
+                    sitescore[i] += rnd::GetRandom().logGamma(priorw);
+                    sitescore[i] -= rnd::GetRandom().logGamma(postw);
                 }
-            }
-
-            logprior += rnd::GetRandom().logGamma(priorw);
-            logpost += rnd::GetRandom().logGamma(postw);
-
-            if (sitescore)  {
-                sitescore[i] += rnd::GetRandom().logGamma(priorw);
-                sitescore[i] -= rnd::GetRandom().logGamma(postw);
             }
         }
     }
@@ -514,7 +736,9 @@ double IIDDirichletIIDGammaPhyloProcess::GetVarLogMarginalLikelihood(double* sit
         logp += totmeanlogprofilenorm;
         if (sitescore)  {
             for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-                sitescore[i] += meanlogprofilenorm[i];
+                if (ActiveSite(i))  {
+                    sitescore[i] += meanlogprofilenorm[i];
+                }
             }
         }
     }
@@ -590,13 +814,15 @@ double IIDDirichletIIDGammaPhyloProcess::GetRateLengthCorrection(double* sitesco
 
     double tot = 0;
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-        double totsite = 0;
-        for (int j=1; j<GetNbranch(); j++)  {
-            totsite += rate[i]*blarray[j] - meanrate[i]*meanbl[j];
-        }
-        tot += totsite;
-        if (sitescore)  {
-            sitescore[i] += totsite;
+        if (ActiveSite(i))  {
+            double totsite = 0;
+            for (int j=1; j<GetNbranch(); j++)  {
+                totsite += rate[i]*blarray[j] - meanrate[i]*meanbl[j];
+            }
+            tot += totsite;
+            if (sitescore)  {
+                sitescore[i] += totsite;
+            }
         }
     }
     return tot;
@@ -643,8 +869,10 @@ void IIDDirichletIIDGammaPhyloProcess::UpdateVarLengths() {
 void IIDDirichletIIDGammaPhyloProcess::UpdateVarRates() {
 
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-        alphastar[i] = alpha + siteratesuffstatcount[i];
-        betastar[i] = alpha + totmeanlength;
+        if (ActiveSite(i))  {
+            alphastar[i] = alpha + siteratesuffstatcount[i];
+            betastar[i] = alpha + totmeanlength;
+        }
     }
     ComputeMeanRates();
 
@@ -706,8 +934,10 @@ void IIDDirichletIIDGammaPhyloProcess::UpdateVarRates() {
 void IIDDirichletIIDGammaPhyloProcess::UpdateVarProfiles() {
 
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
-        for (int k=0; k<GetDim(); k++)  {
-            gammastar[i][k] = dirweight[k] + siteprofilesuffstatcount[i][k];
+        if (ActiveSite(i))  {
+            for (int k=0; k<GetDim(); k++)  {
+                gammastar[i][k] = dirweight[k] + siteprofilesuffstatcount[i][k];
+            }
         }
     }
     ComputeMeanProfiles();

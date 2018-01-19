@@ -32,7 +32,13 @@ class Simulator : public NewickTree {
 			cerr << "error: should be protein datafile\n";
 			exit(1);
 		}
+
+		taxonset = protdata->GetTaxonSet();
 		statespace = protdata->GetStateSpace();
+
+		// check whether tree and data fit together
+		tree->RegisterWith(taxonset);
+		Ntaxa = taxonset->GetNtaxa();
 
 		if (partitionfile != "None")	{
 
@@ -55,7 +61,7 @@ class Simulator : public NewickTree {
 
             if (targetnsite != -1)  {
 
-                cerr << "random assignment until reaching target: " << targetnsite << '\n';
+                cerr << "random assignment until reaching target number of sites: " << targetnsite << '\n';
                 Nsite = 0;
                 Ngene = 0;
                 while (Nsite < targetnsite) {
@@ -70,7 +76,7 @@ class Simulator : public NewickTree {
 
 
             else if (ngene != -1) {
-                cerr << "random assignment: total number of genes: " << ngene << '\n';
+                cerr << "random assignment until reaching target number of genes: " << ngene << '\n';
                 Ngene = ngene;
                 genesize.assign(Ngene,0);
                 genefirst.assign(Ngene,0);
@@ -88,7 +94,12 @@ class Simulator : public NewickTree {
             else    {
                 Nsite = protdata->GetNsite() * nfold;
                 Ngene = fromngene*nfold;
-                cerr << "rolling circle: " << nfold << " x " << fromngene << " = " << Ngene << " genes in total\n";
+                if (nfold > 1)  {
+                    cerr << "rolling circle: " << nfold << " x " << fromngene << " = " << Ngene << " genes in total\n";
+                }
+                else    {
+                    cerr << "simulation based on template alignment and partition: same size, same number of genes\n";
+                }
                 genesize.assign(Ngene,0);
                 genefirst.assign(Ngene,0);
                 genedata.assign(Ngene,(SequenceAlignment*)0);
@@ -142,6 +153,8 @@ class Simulator : public NewickTree {
 
         cerr << "total number of genes: " << Ngene << '\n';
         cerr << "total number of sites: " << Nsite << '\n';
+		cerr << "total number of taxa : " << Ntaxa << '\n';
+
         currentseq = new int[Nsite];
 
 		// get parameters from file
@@ -167,7 +180,6 @@ class Simulator : public NewickTree {
 		}
 		prmis >> mu;
 
-
 		int withempfreq = 1;
 		int mixprior = 0;
 		prmis >> tmp;
@@ -190,40 +202,42 @@ class Simulator : public NewickTree {
 			}
 
 			if (profilefile != "None")	{
+                ifstream is(profilefile.c_str());
+                int nprofile;
+                is >> nprofile;
+                double** profile = new double*[nprofile];
+                for (int k=0; k<nprofile; k++)	{
+                    profile[k] = new double[Naa];
+                    int tmp;
+                    is >> tmp;
+                    for (int i=0; i<Naa; i++)	{
+                        is >> profile[k][i];
+                    }
+                }
+
 				if (randomprofiles)	{
-					ifstream is(profilefile.c_str());
-					int nprofile;
-					is >> nprofile;
-					double** profile = new double*[nprofile];
-					for (int k=0; k<nprofile; k++)	{
-						profile[k] = new double[Naa];
-						int tmp;
-						is >> tmp;
-						for (int i=0; i<Naa; i++)	{
-							is >> profile[k][i];
-						}
-					}
 					for (int k=0; k<Nsite; k++)	{
 						int cat = (int) (nprofile * rnd::GetRandom().Uniform());
 						for (int i=0; i<Naa; i++)	{
 							stat[k][i] = profile[cat][i];
 						}
 					}
-					for (int k=0; k<nprofile; k++)	{
-						delete[] profile[k];
-					}
-					delete[] profile;
 				}
 				else	{
-					ifstream is(profilefile.c_str());
+                    if (Nsite > nprofile)   {
+                        cerr << "error: not enough profiles in file\n";
+                        exit(1);
+                    }
 					for (int k=0; k<Nsite; k++)	{
-						int tmp;
-						is >> tmp;
 						for (int i=0; i<Naa; i++)	{
-							is >> stat[k][i];
+							stat[k][i] = profile[k][i];
 						}
 					}
 				}
+                for (int k=0; k<nprofile; k++)	{
+                    delete[] profile[k];
+                }
+                delete[] profile;
 			}
 			else	{
 				if (Ngene > 1)	{
@@ -555,15 +569,6 @@ class Simulator : public NewickTree {
 		}
 		pos << '\n';
 		
-		taxonset = protdata->GetTaxonSet();
-
-		// check whether tree and data fit together
-		tree->RegisterWith(taxonset);
-		Ntaxa = taxonset->GetNtaxa();
-
-		cerr << "Nsite: " << Nsite << '\n';
-		cerr << "Ntaxa: " << Ntaxa << '\n';
-
 		if (rr)	{
 			CreateMatrices();
 			UpdateMatrices();

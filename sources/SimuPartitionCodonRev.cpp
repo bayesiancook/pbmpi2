@@ -19,8 +19,8 @@ class Simulator : public NewickTree {
 	public:
 
 	Simulator(string datafile, string treefile, string partitionfile, string paramfile, string profilefile, int inmask, string inbasename)	{
+	Simulator(string datafile, string treefile, string partitionfile, string rrfile, string paramfile, string profilefile, int inmask, int inrandomprofiles, int innfold, int ngene, int targetnsite, string inbasename)	{
 
-		mask = inmask;
 		// take tree
 
 		// take a protein datafile
@@ -38,6 +38,10 @@ class Simulator : public NewickTree {
 
 		// apply Halpern and Bruno formalism (as in Holder)
 
+		mask = inmask;
+		randomprofiles = inrandomprofiles;
+		nfold = innfold;
+
 		basename = inbasename; 
 
 		tree = new Tree(treefile);
@@ -45,29 +49,6 @@ class Simulator : public NewickTree {
 		protdata = new FileSequenceAlignment(datafile);
 		if (protdata->GetNstate() != Naa)	{
 			cerr << "error: should be protein datafile\n";
-			exit(1);
-		}
-		Nsite = protdata->GetNsite();
-		currentseq = new int[Nsite];
-
-		ifstream pis(partitionfile.c_str());
-		pis >> Ngene;
-		genesize = new int[Ngene];
-		genefirst = new int[Ngene];
-		genedata = new SequenceAlignment*[Ngene];
-		genealloc = new int[Nsite];
-		int count = 0;
-		for (int gene=0; gene<Ngene; gene++)	{
-			pis >> genesize[gene];
-			genefirst[gene] = count;
-			count += genesize[gene];
-			genedata[gene] = new SequenceAlignment(protdata,genefirst[gene],genesize[gene]);
-			for (int i=0; i<genesize[gene]; i++)	{
-				genealloc[genefirst[gene] + i] = gene;
-			}
-		}
-		if (count != Nsite)	{
-			cerr << "error: non matching total size\n";
 			exit(1);
 		}
 
@@ -78,8 +59,122 @@ class Simulator : public NewickTree {
 		tree->RegisterWith(taxonset);
 		Ntaxa = taxonset->GetNtaxa();
 
-		cerr << "Nsite: " << Nsite << '\n';
-		cerr << "Ntaxa: " << Ntaxa << '\n';
+		if (partitionfile != "None")	{
+
+            double meangenesize = 0;
+			ifstream pis(partitionfile.c_str());
+			int fromngene;
+			pis >> fromngene;
+			int* fromgenesize = new int[fromngene];
+			int* fromgenefirst = new int[fromngene];
+			SequenceAlignment** fromgenedata = new SequenceAlignment*[fromngene];
+			int count = 0;
+			for (int gene=0; gene<fromngene; gene++)	{
+				pis >> fromgenesize[gene];
+                meangenesize += fromgenesize[gene];
+				fromgenefirst[gene] = count;
+				count += fromgenesize[gene];
+				fromgenedata[gene] = new SequenceAlignment(protdata,fromgenefirst[gene],fromgenesize[gene]);
+			}
+            meangenesize /= fromngene;
+
+            if (targetnsite != -1)  {
+
+                cerr << "random assignment until reaching target number of sites: " << targetnsite << '\n';
+                Nsite = 0;
+                Ngene = 0;
+                while (Nsite < targetnsite) {
+                    int alloc = (int) (rnd::GetRandom().Uniform() * fromngene);
+                    genesize.push_back(fromgenesize[alloc]);
+                    genefirst.push_back(Nsite);
+                    genedata.push_back(new SequenceAlignment(fromgenedata[alloc]));
+                    Nsite += genesize[Ngene];
+                    Ngene++;
+                }
+            }
+
+
+            else if (ngene != -1) {
+                cerr << "random assignment until reaching target number of genes: " << ngene << '\n';
+                Ngene = ngene;
+                genesize.assign(Ngene,0);
+                genefirst.assign(Ngene,0);
+                genedata.assign(Ngene,(SequenceAlignment*)0);
+                Nsite = 0;
+                for (int gene=0; gene<Ngene; gene++)	{
+                    int alloc = (int) (rnd::GetRandom().Uniform() * fromngene);
+                    genesize[gene] = fromgenesize[alloc];
+                    genefirst[gene] = Nsite;
+                    Nsite += genesize[gene];
+                    genedata[gene] = new SequenceAlignment(fromgenedata[alloc]);
+                }
+            }
+
+            else    {
+                Nsite = protdata->GetNsite() * nfold;
+                Ngene = fromngene*nfold;
+                if (nfold > 1)  {
+                    cerr << "rolling circle: " << nfold << " x " << fromngene << " = " << Ngene << " genes in total\n";
+                }
+                else    {
+                    cerr << "simulation based on template alignment and partition: same size, same number of genes\n";
+                }
+                genesize.assign(Ngene,0);
+                genefirst.assign(Ngene,0);
+                genedata.assign(Ngene,(SequenceAlignment*)0);
+                int count = 0;
+                int genecount = 0;
+                for (int gene=0; gene<Ngene; gene++)	{
+                    genesize[gene] = fromgenesize[genecount];
+                    genefirst[gene] = count;
+                    count += genesize[gene];
+                    genedata[gene] = new SequenceAlignment(fromgenedata[genecount]);
+                    genecount++;
+                    if (genecount == fromngene)	{
+                        genecount = 0;
+                    }
+                }
+                if (count != Nsite)	{
+                    cerr << "error: non matching total size\n";
+                    exit(1);
+                }
+
+            }
+
+            genealloc = new int[Nsite];
+            for (int gene=0; gene<Ngene; gene++)	{
+                for (int i=0; i<genesize[gene]; i++)	{
+                    genealloc[genefirst[gene] + i] = gene;
+                }
+            }
+
+            delete[] fromgenesize;
+            delete[] fromgenefirst;
+            for (int gene=0; gene<fromngene; gene++)	{
+                delete fromgenedata[gene];
+            }
+            delete[] fromgenedata;
+		}
+		else	{
+			Ngene = 1;
+            Nsite = protdata->GetNsite() * nfold;
+            genesize.assign(Ngene,0);
+            genefirst.assign(Ngene,0);
+            genedata.assign(Ngene,(SequenceAlignment*)0);
+			genealloc = new int[Nsite];
+			genesize[0] = Nsite;
+			genefirst[0] = 0;
+			genedata[0] = protdata;
+			for (int i=0; i<Nsite; i++)	{
+				genealloc[i] = 0;
+			}
+		}
+
+        cerr << "total number of genes: " << Ngene << '\n';
+        cerr << "total number of sites: " << Nsite << '\n';
+		cerr << "total number of taxa : " << Ntaxa << '\n';
+
+		currentseq = new int[Nsite];
 
 		// get parameters from file
 		ifstream prmis(paramfile.c_str());
@@ -102,14 +197,36 @@ class Simulator : public NewickTree {
 			aafreq[i] = new double[Naa];
 		}
 		if (profilefile != "None")	{
-			ifstream is(profilefile.c_str());
-			for (int k=0; k<Nsite; k++)	{
-				int tmp;
-				is >> tmp;
-				for (int i=0; i<Naa; i++)	{
-					is >> aafreq[k][i];
-				}
-			}
+            ifstream is(profilefile.c_str());
+            int nprofile;
+            is >> nprofile;
+            if (randomprofiles) {
+                profile = new double*[Nsite];
+                for (int i=0; i<Nsite; i++)	{
+                    aafreq[i] = new double[Naa];
+                }
+                for (int k=0; k<Nsite; k++)	{
+                    int tmp;
+                    is >> tmp;
+                    for (int i=0; i<Naa; i++)	{
+                        is >> aafreq[k][i];
+                    }
+                }
+            }
+            else    {
+                ifstream is(profilefile.c_str());
+                for (int k=0; k<Nsite; k++)	{
+                    int tmp;
+                    is >> tmp;
+                    if (tmp < Nsite)    {
+                        cerr << "error: not enough profiles in file\n";
+                        exit(1);
+                    }
+                    for (int i=0; i<Naa; i++)	{
+                        is >> aafreq[k][i];
+                    }
+                }
+            }
 		}
 		else	{
 			// make gene-specific empirical freqs

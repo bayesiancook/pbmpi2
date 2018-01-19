@@ -1,0 +1,1 @@
+for f in S*nex L*nex; do for rep in {0..9}; do ../simupartaamix -p simuaaparamc20 -d $f".ali" -part $f".txt.part" -t $f".tree" -targetnsite 20000 -m simuc20$f$rep; done; done

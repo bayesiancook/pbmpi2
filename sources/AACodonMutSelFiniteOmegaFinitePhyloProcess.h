@@ -24,12 +24,15 @@ class AACodonMutSelFiniteOmegaFinitePhyloProcess : public virtual AACodonMutSelF
 
 	public:
 
-	AACodonMutSelFiniteOmegaFinitePhyloProcess(int ncat, int infixncomp, int inempmix, string inmixtype, int infixcodonprofile, int infixomega, int inNomega, int inomegaprior)	{
+	AACodonMutSelFiniteOmegaFinitePhyloProcess(int ncat, int infixncomp, int inempmix, string inmixtype, int infixcodonprofile, int infixomega, int inNomega, int inomegaprior, string inomegamixtype, bool infixnomegacomp, int inempomegamix)	{
 
 		fixcodonprofile = infixcodonprofile;
 		fixomega = infixomega;
 		Nomega = inNomega;
 		omegaprior = inomegaprior;
+		omegamixtype = inomegamixtype;
+		fixnomegacomp = infixnomegacomp;
+		empomegamix = inempomegamix;
 
 		Ncomponent = ncat;
 		fixncomp = infixncomp;
@@ -48,6 +51,9 @@ class AACodonMutSelFiniteOmegaFinitePhyloProcess : public virtual AACodonMutSelF
 		is >> fixomega;
 		is >> Nomega;
 		is >> omegaprior;
+		is >> omegamixtype;
+		is >> fixnomegacomp;
+		is >> empomegamix;
 		is >> fixncomp;
 		is >> empmix;
 		is >> mixtype;
@@ -65,6 +71,9 @@ class AACodonMutSelFiniteOmegaFinitePhyloProcess : public virtual AACodonMutSelF
 		os << fixomega << '\n';
 		os << Nomega << '\n';
 		os << omegaprior << '\n';
+		os << omegamixtype << '\n';
+		os << fixnomegacomp << '\n';
+		os << empomegamix << '\n';
 		os << fixncomp << '\n';
 		os << empmix << '\n';
 		os << mixtype << '\n';

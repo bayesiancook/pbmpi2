@@ -22,7 +22,7 @@ class FiniteOmegaProcess : public virtual MixtureOmegaProcess	{
 
 	public: 
 	//FiniteProfileProcess() : weight(0), fixncomp(false), empmix(0), Nfixcomp(0), statfix(0), empweight(0), statcons(0), Ncons(0), conscutoff(0)  {
-	FiniteOmegaProcess() : omegaweightalpha(1.0), Nomegafixcomp(0), omegafix(0), empomegaweight(0) {}
+	FiniteOmegaProcess() : omegaweightalpha(1.0), fixnomegacomp(true), empomegamix(0), Nomegafixcomp(0), omegafix(0), empomegaweight(0) {}
 
 	virtual ~FiniteOmegaProcess() {}
 
@@ -49,11 +49,14 @@ class FiniteOmegaProcess : public virtual MixtureOmegaProcess	{
 		}
 	}
 	void ReadOmegaFix(string name);
+	void SetOmegaFix();
 
 	double omegaweightalpha;
 	int Nomegafixcomp;
 	double* omegafix;
 	double* empomegaweight;
+	bool fixnomegacomp;
+	int empomegamix;
 	string omegamixtype;
 };
 

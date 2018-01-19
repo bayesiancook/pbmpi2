@@ -13,7 +13,9 @@ double FiniteOmegaProcess::MPIMoveOmega(double tuning, int nrep)	{
 
 		GlobalUpdateOmegaSuffStat();
 
-		total += MoveOmegaValuesAndHyperParameters(tuning,nrep);
+		if (!fixomega)	{
+			total += MoveOmegaValuesAndHyperParameters(tuning,nrep);
+		}
 
 		ResampleOmegaWeights();
 
@@ -34,7 +36,9 @@ double FiniteOmegaProcess::NonMPIMoveOmega(double tuning, int nrep)	{
 
 		UpdateOmegaSuffStat();
 
-		total += MoveOmegaValuesAndHyperParameters(tuning,nrep);
+		if (!fixomega)	{
+			total += MoveOmegaValuesAndHyperParameters(tuning,nrep);
+		}
 
 		ResampleOmegaWeights();
 	}
@@ -72,9 +76,15 @@ void FiniteOmegaProcess::SampleOmega()	{
 	}
 	*/
 	SampleOmegaHyper();
-	SampleOmegas();
 	omegaweightalpha = 1.0;
-	SampleOmegaWeights();
+	if (empomegamix)	{
+		ReadOmegaFix(omegamixtype);
+		SetOmegaFix();
+	}
+	else	{
+		SampleOmegas();
+		SampleOmegaWeights();
+	}
 	SampleOmegaAlloc();
 }
 	
@@ -92,7 +102,7 @@ void FiniteOmegaProcess::SampleOmegaWeights()	{
 
 
 void FiniteOmegaProcess::ReadOmegaFix(string filename)	{
-	omegamixtype = filename;
+
 	if ((filename == "o10") || (filename == "O10"))	{
 		Nomegafixcomp = o10N;
 		omegafix = new double[Nomegafixcomp];
@@ -102,9 +112,33 @@ void FiniteOmegaProcess::ReadOmegaFix(string filename)	{
 			empomegaweight[i] = o10OmegaWeight[i];
 		}
 	}
+	else if ((filename == "o3n") || (filename == "O3n"))	{
+		Nomegafixcomp = o3nN;
+		omegafix = new double[Nomegafixcomp];
+		empomegaweight = new double[Nomegafixcomp];
+		for (int i=0; i<Nomegafixcomp; i++)	{
+			omegafix[i] = o3nOmegaFix[i];
+			empomegaweight[i] = o3nOmegaWeight[i];
+		}
+	}
 	else	{
 		cerr << "nothing else yet implemented\n";
 		exit(1);
 	}
 
+
+}
+
+void FiniteOmegaProcess::SetOmegaFix()	{
+
+	if (! Nomegafixcomp)	{
+		cerr << "error in set omega fix\n";
+		exit(1);
+	}
+	Nomega = Nomegafixcomp;
+	for (int k=0; k<Nomega; k++)	{
+		omegaweight[k] = empomegaweight[k];
+		omega[k] = omegafix[k];
+	}
+	fixnomegacomp = true;
 }

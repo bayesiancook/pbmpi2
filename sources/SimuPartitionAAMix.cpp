@@ -197,6 +197,10 @@ class Simulator : public NewickTree {
 
 		if (Ncat == -1)	{
 
+            double pseudocount;
+            int focus;
+            prmis >> pseudocount >> focus;
+
 			if (profilefile != "None")	{
 
                 ifstream is(profilefile.c_str());
@@ -207,8 +211,17 @@ class Simulator : public NewickTree {
                 }
 
                 for (int k=0; k<Ncat; k++)	{
+                    double tmp;
+                    is >> tmp;
+                    double tot = 0;
                     for (int i=0; i<Naa; i++)	{
                         is >> stat[k][i];
+                        tot += stat[k][i];
+                    }
+                    if (fabs(tot-1)>1e-5)   {
+                        cerr << "error: profiles not normalized\n";
+                        cerr << tot - 1 << '\n';
+                        exit(1);
                     }
                 }
 
@@ -239,10 +252,6 @@ class Simulator : public NewickTree {
                 for (int i=0; i<Nsite; i++)	{
                     alloc[i] = i;
                 }
-
-                double pseudocount;
-                int focus;
-                prmis >> pseudocount >> focus;
 
 				if (Ngene > 1)	{
 					for (int gene=0; gene<Ngene; gene++)	{

@@ -7,6 +7,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 #include "StringStreamUtils.h"
 #include "CodonSubMatrix.h"
@@ -18,8 +19,7 @@ class Simulator : public NewickTree {
 
 	public:
 
-	Simulator(string datafile, string treefile, string partitionfile, string paramfile, string profilefile, int inmask, string inbasename)	{
-	Simulator(string datafile, string treefile, string partitionfile, string rrfile, string paramfile, string profilefile, int inmask, int inrandomprofiles, int innfold, int ngene, int targetnsite, string inbasename)	{
+	Simulator(string datafile, string treefile, string partitionfile, string paramfile, string profilefile, int inmask, int inrandomprofiles, int innfold, int ngene, int targetnsite, string inbasename)	{
 
 		// take tree
 
@@ -46,12 +46,12 @@ class Simulator : public NewickTree {
 
 		tree = new Tree(treefile);
 
+        // reading template sequence alignment
 		protdata = new FileSequenceAlignment(datafile);
 		if (protdata->GetNstate() != Naa)	{
 			cerr << "error: should be protein datafile\n";
 			exit(1);
 		}
-
 		taxonset = protdata->GetTaxonSet();
 		codonstatespace = new CodonStateSpace(Universal);
 
@@ -59,9 +59,10 @@ class Simulator : public NewickTree {
 		tree->RegisterWith(taxonset);
 		Ntaxa = taxonset->GetNtaxa();
 
+        // making gene partition
 		if (partitionfile != "None")	{
 
-            double meangenesize = 0;
+            // reading partition from file
 			ifstream pis(partitionfile.c_str());
 			int fromngene;
 			pis >> fromngene;
@@ -71,15 +72,13 @@ class Simulator : public NewickTree {
 			int count = 0;
 			for (int gene=0; gene<fromngene; gene++)	{
 				pis >> fromgenesize[gene];
-                meangenesize += fromgenesize[gene];
 				fromgenefirst[gene] = count;
 				count += fromgenesize[gene];
 				fromgenedata[gene] = new SequenceAlignment(protdata,fromgenefirst[gene],fromgenesize[gene]);
 			}
-            meangenesize /= fromngene;
 
+            // random assignment until reaching target number of sites
             if (targetnsite != -1)  {
-
                 cerr << "random assignment until reaching target number of sites: " << targetnsite << '\n';
                 Nsite = 0;
                 Ngene = 0;
@@ -93,7 +92,7 @@ class Simulator : public NewickTree {
                 }
             }
 
-
+            // random assignment until reaching target number of genes
             else if (ngene != -1) {
                 cerr << "random assignment until reaching target number of genes: " << ngene << '\n';
                 Ngene = ngene;
@@ -110,6 +109,7 @@ class Simulator : public NewickTree {
                 }
             }
 
+            // simulation based on template alignment and partition: same size, same number of genes
             else    {
                 Nsite = protdata->GetNsite() * nfold;
                 Ngene = fromngene*nfold;
@@ -155,6 +155,8 @@ class Simulator : public NewickTree {
             }
             delete[] fromgenedata;
 		}
+
+        // trivial one-component partition
 		else	{
 			Ngene = 1;
             Nsite = protdata->GetNsite() * nfold;
@@ -192,44 +194,45 @@ class Simulator : public NewickTree {
 		prmis >> pseudocount;
 		prmis >> focus;
 
-		aafreq = new double*[Nsite];
-		for (int i=0; i<Nsite; i++)	{
-			aafreq[i] = new double[Naa];
-		}
+        alloc = new int[Nsite];
+
 		if (profilefile != "None")	{
             ifstream is(profilefile.c_str());
-            int nprofile;
-            is >> nprofile;
-            if (randomprofiles) {
-                profile = new double*[Nsite];
-                for (int i=0; i<Nsite; i++)	{
-                    aafreq[i] = new double[Naa];
+            is >> Ncat;
+            aafreq = new double*[Ncat];
+            for (int k=0; k<Ncat; k++)	{
+                aafreq[k] = new double[Naa];
+                for (int i=0; i<Naa; i++)	{
+                    is >> aafreq[k][i];
                 }
+            }
+
+            if (randomprofiles) {
                 for (int k=0; k<Nsite; k++)	{
-                    int tmp;
-                    is >> tmp;
-                    for (int i=0; i<Naa; i++)	{
-                        is >> aafreq[k][i];
-                    }
+                    alloc[k] = (int) (Ncat * rnd::GetRandom().Uniform());
                 }
             }
             else    {
-                ifstream is(profilefile.c_str());
+                if (Nsite > Ncat)   {
+                    cerr << "error: not enough profiles in file\n";
+                    exit(1);
+                }
                 for (int k=0; k<Nsite; k++)	{
-                    int tmp;
-                    is >> tmp;
-                    if (tmp < Nsite)    {
-                        cerr << "error: not enough profiles in file\n";
-                        exit(1);
-                    }
-                    for (int i=0; i<Naa; i++)	{
-                        is >> aafreq[k][i];
-                    }
+                    alloc[k] = k;
                 }
             }
 		}
 		else	{
 			// make gene-specific empirical freqs
+            Ncat = Nsite;
+            aafreq = new double*[Ncat];
+            for (int k=0; k<Ncat; k++)	{
+                aafreq[k] = new double[Naa];
+            }
+            for (int i=0; i<Nsite; i++)	{
+                alloc[i] = i;
+            }
+
 			for (int gene=0; gene<Ngene; gene++)	{
 				genedata[gene]->GetSiteEmpiricalFreq(aafreq + genefirst[gene],pseudocount,focus);
 			}
@@ -378,7 +381,7 @@ class Simulator : public NewickTree {
 	void CreateMatrices()	{
 		Q = new HBAACodonMutSelProfileSubMatrix*[Nsite];
 		for (int i=0; i<Nsite; i++)	{
-			Q[i] = new HBAACodonMutSelProfileSubMatrix(codonstatespace,genenucrr[genealloc[i]],genenucstat[genealloc[i]],aafreq[i],&omega,&Ne,false);
+			Q[i] = new HBAACodonMutSelProfileSubMatrix(codonstatespace,genenucrr[genealloc[i]],genenucstat[genealloc[i]],aafreq[alloc[i]],&omega,&Ne,false);
 		}
 	}
 
@@ -580,10 +583,14 @@ class Simulator : public NewickTree {
 	int dncount;
 
 	int mask;
+	int randomprofiles;
+	int nfold;
 
 	double pseudocount;
 	int focus;
+    int Ncat;
 	double** aafreq;
+    int* alloc;
 	HBAACodonMutSelProfileSubMatrix** Q;
 
 	int Ntaxa;
@@ -593,8 +600,9 @@ class Simulator : public NewickTree {
 
 	int Ngene;
 	int* genealloc;
-	int* genesize;
-	int* genefirst;
+    vector<int> genesize;
+    vector<int> genefirst;
+    vector<SequenceAlignment*> genedata;
 
 	double* nucrr;
 	double rralpha;
@@ -620,7 +628,6 @@ class Simulator : public NewickTree {
 	map<const Node*, int*> nodeseq;
 
 	SequenceAlignment* protdata;
-	SequenceAlignment** genedata;
 	const TaxonSet* taxonset;
 	CodonStateSpace* codonstatespace;
 
@@ -636,7 +643,12 @@ int main(int argc, char* argv[])	{
 	string profilefile = "None";
 	string paramfile = "";
 	string basename = "";
-	int mask = 0;
+	int mask = 1;
+	int randomprofiles = 0;
+	int nfold = 1;
+	int ngene = -1;
+    int targetnsite = -1;
+
 
 	try	{
 
@@ -654,6 +666,9 @@ int main(int argc, char* argv[])	{
 			else if (s == "-m")	{
 				mask = 1;
 			}
+			else if (s == "-nomask")	{
+				mask = 0;
+			}
 			else if ((s == "-t") || (s == "-tree"))	{
 				i++;
 				treefile = argv[i];
@@ -670,6 +685,21 @@ int main(int argc, char* argv[])	{
 				i++;
 				paramfile = argv[i];
 			}
+			else if (s == "-randprof")	{
+				randomprofiles = 1;
+			}
+			else if (s == "-nfold")	{
+				i++;
+				nfold = atoi(argv[i]);
+			}
+			else if (s == "-ngene")	{
+				i++;
+				ngene = atoi(argv[i]);
+			}
+            else if (s == "-targetnsite") {
+                i++;
+                targetnsite = atoi(argv[i]);
+            }
 			else	{
 				if (i != (argc -1))	{
 					throw(0);
@@ -690,7 +720,7 @@ int main(int argc, char* argv[])	{
 	}
 
 	cerr << "new sim\n";
-	Simulator* sim = new Simulator(datafile,treefile,partitionfile,paramfile,profilefile,mask,basename);
+	Simulator* sim = new Simulator(datafile,treefile,partitionfile,paramfile,profilefile,mask,randomprofiles,nfold,ngene,targetnsite,basename);
 
 	cerr << "simulate\n";
 	sim->Simulate();

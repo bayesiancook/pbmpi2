@@ -903,6 +903,22 @@ int main(int argc, char* argv[])	{
 				fixnomegacomp = true;
 				fixomega = 1;
 			}
+			else if (s == "-o11mutsel")	{
+				omegamixturetype = 1;
+				nomega = 11;
+				omegamixtype = "o11mutsel";
+				empomegamix = 1;
+				fixnomegacomp = true;
+				fixomega = 1;
+			}
+			else if (s == "-o12mutsel")	{
+				omegamixturetype = 1;
+				nomega = 12;
+				omegamixtype = "o12mutsel";
+				empomegamix = 1;
+				fixnomegacomp = true;
+				fixomega = 1;
+			}
 			else if (s == "-omegasbdp")	{
 				omegamixturetype = 3;
 			}

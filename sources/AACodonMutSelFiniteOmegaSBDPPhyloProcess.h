@@ -24,13 +24,16 @@ class AACodonMutSelFiniteOmegaSBDPPhyloProcess : public virtual AACodonMutSelFin
 
 	public:
 
-	AACodonMutSelFiniteOmegaSBDPPhyloProcess(int infixcodonprofile, int infixomega, int inNomega, int inomegaprior, int inkappaprior)	{
+	AACodonMutSelFiniteOmegaSBDPPhyloProcess(int infixcodonprofile, int infixomega, int inNomega, int inomegaprior, string inomegamixtype, bool infixnomegacomp, int inempomegamix, int inkappaprior)	{
 
 		fixcodonprofile = infixcodonprofile;
 		fixomega = infixomega;
 		Nomega = inNomega;
 		omegaweightalpha = 1.0;
 		omegaprior = inomegaprior;
+		omegamixtype = inomegamixtype;
+		fixnomegacomp = infixnomegacomp;
+		empomegamix = inempomegamix;
 		kappaprior = inkappaprior;
 	}
 
@@ -45,6 +48,9 @@ class AACodonMutSelFiniteOmegaSBDPPhyloProcess : public virtual AACodonMutSelFin
 		is >> fixomega;
 		is >> Nomega;
 		is >> omegaprior;
+		is >> omegamixtype;
+		is >> fixnomegacomp;
+		is >> empomegamix;
 		is >> kappaprior;
 
 		Open(is);
@@ -60,6 +66,9 @@ class AACodonMutSelFiniteOmegaSBDPPhyloProcess : public virtual AACodonMutSelFin
 		os << fixomega << '\n';
 		os << Nomega << '\n';
 		os << omegaprior << '\n';
+		os << omegamixtype << '\n';
+		os << fixnomegacomp << '\n';
+		os << empomegamix << '\n';
 		os << kappaprior << '\n';
 	}
 
@@ -122,6 +131,7 @@ class AACodonMutSelFiniteOmegaSBDPPhyloProcess : public virtual AACodonMutSelFin
 
 	virtual void ReadPB(int argc, char* argv[]);
 	void Read(string name, int burnin, int every, int until);
+	void ReadSiteOmegaGTO(string name, int burnin, int every, int until);
 	void ReadMapStats(string name, int burnin, int every, int until);
 	int CountNonSynMapping(int i);
 	int CountNonSynMapping();

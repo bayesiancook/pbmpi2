@@ -275,6 +275,7 @@ void AACodonMutSelFiniteOmegaFinitePhyloProcess::ReadPB(int argc, char* argv[])	
 	int cv = 0;
 	int sel = 0;
 	int map = 0;
+	int siteomegagto = 0;
 	string testdatafile = "";
 
 	int rateprior = 0;
@@ -295,6 +296,9 @@ void AACodonMutSelFiniteOmegaFinitePhyloProcess::ReadPB(int argc, char* argv[])	
 			}
 			else if (s == "-map")	{
 				map = 1;
+			}
+			else if (s == "-siteomegagto")	{
+				siteomegagto = 1;
 			}
 			else if (s == "-cv")	{
 				cv = 1;
@@ -394,6 +398,9 @@ void AACodonMutSelFiniteOmegaFinitePhyloProcess::ReadPB(int argc, char* argv[])	
 	else if (cv)	{
 		ReadCV(testdatafile,name,burnin,every,until,1,codetype);
 	}
+	else if (siteomegagto)	{
+		ReadSiteOmegaGTO(name,burnin,every,until);
+	}
 	//if (sel)	{
 	//	ReadSDistributions(name,burnin,every,until);
 	//}
@@ -406,6 +413,11 @@ void AACodonMutSelFiniteOmegaFinitePhyloProcess::ReadPB(int argc, char* argv[])	
 }
 
 void AACodonMutSelFiniteOmegaFinitePhyloProcess::Read(string name, int burnin, int every, int until)	{
+	cerr << "No generic Read for AACodonMutSelFiniteOmegaFinitePhyloProcess\n";
+	exit(1);
+}
+
+void AACodonMutSelFiniteOmegaFinitePhyloProcess::ReadSiteOmegaGTO(string name, int burnin, int every, int until)	{
 
 	ifstream is((name + ".chain").c_str());
 	if (! is)	{

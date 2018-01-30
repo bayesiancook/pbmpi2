@@ -129,6 +129,7 @@ class AACodonMutSelFiniteOmegaFinitePhyloProcess : public virtual AACodonMutSelF
 	}
 
 	virtual void ReadPB(int argc, char* argv[]);
+	void ReadSiteOmegaGTO(string name, int burnin, int every, int until);
 	void Read(string name, int burnin, int every, int until);
 
 	double Move(double tuning = 1.0)	{

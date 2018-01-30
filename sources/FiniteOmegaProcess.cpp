@@ -17,8 +17,8 @@ double FiniteOmegaProcess::MPIMoveOmega(double tuning, int nrep)	{
 			total += MoveOmegaValuesAndHyperParameters(tuning,nrep);
 		}
 
-		ResampleOmegaWeights();
-
+		//ResampleOmegaWeights();  Do we really need this?
+		
 		// perhaps some broadcast here, or just call GlobalUpdateParameters
 	}
 
@@ -32,6 +32,8 @@ double FiniteOmegaProcess::NonMPIMoveOmega(double tuning, int nrep)	{
 	for (int rep=0; rep<nrep; rep++)	{
 
 		// yet to be implemented
+		cerr << "NonMPIMoveOmega not yet implemented\n";
+		exit(1);
 		// total += OmegaIncrementalFiniteMove();
 
 		UpdateOmegaSuffStat();
@@ -40,7 +42,7 @@ double FiniteOmegaProcess::NonMPIMoveOmega(double tuning, int nrep)	{
 			total += MoveOmegaValuesAndHyperParameters(tuning,nrep);
 		}
 
-		ResampleOmegaWeights();
+		//ResampleOmegaWeights();
 	}
 
 	return total;
@@ -110,6 +112,24 @@ void FiniteOmegaProcess::ReadOmegaFix(string filename)	{
 		for (int i=0; i<Nomegafixcomp; i++)	{
 			omegafix[i] = o10OmegaFix[i];
 			empomegaweight[i] = o10OmegaWeight[i];
+		}
+	}
+	else if ((filename == "o11mutsel") || (filename == "O11MUTSEL"))	{
+		Nomegafixcomp = o11MutSelN;
+		omegafix = new double[Nomegafixcomp];
+		empomegaweight = new double[Nomegafixcomp];
+		for (int i=0; i<Nomegafixcomp; i++)	{
+			omegafix[i] = o11MutSelOmegaFix[i];
+			empomegaweight[i] = o11MutSelOmegaWeight[i];
+		}
+	}
+	else if ((filename == "o12mutsel") || (filename == "O12MUTSEL"))	{
+		Nomegafixcomp = o12MutSelN;
+		omegafix = new double[Nomegafixcomp];
+		empomegaweight = new double[Nomegafixcomp];
+		for (int i=0; i<Nomegafixcomp; i++)	{
+			omegafix[i] = o12MutSelOmegaFix[i];
+			empomegaweight[i] = o12MutSelOmegaWeight[i];
 		}
 	}
 	else if ((filename == "o3n") || (filename == "O3n"))	{

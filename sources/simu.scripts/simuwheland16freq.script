@@ -1,0 +1,1 @@
+for f in S*nex L*nex; do for rep in {0..9}; do ../simupartaamix -p simuaaparamsite -freq catgtrwheland160.siteprofiles -randprof -d $f".ali" -part $f".txt.part" -t $f".tree" -targetnsite 20000 -m simuwheland16freq$f; done; done

@@ -72,6 +72,12 @@ void MPIModule::NonMPIReshuffleSites(int rand)	{
 	delete[] permut;
 }
 
+void MPIModule::NonMPIReshuffleSites(int* permut)  {
+	for (int i=0; i<nsite; i++)	{
+        globalrank[i] = permut[i];
+	}
+}
+
 void MPIModule::GlobalReshuffleSites(int rand)	{
 
 	if (nprocs == 1)	{

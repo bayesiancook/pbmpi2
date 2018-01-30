@@ -1,0 +1,2 @@
+for f in {0..9}; do ../simupartcodonrev -p ../simupartparam -d wheland16.phy -part wheland16.partition -t wheland16porisistercatgtr.tree -m -f catgtrwheland16$f".siteprofiles" simucodonwhelan16catgtrfreqporisister$f; done
+for f in {0..9}; do ../simupartcodonrev -p ../simupartparam -d wheland16.phy -part wheland16.partition -t wheland16ctenosistercatgtr.tree -m -f catgtrwheland16$f".siteprofiles" simucodonwhelan16catgtrfreqctenosister$f; done

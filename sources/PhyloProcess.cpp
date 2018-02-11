@@ -843,9 +843,8 @@ void PhyloProcess::DeleteMissingMap()	{
 	delete[] missingmap;
 }
 
-void PhyloProcess::FillMissingMap()	{
-    int active = 0;
-    if (! active)   {
+void PhyloProcess::FillMissingMap(int reduced)	{
+    if (! reduced)   {
         for (int i=0; i<GetNsite(); i++)	{
             missingmap[0][i] = 2;
         }

@@ -811,7 +811,9 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	void CreateMissingMap();
 	void DeleteMissingMap();
-	void FillMissingMap();
+    // reduced == 1: minimal suff stats (pruning out all parts that lead to missing data at the tips)
+    // reduced == 0: maximal suff stats (including on branches leading to missing data)
+	void FillMissingMap(int reduced = 1);
 	void BackwardFillMissingMap(const Link* from);
 	void ForwardFillMissingMap(const Link* from, const Link* up);
 

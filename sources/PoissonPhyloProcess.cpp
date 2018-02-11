@@ -102,16 +102,11 @@ void PoissonPhyloProcess::Collapse()	{
 
 void PoissonPhyloProcess::UpdateMeanSuffStat()  {
 
-    FillMissingMap();
-
+    FillMissingMap(0);
     PostOrderPruning(GetRoot(),condlmap[0]);
-
     MultiplyByStationaries(condlmap[0],condflag);
-
     PreOrderPruning(GetRoot(),condlmap[0]);
-
     double lnL2 = ComputeNodeLikelihood(GetRoot(),0);
-
     // reset suffstats
 	for (int j=0; j<GetNbranch(); j++)	{
 		branchlengthsuffstatcount[j] = 0;
@@ -126,7 +121,6 @@ void PoissonPhyloProcess::UpdateMeanSuffStat()  {
 			}
 		}
 	}
-
     RecursiveUpdateMeanSuffStat(GetRoot(),condlmap[0]);
 }
 

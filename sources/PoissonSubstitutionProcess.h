@@ -45,7 +45,7 @@ class PoissonSubstitutionProcess : public virtual SubstitutionProcess, public vi
 	void AddBranchLengthSuffStat(double& count, double& beta, BranchSitePath** patharray, int* nonmissing);
 	void AddSiteProfileSuffStat(double** siteprofilesuffstatcount, BranchSitePath** patharray, bool root);
 
-    void AddMeanSuffStat(double*** down, double*** up, double*** at, double branchlength, double* meanratecount, double& meanlengthcount, double** meanprofilecount, int* nonmissing);
+    void AddMeanSuffStat(double*** down, double*** up, double*** at, double branchlength, double* meanratecount, double* meanratebeta, double& meanlengthcount, double& meanlengthbeta, double** meanprofilecount, int* nonmissing);
 
 	virtual void Delete() {
 		DeleteZip();

@@ -160,7 +160,7 @@ BranchSitePath* PoissonSubstitutionProcess::SampleSitePath(int site, int stateup
 //-------------------------------------------------------------------------
 
 
-void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, double*** at, double branchlength, double* meanratecount, double& meanlengthcount, double** meanprofilecount, int* nonmissing)   {
+void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, double*** at, double branchlength, double* meanratecount, double* meanratebeta, double& meanlengthcount, double& meanlengthbeta, double** meanprofilecount, int* nonmissing)   {
 
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
         if (ActiveSite(i))  {
@@ -296,7 +296,9 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                 AddZipToTrueMeanProfileSuffStat(i,totz,meanprofilecount[i]);
 
                 meanratecount[i] += totn;
+                meanratebeta[i] += branchlength;
                 meanlengthcount += totn;
+                meanlengthbeta += rate;
             }
         }
     }

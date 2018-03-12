@@ -22,7 +22,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 class AASubSelSubMatrix : public virtual SubMatrix	{
 
-	static const double TOOSMALL = 1e-30;
+	static constexpr double TOOSMALL = 1e-30;
 
 	public:
 

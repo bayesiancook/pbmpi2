@@ -50,7 +50,7 @@ class Random {
  
 	public:
 
-	// static const double INFPROB=250.0;
+	static constexpr double INFPROB=250.0;
 	
   	Random(int seed = -1);
 

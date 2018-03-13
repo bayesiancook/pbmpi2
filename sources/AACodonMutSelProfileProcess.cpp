@@ -176,7 +176,7 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 		MoveNucStat(tuning*0.1,2);
 	}
 
-	//if (! fixomega)	{
+	if (! fixomega)	{
 		//cerr << "###############################\n";
 		//cerr << "#   In !fixomega\n";
 		//cerr << "# fixomega = " << fixomega << "\n";
@@ -189,7 +189,7 @@ double AACodonMutSelProfileProcess::GlobalParametersMove()	{
 		MoveOmega(tuning);
 		//GlobalUpdateParameters(); // check
 		// MoveOmega(tuning*0.3);
-	//}
+	}
 
 	GlobalUpdateParameters();
 }

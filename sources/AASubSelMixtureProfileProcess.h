@@ -24,7 +24,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 // general superclass for GTR-like Dirichlet-process mixture on profiles
 class AASubSelMixtureProfileProcess : public virtual GTRMixtureProfileProcess	{
 
-	static const double TOOSMALL = 1e-30;
+	static constexpr double TOOSMALL = 1e-30;
 
 	public:
 

@@ -117,12 +117,14 @@ void ExpoConjugateGTRPhyloProcess::UpdateSiteProfileSuffStat()	{
 						cerr << "error in ExpoConjugateGTRPhyloProcess::UpdateSiteProfileSuffStat: all missing column has counts\n";
 						cerr << "site : " << i << '\n';
 						GetData()->PrintColumn(cerr,i);
+                        cerr << siteprofilesuffstatcount[i][k] << '\n';
 						exit(1);
 					}
 					if (siteprofilesuffstatbeta[i][k] != 0)	{
 						cerr << "error in ExpoConjugateGTRPhyloProcess::UpdateSiteProfileSuffStat: all missing column has positive beta\n";
 						cerr << "site : " << i << '\n';
 						GetData()->PrintColumn(cerr,i);
+                        cerr << siteprofilesuffstatbeta[i][k] << '\n';
 						exit(1);
 					}
 				}

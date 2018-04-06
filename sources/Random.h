@@ -38,6 +38,11 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define SAFE_EXP(x) exp(x)
 
 
+// activate this one for old c++ compiling
+#define CONST const 
+// activate that one for c++11 compiling
+// #define CONST constexp
+
 using namespace std;
 
 const double gammacoefs[] = {0.9999999999995183,676.5203681218835,-1259.139216722289,771.3234287757674,-176.6150291498386,12.50734324009056,-0.1385710331296526,0.9934937113930748e-05,0.1659470187408462e-06};
@@ -50,7 +55,7 @@ class Random {
  
 	public:
 
-	static constexpr double INFPROB=250.0;
+	static CONST double INFPROB=250.0;
 	
   	Random(int seed = -1);
 

@@ -497,6 +497,8 @@ class SequenceAlignment	{
 
 	void PrintWithoutAllMissingTaxa(ostream& os);
 
+    void PrintSiteComposition(ostream& os);
+
 	void SetTestData(int testnsite, int offset, int sitemin, int sitemax, int* tmp)	{
 
 		int index = 0;

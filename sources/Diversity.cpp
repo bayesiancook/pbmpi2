@@ -5,6 +5,7 @@ MPI_Datatype Propagate_arg;
 int main(int argc, char* argv[])	{
 
 	string datafile = argv[1];
+    string outfile = argv[2];
 
 	SequenceAlignment* data = new FileSequenceAlignment(datafile);
 	cout << "alphabet size : " << data->GetNstate() << '\n';
@@ -17,4 +18,7 @@ int main(int argc, char* argv[])	{
 		cout << freq[i] << '\t';
 	}
 	cout << '\n';
+
+    ofstream os(argv[2]);
+    data->PrintSiteComposition(os);
 }

@@ -18,6 +18,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "BiologicalSequences.h"
 
 #include <fstream>
+#include <vector>
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
@@ -283,6 +284,25 @@ void SequenceAlignment::ToFasta(ostream& os)	{
 		os << '\n';
 	}
 }
+
+void SequenceAlignment::PrintSiteComposition(ostream& os)   {
+    os << Nsite << '\t' << statespace->GetNstate() << '\n';
+    for (int i=0; i<Nsite; i++) {
+        vector<int> comp(statespace->GetNstate(),0);
+        for (int j=0; j<Ntaxa; j++) {
+            if (Data[j][i] != unknown)  {
+                comp[Data[j][i]] = 1;
+            }
+        }
+        for (int k=0; k<statespace->GetNstate(); k++)    {
+            if (comp[k])    {
+                os << statespace->GetState(k);
+            }
+        }
+        os << '\n';
+    }
+}
+
 /*
 void SequenceAlignment::ToStream(ostream& os)	{
 

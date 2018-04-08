@@ -1050,6 +1050,8 @@ int main(int argc, char* argv[])	{
 		MPI_Finalize();
 		exit(1);
 	}
+
+    // NEW CHAIN
 	if (datafile != "")	{
 		if (myid == 0) {
 			cerr << "model:\n";
@@ -1133,6 +1135,9 @@ int main(int argc, char* argv[])	{
 			}
 		}
 	}
+
+
+    // OPENING EXISTING CHAIN
 	else	{
 		model = new Model(name,myid,nprocs);
 		if (until != -1)	{
@@ -1140,6 +1145,7 @@ int main(int argc, char* argv[])	{
 		}
 	}
 
+    // STARTING AND RUNNING
 	if (myid == 0) {
 
 		cerr << "run started\n";

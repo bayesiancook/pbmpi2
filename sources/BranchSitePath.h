@@ -95,7 +95,8 @@ class BranchSitePath  {
 
 	void AddRateSuffStat(double& count, double& beta, double factor, const double* rr, const double* stat, int nstate);
 	void AddProfileSuffStat(double* count, double* beta, double factor, const double* rr, int nstate);
-	void AddRRSuffStat(double* count, double* beta, double factor, const double* stat, int nstate);
+	void AddRRSuffStat(double* count, double* beta, double factor, SubMatrix* mat, const double* rr, int nstate);
+	// void AddRRSuffStat(double* count, double* beta, double factor, const double* stat, int nstate);
 
 	void AddGeneralPathRateSuffStat(double& count, double& beta, double factor, SubMatrix* mat);
 	void AddGeneralPathSuffStat(map<pair<int,int>,int>& paircount, map<int,double>& waitingtime, double factor);

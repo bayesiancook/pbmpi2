@@ -37,7 +37,8 @@ void ExpoConjugatePartitionGTRSubstitutionProcess::AddRRSuffStat(double* allocrr
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 		// if (ActiveSite(i))	{
-			patharray[i]->AddRRSuffStat(allocrrsuffstatcount+partalloc[i]*GetNrr(),allocrrsuffstatbeta+partalloc[i]*GetNrr(),GetRate(i)*branchlength,GetProfile(i),GetNstate(i));
+			patharray[i]->AddRRSuffStat(allocrrsuffstatcount+partalloc[i]*GetNrr(),allocrrsuffstatbeta+partalloc[i]*GetNrr(),GetRate(i)*branchlength,GetMatrix(i), GetSiteRR(i),GetNstate(i));
+			// patharray[i]->AddRRSuffStat(allocrrsuffstatcount+partalloc[i]*GetNrr(),allocrrsuffstatbeta+partalloc[i]*GetNrr(),GetRate(i)*branchlength,GetProfile(i),GetNstate(i));
 		}
 	}
 }

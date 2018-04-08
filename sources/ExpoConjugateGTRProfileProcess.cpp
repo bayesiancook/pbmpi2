@@ -36,11 +36,13 @@ void ExpoConjugateGTRProfileProcess::Create()	{
 }
 
 void ExpoConjugateGTRProfileProcess::Delete()	{
-	if (rr)	{
+	if (rrsuffstatcount)	{
 		delete[] rrsuffstatcount;
 		delete[] rrsuffstatbeta;
 		rrsuffstatcount = 0;
 		rrsuffstatbeta = 0;
+    }
+    if (!rr)    {
 		GTRProfileProcess::Delete();
 	}
 }

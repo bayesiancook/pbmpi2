@@ -37,7 +37,8 @@ void ExpoConjugateGTRSubstitutionProcess::AddRRSuffStat(double* rrsuffstatcount,
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i) && (nonmissing[i] == 1))	{
 		// if (ActiveSite(i))	{
-			patharray[i]->AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,GetRate(i)*branchlength,GetProfile(i),GetNstate(i));
+			patharray[i]->AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,GetRate(i)*branchlength,GetMatrix(i),GetRR(),GetNstate(i));
+			// patharray[i]->AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,GetRate(i)*branchlength,GetProfile(i),GetNstate(i));
 		}
 	}
 }

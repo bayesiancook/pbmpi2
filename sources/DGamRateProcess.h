@@ -23,7 +23,7 @@ class DGamRateProcess : public virtual RateProcess {
 
 	public:
 
-	DGamRateProcess() : Ncat(0), rate(0), fixalpha(false), meanalpha(1), varalpha(1), alphamin(0.0), pinv(0.01), withpinv(false), fixpinv(false), meanpinv(0.5), invconcpinv(2) {}
+	DGamRateProcess() : Ncat(0), rate(0), alpha(1.0), fixalpha(false), meanalpha(1), varalpha(1), alphamin(0.0), pinv(0.01), withpinv(false), fixpinv(false), meanpinv(0.5), invconcpinv(2) {}
 
 	virtual ~DGamRateProcess() {}
 

@@ -124,6 +124,9 @@ void DGamRateProcess::SampleRate()	{
 	if (withpinv  && (! FixPinv()))	{
 		pinv = 0.01;
 	}
+    else    {
+        pinv = 0;
+    }
 	UpdateDiscreteCategories();
 }
 

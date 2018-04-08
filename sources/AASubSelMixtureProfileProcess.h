@@ -17,9 +17,8 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #define AASSMIXTUREPROFILE_H
 
 
-#include "GTRProfileProcess.h"
+#include "GTRMixtureProfileProcess.h"
 #include "AASubSelSubMatrix.h"
-#include "MatrixMixtureProfileProcess.h"
 
 // general superclass for GTR-like Dirichlet-process mixture on profiles
 class AASubSelMixtureProfileProcess : public virtual GTRMixtureProfileProcess	{
@@ -28,10 +27,21 @@ class AASubSelMixtureProfileProcess : public virtual GTRMixtureProfileProcess	{
 
 	public:
 
-	AASubSelMixtureProfileProcess() {}
+	AASubSelMixtureProfileProcess() : rrsuffstatcount(0), rrsuffstatbeta(0) {}
 	virtual ~AASubSelMixtureProfileProcess() {}
 
+	const double* GetRRSuffStatCount() {return rrsuffstatcount;}
+	const double* GetRRSuffStatBeta() {return rrsuffstatbeta;}
+
+	virtual void Create();
+	virtual void Delete();
+
+	virtual double MoveRR();
+
 	protected:
+
+	virtual void GlobalUpdateRRSuffStat();
+	virtual void SlaveUpdateRRSuffStat();
 
 	// simply creates/deletes GTR matrices for all currently existing components
 	void CreateMatrix(int k)	{
@@ -89,6 +99,8 @@ class AASubSelMixtureProfileProcess : public virtual GTRMixtureProfileProcess	{
 		return norm;
 	}
 
+	double* rrsuffstatcount;
+	double* rrsuffstatbeta;
 };
 
 #endif

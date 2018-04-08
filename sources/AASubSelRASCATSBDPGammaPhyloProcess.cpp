@@ -21,6 +21,27 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "TexTab.h"
 
 
+void AASubSelRASCATSBDPSubstitutionProcess::AddRRSuffStat(double* rrsuffstatcount, double* rrsuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i) && (nonmissing[i] == 1))	{
+		// if (ActiveSite(i))	{
+			patharray[i]->AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,GetRate(i)*branchlength,GetMatrix(i),GetRR(),GetNstate());
+			// patharray[i]->AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,GetRate(i)*branchlength,GetProfile(i),GetNstate(i));
+		}
+	}
+}
+
+void AASubSelRASCATSBDPGammaPhyloProcess::UpdateRRSuffStat()	{
+
+	for (int k=0; k<GetNrr(); k++)	{
+		rrsuffstatcount[k] = 0;
+		rrsuffstatbeta[k] = 0;
+	}
+	for (int j=1; j<GetNbranch(); j++)	{
+		AddRRSuffStat(rrsuffstatcount,rrsuffstatbeta,submap[j],blarray[j],missingmap[j]);
+	}
+}
+
 void AASubSelRASCATSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 
 	if (GetNprocs() > 1)	{

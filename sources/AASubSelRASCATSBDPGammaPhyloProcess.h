@@ -59,6 +59,10 @@ class AASubSelRASCATSBDPSubstitutionProcess : public virtual GeneralPathSuffStat
 	AASubSelRASCATSBDPSubstitutionProcess() {}
 	virtual ~AASubSelRASCATSBDPSubstitutionProcess() {}
 
+	// need to redefine
+	virtual int GetNstate() {return GetDim();}
+	virtual int GetNstate(int site) {return GetDim();}
+
 	virtual void Create()	{
 		GeneralPathSuffStatMatrixSubstitutionProcess::Create();
 		DGamRateProcess::Create();
@@ -70,6 +74,8 @@ class AASubSelRASCATSBDPSubstitutionProcess : public virtual GeneralPathSuffStat
 		DGamRateProcess::Delete();
 		GeneralPathSuffStatMatrixSubstitutionProcess::Delete();
 	}
+
+	void AddRRSuffStat(double* rrsuffstatcount, double* rrsuffstatbeta, BranchSitePath** patharray, double branchlength, int* nonmissing);
 
 };
 
@@ -118,9 +124,11 @@ class AASubSelRASCATSBDPGammaPhyloProcess : public virtual GeneralPathSuffStatMa
 	void GlobalUpdateParameters();
 
 	virtual void SlaveExecute(MESSAGE);
-	void UpdateRRSuffStat() {}
+	void UpdateRRSuffStat();
+    /*
 	void GlobalUpdateRRSuffStat() {}
 	void SlaveUpdateRRSuffStat() {}
+    */
 
 	void TraceHeader(ostream& os)	{
 		os << "#time\ttimeperccyle\ttopo\tlnL\tlength\talpha\tNmode\tstatent\tstatalpha";

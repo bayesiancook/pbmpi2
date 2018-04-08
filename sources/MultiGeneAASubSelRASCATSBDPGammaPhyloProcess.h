@@ -14,45 +14,75 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 **********************/
 
 
-#ifndef MULTIGENERASCATGTRSBDPGAMMAPHYLOPROCESS_H
-#define MULTIGENERASCATGTRSBDPGAMMAPHYLOPROCESS_H
+#ifndef MULTIGENEAASubSelRASCATSBDPGAMMAPHYLOPROCESS_H
+#define MULTIGENEAASubSelRASCATSBDPGAMMAPHYLOPROCESS_H
 
 #include "MultiGenePhyloProcess.h"
 #include "MultiGeneSBDPProfileProcess.h"
-#include "RASCATGTRSBDPGammaPhyloProcess.h"
+#include "AASubSelRASCATSBDPGammaPhyloProcess.h"
 
-class MultiGeneExpoConjugateGTRProfileProcess : public virtual ExpoConjugateGTRProfileProcess, public virtual MultiGeneProfileProcess	{
+/*
+class MultiGeneGeneralPathSuffStatGTRProfileProcess : public virtual GTRProfileProcess, public virtual GeneralPathSuffStatMatrixProfileProcess, public virtual MultiGeneProfileProcess	{
 
 	public:
 
-	MultiGeneExpoConjugateGTRProfileProcess()	{}
-	virtual ~MultiGeneExpoConjugateGTRProfileProcess() {}
+	MultiGeneGeneralPathSuffStatGTRProfileProcess()	{}
+	virtual ~MultiGeneGeneralPathSuffStatGTRProfileProcess() {}
 
 	// re-implement: should gather gene-specific suff stats
 	virtual void UpdateRRSuffStat();
 
 	virtual void Create()	{
-		ExpoConjugateGTRProfileProcess::Create();
+		GTRProfileProcess::Create();
 		MultiGeneProfileProcess::Create();
 	}
 
 	virtual void Delete()	{
 		MultiGeneProfileProcess::Delete();
-		ExpoConjugateGTRProfileProcess::Delete();
+		GTRProfileProcess::Delete();
 	}
 
-	ExpoConjugateGTRProfileProcess* GetGTRProfileProcess(int gene)	{
-		ExpoConjugateGTRProfileProcess* tmp = dynamic_cast<ExpoConjugateGTRProfileProcess*>(process[gene]);
+	GTRProfileProcess* GetGTRProfileProcess(int gene)	{
+		GTRProfileProcess* tmp = dynamic_cast<GTRProfileProcess*>(process[gene]);
 		if (! tmp)	{
 			cerr << "error in GetGTRProfileProcess\n";
 			exit(1);
 		}
 		return tmp;
 	}
+};
+*/
 
+class MultiGeneAASubSelMixtureProfileProcess : public virtual AASubSelMixtureProfileProcess, public virtual MultiGeneProfileProcess {
+    
+	public:
+
+	MultiGeneAASubSelMixtureProfileProcess()	{}
+	virtual ~MultiGeneAASubSelMixtureProfileProcess() {}
+
+	virtual void Create()	{
+		AASubSelMixtureProfileProcess::Create();
+		MultiGeneProfileProcess::Create();
+	}
+
+	virtual void Delete()	{
+		MultiGeneProfileProcess::Delete();
+		AASubSelMixtureProfileProcess::Delete();
+	}
+
+	/*
+	AASubSelMixtureProfileProcess* GetAASubSelMixtureProfileProcess(int gene)	{
+		AASubSelMixtureProfileProcess* tmp = dynamic_cast<AASubSelMixtureProfileProcess*>(process[gene]);
+		if (! tmp)	{
+			cerr << "error in GetAASubSelMixtureProfileProcess\n";
+			exit(1);
+		}
+		return tmp;
+	}
+	*/
 };
 
-class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual MultiGeneExpoConjugateGTRProfileProcess, public virtual MultiGeneSBDPProfileProcess, public virtual RASCATGTRSBDPGammaPhyloProcess	{
+class MultiGeneAASubSelRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProcess, public virtual MultiGeneAASubSelMixtureProfileProcess, public virtual MultiGeneSBDPProfileProcess, public virtual AASubSelRASCATSBDPGammaPhyloProcess	{
 
 	public:
 
@@ -83,15 +113,17 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		MultiGenePhyloProcess::UpdateRateSuffStat();
 	}
 
+	/*
 	virtual void UpdateRRSuffStat()	{
-		MultiGeneExpoConjugateGTRProfileProcess::UpdateRRSuffStat();
+		MultiGeneGeneralPathSuffStatGTRProfileProcess::UpdateRRSuffStat();
 	}
+	*/
 
 	virtual void Create();
 	virtual void Delete();
 
-	RASCATGTRSBDPGammaPhyloProcess* GetProcess(int gene)	{
-		RASCATGTRSBDPGammaPhyloProcess* proc = dynamic_cast<RASCATGTRSBDPGammaPhyloProcess*> (process[gene]);
+	AASubSelRASCATSBDPGammaPhyloProcess* GetProcess(int gene)	{
+		AASubSelRASCATSBDPGammaPhyloProcess* proc = dynamic_cast<AASubSelRASCATSBDPGammaPhyloProcess*> (process[gene]);
 		if ((! proc) && (process[gene]))	{
 			cerr << "error in phyloprocess conversion\n";
 			exit(1);
@@ -99,12 +131,11 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		return proc;
 	}
 
-	MultiGeneRASCATGTRSBDPGammaPhyloProcess() {}
+	MultiGeneAASubSelRASCATSBDPGammaPhyloProcess() {}
 
-	MultiGeneRASCATGTRSBDPGammaPhyloProcess(int nratecat, string inrrtype, int inkappaprior, int innmodemax, int inglobalalpha, int inglobalbl, int inmappsuffstat)	{
+	MultiGeneAASubSelRASCATSBDPGammaPhyloProcess(int nratecat, int inkappaprior, int innmodemax, int inglobalalpha, int inglobalbl, int inmappsuffstat)	{
 
 		Ncat = nratecat;
-		rrtype = inrrtype;
 		kappaprior = inkappaprior;
 		nmodemax = innmodemax;
 		globalalpha = inglobalalpha;
@@ -115,7 +146,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		mappsuffstat = inmappsuffstat;
 	}
 
-	MultiGeneRASCATGTRSBDPGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
+	MultiGeneAASubSelRASCATSBDPGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
 
 		// generic
 		FromStreamHeader(is);
@@ -127,7 +158,6 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		is >> Ncat;
 		is >> kappaprior;
 		is >> nmodemax;
-		is >> rrtype;
 		is >> globalalpha;
 		is >> globalbl;
 		if (! globalbl)	{
@@ -139,7 +169,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 
 	}
 
-	~MultiGeneRASCATGTRSBDPGammaPhyloProcess() {
+	~MultiGeneAASubSelRASCATSBDPGammaPhyloProcess() {
 		Delete();
 	}
 
@@ -148,7 +178,6 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		os << Ncat << '\n';
 		os << kappaprior << '\n';
 		os << nmodemax << '\n';
-		os << rrtype << '\n';
 		os << globalalpha << '\n';
 		os << globalbl << '\n';
 		if (! globalbl)	{
@@ -251,7 +280,7 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 		cerr << "in multi gene: prepare site log likelihood\n";
 		exit(1);
 		/*
-		int cat = ExpoConjugateGTRSBDPProfileProcess::alloc[site];
+		int cat = GTRSBDPProfileProcess::alloc[site];
 		if (! matrixarray[cat])	{
 			cerr << "error in prepare site log likelihood: matrix is not allocated\n";
 			exit(1);

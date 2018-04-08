@@ -43,6 +43,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "ZipGeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess.h"
 #include "ZipGeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.h"
 
+#include "MultiGeneAASubSelRASCATSBDPGammaPhyloProcess.h"
 #include "MultiGeneRASCATGTRSBDPGammaPhyloProcess.h"
 #include "MultiGeneRASCATSBDPGammaPhyloProcess.h"
 
@@ -95,6 +96,10 @@ class Model	{
 			else if (modeltype == 2)	{
 				type = "MULTIGENECATGTRSBDP";
 				process = new MultiGeneRASCATGTRSBDPGammaPhyloProcess(nratecat,rrtype,kappaprior,nmodemax,globalalpha,globalbl,mappsuffstat);
+			}
+			else if (modeltype == 6)	{
+				type = "MULTIGENEAASUBSELSBDP";
+				process = new MultiGeneAASubSelRASCATSBDPGammaPhyloProcess(nratecat,kappaprior,nmodemax,globalalpha,globalbl,mappsuffstat);
 			}
 			else	{
 				cerr << "model not recognized\n";
@@ -398,6 +403,9 @@ class Model	{
 		}
 		else if (type == "AASUBSELSBDP")	{
 			process = new AASubSelRASCATSBDPGammaPhyloProcess(is,myid,nprocs);
+		}
+		else if (type == "MULTIGENEAASUBSELSBDP")	{
+			process = new MultiGeneAASubSelRASCATSBDPGammaPhyloProcess(is,myid,nprocs); 
 		}
 		else if (type == "AACODONMUTSELFINITE")	{
 			process = new AACodonMutSelFinitePhyloProcess(is,myid,nprocs);

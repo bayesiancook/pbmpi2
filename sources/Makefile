@@ -4,7 +4,7 @@ LDFLAGS= -O3
 SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp CodonSequenceAlignment.cpp \
 	NNI.cpp SPR.cpp CCP.cpp BranchSitePath.cpp \
 	MultiGeneMPIModule.cpp MultiGeneRateProcess.cpp MultiGeneBranchProcess.cpp MultiGeneProfileProcess.cpp MultiGeneSBDPProfileProcess.cpp \
-	MultiGenePhyloProcess.cpp MultiGeneRASCATGTRSBDPGammaPhyloProcess.cpp MultiGeneRASCATSBDPGammaPhyloProcess.cpp \
+	MultiGenePhyloProcess.cpp MultiGeneRASCATGTRSBDPGammaPhyloProcess.cpp MultiGeneRASCATSBDPGammaPhyloProcess.cpp MultiGeneAASubSelRASCATSBDPGammaPhyloProcess.cpp \
 	StateSpace.cpp CodonStateSpace.cpp ZippedSequenceAlignment.cpp SubMatrix.cpp \
 	ZipSubMatrix.cpp GTRSubMatrix.cpp CodonSubMatrix.cpp linalg.cpp Chrono.cpp BranchProcess.cpp \
 	GammaBranchProcess.cpp RateProcess.cpp DGamRateProcess.cpp ProfileProcess.cpp DirichletProfileProcess.cpp DirichletMixtureProfileProcess.cpp \

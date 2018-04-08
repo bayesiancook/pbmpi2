@@ -83,6 +83,8 @@ class AASubSelRASCATSBDPGammaPhyloProcess : public virtual GeneralPathSuffStatMa
 
 	public:
 
+	AASubSelRASCATSBDPGammaPhyloProcess() {}
+
 	AASubSelRASCATSBDPGammaPhyloProcess(int nratecat, int inkappaprior)	{
 
 		Ncat = nratecat;

@@ -82,7 +82,7 @@ void ExpoConjugateGTRProfileProcess::GlobalUpdateRRSuffStat()	{
 		}
 	}
 
-	MPI_Bcast(rrsuffstatcount,GetNrr(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(rrsuffstatcount,GetNrr(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 	MPI_Bcast(rrsuffstatbeta,GetNrr(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
 	else	{
@@ -93,10 +93,10 @@ void ExpoConjugateGTRProfileProcess::GlobalUpdateRRSuffStat()	{
 void ExpoConjugateGTRProfileProcess::SlaveUpdateRRSuffStat()	{
 
 	UpdateRRSuffStat();
-	MPI_Send(rrsuffstatcount,GetNrr(),MPI_INT,0,TAG1,MPI_COMM_WORLD);
+	MPI_Send(rrsuffstatcount,GetNrr(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Send(rrsuffstatbeta,GetNrr(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 
-	MPI_Bcast(rrsuffstatcount,GetNrr(),MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(rrsuffstatcount,GetNrr(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 	MPI_Bcast(rrsuffstatbeta,GetNrr(),MPI_DOUBLE,0,MPI_COMM_WORLD);
 }

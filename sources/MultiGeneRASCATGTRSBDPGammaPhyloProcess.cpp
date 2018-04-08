@@ -83,17 +83,14 @@ double MultiGeneRASCATGTRSBDPGammaPhyloProcess::Move(double tuning)	{
 
 		GlobalUpdateParameters();
 
-		MoveRR();
-
-		GlobalUpdateParameters();
-
 		if (! fixrr){
+            MoveRR();
+            GlobalUpdateParameters();
 			LengthRelRateMove(1,10);
 			LengthRelRateMove(0.1,10);
 			LengthRelRateMove(0.01,10);
+            GlobalUpdateParameters();
 		}
-
-		GlobalUpdateParameters();
 
 		GlobalUnfold();
 	}

@@ -98,6 +98,8 @@ double FiniteProfileProcess::MPIMove(double tuning, int n, int nrep)	{
 			GlobalMoveProfile(0.1,3,100);
 			profilechrono.Stop();
 
+            GlobalUpdateParameters();
+            GlobalUpdateSiteProfileSuffStat();
 			MoveHyper(tuning,10);
 		}
 
@@ -342,18 +344,20 @@ double FiniteProfileProcess::IncrementalFiniteMove(int nrep)	{
 }
 
 void FiniteProfileProcess::ResampleWeights()	{
-	UpdateOccupancyNumbers();
-	double total = 0;
-	for (int k=0; k<GetNcomponent(); k++)	{
-		weight[k] = rnd::GetRandom().sGamma(weightalpha + occupancy[k]);
-		if (weight[k] < 1e-10)	{
-			weight[k] = 1e-10;
-		}
-		total += weight[k];
-	}
-	for (int k=0; k<GetNcomponent(); k++)	{
-		weight[k] /= total;
-	}
+    if (GetNcomponent() > 1)    {
+        UpdateOccupancyNumbers();
+        double total = 0;
+        for (int k=0; k<GetNcomponent(); k++)	{
+            weight[k] = rnd::GetRandom().sGamma(weightalpha + occupancy[k]);
+            if (weight[k] < 1e-10)	{
+                weight[k] = 1e-10;
+            }
+            total += weight[k];
+        }
+        for (int k=0; k<GetNcomponent(); k++)	{
+            weight[k] /= total;
+        }
+    }
 }
 
 void FiniteProfileProcess::SampleWeights()	{

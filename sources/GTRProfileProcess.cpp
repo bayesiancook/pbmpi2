@@ -56,10 +56,12 @@ double GTRProfileProcess::LogRRPrior()	{
 }
 
 void GTRProfileProcess::SampleRR()	{
-	for (int i=0; i<GetNrr(); i++)	{
-		// rr[i] = LG_RR[i];
-		rr[i] = rnd::GetRandom().sExpo();
-	}
+    if (! fixrr)    {
+        for (int i=0; i<GetNrr(); i++)	{
+            // rr[i] = LG_RR[i];
+            rr[i] = rnd::GetRandom().sExpo();
+        }
+    }
 }
 
 double GTRProfileProcess::GlobalParametersMove()	{

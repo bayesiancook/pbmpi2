@@ -52,7 +52,7 @@ void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	L2 = GetDim();
 	nd = 2 + nbranch + nrr + L2 + L1*(L2+1);
 	if (empmix == 2)	{
-		nd += 2;
+		nd += 1;
 	}
 	ni = 1 + GetNsite();
 	int ivector[ni];
@@ -98,6 +98,10 @@ void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 		dvector[index] = statfixalpha;
 		index++;
 	}
+    if (index != nd)    {
+        cerr << "error in globalupdateparams: non matching double vector size\n";
+        exit(1);
+    }
 
 	// Now the vector of ints
 	ivector[0] = GetNcomponent();
@@ -109,8 +113,9 @@ void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
-
-	// UpdateMatrices();
+    else    {
+        UpdateMatrices();
+    }
 }
 
 
@@ -147,7 +152,7 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
 	L2 = GetDim();
 	nd = 2 + nbranch + nrr + L2 + L1*(L2+1);
 	if (empmix == 2)	{
-		nd += 2;
+		nd += 1;
 	}
 	ni = 1 + GetNsite();
 	int* ivector = new int[ni];
@@ -190,11 +195,10 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
 	for(i=0; i<GetNsite(); ++i) {
 		FiniteProfileProcess::alloc[i] = ivector[1+i];
 	}
-	// cerr << "after update params: " << GetTotalLength() << '\n';
 	delete[] dvector;
 	delete[] ivector;
 
-	// UpdateMatrices();
+	UpdateMatrices();
 }
 
 void RASCATGTRFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{

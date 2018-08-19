@@ -639,6 +639,8 @@ int main(int argc, char* argv[])	{
 				i++;
 				ncat = atoi(argv[i]);
 				fixncomp = 1;
+                fixstatalpha = 1;
+                fixstatcenter = 1;
 			}
 			else if (s == "-fixncomp")	{
 				fixncomp = 1;

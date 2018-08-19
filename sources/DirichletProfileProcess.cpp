@@ -179,6 +179,26 @@ double DirichletProfileProcess::GetPostStatProb(double* prof, double* post)	{
 	return log(tot) + max;
 }
 
+double DirichletProfileProcess::MoveHyper(double tuning, int nrep)	{
+    if (dirpriortype)	{
+        if (! fixstatcenter)    {
+            MoveDirWeights(tuning,nrep);
+        }
+    }
+    else	{
+        if (! fixstatcenter)	{
+            MoveStatCenter(tuning,nrep,GetDim()/2);
+        }
+        if (! fixstatalpha)	{
+            MoveStatAlpha(tuning,nrep);
+        }
+        if (! fixstatweight)	{
+            MoveStatWeight();
+        }
+    }
+}
+
+
 double DirichletProfileProcess::MoveStatWeight()	{
 
 	int* count = new int[Nstatcomp];

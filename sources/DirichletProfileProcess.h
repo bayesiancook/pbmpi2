@@ -41,22 +41,7 @@ class DirichletProfileProcess : public virtual ProfileProcess {
 	void SetEmpiricalPriorStatMix();
 
 	// move on hyperparameters
-	virtual double MoveHyper(double tuning, int nrep)	{
-		if (dirpriortype)	{
-			MoveDirWeights(tuning,nrep);
-		}
-		else	{
-			if (! fixstatcenter)	{
-				MoveStatCenter(tuning,nrep,GetDim()/2);
-			}
-			if (! fixstatalpha)	{
-				MoveStatAlpha(tuning,nrep);
-			}
-			if (! fixstatweight)	{
-				MoveStatWeight();
-			}
-		}
-	}
+	virtual double MoveHyper(double tuning, int nrep);
 
 	double GetPostStatProb(double* prof, double* post);
 

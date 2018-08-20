@@ -51,11 +51,11 @@ static const double Logroot2pi =0.918938533204673;
 // const double InfProb = -30;
 
 
+const double INFPROB=250.0;
+
 class Random {
  
 	public:
-
-	static CONST double INFPROB=250.0;
 	
   	Random(int seed = -1);
 

@@ -45,6 +45,10 @@ using namespace std;
 
 #include "Random.h"
 
+const double TOOSMALL = 1e-30;
+const double TOOLARGE = 500;
+const double TOOLARGENEGATIVE = -50;
+
 class SubMatrix  	{
 
 

@@ -20,9 +20,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "BiologicalSequences.h"
 #include "SubMatrix.h"
 
+
 class AASubSelSubMatrix : public virtual SubMatrix	{
 
-	static CONST double TOOSMALL = 1e-30;
 
 	public:
 

@@ -138,10 +138,6 @@ class AACodonMutSelProfileSubMatrix : public CodonSubMatrix	{
 
 	// double** fixprobs;
 
-	static CONST double TOOSMALL = 1e-30;
-	static CONST double TOOLARGE = 500;
-	static CONST double TOOLARGENEGATIVE = -50;
-
 	bool nucnormalise;
 
 };
@@ -162,10 +158,6 @@ class CodonMutSelProfileSubMatrix : public CodonSubMatrix	{
 	void ComputeStationary();
 	double GetRate();
 	double* codonprofile;
-
-	static CONST double TOOSMALL = 1e-30;
-	static CONST double TOOLARGE = 500;
-	static CONST double TOOLARGENEGATIVE = -50;
 
 };
 

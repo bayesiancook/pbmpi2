@@ -2249,14 +2249,17 @@ double PhyloProcess::MoveTopo()	{
 		mhsprtry ++;
 	}
 	if (NTSPR)	{
-		tsprchrono.Start();
-		double logbf = 0;
-		double deltalogp = 0;
-		double tmp = TemperedGibbsSPR(topolambda,topomu,toponstep,1,2,deltalogp,logbf);
-		tsprchrono.Stop();
-		success += tmp;
-		tspracc += tmp;
-		tsprtry ++;
+        for (int rep=0; rep<NTSPR; rep++)   {
+            tsprchrono.Start();
+            double logbf = 0;
+            double deltalogp = 0;
+            double tmp = TemperedGibbsSPR(topolambda,topomu,toponstep,1,0,deltalogp,logbf);
+            // double tmp = TemperedGibbsSPR(topolambda,topomu,toponstep,1,2,deltalogp,logbf);
+            tsprchrono.Stop();
+            success += tmp;
+            tspracc += tmp;
+            tsprtry ++;
+        }
 	}
 	if (nspec)	{
 		sprchrono.Start();

@@ -103,7 +103,8 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		if (withpinv)	{
 			os << "\tpinv";
 		}
-		os << "\tNmode\tstatent\tstatalpha\ttopo";
+		os << "\tNmode\tstatent\tstatalpha";
+		// os << "\tNmode\tstatent\tstatalpha\ttopo";
 		os << '\n'; 
 	}
 
@@ -127,7 +128,7 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		}
 		os << '\t' << GetNOccupiedComponent() << '\t' << GetStatEnt();
 		os << '\t' << GetMeanDirWeight();
-		os << '\t' << currenttopo;
+		// os << '\t' << currenttopo;
 		os << '\n';
 	}
 

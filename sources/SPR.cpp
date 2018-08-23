@@ -143,7 +143,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 		GlobalRootAtRandom();
 	}
 
-	GlobalReshuffleSites();
+	// GlobalReshuffleSites();
 
 	if (version == 1)	{
 		Backup();

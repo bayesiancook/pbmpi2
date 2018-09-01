@@ -342,11 +342,10 @@ void PoissonPhyloProcess::GlobalSetTestData()	{
 	delete[] tmp;
 
 	// GlobalCollapse();
-	DeleteZip();
+	// DeleteZip();
 	delete zipdata;
-
 	zipdata = new ZippedSequenceAlignment(truedata);
-	CreateZip();
+	// CreateZip();
 }
 
 void PoissonPhyloProcess::SlaveSetTestData()	{
@@ -360,13 +359,12 @@ void PoissonPhyloProcess::SlaveSetTestData()	{
 
 	delete[] tmp;
 
-	Collapse();
-	DeleteZip();
+	// Collapse();
+	// DeleteZip();
 	delete zipdata;
-
 	zipdata = new ZippedSequenceAlignment(truedata);
-	CreateZip();
-	Unfold();
+	// CreateZip();
+	// Unfold();
 }
 
 void PoissonPhyloProcess::RecursiveUnzipBranchSitePath(const Link* from){

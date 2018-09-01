@@ -53,7 +53,6 @@ void MixtureProfileProcess::Create()	{
 
 void MixtureProfileProcess::ActivateSumOverComponents()	{
 
-	cerr <<  "allocate mtryalloc : " << mtryalloc << '\n';
 	if (!mtryalloc)	{
 		mtryalloc = new int*[GetNsite()];
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{

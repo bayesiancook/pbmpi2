@@ -547,6 +547,14 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 
 	int sitemin = GetSiteMin();
 	int sitemax = GetSiteMin() + testsitemax - testsitemin;
+
+    int kmax = 0;
+    double totw = weight[0];
+    while (fabs(1-totw) > 1e-8) {
+        kmax++;
+        totw += weight[kmax];
+    }
+    
 	double** sitelogl = new double*[GetNsite()];
 	for (int i=sitemin; i<sitemax; i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
@@ -554,7 +562,8 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 	
 	// UpdateMatrices();
 
-	for (int k=0; k<GetNcomponent(); k++)	{
+	// for (int k=0; k<GetNcomponent(); k++)	{
+	for (int k=0; k<kmax; k++)	{
 		for (int i=sitemin; i<sitemax; i++)	{
 			ExpoConjugateGTRSBDPProfileProcess::alloc[i] = k;
 		}

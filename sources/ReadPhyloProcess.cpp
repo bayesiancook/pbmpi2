@@ -1492,6 +1492,12 @@ void PhyloProcess::ReadCV(string testdatafile, string name, int burnin, int ever
 	}
 	GlobalSetTestData();
 
+    /*
+    cerr << "activate sum over components\n";
+    sumovercomponents = 10;
+    GlobalActivateSumOverComponents();
+    */
+
 	cerr << "burnin: " << burnin << '\n';
 	cerr << "every " << every << " points until " << until << '\n';
 	int i=0;
@@ -1508,10 +1514,12 @@ void PhyloProcess::ReadCV(string testdatafile, string name, int burnin, int ever
 	while (i < until)	{
 		cerr << ".";
 		samplesize++;
+        cerr << "from stream\n";
 		FromStream(is);
 		i++;
+        cerr << "quick update\n";
 		QuickUpdate();
-		// Trace(cerr);
+		Trace(cerr);
 		MPI_Status stat;
 		MESSAGE signal = CVSCORE;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);

@@ -1519,6 +1519,7 @@ void PhyloProcess::ReadCV(string testdatafile, string name, int burnin, int ever
 		i++;
         cerr << "quick update\n";
 		QuickUpdate();
+        cerr << "quick update ok\n";
 		Trace(cerr);
 		MPI_Status stat;
 		MESSAGE signal = CVSCORE;

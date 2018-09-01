@@ -1149,11 +1149,15 @@ void PhyloProcess::GlobalUnfold()	{
 		MESSAGE signal = UNFOLD;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
+        cerr << "global update conditional likelihoods\n";
 		GlobalUpdateConditionalLikelihoods();
+        cerr << "global update conditional likelihoods ok\n";
 	}
 	else	{
 		Unfold();
+        cerr << "update cond\n";
 		UpdateConditionalLikelihoods();
+        cerr << "update cond ok\n";
         /*
         cerr << "check likelihoods\n";
         CheckLikelihood();

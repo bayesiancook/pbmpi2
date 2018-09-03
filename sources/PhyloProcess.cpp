@@ -628,13 +628,9 @@ void PhyloProcess::QuickUpdate()	{
 	MPI_Status stat;
 	MESSAGE signal = BCAST_TREE;
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
-    cerr << "bcast tree\n";
 	GlobalBroadcastTree();
-    cerr << "collapse\n";
 	GlobalCollapse();
-    cerr << "unfold\n";
 	GlobalUnfold();
-    cerr << "ok\n";
 }
 
 
@@ -1121,7 +1117,6 @@ void PhyloProcess::SlaveBroadcastTree()	{
 	istringstream is(os.str());
 	tree->ReadFromStream(is);
 	delete[] bvector;
-    cerr << "slave bcast tree ok\n";
 }
 
 //-------------------------------------------------------------------------
@@ -1149,15 +1144,11 @@ void PhyloProcess::GlobalUnfold()	{
 		MESSAGE signal = UNFOLD;
 		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-        cerr << "global update conditional likelihoods\n";
 		GlobalUpdateConditionalLikelihoods();
-        cerr << "global update conditional likelihoods ok\n";
 	}
 	else	{
 		Unfold();
-        cerr << "update cond\n";
 		UpdateConditionalLikelihoods();
-        cerr << "update cond ok\n";
         /*
         cerr << "check likelihoods\n";
         CheckLikelihood();
@@ -1168,7 +1159,6 @@ void PhyloProcess::GlobalUnfold()	{
 
 void PhyloProcess::SlaveUnfold()	{
 	Unfold();
-    cerr << "slave unfold ok\n";
 }
 
 //-------------------------------------------------------------------------
@@ -1177,12 +1167,9 @@ void PhyloProcess::SlaveUnfold()	{
 
 void PhyloProcess::Collapse()	{
 
-    cerr << "draw alloc\n";
 	// if (sumratealloc)	{
 	DrawAllocations(0);
-    cerr << "inactivate\n";
 	InactivateSumOverRateAllocations();
-    cerr << "ok\n";
 	// }
 	if ((topobf == 1) || (topobf == 3))	{
 		SetMinMax(bffrac,1);
@@ -1198,13 +1185,9 @@ void PhyloProcess::Collapse()	{
 		SetMinMax(0,1);
 	}
 	else	{
-        cerr << "sample node states\n";
 		SampleNodeStates();
-        cerr << "fill missing map\n";
 		FillMissingMap();
-        cerr << "sample mapping\n";
 		SampleSubstitutionMappings(GetRoot());
-        cerr << "ok\n";
 	}
 	activesuffstat = true;
 }
@@ -1221,9 +1204,7 @@ void PhyloProcess::GlobalCollapse()	{
 }
 
 void PhyloProcess::SlaveCollapse()	{
-    cerr << "slave collapse\n";
 	Collapse();
-    cerr << "slave collapse ok\n";
 }
 
 //-------------------------------------------------------------------------

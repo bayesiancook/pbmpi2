@@ -234,11 +234,9 @@ void SubstitutionProcess::Offset(double*** t, bool condalloc)	{
 							max = tmp[k];
 						}
 					}
-					/*
 					if (max == 0)	{
 						max = 1e-12;
 					}
-					*/
 					if (max < 0)	{
 						cerr << "error in pruning (offset function): null likelihood\n";
 						exit(1);
@@ -277,6 +275,11 @@ double SubstitutionProcess::ComputeLikelihood(double*** aux, bool condalloc)	{
 					tot = 1e-12;
 				}
 				sitelogL[i] = log(tot) + (*t);
+                if (isnan(sitelogL[i])) {
+                    cerr << "in SubstitutionProcess::ComputeLikelihood: nan\n";
+                    cerr << tot << '\n';
+                    exit(1);
+                }
 				t -= nstate;
 			}
 			else	{
@@ -308,6 +311,11 @@ double SubstitutionProcess::ComputeLikelihood(double*** aux, bool condalloc)	{
 						tot = 1e-12;
 					}
 					logl[j] = log(tot) + (*t);
+                    if (isinf(logl[j])) {
+                        cerr << "in SubstitutionProcess::ComputeLikelihood: inf\n";
+                        cerr << tot << '\t' << (*t) << '\t' << log(tot) << '\t' << log(tot) + (*t) << '\n';
+                        exit(1);
+                    }
 					t -= nstate;
 					if ((!j) || (max < logl[j]))	{
 						max = logl[j];
@@ -321,6 +329,11 @@ double SubstitutionProcess::ComputeLikelihood(double*** aux, bool condalloc)	{
 					meanrate += tmp * GetRate(i,j);
 				}
 				sitelogL[i] = log(total) + max;
+                if (isnan(sitelogL[i])) {
+                    cerr << "in SubstitutionProcess::ComputeLikelihood: nan\n";
+                    cerr << total << '\t' << max << '\n';
+                    exit(1);
+                }
 				meanrate /= total;
 				meansiterate[i] = meanrate;
 			}

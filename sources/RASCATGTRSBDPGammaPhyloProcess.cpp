@@ -562,8 +562,9 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 	
 	// UpdateMatrices();
 
-	// for (int k=0; k<GetNcomponent(); k++)	{
-	for (int k=0; k<kmax; k++)	{
+    int Ncomp = GetNcomponent();
+    // int Ncomp = kmax;
+	for (int k=0; k<Ncomp; k++)	{
 		for (int i=sitemin; i<sitemax; i++)	{
 			ExpoConjugateGTRSBDPProfileProcess::alloc[i] = k;
 		}
@@ -576,19 +577,33 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 	double total = 0;
 	for (int i=sitemin; i<sitemax; i++)	{
 		double max = 0;
-		for (int k=0; k<GetNcomponent(); k++)	{
+		for (int k=0; k<Ncomp; k++)	{
 			if ((!k) || (max < sitelogl[i][k]))	{
 				max = sitelogl[i][k];
 			}
 		}
 		double tot = 0;
 		double totweight = 0;
-		for (int k=0; k<GetNcomponent(); k++)	{
+		for (int k=0; k<Ncomp; k++)	{
 			tot += weight[k] * exp(sitelogl[i][k] - max);
+            if (isnan(tot)) {
+                cerr << "in SlaveComputeCVScore: nan\n";
+                cerr << weight[k] << '\t' << sitelogl[i][k] << '\t' << max << '\n';
+                exit(1);
+            }
 			totweight += weight[k];
 		}
 		total += log(tot) + max;
 	}
+
+    if (isnan(total))   {
+        cerr << "in SlaveComputeCVScore: nan\n";
+        exit(1);
+    }
+    if (isinf(total))   {
+        cerr << "in SlaveComputeCVScore: inf\n";
+        exit(1);
+    }
 
 	MPI_Send(&total,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	

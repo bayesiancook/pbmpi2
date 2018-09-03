@@ -100,11 +100,8 @@ void RASCATSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 void RASCATSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 
-    cerr << "slave compute CV score\n";
 	int sitemin = GetSiteMin();
 	int sitemax = GetSiteMin() + testsitemax - testsitemin;
-    cerr << GetNsite() << '\t' << sitemin << '\t' << sitemax << '\n';
-    cerr << GetNcomponent() << '\n';
 	double** sitelogl = new double*[GetNsite()];
 	for (int i=sitemin; i<sitemax; i++)	{
 		sitelogl[i] = new double[GetNcomponent()];

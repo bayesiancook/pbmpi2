@@ -358,6 +358,9 @@ void FiniteProfileProcess::ResampleWeights()	{
             weight[k] /= total;
         }
     }
+    else    {
+        weight[0] = 1.0;
+    }
 }
 
 void FiniteProfileProcess::SampleWeights()	{

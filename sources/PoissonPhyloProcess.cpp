@@ -73,12 +73,9 @@ void PoissonPhyloProcess::DeleteSuffStat()	{
 void PoissonPhyloProcess::Collapse()	{
 
     
-    cerr << "draw alloc\n";
 	// if (sumratealloc)	{
 	DrawAllocations(0);
-    cerr << "inactivate\n";
 	InactivateSumOverRateAllocations();
-    cerr << "ok\n";
 	// }
 	if ((topobf == 1) || (topobf == 3))	{
 		SetMinMax(bffrac,1);
@@ -96,15 +93,10 @@ void PoissonPhyloProcess::Collapse()	{
 		SetMinMax(0,1);
 	}
 	else	{
-        cerr << "sample node states\n";
 		SampleNodeStates();
-        cerr << "fill missing map\n";
 		FillMissingMap();
-        cerr << "sample mapping\n";
 		SampleSubstitutionMappings(GetRoot());
-        cerr << "update site profile suff stat\n";
 		PoissonUpdateSiteProfileSuffStat();
-        cerr << "ok\n";
 	}
 	activesuffstat = true;
 }

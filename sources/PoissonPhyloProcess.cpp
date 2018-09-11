@@ -318,6 +318,10 @@ void PoissonPhyloProcess::SlaveUpdateSiteProfileSuffStat()	{
 
 void PoissonPhyloProcess::GlobalSetTestData()	{
 
+    if (GetNprocs() == 1)   {
+        DeleteConditionalLikelihoods();
+    }
+
 	testnsite = testdata->GetNsite();
 	int* tmp = new int[testnsite * GetNtaxa()];
 	testdata->GetDataVector(tmp);
@@ -329,19 +333,22 @@ void PoissonPhyloProcess::GlobalSetTestData()	{
 		MPI_Bcast(tmp,testnsite*GetNtaxa(),MPI_INT,0,MPI_COMM_WORLD);
 	}
 	else	{
-		data->SetTestData(testnsite,0,0,testnsite,tmp);
+		truedata->SetTestData(testnsite,0,0,testnsite,tmp);
 	}
 	delete[] tmp;
 
-	// GlobalCollapse();
-	// DeleteZip();
 	delete zipdata;
 	zipdata = new ZippedSequenceAlignment(truedata);
     data = zipdata;
-	// CreateZip();
+
+    if (GetNprocs() == 1)   {
+        CreateConditionalLikelihoods();
+    }
 }
 
 void PoissonPhyloProcess::SlaveSetTestData()	{
+
+    DeleteConditionalLikelihoods();
 
 	MPI_Bcast(&testnsite,1,MPI_INT,0,MPI_COMM_WORLD);
 	int* tmp = new int[testnsite * GetNtaxa()];
@@ -352,13 +359,11 @@ void PoissonPhyloProcess::SlaveSetTestData()	{
 
 	delete[] tmp;
 
-	// Collapse();
-	// DeleteZip();
 	delete zipdata;
 	zipdata = new ZippedSequenceAlignment(truedata);
     data = zipdata;
-	// CreateZip();
-	// Unfold();
+
+    CreateConditionalLikelihoods();
 }
 
 void PoissonPhyloProcess::RecursiveUnzipBranchSitePath(const Link* from){

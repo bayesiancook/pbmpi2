@@ -102,6 +102,7 @@ void RASCATSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 
 	int bksitemax = sitemax[myid];
 	sitemax[myid] = GetSiteMin() + testsitemax - testsitemin;
+
 	double** sitelogl = new double*[GetNsite()];
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		sitelogl[i] = new double[GetNcomponent()];

@@ -100,49 +100,127 @@ void RASCATSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
 void RASCATSBDPGammaPhyloProcess::SlaveComputeCVScore()	{
 
-	int sitemin = GetSiteMin();
-	int sitemax = GetSiteMin() + testsitemax - testsitemin;
+	int bksitemax = sitemax[myid];
+	sitemax[myid] = GetSiteMin() + testsitemax - testsitemin;
 	double** sitelogl = new double*[GetNsite()];
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		sitelogl[i] = new double[GetNcomponent()];
 	}
 	
-	// UpdateMatrices();
+	// double cutoff = 0;
+	double cutoff = 1e-5;
+	double total = 0;
 
-	for (int k=0; k<GetNcomponent(); k++)	{
-		for (int i=sitemin; i<sitemax; i++)	{
-			PoissonSBDPProfileProcess::alloc[i] = k;
-			UpdateZip(i);
+	if (cutoff)	{
+		int kmax = 0;
+		double totw = weight[0];
+		while ((kmax < GetNcomponent()) && (fabs(1-totw) > cutoff)) {
+			kmax ++;
+			totw += weight[kmax];
 		}
-		UpdateConditionalLikelihoods();
-		for (int i=sitemin; i<sitemax; i++)	{
-			sitelogl[i][k] = sitelogL[i];
+		if (kmax == GetNcomponent())	{
+			cerr << "error in SlaveComputeCVScore: overflow\n";
+			exit(1);
+		}
+		kmax++;
+		double remw = 1 - totw;
+		int Ncomp = kmax;
+		if ((kmax < GetNcomponent()) && (remw > 0))	{
+			Ncomp++;
+		}
+		vector<double> w(Ncomp,0);
+		for (int k=0; k<kmax; k++)	{
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				PoissonSBDPProfileProcess::alloc[i] = k;
+				UpdateZip(i);
+			}
+			UpdateConditionalLikelihoods();
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				sitelogl[i][k] = sitelogL[i];
+			}
+			w[k] = weight[k];
+		}
+
+		if ((kmax < GetNcomponent()) && (remw > 0))	{
+			int M = GetNcomponent() - kmax;
+			vector<double> cumul(M,0);
+			double tot = 0;
+			for (int k=0; k<M; k++)	{
+				tot += weight[kmax+k];
+				cumul[k] = tot;
+			}
+			double q = tot * rnd::GetRandom().Uniform();
+			int k = 0;
+			while ((k<M) && (q>cumul[k]))	{
+				k++;
+			}
+			if (k == M)	{
+				cerr << "error in SlaveComputeCVScore: overflow when choosing low weight component\n";
+				exit(1);
+			}
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				PoissonSBDPProfileProcess::alloc[i] = k;
+				UpdateZip(i);
+			}
+			UpdateConditionalLikelihoods();
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				sitelogl[i][kmax] = sitelogL[i];
+			}
+			w[kmax] = remw;
+		}
+
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			double max = 0;
+			for (int k=0; k<Ncomp; k++)	{
+				if ((!k) || (max < sitelogl[i][k]))	{
+					max = sitelogl[i][k];
+				}
+			}
+			double tot = 0;
+			double totweight = 0;
+			for (int k=0; k<Ncomp; k++)	{
+				tot += w[k] * exp(sitelogl[i][k] - max);
+				totweight += w[k];
+			}
+			total += log(tot) + max;
 		}
 	}
-
-	double total = 0;
-	for (int i=sitemin; i<sitemax; i++)	{
-		double max = 0;
+	else	{
 		for (int k=0; k<GetNcomponent(); k++)	{
-			if ((!k) || (max < sitelogl[i][k]))	{
-				max = sitelogl[i][k];
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				PoissonSBDPProfileProcess::alloc[i] = k;
+				UpdateZip(i);
+			}
+			UpdateConditionalLikelihoods();
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				sitelogl[i][k] = sitelogL[i];
 			}
 		}
-		double tot = 0;
-		double totweight = 0;
-		for (int k=0; k<GetNcomponent(); k++)	{
-			tot += weight[k] * exp(sitelogl[i][k] - max);
-			totweight += weight[k];
+
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			double max = 0;
+			for (int k=0; k<GetNcomponent(); k++)	{
+				if ((!k) || (max < sitelogl[i][k]))	{
+					max = sitelogl[i][k];
+				}
+			}
+			double tot = 0;
+			double totweight = 0;
+			for (int k=0; k<GetNcomponent(); k++)	{
+				tot += weight[k] * exp(sitelogl[i][k] - max);
+				totweight += weight[k];
+			}
+			total += log(tot) + max;
 		}
-		total += log(tot) + max;
 	}
 
 	MPI_Send(&total,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 	
-	for (int i=sitemin; i<sitemax; i++)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		delete[] sitelogl[i];
 	}
 	delete[] sitelogl;
+	sitemax[myid] = bksitemax;
 }
 
 /*

@@ -673,36 +673,115 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
 		sitelogl[i] = new double[GetNcomponent()];
 	}
 	
-	// UpdateMatrices();
-
-	for (int k=0; k<GetNcomponent(); k++)	{
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			ExpoConjugateGTRSBDPProfileProcess::alloc[i] = k;
-		}
-		UpdateConditionalLikelihoods();
-		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-			sitelogl[i][k] = sitelogL[i];
-		}
-	}
-
 	double* meansitelogl = new double[GetNsite()];
 	for (int i=0; i<GetNsite(); i++)	{
 		meansitelogl[i] = 0;
 	}
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		double max = 0;
+	double total = 0;
+
+	// double cutoff = 0;
+	double cutoff = 1e-5;
+
+	if (cutoff)	{
+		int kmax = 0;
+		double totw = weight[0];
+		while ((kmax < GetNcomponent()) && (fabs(1-totw) > cutoff)) {
+			kmax ++;
+			totw += weight[kmax];
+		}
+		if (kmax == GetNcomponent())	{
+			cerr << "error in SlaveComputeCVScore: overflow\n";
+			exit(1);
+		}
+		kmax++;
+		double remw = 1 - totw;
+		int Ncomp = kmax;
+		if ((kmax < GetNcomponent()) && (remw > 0))	{
+			Ncomp++;
+		}
+		vector<double> w(Ncomp,0);
+		for (int k=0; k<kmax; k++)	{
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+                ExpoConjugateGTRSBDPProfileProcess::alloc[i] = k;
+			}
+			UpdateConditionalLikelihoods();
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				sitelogl[i][k] = sitelogL[i];
+			}
+			w[k] = weight[k];
+		}
+
+		if ((kmax < GetNcomponent()) && (remw > 0))	{
+			int M = GetNcomponent() - kmax;
+			vector<double> cumul(M,0);
+			double tot = 0;
+			for (int k=0; k<M; k++)	{
+				tot += weight[kmax+k];
+				cumul[k] = tot;
+			}
+			double q = tot * rnd::GetRandom().Uniform();
+			int k = 0;
+			while ((k<M) && (q>cumul[k]))	{
+				k++;
+			}
+			if (k == M)	{
+				cerr << "error in SlaveComputeCVScore: overflow when choosing low weight component\n";
+				exit(1);
+			}
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+                ExpoConjugateGTRSBDPProfileProcess::alloc[i] = k;
+			}
+			UpdateConditionalLikelihoods();
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				sitelogl[i][kmax] = sitelogL[i];
+			}
+			w[kmax] = remw;
+		}
+
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			double max = 0;
+			for (int k=0; k<Ncomp; k++)	{
+				if ((!k) || (max < sitelogl[i][k]))	{
+					max = sitelogl[i][k];
+				}
+			}
+			double tot = 0;
+			double totweight = 0;
+			for (int k=0; k<Ncomp; k++)	{
+				tot += w[k] * exp(sitelogl[i][k] - max);
+				totweight += w[k];
+			}
+            meansitelogl[i] = log(tot) + max;
+            total += meansitelogl[i] ;
+		}
+	}
+	else	{
 		for (int k=0; k<GetNcomponent(); k++)	{
-			if ((!k) || (max < sitelogl[i][k]))	{
-				max = sitelogl[i][k];
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+                ExpoConjugateGTRSBDPProfileProcess::alloc[i] = k;
+			}
+			UpdateConditionalLikelihoods();
+			for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+				sitelogl[i][k] = sitelogL[i];
 			}
 		}
-		double tot = 0;
-		double totweight = 0;
-		for (int k=0; k<GetNcomponent(); k++)	{
-			tot += weight[k] * exp(sitelogl[i][k] - max);
-			totweight += weight[k];
+
+		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			double max = 0;
+			for (int k=0; k<GetNcomponent(); k++)	{
+				if ((!k) || (max < sitelogl[i][k]))	{
+					max = sitelogl[i][k];
+				}
+			}
+			double tot = 0;
+			double totweight = 0;
+			for (int k=0; k<GetNcomponent(); k++)	{
+				tot += weight[k] * exp(sitelogl[i][k] - max);
+				totweight += weight[k];
+			}
+            meansitelogl[i] = log(tot) + max;
+            total += meansitelogl[i] ;
 		}
-		meansitelogl[i] = log(tot) + max;
 	}
 
 	MPI_Send(meansitelogl,GetNsite(),MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
@@ -712,7 +791,6 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveComputeSiteLogL()	{
 	}
 	delete[] sitelogl;
 	delete[] meansitelogl;
-
 }
 
 void RASCATGTRSBDPGammaPhyloProcess::ReadTestProfile(string name, int nrep, double tuning, int burnin, int every, int until)	{

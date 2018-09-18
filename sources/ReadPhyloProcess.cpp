@@ -1642,11 +1642,13 @@ void PhyloProcess::ReadSiteLogL(string name, int burnin, int every, int until)	{
 	ofstream cos((name + ".cpo").c_str());
 	cos << "posterior mean ln L : " << total << '\n';
 	cos << "CPO : " << GetNsite() * meancpo << '\t' << meancpo << '\t' << sqrt(varcpo) << '\n';
+    cos << "CPO (leave-one-out cross-validation); log pseudo-marginal likelihood score: " << GetNsite() * meancpo << '\n';
 	
 	cerr << '\n';
 	cerr << "posterior mean ln L : " << total << '\n';
+    cerr << "CPO (leave-one-out cross-validation); log pseudo-marginal likelihood score: " << GetNsite() * meancpo << '\n';
+	cerr << '\n';
 	cerr << "site-specific posterior mean ln L in " << name << ".sitelogl\n";
-	cerr << "CPO: " << GetNsite() * meancpo << '\t' << meancpo << '\t' << sqrt(varcpo) << '\n';
 	cerr << '\n';
 
 }

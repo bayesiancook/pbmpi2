@@ -114,6 +114,9 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	void SlaveCollapse();
 
 	void SlaveCollectLogLikelihood();
+	void SlaveCollectFullLogLikelihood();
+	virtual void ReadPB(int argc, char* argv[]);
+	virtual void ReadFullLogL(string name, int burnin, int every, int until);
 
 	void SlaveActivateSumOverRateAllocations();
 	void SlaveInactivateSumOverRateAllocations();
@@ -153,6 +156,10 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	// in SMC.cpp
 	void SlaveSetMinMax();
 
+	// virtual void ReadSiteLogL(string name, int burnin, int every, int until);
+	// virtual void PostPred(int ppredtype, string name, int burnin, int every, int until, int rateprior, int profileprior, int rootprior);
+    
+    int cpo;
 };
 
 #endif

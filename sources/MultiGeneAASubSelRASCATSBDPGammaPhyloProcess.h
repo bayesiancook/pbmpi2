@@ -306,6 +306,10 @@ class MultiGeneAASubSelRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhy
 	void SlaveComputeSiteLogL();
 	*/
 
+	virtual void ReadPB(int argc, char* argv[]) {
+        MultiGenePhyloProcess::ReadPB(argc,argv);
+    }
+
 	int nmodemax;
 };
 

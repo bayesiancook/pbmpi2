@@ -277,6 +277,11 @@ class MultiGeneRASCATGTRSBDPGammaPhyloProcess : public virtual MultiGenePhyloPro
 	void SlaveComputeSiteLogL();
 	*/
 
+	virtual void ReadPB(int argc, char* argv[]) {
+        MultiGenePhyloProcess::ReadPB(argc,argv);
+    }
+
+
 	int nmodemax;
 };
 

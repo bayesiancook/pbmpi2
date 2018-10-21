@@ -17,6 +17,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 #include "Parallel.h"
 #include <string.h>
+#include "StringStreamUtils.h"
 
 #include "MultiGenePhyloProcess.h"
 
@@ -608,6 +609,10 @@ int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{
 		SlaveCollectGeneBranchLengths();
 		return 1;
 		break;
+	case FULLLIKELIHOOD:
+		SlaveCollectFullLogLikelihood();
+		return 1;
+		break;
 	case COLLECTLENGTHSUFFSTAT:
 		SlaveCollectGeneLengthMappingSuffStat();
 		return 1;
@@ -774,6 +779,17 @@ void MultiGenePhyloProcess::SlaveCollectLogLikelihood()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			genelnL[gene] = process[gene]->GetLogLikelihood();
+			totlogl += genelnL[gene];
+		}
+	}
+	MPI_Send(&totlogl,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
+void MultiGenePhyloProcess::SlaveCollectFullLogLikelihood()	{
+	double totlogl = 0;
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			genelnL[gene] = process[gene]->GetFullLogLikelihood();
 			totlogl += genelnL[gene];
 		}
 	}
@@ -1009,3 +1025,194 @@ void MultiGenePhyloProcess::SlaveReshuffleSites()	{
 	}
 }
 
+void MultiGenePhyloProcess::ReadPB(int argc, char* argv[])	{
+
+	string name = "";
+
+	int burnin = -1;
+	int every = 1;
+	int until = -1;
+	int ppred = 0;
+	int rateprior = 0;
+	int profileprior = 0;
+	int rootprior = 0;
+    int fulllogl = 0;
+
+	// 1 : plain ppred (outputs simulated data)
+	// 2 : diversity statistic
+	// 3 : compositional statistic
+
+	try	{
+
+		if (argc == 1)	{
+			throw(0);
+		}
+
+		int i = 1;
+		while (i < argc)	{
+			string s = argv[i];
+			if (s == "-div")	{
+				ppred = 2;
+			}
+			else if (s == "-comp")	{
+				ppred = 3;
+			}
+			else if (s == "-nsub")	{
+				ppred = 4;
+			}
+			else if (s == "-ppred")	{
+				ppred = 1;
+			}
+			else if (s == "-ppredrate")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					rateprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					rateprior = 0;
+				}
+				else	{
+					cerr << "error after ppredrate: should be prior or posterior\n";
+					throw(0);
+				}
+			}
+			else if (s == "-ppredprofile")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					profileprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					profileprior = 0;
+				}
+				else	{
+					cerr << "error after ppredprofile: should be prior or posterior\n";
+					throw(0);
+				}
+			}
+			else if (s == "-ppredroot")	{
+				i++;
+				string tmp = argv[i];
+				if (tmp == "prior")	{
+					rootprior = 1;
+				}
+				else if ((tmp == "posterior") || (tmp == "post"))	{
+					rootprior = 0;
+				}
+				else	{
+					cerr << "error after ppredroot: should be prior or posterior\n";
+					throw(0);
+				}
+			}
+			else if (s == "-logl")	{
+				fulllogl = 1;
+			}
+			else if ( (s == "-x") || (s == "-extract") )	{
+				i++;
+				if (i == argc) throw(0);
+				burnin = atoi(argv[i]);
+				i++;
+				if (i == argc) throw(0);
+				every = atoi(argv[i]);
+				i++;
+				if (i == argc) throw(0);
+				string tmp = argv[i];
+				if (IsFloat(tmp))	{
+					until = atoi(argv[i]);
+				}
+				else	{
+					i--;
+				}
+			}
+			else	{
+				if (i != (argc -1))	{
+					throw(0);
+				}
+				name = argv[i];
+			}
+			i++;
+		}
+	}
+	catch(...)	{
+		cerr << "error in command\n";
+		cerr << '\n';
+		MESSAGE signal = KILL;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Finalize();
+		exit(1);
+	}
+
+	if (until == -1)	{
+		until = GetSize();
+	}
+	if (burnin == -1)	{
+		burnin = GetSize() / 5;
+	}
+
+	if (ppred)	{
+		// PostPred(ppred,name,burnin,every,until,rateprior,profileprior,rootprior);
+	}
+	else if (fulllogl)	{
+		ReadFullLogL(name,burnin,every,until);
+	}
+	else	{
+		Read(name,burnin,every,until);
+	}
+}
+
+void MultiGenePhyloProcess::ReadFullLogL(string name, int burnin, int every, int until)	{
+
+	ifstream is((name + ".chain").c_str());
+	if (!is)	{
+		cerr << "error: no .chain file found\n";
+		exit(1);
+	}
+
+	cerr << "burnin: " << burnin << '\n';
+	cerr << "every " << every << " points until " << until << '\n';
+	int i=0;
+	while ((i < until) && (i < burnin))	{
+		FromStream(is);
+		i++;
+	}
+	int samplesize = 0;
+
+    double mean = 0;
+    double var = 0;
+
+	while (i < until)	{
+		cerr << ".";
+		samplesize++;
+		FromStream(is);
+		i++;
+		QuickUpdate();
+		MPI_Status stat;
+		MESSAGE signal = FULLLIKELIHOOD;
+		MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+		double total = 0;
+        double tmp = 0;
+		for(int i=1; i<GetNprocs(); ++i) {
+			MPI_Recv(&tmp,1,MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+            total += tmp;
+		}
+        mean += total;
+        var += total*total;
+		
+		int nrep = 1;
+		while ((i<until) && (nrep < every))	{
+			FromStream(is);
+			i++;
+			nrep++;
+		}
+	}
+    cerr << '\n';
+    mean /= samplesize;
+    var /= samplesize;
+    var -= mean*mean;
+	ofstream os((name + ".logl").c_str());
+    os << mean << " +/- " << sqrt(var) << '\n';
+	cerr << "posterior mean ln L : " <<  mean << " +/- " << sqrt(var) << '\n';
+    cerr << '\n';
+}

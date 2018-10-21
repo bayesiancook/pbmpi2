@@ -234,14 +234,16 @@ void PhyloProcess::Read(string name, int burnin, int every, int until)	{
 		exit(1);
 	}
 
+    int samplesize = (int) ((until - burnin)/every);
+
 	cerr << '\n';
 	cerr << "burnin : " << burnin << "\n";
 	cerr << "every  : " << every << '\n'; 
 	cerr << "until  : " << until << '\n';
+    cerr << "size   : " << samplesize << '\n';
 	cerr << '\n';
 
 	cerr << "burnin\n";
-
 	int i=0;
 	while ((i < until) && (i < burnin))	{
 		cerr << '.';
@@ -250,27 +252,21 @@ void PhyloProcess::Read(string name, int burnin, int every, int until)	{
 		i++;
 	}
 	cerr << '\n';
-	int samplesize = 0;
 
 	list<double> lengthlist;
 	list<double> alphalist;
 
 	cerr << "sample\n";
-	while (i < until)	{
+    for (int i=0; i<samplesize; i++)    {
 		cerr << ".";
 		cerr.flush();
-		samplesize++;
 		FromStream(is);
-		i++;
 		double alpha = GetAlpha();
 		alphalist.push_back(alpha);
 		double length = GetRenormTotalLength();
 		lengthlist.push_back(length);
-		int nrep = 1;
-		while ((i<until) && (nrep < every))	{
+        for (int rep=0; rep<every; rep++)   {
 			FromStream(is);
-			i++;
-			nrep++;
 		}
 	}
 	cerr << '\n';

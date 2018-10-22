@@ -53,7 +53,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	virtual void SlavePropagate(int,int,bool,double);
 
 	// default constructor: pointers set to nil
-	PhyloProcess() :  sitecondlmap(0), condlmap(0), condlmap2(0), withoutwardcondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), data(0), iscodon(0), fasttopo(0), dataclamped(1) {
+	PhyloProcess() :  sitecondlmap(0), condlmap(0), condlmap2(0), withoutwardcondlmap(0), siteratesuffstatcount(0), siteratesuffstatbeta(0), branchlengthsuffstatcount(0), branchlengthsuffstatbeta(0), size(0), totaltime(0), currenttopo(0), data(0), iscodon(0), fasttopo(0), dataclamped(1), cposize(0), cpoindex(0), cpositelogl(0) {
 
 		reshuffle = 0;
 		reverseafterfull = 0;
@@ -798,6 +798,30 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 		SetDim(GetData()->GetNstate());
 	}
 
+    void ActivateCPO(int size)  {
+        if (cposize)    {
+            cerr << "error: cpo already activated\n";
+            exit(1);
+        }
+        cposize = size;
+        cpoindex = 0;
+        cpositelogl = new double*[size];
+        for (int i=0; i<size; i++)  {
+            cpositelogl[i] = new double[GetNsite()];
+        }
+    }
+
+    void InactivateCPO()    {
+        for (int i=0; i<cposize; i++)   {
+            delete[] cpositelogl[i];
+        }
+        delete[] cpositelogl;
+        cposize = 0;
+        cpoindex = 0;
+    }
+
+    double GetPseudoMarginalLogLikelihood();
+
 	virtual void New(int unfold = 1);
 	virtual void Open(istream& is, int unfold = 1);
 
@@ -993,6 +1017,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
     int profilevarmode;
     int ratevarmode;
     int blvarmode;
+
+    int cposize;
+    int cpoindex;
+    double** cpositelogl;
 };
 
 

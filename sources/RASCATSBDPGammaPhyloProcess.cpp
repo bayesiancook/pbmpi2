@@ -534,6 +534,9 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 
 				double sitetotlogL = log(total) + max;
 				totlogL += sitetotlogL;
+                if (cpositelogl)    {
+                    cpositelogl[cpoindex][i] = sitetotlogL;
+                }
 			}
 		}
 	}
@@ -595,10 +598,16 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 					cerr << "sitetotlogL is inf: site " << i << '\n';
 				}
 				totlogL += sitetotlogL;
+                if (cpositelogl)    {
+                    cpositelogl[cpoindex][i] = sitetotlogL;
+                }
 			}
 		}
 	}
 
+    if (cposize)    {
+        cpoindex++;
+    }
 	if (isinf(totlogL))	{
 		cerr << "error in GetFullLogLikelihood: inf\n";
 		exit(1);

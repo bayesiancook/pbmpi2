@@ -281,6 +281,39 @@ void PhyloProcess::Read(string name, int burnin, int every, int until)	{
 	cerr << '\n';
 }
 
+double PhyloProcess::GetPseudoMarginalLogLikelihood()   {
+
+    if (cpoindex != cposize)    {
+        cerr << "error in cpo: " << cpoindex << '\t' << cposize << '\n';
+        exit(1);
+    }
+
+	double meancpo = 0;
+    double meanlogl = 0;
+	for (int i=0; i<GetNsite(); i++)	{
+		double min = 0;
+        double mean = 0;
+        for (int j=0; j<cposize; j++)   {
+            if (min > cpositelogl[j][i])    {
+                min = cpositelogl[j][i];
+            }
+            mean += cpositelogl[j][i];
+        }
+        mean /= cposize;
+
+		double hmean = 0;
+        for (int j=0; j<cposize; j++)   {
+            hmean += exp(min - cpositelogl[j][i]);
+        }
+		hmean /= cposize;
+		double sitecpo = min - log(hmean);
+		meancpo += sitecpo;
+        meanlogl += mean;
+	}
+    // return meanlogl;
+    return meancpo;
+}
+
 void PhyloProcess::ReadSiteRates(string name, int burnin, int every, int until)	{
 
 	ifstream is((name + ".chain").c_str());

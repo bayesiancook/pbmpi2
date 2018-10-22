@@ -159,7 +159,9 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	// virtual void ReadSiteLogL(string name, int burnin, int every, int until);
 	// virtual void PostPred(int ppredtype, string name, int burnin, int every, int until, int rateprior, int profileprior, int rootprior);
     
-    int cpo;
+    void SlaveActivateCPO();
+    void SlaveInactivateCPO();
+    void SlaveCollectPseudoMarginalLogLikelihood();
 };
 
 #endif

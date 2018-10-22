@@ -625,6 +625,18 @@ int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{
 		SlaveReadSiteRankFromStream();
 		return 1;
 		break;
+	case ACTIVATECPO:
+		SlaveActivateCPO();
+		return 1;
+		break;
+	case INACTIVATECPO:
+		SlaveInactivateCPO();
+		return 1;
+		break;
+	case COLLECTCPO:
+		SlaveCollectPseudoMarginalLogLikelihood();
+		return 1;
+		break;
 
 	default:
 		return 0;
@@ -794,6 +806,38 @@ void MultiGenePhyloProcess::SlaveCollectFullLogLikelihood()	{
 		}
 	}
 	MPI_Send(&totlogl,1,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+}
+
+void MultiGenePhyloProcess::SlaveActivateCPO()  {
+    int size;
+	MPI_Bcast(&size,1,MPI_INT,0,MPI_COMM_WORLD);
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->ActivateCPO(size);
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveInactivateCPO()  {
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			process[gene]->InactivateCPO();
+		}
+	}
+}
+
+void MultiGenePhyloProcess::SlaveCollectPseudoMarginalLogLikelihood()	{
+    double* tmpgenelogl = new double[Ngene];
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+			tmpgenelogl[gene] = process[gene]->GetPseudoMarginalLogLikelihood();
+		}
+        else    {
+            tmpgenelogl[gene] = 0;
+        }
+	}
+	MPI_Send(tmpgenelogl,Ngene,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+    delete[] tmpgenelogl;
 }
 
 
@@ -1169,23 +1213,33 @@ void MultiGenePhyloProcess::ReadFullLogL(string name, int burnin, int every, int
 		exit(1);
 	}
 
-	cerr << "burnin: " << burnin << '\n';
-	cerr << "every " << every << " points until " << until << '\n';
-	int i=0;
-	while ((i < until) && (i < burnin))	{
-		FromStream(is);
-		i++;
-	}
-	int samplesize = 0;
+    int samplesize = (int) ((until - burnin)/every);
 
+	cerr << '\n';
+	cerr << "burnin : " << burnin << "\n";
+	cerr << "every  : " << every << '\n'; 
+	cerr << "until  : " << until << '\n';
+    cerr << "size   : " << samplesize << '\n';
+	cerr << '\n';
+
+	MESSAGE signal = ACTIVATECPO;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&samplesize,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	cerr << "burnin\n";
+	for (int i=0; i<burnin; i++)	{
+		cerr << ".";
+		FromStream(is);
+	}
+    cerr << '\n';
+    
     double mean = 0;
     double var = 0;
 
-	while (i < until)	{
+	cerr << "sample\n";
+    for (int i=0; i<samplesize; i++)    {
 		cerr << ".";
-		samplesize++;
 		FromStream(is);
-		i++;
 		QuickUpdate();
 		MPI_Status stat;
 		MESSAGE signal = FULLLIKELIHOOD;
@@ -1200,19 +1254,57 @@ void MultiGenePhyloProcess::ReadFullLogL(string name, int burnin, int every, int
         mean += total;
         var += total*total;
 		
-		int nrep = 1;
-		while ((i<until) && (nrep < every))	{
+        for (int rep=0; rep<every; rep++)   {
 			FromStream(is);
-			i++;
-			nrep++;
 		}
 	}
     cerr << '\n';
     mean /= samplesize;
     var /= samplesize;
     var -= mean*mean;
+
+	signal = COLLECTCPO;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Status stat;
+    double* genelogl = new double[Ngene];
+    double* tmpgenelogl = new double[Ngene];
+    for (int gene=0; gene<Ngene; gene++)	{
+        genelogl[gene] = 0;
+    }
+	for(int proc=1; proc<GetNprocs(); proc++) {
+		MPI_Recv(tmpgenelogl,Ngene,MPI_DOUBLE,proc,TAG1,MPI_COMM_WORLD,&stat);
+		for (int gene=0; gene<Ngene; gene++)	{
+			if (genealloc[gene] == proc)	{
+				genelogl[gene] = tmpgenelogl[gene];
+			}
+		}
+	}
+
+    double totcposcore = 0;
+    for (int gene=0; gene<Ngene; gene++)	{
+        if (! genelogl[gene])   {
+            cerr << "error: did not get cpo for gene : " << gene << '\n';
+        }
+        totcposcore += genelogl[gene];
+    }
+
 	ofstream os((name + ".logl").c_str());
-    os << mean << " +/- " << sqrt(var) << '\n';
+	os << "posterior mean  ln L : " <<  mean << " +/- " << sqrt(var) << '\n';
+	os << "pseudo marginal ln L : " <<  totcposcore << '\n';
 	cerr << "posterior mean ln L : " <<  mean << " +/- " << sqrt(var) << '\n';
+	cerr << "pseudo marginal ln L : " <<  totcposcore << '\n';
     cerr << '\n';
+
+	ofstream gos((name + ".genepseudologl").c_str());
+    for (int gene=0; gene<Ngene; gene++)	{
+        gos << genelogl[gene] << '\n';
+    }
+
+    // clean up
+    delete[] tmpgenelogl;
+    delete[] genelogl;
+
+	signal = INACTIVATECPO;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
 }

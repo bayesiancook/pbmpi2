@@ -108,6 +108,8 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
         profilevarmode = 1;
         blvarmode = 1;
         ratevarmode = 1;
+
+        BPP = 0;
 	}
 
 	virtual ~PhyloProcess() {}

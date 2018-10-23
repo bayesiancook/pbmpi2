@@ -451,9 +451,11 @@ void MultiGenePhyloProcess::ToStream(ostream& os)	{
 	}
 
 	for (int gene=0; gene<Ngene; gene++)	{
+        // os << "BEGIN\n";
 		os << fullgeneparamsize[gene] << '\n';
 		os << geneparam[gene];
 		os << '\n';
+        // os << "END\n";
 	}
 
 	delete[] fullgeneparamsize;
@@ -471,6 +473,7 @@ void MultiGenePhyloProcess::SlaveToStream()	{
 		if (genealloc[gene] == myid)	{
 			ostringstream os;
 			process[gene]->ToStream(os);
+            // os.flush();
 			geneparam[gene] = os.str();
 			geneparamsize[gene] = geneparam[gene].size();
 		}
@@ -510,11 +513,26 @@ void MultiGenePhyloProcess::FromStream(istream& is)	{
 	int paramtotsize = 0;
 
 	for (int gene=0; gene<Ngene; gene++)	{
+        /*
+        string tmp;
+        is >> tmp;
+        if (tmp != "BEGIN") {
+            cerr << "begin error when reading multi gene from stream\n";
+            exit(1);
+        }
+        */
 		is >> geneparamsize[gene];
 		paramtotsize += geneparamsize[gene];
 
 		geneparam[gene].resize(geneparamsize[gene]);
 		is.read(&geneparam[gene][0],geneparamsize[gene]);
+        /*
+        is >> tmp;
+        if (tmp != "END")  {
+            cerr << "end error when reading multi gene from stream\n";
+            exit(1);
+        }
+        */
 	}
 
 	char* c = new char[paramtotsize];
@@ -1254,7 +1272,7 @@ void MultiGenePhyloProcess::ReadFullLogL(string name, int burnin, int every, int
         mean += total;
         var += total*total;
 		
-        for (int rep=0; rep<every; rep++)   {
+        for (int rep=1; rep<every; rep++)   {
 			FromStream(is);
 		}
 	}

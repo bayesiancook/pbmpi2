@@ -265,7 +265,7 @@ void PhyloProcess::Read(string name, int burnin, int every, int until)	{
 		alphalist.push_back(alpha);
 		double length = GetRenormTotalLength();
 		lengthlist.push_back(length);
-        for (int rep=0; rep<every; rep++)   {
+        for (int rep=1; rep<every; rep++)   {
 			FromStream(is);
 		}
 	}

@@ -686,8 +686,13 @@ void MultiGenePhyloProcess::GlobalWriteSiteLogLToStream(ostream& os)	{
             index += genesize[gene];
 		}
 	}
+    double total = 0;
     for (int k=0; k<globalnsite[0]; k++)    {
-        os << sitelogl[k] << '\t';
+        total += sitelogl[k];
+    }
+    os << total;
+    for (int k=0; k<globalnsite[0]; k++)    {
+        os << '\t' << sitelogl[k];
     }
     os << '\n';
     delete[] sitelogl;

@@ -386,7 +386,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	// valid only under specific settings
 	virtual double GlobalGetFullLogLikelihood();
 	virtual void SlaveGetFullLogLikelihood();
-	virtual double GetFullLogLikelihood()	{
+	virtual double GetFullLogLikelihood(double* sitelogl = 0)	{
 		return logL;
 	}
 

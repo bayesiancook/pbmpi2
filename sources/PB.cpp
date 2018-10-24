@@ -1129,6 +1129,8 @@ int main(int argc, char* argv[])	{
 			ofstream tos((name + ".trace").c_str());
 			model->TraceHeader(tos);
 			tos.close();
+			ofstream mos((name + ".monitor").c_str());
+			mos.close();
 			ofstream pos((name + ".param").c_str());
 			model->ToStream(pos,true);
 			pos.close();

@@ -478,7 +478,7 @@ void RASCATSBDPGammaPhyloProcess::ReadStatMin(string name, int burnin, int every
 	cout << '\n';
 }
 
-double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
+double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood(double* sitelogl)	{
 
 	int ncomp = GetNcomponent();
 	if ((sumovercomponents > 0) && (sumovercomponents < GetNcomponent()))	{
@@ -536,6 +536,9 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood()	{
 				totlogL += sitetotlogL;
                 if (cpositelogl)    {
                     cpositelogl[cpoindex][i] = sitetotlogL;
+                }
+                if (sitelogl)   {
+                    sitelogl[i] = sitetotlogL;
                 }
 			}
 		}

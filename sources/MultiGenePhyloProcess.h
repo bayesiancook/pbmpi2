@@ -57,7 +57,10 @@ class MultiGenePhyloProcess : public virtual PhyloProcess, public virtual MultiG
 	virtual void SlaveWriteSiteRankToStream();
 	virtual void SlaveReadSiteRankFromStream();
 
-        virtual int SpecialSlaveExecute(MESSAGE);
+    virtual int SpecialSlaveExecute(MESSAGE);
+
+	virtual void GlobalWriteSiteLogLToStream(ostream& os);
+	virtual void SlaveWriteSiteLogLToStream();
 
 	virtual void SlaveUpdateSiteRateSuffStat()	{
 		MultiGeneRateProcess::SlaveUpdateSiteRateSuffStat();

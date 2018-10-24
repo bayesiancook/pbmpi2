@@ -655,6 +655,10 @@ int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{
 		SlaveCollectPseudoMarginalLogLikelihood();
 		return 1;
 		break;
+	case WRITESITELOGL:
+		SlaveWriteSiteLogLToStream();
+		return 1;
+		break;
 
 	default:
 		return 0;
@@ -662,6 +666,43 @@ int MultiGenePhyloProcess::SpecialSlaveExecute(MESSAGE signal)	{
 	}
 }
 
+void MultiGenePhyloProcess::GlobalWriteSiteLogLToStream(ostream& os)	{
+
+	MESSAGE signal = WRITESITELOGL;
+	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	MPI_Status stat;
+    int totsize = globalnsite[0];
+    double* sitelogl = new double[globalnsite[0]];
+    for (int k=0; k<globalnsite[0]; k++)    {
+        sitelogl[k] = 0;
+    }
+	for(int i=1; i<GetNprocs(); i++) {
+        int index = 0;
+		for (int gene=0; gene<Ngene; gene++)	{
+			if (genealloc[gene] == i)	{
+				MPI_Recv(sitelogl+index,genesize[gene],MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+			}
+            index += genesize[gene];
+		}
+	}
+    for (int k=0; k<globalnsite[0]; k++)    {
+        os << sitelogl[k] << '\t';
+    }
+    os << '\n';
+    delete[] sitelogl;
+}
+
+void MultiGenePhyloProcess::SlaveWriteSiteLogLToStream()	{
+	for (int gene=0; gene<Ngene; gene++)	{
+		if (genealloc[gene] == myid)	{
+            double* sitelogl = new double[genesize[gene]];
+			genelnL[gene] = process[gene]->GetFullLogLikelihood(sitelogl);
+			MPI_Send(sitelogl,genesize[gene],MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+            delete[] sitelogl;
+		}
+	}
+}
 
 /*
 void MultiGenePhyloProcess::SlaveResetTree()	{

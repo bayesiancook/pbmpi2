@@ -564,7 +564,7 @@ class Model	{
 			Trace(tos);
 			tos.close();
 
-			ofstream mos((name + ".monitor").c_str());
+			ofstream mos((name + ".monitor").c_str(), ios_base::app);
 			process->Monitor(mos);
 			mos.close();
 

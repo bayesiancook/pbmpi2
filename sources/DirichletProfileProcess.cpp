@@ -4,102 +4,74 @@
 
 void DirichletProfileProcess::Create()	{
 
-	if (dirpriortype)	{
-		if (! dirweight)	{
-			dirweight = new double[GetDim()];
-		}
-	}
-	else	{
-		if (! statalpha)	{
-			statalpha = new double[Nstatcomp];
-			statweight = new double[Nstatcomp];
-			statcenter = new double*[Nstatcomp];
-			for (int k=0; k<Nstatcomp; k++)	{
-				statcenter[k] = new double[GetDim()];
-			}
+    if (! dirweight)	{
+        if (priorempmix)   {
+            SetEmpiricalPriorStatMix();
+        }
+        else    {
+            Nstatcomp = 1;
+            dirweight = new double*[1];
+            dirweight[0] = new double[GetDim()];
+            statweight = new double[1];
+            statweight[0] = 1.0;
 		}
 	}
 }
 
 void DirichletProfileProcess::Delete()	{
 
-	if (dirpriortype)	{
-		if (dirweight)	{
-			delete[] dirweight;
-			dirweight = 0;
-		}
-	}
-	else	{
-		if (statalpha)	{
-			delete[] statalpha;
-			statalpha = 0;
-			delete[] statweight;
-			for (int k=0; k<Nstatcomp; k++)	{
-				delete[] statcenter[k];
-			}
-			delete[] statcenter;
-		}
-	}
+    if (dirweight)	{
+        for (int k=0; k<Nstatcomp; k++) {
+            delete[] dirweight[k];
+        }
+        delete[] dirweight;
+        dirweight = 0;
+        delete[] statweight;
+        statweight = 0;
+    }
 }
 
 double DirichletProfileProcess::GetMeanDirWeight()	{
-	double total = 0;
-	if (dirpriortype)	{
-		for (int k=0; k<GetDim(); k++)	{
-			total += dirweight[k];
-		}
+    double total = 0;
+    for (int cat=0; cat<Nstatcomp; cat++)   {
+        for (int k=0; k<GetDim(); k++)	{
+            total += dirweight[cat][k];
+        }
 	}
-	else	{
-		for (int k=0; k<Nstatcomp; k++)	{
-			total += statalpha[k];
-		}
-		total /= Nstatcomp;
-	}
+    total /= Nstatcomp;
 	return total;
 }
 
 double DirichletProfileProcess::GetCenterStatEnt()	{
-	double total = 0;
-	if (dirpriortype)	{
-		double totalweight = 0;
-		for (int k=0; k<GetDim(); k++)	{
-			totalweight += dirweight[k];
-		}
-		for (int k=0; k<GetDim(); k++)	{
-			double w = dirweight[k] / totalweight;
-			total -= w * log(w);
-		}
-	}
-	else	{
-		for (int k=0; k<Nstatcomp; k++)	{
-			for (int l=0; l<GetDim(); l++)	{
-				total -= statcenter[k][l] * log(statcenter[k][l]);
-			}
-		}
-		total /= Nstatcomp;
-	}
-	return total;
+    double mean = 0;
+    for (int cat=0; cat<Nstatcomp; cat++)   {
+        double total = 0;
+        for (int k=0; k<GetDim(); k++)  {
+            total += dirweight[cat][k];
+        }
+        for (int k=0; k<GetDim(); k++)  {
+            double tmp = dirweight[cat][k] / total;
+            mean -= tmp * log(tmp);
+        }
+    }
+    mean /= Nstatcomp;
+    return mean;
 }
 
 void DirichletProfileProcess::SampleFrequencyStat(double* prof)	{
 
-	double statmin = stateps;
-	double total = 0;
-	int infreached = 0;
+    int cat = 0;
+	if (Nstatcomp > 1)	{
+		cat = rnd::GetRandom().FiniteDiscrete(Nstatcomp,statweight);	
+    }
+    for (int k=0; k<GetDim(); k++)	{
+        prof[k] = rnd::GetRandom().sGamma(dirweight[cat][k]);
+    }
 
-
-	if (dirpriortype)	{
-		for (int k=0; k<GetDim(); k++)	{
-			prof[k] = rnd::GetRandom().sGamma(dirweight[k]);
-		}
-	}
-	else	{
-		int k = rnd::GetRandom().FiniteDiscrete(Nstatcomp,statweight);	
-		for (int l=0; l<GetDim(); l++)	{
-			prof[l] = rnd::GetRandom().sGamma(statalpha[k] * statcenter[k][l]);
-		}
-	}
-
+    // check for numerical errors
+    double statmin = stateps;
+    int infreached = 0;
+    double total = 0;
 	for (int k=0; k<GetDim(); k++)	{
 		if (prof[k] < statmin)	{
 			prof[k] = statmin;
@@ -117,24 +89,27 @@ void DirichletProfileProcess::SampleFrequencyStat(double* prof)	{
 }
 
 double DirichletProfileProcess::LogFrequencyStatPrior(double* prof)	{
+
 	double total = 0;
-	if (dirpriortype)	{
-		double totalweight = 0;
-		for (int k=0; k<GetDim(); k++)	{
-			total += (dirweight[k] - 1) * log(prof[k]) - rnd::GetRandom().logGamma(dirweight[k]);
-			totalweight += dirweight[k];
+	if (Nstatcomp == 1)	{
+		double totweight = 0;
+		for (int l=0; l<GetDim(); l++)	{
+			total += (dirweight[0][l] - 1) * log(prof[l]) - rnd::GetRandom().logGamma(dirweight[0][l]);
+			totweight += dirweight[0][l];
 		}
-		total += rnd::GetRandom().logGamma(totalweight);
+		total += rnd::GetRandom().logGamma(totweight);
 	}
 	else	{
 		double tmp[Nstatcomp];
 		double max = 0;
 		for (int k=0; k<Nstatcomp; k++)	{
 			double tot = 0;
+            double totweight = 0;
 			for (int l=0; l<GetDim(); l++)	{
-				tot += (statalpha[k] * statcenter[k][l] - 1) * log(prof[k]) - rnd::GetRandom().logGamma(statalpha[k]*statcenter[k][l]);
+				tot += (dirweight[k][l] - 1) * log(prof[l]) - rnd::GetRandom().logGamma(dirweight[k][l]);
+                totweight += dirweight[k][l];
 			}
-			tot += rnd::GetRandom().logGamma(statalpha[k]);
+			tot += rnd::GetRandom().logGamma(totweight);
 			tmp[k] = tot;
 			if ((!k) || (max < tot))	{
 				max = tot;
@@ -151,18 +126,20 @@ double DirichletProfileProcess::LogFrequencyStatPrior(double* prof)	{
 
 double DirichletProfileProcess::GetPostStatProb(double* prof, double* post)	{
 
-	if (dirpriortype)	{
-		cerr << "error: in DirichletProfileProcess::GetPostStatProb; under simple Dirichlet base distribution\n";
-		exit(1);
-	}
+    if (Nstatcomp == 1) {
+        cerr << "error: in DirichletProfileProcess::GetPostStatProb with Nstatcomp == 1\n";
+        exit(1);
+    }
 
 	double max = 0;
 	for (int k=0; k<Nstatcomp; k++)	{
 		double tot = 0;
+        double totweight = 0;
 		for (int l=0; l<GetDim(); l++)	{
-			tot += (statalpha[k] * statcenter[k][l] - 1) * log(prof[k]) - rnd::GetRandom().logGamma(statalpha[k]*statcenter[k][l]);
+			tot += (dirweight[k][l] - 1) * log(prof[l]) - rnd::GetRandom().logGamma(dirweight[k][l]);
+            totweight += dirweight[k][l];
 		}
-		tot += rnd::GetRandom().logGamma(statalpha[k]);
+		tot += rnd::GetRandom().logGamma(totweight);
 		post[k] = tot;
 		if ((!k) || (max < tot))	{
 			max = tot;
@@ -180,24 +157,25 @@ double DirichletProfileProcess::GetPostStatProb(double* prof, double* post)	{
 }
 
 double DirichletProfileProcess::MoveHyper(double tuning, int nrep)	{
-    if (dirpriortype)	{
-        if (! fixstatcenter)    {
-            MoveDirWeights(tuning,nrep);
+    if (((!fixstatcenter) && fixstatalpha) || (fixstatcenter && (!fixstatalpha)))   {
+        cerr << "error in DirichletProfileProcess::Move: currently, should move all hyperparameters or all fixed\n";
+        exit(1);
+    }
+    if (! fixstatcenter)    {
+        if (Nstatcomp > 1)  {
+            cerr << "in DirichletProfileProcess:: dirweight should be fixed with Nstatcomp > 1\n";
+            exit(1);
+        }
+        for (int cat=0; cat<Nstatcomp; cat++)   {
+            MoveDirWeights(cat,tuning,nrep);
         }
     }
-    else	{
-        if (! fixstatcenter)	{
-            MoveStatCenter(tuning,nrep,GetDim()/2);
-        }
-        if (! fixstatalpha)	{
-            MoveStatAlpha(tuning,nrep);
-        }
-        if (! fixstatweight)	{
+    if (! fixstatweight)	{
+        if (Nstatcomp > 1) {
             MoveStatWeight();
         }
     }
 }
-
 
 double DirichletProfileProcess::MoveStatWeight()	{
 
@@ -215,64 +193,15 @@ double DirichletProfileProcess::MoveStatWeight()	{
 	return 1.0;
 }
 
-double DirichletProfileProcess::MoveStatCenter(double tuning, int n, int nrep)	{
+double DirichletProfileProcess::MoveDirWeights(int cat, double tuning, int nrep)	{
 
-	double naccepted = 0;
-	double bk[GetDim()];
-	for (int rep=0; rep<nrep; rep++)	{
-		for (int k=0; k<Nstatcomp; k++)	{
-			for (int l=0; l<GetDim(); l++)	{
-				bk[l] = statcenter[k][l];
-			}
-			double deltalogprob = - LogHyperPrior() - LogStatPrior();
-			double logh = ProfileProposeMove(statcenter[k],tuning,n,0,0,0);
-			deltalogprob += LogHyperPrior() + LogStatPrior();
-			deltalogprob += logh;
-			int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
-			if (accepted)	{
-				naccepted++;
-			}
-			else	{
-				for (int l=0; l<GetDim(); l++)	{
-					statcenter[k][l] = bk[l];
-				}
-			}
-		}
-	}
-	return naccepted / nrep / Nstatcomp;
-}
-
-double DirichletProfileProcess::MoveStatAlpha(double tuning, int nrep)	{
-
-	double naccepted = 0;
-	for (int rep=0; rep<nrep; rep++)	{
-		for (int k=0; k<Nstatcomp; k++)	{
-			double deltalogprob = - LogHyperPrior() - LogStatPrior();
-			double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
-			double e = exp(m);
-			statalpha[k] *= e;
-			deltalogprob += LogHyperPrior() + LogStatPrior();
-			deltalogprob += m;
-			int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
-			if (accepted)	{
-				naccepted++;
-			}
-			else	{
-				statalpha[k] /= e;
-			}
-		}
-	}
-	return naccepted / nrep / Nstatcomp;
-}
-
-double DirichletProfileProcess::MoveDirWeights(double tuning, int nrep)	{
 	double naccepted = 0;
 	for (int rep=0; rep<nrep; rep++)	{
 		for (int k=0; k<GetDim(); k++)	{
 			double deltalogprob = - LogHyperPrior() - LogStatPrior();
 			double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
 			double e = exp(m);
-			dirweight[k] *= e;
+			dirweight[cat][k] *= e;
 			deltalogprob += LogHyperPrior() + LogStatPrior();
 			deltalogprob += m;
 			int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
@@ -280,7 +209,7 @@ double DirichletProfileProcess::MoveDirWeights(double tuning, int nrep)	{
 				naccepted++;
 			}
 			else	{
-				dirweight[k] /= e;
+				dirweight[cat][k] /= e;
 			}
 		}
 	}
@@ -289,88 +218,26 @@ double DirichletProfileProcess::MoveDirWeights(double tuning, int nrep)	{
 
 void DirichletProfileProcess::SampleHyper()	{
 
-	if (dirpriortype)	{
+    if (Nstatcomp == 1) {
 		for (int i=0; i<GetDim(); i++)	{
-			dirweight[i] = 1;
+			dirweight[0][i] = 1;
 		}
 	}
 	else	{
-		if (priorempmix)	{
-			SetEmpiricalPriorStatMix();
-		}
-		else	{
-			if (! fixstatweight)	{
-				double tot = 0;
-				for (int k=0; k<Nstatcomp; k++)	{
-					statweight[k] = rnd::GetRandom().sExpo();
-					tot += statweight[k];
-				}
-				for (int k=0; k<Nstatcomp; k++)	{
-					statweight[k] /= tot;
-				}
-			}
-			if (! fixstatalpha)	{
-				for (int k=0; k<Nstatcomp; k++)	{
-					statalpha[k] = GetDim() * rnd::GetRandom().sExpo();
-				}
-			}
-			if (! fixstatcenter)	{
-				for (int k=0; k<Nstatcomp; k++)	{
-					double tot = 0;
-					for (int l=0; l<GetDim(); k++)	{
-						statcenter[k][l] = rnd::GetRandom().sExpo();
-						tot += statcenter[k][l];
-					}
-					for (int l=0; l<GetDim(); l++)	{
-						statcenter[k][l] /= tot;
-					}
-				}
-			}
-		}
-	}
+        // nothing to do
+    }
 }
 
 void DirichletProfileProcess::PriorSampleHyper()	{
 
-	if (dirpriortype)	{
+	if (Nstatcomp == 1)	{
 		for (int i=0; i<GetDim(); i++)	{
-			dirweight[i] = rnd::GetRandom().sExpo();
+			dirweight[0][i] = rnd::GetRandom().sExpo();
 		}
 	}
 	else	{
-		if (priorempmix)	{
-			SetEmpiricalPriorStatMix();
-		}
-		else	{
-			if (! fixstatweight)	{
-				double tot = 0;
-				for (int k=0; k<Nstatcomp; k++)	{
-					statweight[k] = rnd::GetRandom().sExpo();
-					tot += statweight[k];
-				}
-				for (int k=0; k<Nstatcomp; k++)	{
-					statweight[k] /= tot;
-				}
-			}
-			if (! fixstatalpha)	{
-				for (int k=0; k<Nstatcomp; k++)	{
-					statalpha[k] = GetDim() * rnd::GetRandom().sExpo();
-				}
-			}
-			if (! fixstatcenter)	{
-				for (int k=0; k<Nstatcomp; k++)	{
-					double tot = 0;
-					for (int l=0; l<GetDim(); k++)	{
-						statcenter[k][l] = rnd::GetRandom().sExpo();
-						tot += statcenter[k][l];
-					}
-					for (int l=0; l<GetDim(); l++)	{
-						statcenter[k][l] /= tot;
-					}
-				}
-			}
-		}
-	}
+        // nothing to do
+    }
 }
 
 void DirichletProfileProcess::SetEmpiricalPriorStatMix()	{
@@ -380,33 +247,32 @@ void DirichletProfileProcess::SetEmpiricalPriorStatMix()	{
 		cerr << "error in DirichletProfileProcess::SetEmpiricalPriorStatMix\n";
 		exit(1);
 	}
+
 	is >> Nstatcomp;
-	cerr << "prior stat mixture: number of components: " << Nstatcomp << '\n';
+
+    dirweight = new double*[Nstatcomp];
+    for (int k=0; k<Nstatcomp; k++) {
+        dirweight[k] = new double[GetDim()];
+    }
+    statweight = new double[Nstatcomp];
 
 	for (int k=0; k<Nstatcomp; k++)	{
 		is >> statweight[k];
-		is >> statalpha[k];
+        double statalpha;
+		is >> statalpha;
 		for (int l=0; l<GetDim(); l++)	{
-			is >> statcenter[k][l];
+			is >> dirweight[k][l];
+            dirweight[k][l] *= statalpha;
 		}
 	}
 }
 
 double DirichletProfileProcess::LogHyperPrior()	{
-
 	double total = 0;
-	if (dirpriortype)	{
+    for (int cat=0; cat<Nstatcomp; cat++)   {
 		for (int k=0; k<GetDim(); k++)	{
-			total -= dirweight[k];
+			total -= dirweight[cat][k];
 		}
 	}
-	else	{
-		if (! fixstatalpha)	{
-			for (int k=0; k<Nstatcomp; k++)	{
-				total -= statalpha[k]/GetDim();;
-			}
-		}
-	}
-	return total;
 }
 

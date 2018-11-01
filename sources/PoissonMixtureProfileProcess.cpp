@@ -96,19 +96,35 @@ void PoissonMixtureProfileProcess::UpdateModeProfileSuffStat()	{
 }
 
 double PoissonMixtureProfileProcess::ProfileSuffStatLogProb(int cat)	{
+
+    if (Nstatcomp > 1)  {
+        cerr << "in PoissonMixtureProfileProcess::ProfileSuffStatLogProb\n";
+        exit(1);
+    }
+
 	double total = 0;
-	double priorweight = 0;
-	double postweight = 0;
-	for (int k=0; k<GetDim(); k++)	{
-		total += rnd::GetRandom().logGamma(dirweight[k] + profilesuffstatcount[cat][k]) - rnd::GetRandom().logGamma(dirweight[k]);
-		priorweight += dirweight[k];
-		postweight += dirweight[k] + profilesuffstatcount[cat][k];
-	}
-	total += rnd::GetRandom().logGamma(priorweight) - rnd::GetRandom().logGamma(postweight);
+
+    if (Nstatcomp == 1) {
+        double priorweight = 0;
+        double postweight = 0;
+        for (int k=0; k<GetDim(); k++)	{
+            total += rnd::GetRandom().logGamma(dirweight[0][k] + profilesuffstatcount[cat][k]) - rnd::GetRandom().logGamma(dirweight[0][k]);
+            priorweight += dirweight[0][k];
+            postweight += dirweight[0][k] + profilesuffstatcount[cat][k];
+        }
+        total += rnd::GetRandom().logGamma(priorweight) - rnd::GetRandom().logGamma(postweight);
+    }
+    else    {
+    }
 	return total;
 }
 
 double PoissonMixtureProfileProcess::DiffLogSampling(int cat, int site)	{
+
+    if (Nstatcomp > 1)  {
+        cerr << "error in PoissonMixtureProfileProcess::DiffLogsampling\n";
+        exit(1);
+    }
 
 	const double* nsub = GetSiteProfileSuffStatCount(site);
 	double* catnsub = profilesuffstatcount[cat];
@@ -117,7 +133,7 @@ double PoissonMixtureProfileProcess::DiffLogSampling(int cat, int site)	{
 	int grandtotal = 0;
 	for (int k=0; k<GetDim(); k++)	{
 		totalsub += nsub[k];
-		priorweight += dirweight[k];
+		priorweight += dirweight[0][k];
 		grandtotal += catnsub[k];
 	}
 	
@@ -127,7 +143,7 @@ double PoissonMixtureProfileProcess::DiffLogSampling(int cat, int site)	{
 	}
 	for (int k=0; k<GetDim(); k++)	{
 		for (int j=0; j< nsub[k]; j++)	{
-			total += log(dirweight[k] + catnsub[k] + j);
+			total += log(dirweight[0][k] + catnsub[k] + j);
 		}
 	}
 	return total;
@@ -149,10 +165,57 @@ double PoissonMixtureProfileProcess::MoveProfile()	{
 	return 1;
 }
 
+int PoissonMixtureProfileProcess::SamplePriorAllocation(int cat)   {
+
+    double logprob[Nstatcomp];
+    int max = 0;
+    for (int i=0; i<Nstatcomp; i++) {
+        double priorweight = 0;
+        double postweight = 0;
+        double total = 0;
+        for (int k=0; k<GetDim(); k++)	{
+            total += rnd::GetRandom().logGamma(dirweight[i][k] + profilesuffstatcount[cat][k]) - rnd::GetRandom().logGamma(dirweight[i][k]);
+            priorweight += dirweight[i][k];
+            postweight += dirweight[i][k] + profilesuffstatcount[cat][k];
+        }
+        total += rnd::GetRandom().logGamma(priorweight) - rnd::GetRandom().logGamma(postweight);
+
+        if ((!i) || (max < total))  {
+            max = total;
+        }
+        logprob[i] = total;
+    }
+
+    double cumul[Nstatcomp];
+    double total = 0;
+    for (int i=0; i<Nstatcomp; i++) {
+        double tmp = exp(logprob[i] - max);
+        total += tmp;
+        cumul[i] = total;
+    }
+
+    double u = total * rnd::GetRandom().Uniform();
+    int i = 0;
+    while ((i<Nstatcomp) && (u>cumul[i]))   {
+        i++;
+    }
+    if (i == Nstatcomp) {
+        cerr << "error in PoissonMixtureProfileProcess::SamplePriorCat: overflow\n";
+        exit(1);
+    }
+    return i;
+}
+
 double PoissonMixtureProfileProcess::MoveProfile(int cat)	{
+    int priorcat = 0;
+
+    if (Nstatcomp > 1)  {
+        priorcat = SamplePriorAllocation(cat);
+    }
+    
 	double total = 0;
 	for (int k=0; k<GetDim(); k++)	{
-		profile[cat][k] = rnd::GetRandom().sGamma(dirweight[k] + profilesuffstatcount[cat][k]);
+		profile[cat][k] = rnd::GetRandom().sGamma(dirweight[priorcat][k] + profilesuffstatcount[cat][k]);
 		if (profile[cat][k] < stateps)	{
 			profile[cat][k] = stateps;
 		}
@@ -164,6 +227,7 @@ double PoissonMixtureProfileProcess::MoveProfile(int cat)	{
 	return 1;
 }
 
+/*
 double PoissonMixtureProfileProcess::LogStatIntPrior()	{
 	double total = 0;
 	for (int k=0; k<GetNcomponent(); k++)	{
@@ -180,9 +244,9 @@ double PoissonMixtureProfileProcess::LogStatIntPrior(int cat)	{
 	double tot = 0;
 	double totweight = 0;
 	for (int k=0; k<GetDim(); k++)	{
-		total += rnd::GetRandom().logGamma(dirweight[k] + profilesuffstatcount[cat][k]);
-		total -= rnd::GetRandom().logGamma(dirweight[k]);
-		totweight += dirweight[k];
+		total += rnd::GetRandom().logGamma(dirweight[0][k] + profilesuffstatcount[cat][k]);
+		total -= rnd::GetRandom().logGamma(dirweight[0][k]);
+		totweight += dirweight[0][k];
 		tot += profilesuffstatcount[cat][k];
 	}
 	total -= rnd::GetRandom().logGamma(totweight + tot);
@@ -202,7 +266,7 @@ double PoissonMixtureProfileProcess::MoveDirWeights(double tuning, int nrep)	{
 			double deltalogprob = - LogHyperPrior() - LogStatIntPrior();
 			double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
 			double e = exp(m);
-			dirweight[k] *= e;
+			dirweight[0][k] *= e;
 			deltalogprob += LogHyperPrior() + LogStatIntPrior();
 			deltalogprob += m;
 			int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
@@ -210,13 +274,14 @@ double PoissonMixtureProfileProcess::MoveDirWeights(double tuning, int nrep)	{
 				naccepted++;
 			}
 			else	{
-				dirweight[k] /= e;
+				dirweight[0][k] /= e;
 			}
 		}
 	}
 	SampleStat();
 	return naccepted / nrep / GetDim();
 }
+*/
 
 void PoissonMixtureProfileProcess::RemoveSite(int site, int cat)	{
 	if (cat != -1)	{

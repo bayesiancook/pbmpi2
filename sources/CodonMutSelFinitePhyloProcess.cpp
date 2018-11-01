@@ -56,7 +56,7 @@ void CodonMutSelFinitePhyloProcess::SlaveUpdateParameters()	{
 		index++;
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[index];
+		dirweight[0][i] = dvector[index];
 		index++;
 	}
 	Ncomponent = ivector[0];
@@ -144,7 +144,7 @@ void CodonMutSelFinitePhyloProcess::GlobalUpdateParameters() {
 		index++;
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dvector[index] = dirweight[i];
+		dvector[index] = dirweight[0][i];
 		index++;
 	}
 

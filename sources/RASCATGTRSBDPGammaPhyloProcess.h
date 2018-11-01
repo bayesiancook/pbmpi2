@@ -278,7 +278,7 @@ class RASCATGTRSBDPGammaPhyloProcess : public virtual ExpoConjugateGTRPhyloProce
 
 	virtual void ReadPB(int argc, char* argv[]);
 	virtual void ReadProfileDistribution(string name, int burnin, int every, int until, int ndisc, double cialpha, int nsample);
-	void ReadMeanDirWeight(string name, int burnin, int every, int until);
+	// void ReadMeanDirWeight(string name, int burnin, int every, int until);
 	void ReadNocc(string name, int burnin, int every, int until);
 	void ReadTestProfile(string name, int nrep, double tuning, int burnin, int every, int until);
 	void ReadRelRates(string name, int burnin, int every, int until);

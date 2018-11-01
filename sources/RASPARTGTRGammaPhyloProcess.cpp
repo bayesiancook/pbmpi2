@@ -22,103 +22,86 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 void RASPARTGTRGammaPhyloProcess::GlobalUpdateParameters()	{
 
+    cerr << "in RASPARTGTR: global and slave update params: check code\n";
+    exit(1);
+
 	if (GetNprocs() > 1)	{
-	// MPI2
-	// should send the slaves the relevant information
-	// about model parameters
 
-	// for this model, should broadcast
-	// double alpha
-	// int Ncomponent
-	// int* alloc
-	// double* rr
-	// double** profile
-	// double* brancharray
-	// (but should first call PutBranchLengthsIntoArray())
-	// 
-	// upon receiving this information
-	// slave should 
-	// store it in the local copies of the variables
-	// and then call
-	// SetBranchLengthsFromArray()
-	// SetAlpha(inalpha)
+        // ResampleWeights();
+        RenormalizeProfiles();
 
-	// ResampleWeights();
-	RenormalizeProfiles();
+        int i,j,nrr,nbranch = GetNbranch(),ni,nd,L1,L2;
+        nrr = GetNrr();
+        L1 = GetNmodeMax();
+        L2 = GetDim();
+        nd = 2*Npart + nbranch + nrr*Npart + L2 + L1*(L2+1);
+        if (empmix == 2)	{
+            nd += 2;
+        }
+        ni = 1 + GetNsite();
+        int ivector[ni];
+        double dvector[nd]; 
+        MESSAGE signal = PARAMETER_DIFFUSION;
+        MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	int i,j,nrr,nbranch = GetNbranch(),ni,nd,L1,L2;
-	nrr = GetNrr();
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = 2*Npart + nbranch + nrr*Npart + L2 + L1*(L2+1);
-	if (empmix == 2)	{
-		nd += 2;
-	}
-	ni = 1 + GetNsite();
-	int ivector[ni];
-	double dvector[nd]; 
-	MESSAGE signal = PARAMETER_DIFFUSION;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+        // GlobalBroadcastTree();
 
-	// GlobalBroadcastTree();
+        // First we assemble the vector of doubles for distribution
+        int index = 0;
 
-	// First we assemble the vector of doubles for distribution
-	int index = 0;
+        for (int part=0; part<Npart; part++)	{
+            dvector[index] = GetAlpha(part);
+            index ++;
+        }
+        for (int part=0; part<Npart; part++)	{
+            dvector[index] = GetPinv(part);
+            index ++;
+        }
 
-	for (int part=0; part<Npart; part++)	{
-		dvector[index] = GetAlpha(part);
-		index ++;
-	}
-	for (int part=0; part<Npart; part++)	{
-		dvector[index] = GetPinv(part);
-		index ++;
-	}
+        for(i=0; i<nbranch; ++i) {
+            dvector[index] = blarray[i];
+            index++;
+        }
+        
+        for (int part=0; part<Npart; part++)	{
+            for(i=0; i<nrr ; ++i) {
+                dvector[index] = rr[part][i];
+                index++;
+            }
+        }
 
-	for(i=0; i<nbranch; ++i) {
-		dvector[index] = blarray[i];
-		index++;
-	}
-	
-	for (int part=0; part<Npart; part++)	{
-		for(i=0; i<nrr ; ++i) {
-			dvector[index] = rr[part][i];
-			index++;
-		}
-	}
+        for(i=0; i<L1; ++i) {
+            for(j=0; j<L2; ++j) {
+                dvector[index] = profile[i][j];
+                index++;
+            }
+            dvector[index] = weight[i];
+            index++;
+        }
+        for (int i=0; i<GetDim(); i++)	{
+            dvector[index] = dirweight[0][i];
+            index++;
+        }
+        if (empmix == 2)	{
+            /*
+            dvector[index] = weightalpha;
+            index++;
+            */
+            dvector[index] = statfixalpha;
+            index++;
+        }
 
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			dvector[index] = profile[i][j];
-			index++;
-		}
-		dvector[index] = weight[i];
-		index++;
-	}
-	for (int i=0; i<GetDim(); i++)	{
-		dvector[index] = dirweight[i];
-		index++;
-	}
-	if (empmix == 2)	{
-		/*
-		dvector[index] = weightalpha;
-		index++;
-		*/
-		dvector[index] = statfixalpha;
-		index++;
-	}
+        // Now the vector of ints
+        ivector[0] = GetNcomponent();
+        for(i=0; i<GetNsite(); ++i) {
+            ivector[1+i] = FiniteProfileProcess::alloc[i];
+        }
 
-	// Now the vector of ints
-	ivector[0] = GetNcomponent();
-	for(i=0; i<GetNsite(); ++i) {
-		ivector[1+i] = FiniteProfileProcess::alloc[i];
-	}
-
-	// Now send out the doubles and ints over the wire...
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	}
-
-	// UpdateMatrices();
+        // Now send out the doubles and ints over the wire...
+        MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
+        MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+    }
+    // UpdateMatrices();
 }
 
 
@@ -184,7 +167,7 @@ void RASPARTGTRGammaPhyloProcess::SlaveUpdateParameters()	{
 		index++;
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[index];
+		dirweight[0][i] = dvector[index];
 		index++;
 	}
 	if (empmix == 2)	{

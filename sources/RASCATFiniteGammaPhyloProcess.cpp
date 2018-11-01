@@ -50,75 +50,126 @@ double RASCATFiniteGammaPhyloProcess::GlobalRestrictedTemperedMove()	{
 
 void RASCATFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 	if (GetNprocs() > 1)	{
-	// MPI2
-	// should send the slaves the relevant information
-	// about model parameters
 
-	// for this model, should broadcast
-	// double alpha
-	// int Ncomponent
-	// int* alloc
-	// double* rr
-	// double** profile
-	// double* brancharray
-	// (but should first call PutBranchLengthsIntoArray())
-	// 
-	// upon receiving this information
-	// slave should 
-	// store it in the local copies of the variables
-	// and then call
-	// SetBranchLengthsFromArray()
-	// SetAlpha(inalpha)
+        // ResampleWeights();
+        RenormalizeProfiles();
 
-	// ResampleWeights();
-	RenormalizeProfiles();
+        int nd = 2 + GetNbranch() + GetNmodeMax()*GetDim() + Nstatcomp*(GetDim()+1) + 1;
+        int ni = 1 + GetNsite();
+        int* ivector = new int[ni];
+        double* dvector = new double[nd]; 
 
-	int i,j,nbranch = GetNbranch(),ni,nd,L1,L2;
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = 2 + nbranch + L1*L2 + GetDim() + 1;
-	ni = 1 + GetNsite();
-	int ivector[ni];
-	double dvector[nd]; 
-	MESSAGE signal = PARAMETER_DIFFUSION;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+        MESSAGE signal = PARAMETER_DIFFUSION;
+        MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	// First we assemble the vector of doubles for distribution
+        // First we assemble the vector of doubles for distribution
+        int index = 0;
+        dvector[index] = GetAlpha();
+        index++;
+        dvector[index] = GetPinv();
+        index++;
+        for(int i=0; i<GetNbranch(); i++) {
+            dvector[index] = blarray[i];
+            index++;
+        }
+        
+        for(int i=0; i<GetNmodeMax(); i++) {
+            for(int j=0; j<GetDim(); j++) {
+                dvector[index] = profile[i][j];
+                index++;
+            }
+        }
+
+        for (int k=0; k<Nstatcomp; k++) {
+            dvector[index] = statweight[k];
+            index++;
+            for (int i=0; i<GetDim(); i++)	{
+                dvector[index] = dirweight[k][i];
+                index++;
+            }
+        }
+
+        dvector[index] = statfixalpha;
+        index++;
+
+        if (index != nd)    {
+            cerr << "error in RASCATFiniteGammaPhyloProcess::GlobalUpdateParameters: non matching dimension\n";
+            exit(1);
+        }
+
+        // Now the vector of ints
+        ivector[0] = GetNcomponent();
+        for(int i=0; i<GetNsite(); i++) {
+            ivector[1+i] = FiniteProfileProcess::alloc[i];
+        }
+
+        // Now send out the doubles and ints over the wire...
+        MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
+        MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+        MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+        delete[] ivector;
+        delete[] dvector;
+    }
+    else	{
+        UpdateZip();
+    }
+}
+
+void RASCATFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
+
+	int nd = 2 + GetNbranch() + GetNmodeMax()*GetDim() + Nstatcomp*(GetDim()+1) + 1;
+	int ni = 1 + GetNsite();
+	int* ivector = new int[ni];
+	double* dvector = new double[nd];
+
+	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
 	int index = 0;
-	dvector[index] = GetAlpha();
-	index++;
-	dvector[index] = GetPinv();
-	index++;
-	for(i=0; i<nbranch; ++i) {
-		dvector[index] = blarray[i];
+	SetRateParams(dvector[index],dvector[index+1]);
+	index+=2;
+	for(int i=0; i<GetNbranch(); i++) {
+		blarray[i] = dvector[index];
 		index++;
 	}
-	
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			dvector[index] = profile[i][j];
+
+	for(int i=0; i<GetNmodeMax(); i++)  {
+		for(int j=0; j<GetDim(); j++)   {
+			profile[i][j] = dvector[index];
 			index++;
 		}
 	}
-	for (int i=0; i<GetDim(); i++)	{
-		dvector[index] = dirweight[i];
-		index++;
+    for (int k=0; k<Nstatcomp; k++) {
+        statweight[k] = dvector[index];
+        index++;
+        for (int i=0; i<GetDim(); i++)	{
+            dirweight[k][i] = dvector[index];
+            index++;
+        }
+    }
+
+    statfixalpha = dvector[index];
+    index++;
+
+    if (index != nd)    {
+        cerr << "error in RASCATFiniteGammaPhyloProcess::SlaveUpdateParameters: non matching dimension\n";
+        exit(1);
+    }
+
+	Ncomponent = ivector[0];
+	for(int i=0; i<GetNsite(); i++) {
+		FiniteProfileProcess::alloc[i] = ivector[1+i];
 	}
 
-	// Now the vector of ints
-	ivector[0] = GetNcomponent();
-	for(i=0; i<GetNsite(); ++i) {
-		ivector[1+i] = FiniteProfileProcess::alloc[i];
-	}
-
-	// Now send out the doubles and ints over the wire...
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-	}
-	else	{
-		UpdateZip();
-	}
+
+	UpdateZip();
+
+	delete[] dvector;
+	delete[] ivector;
+
+	// some upate here ?
 }
 
 
@@ -411,51 +462,6 @@ void RASCATFiniteGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 	}
 }
 
-
-void RASCATFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
-	int i,j,L1,L2,ni,nd,nbranch = GetNbranch();
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = 2 + nbranch + L1*L2 + GetDim() + 1;
-	ni = 1 + GetNsite();
-	int* ivector = new int[ni];
-	double* dvector = new double[nd];
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-
-	int index = 0;
-	SetRateParams(dvector[index],dvector[index+1]);
-	index+=2;
-	for(i=0; i<nbranch; ++i) {
-		blarray[i] = dvector[index];
-		index++;
-	}
-
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			profile[i][j] = dvector[index];
-			index++;
-		}
-	}
-	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[index];
-		index++;
-	}
-
-	Ncomponent = ivector[0];
-	for(i=0; i<GetNsite(); ++i) {
-		FiniteProfileProcess::alloc[i] = ivector[1+i];
-	}
-
-	MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-
-	UpdateZip();
-
-	delete[] dvector;
-	delete[] ivector;
-
-	// some upate here ?
-}
 
 void RASCATFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 

@@ -23,99 +23,142 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 void RASCATGTRFiniteGammaPhyloProcess::GlobalUpdateParameters()	{
 
 	if (GetNprocs() > 1)	{
-	// MPI2
-	// should send the slaves the relevant information
-	// about model parameters
 
-	// for this model, should broadcast
-	// double alpha
-	// int Ncomponent
-	// int* alloc
-	// double* rr
-	// double** profile
-	// double* brancharray
-	// (but should first call PutBranchLengthsIntoArray())
-	// 
-	// upon receiving this information
-	// slave should 
-	// store it in the local copies of the variables
-	// and then call
-	// SetBranchLengthsFromArray()
-	// SetAlpha(inalpha)
+        // ResampleWeights();
+        RenormalizeProfiles();
 
-	// ResampleWeights();
-	RenormalizeProfiles();
+        int nd = 2 + GetNbranch() + GetNrr() + GetNmodeMax()*(GetDim()+1) + Nstatcomp*(GetDim()+1) + 1;
+        int ni = 1 + GetNsite();
+        int* ivector = new int[ni];
+        double* dvector = new double[nd]; 
 
-	int i,j,nrr,nbranch = GetNbranch(),ni,nd,L1,L2;
-	nrr = GetNrr();
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = 2 + nbranch + nrr + L2 + L1*(L2+1);
-	if (empmix == 2)	{
-		nd += 1;
-	}
-	ni = 1 + GetNsite();
-	int ivector[ni];
-	double dvector[nd]; 
-	MESSAGE signal = PARAMETER_DIFFUSION;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+        MESSAGE signal = PARAMETER_DIFFUSION;
+        MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	// GlobalBroadcastTree();
+        // GlobalBroadcastTree();
 
-	// First we assemble the vector of doubles for distribution
-	int index = 0;
-	dvector[index] = GetAlpha();
-	index ++;
-	dvector[index] = GetPinv();
-	index ++;
-	for(i=0; i<nbranch; ++i) {
-		dvector[index] = blarray[i];
-		index++;
-	}
-	
-	for(i=0; i<nrr ; ++i) {
-		dvector[index] = rr[i];
-		index++;
-	}
+        // First we assemble the vector of doubles for distribution
+        int index = 0;
+        dvector[index] = GetAlpha();
+        index ++;
+        dvector[index] = GetPinv();
+        index ++;
 
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			dvector[index] = profile[i][j];
-			index++;
-		}
-		dvector[index] = weight[i];
-		index++;
-	}
-	for (int i=0; i<GetDim(); i++)	{
-		dvector[index] = dirweight[i];
-		index++;
-	}
-	if (empmix == 2)	{
-		/*
-		dvector[index] = weightalpha;
-		index++;
-		*/
-		dvector[index] = statfixalpha;
-		index++;
-	}
-    if (index != nd)    {
-        cerr << "error in globalupdateparams: non matching double vector size\n";
-        exit(1);
+        for (int i=0; i<GetNbranch(); i++)  {
+            dvector[index] = blarray[i];
+            index++;
+        }
+        
+        for (int i=0; i<GetNrr(); i++)  {
+            dvector[index] = rr[i];
+            index++;
+        }
+
+        for (int i=0; i<GetNmodeMax(); i++) {
+            for (int j=0; j<GetDim(); j++)  {
+                dvector[index] = profile[i][j];
+                index++;
+            }
+            dvector[index] = weight[i];
+            index++;
+        }
+
+        for (int k=0; k<Nstatcomp; k++) {
+            dvector[index] = statweight[k];
+            index++;
+            for (int i=0; i<GetDim(); i++)	{
+                dvector[index] = dirweight[k][i];
+                index++;
+            }
+        }
+
+        dvector[index] = statfixalpha;
+        index++;
+
+        if (index != nd)    {
+            cerr << "error in globalupdateparams: non matching double vector size\n";
+            exit(1);
+        }
+
+        // Now the vector of ints
+        ivector[0] = GetNcomponent();
+        for(int i=0; i<GetNsite(); i++) {
+            ivector[1+i] = FiniteProfileProcess::alloc[i];
+        }
+
+        // Now send out the doubles and ints over the wire...
+        MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
+        MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+        delete[] dvector;
+        delete[] ivector;
     }
-
-	// Now the vector of ints
-	ivector[0] = GetNcomponent();
-	for(i=0; i<GetNsite(); ++i) {
-		ivector[1+i] = FiniteProfileProcess::alloc[i];
-	}
-
-	// Now send out the doubles and ints over the wire...
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	}
     else    {
         UpdateMatrices();
     }
+}
+
+void RASCATGTRFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
+
+	// SlaveBroadcastTree();
+
+    int nd = 2 + GetNbranch() + GetNrr() + GetNmodeMax()*(GetDim()+1) + Nstatcomp*(GetDim()+1) + 1;
+    int ni = 1 + GetNsite();
+    int* ivector = new int[ni];
+    double* dvector = new double[nd]; 
+
+	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+	int index = 0;
+	SetRateParams(dvector[index],dvector[index+1]);
+	index +=2;
+
+    for (int i=0; i<GetNbranch(); i++)  {
+		blarray[i] = dvector[index];
+		index++;
+	}
+
+    for (int i=0; i<GetNrr(); i++)  {
+		rr[i] = dvector[index];
+		index++;
+	}
+
+    for (int i=0; i<GetNmodeMax(); i++) {
+        for (int j=0; j<GetDim(); j++)  {
+			profile[i][j] = dvector[index];
+			index++;
+		}
+		weight[i] = dvector[index];
+		index++;
+	}
+
+    for (int k=0; k<Nstatcomp; k++) {
+        statweight[k] = dvector[index];
+        index++;
+        for (int i=0; i<GetDim(); i++)	{
+            dirweight[k][i] = dvector[index];
+            index++;
+        }
+    }
+
+    statfixalpha = dvector[index];
+    index++;
+
+    if (index != nd)    {
+        cerr << "error in slave update params: non matching dim\n";
+        exit(1);
+    }
+
+	Ncomponent = ivector[0];
+	for(int i=0; i<GetNsite(); i++) {
+		FiniteProfileProcess::alloc[i] = ivector[1+i];
+	}
+
+	delete[] dvector;
+	delete[] ivector;
+
+	UpdateMatrices();
 }
 
 
@@ -141,64 +184,6 @@ void RASCATGTRFiniteGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 	default:
 		PhyloProcess::SlaveExecute(signal);
 	}
-}
-
-void RASCATGTRFiniteGammaPhyloProcess::SlaveUpdateParameters()	{
-
-	// SlaveBroadcastTree();
-
-	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nrr = GetNrr();
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = 2 + nbranch + nrr + L2 + L1*(L2+1);
-	if (empmix == 2)	{
-		nd += 1;
-	}
-	ni = 1 + GetNsite();
-	int* ivector = new int[ni];
-	double* dvector = new double[nd];
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	int index = 0;
-	SetRateParams(dvector[index],dvector[index+1]);
-	index +=2;
-	for(i=0; i<nbranch; ++i) {
-		blarray[i] = dvector[index];
-		index++;
-	}
-	for(i=0; i<nrr; ++i) {
-		rr[i] = dvector[index];
-		index++;
-	}
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			profile[i][j] = dvector[index];
-			index++;
-		}
-		weight[i] = dvector[index];
-		index++;
-	}
-	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[index];
-		index++;
-	}
-	if (empmix == 2)	{
-		/*
-		weightalpha = dvector[index];
-		index++;
-		*/
-		statfixalpha = dvector[index];
-		index++;
-	}
-
-	Ncomponent = ivector[0];
-	for(i=0; i<GetNsite(); ++i) {
-		FiniteProfileProcess::alloc[i] = ivector[1+i];
-	}
-	delete[] dvector;
-	delete[] ivector;
-
-	UpdateMatrices();
 }
 
 void RASCATGTRFiniteGammaPhyloProcess::ReadPB(int argc, char* argv[])	{

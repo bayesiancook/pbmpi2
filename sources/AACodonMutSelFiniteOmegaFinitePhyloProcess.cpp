@@ -63,7 +63,7 @@ void AACodonMutSelFiniteOmegaFinitePhyloProcess::SlaveUpdateParameters()	{
 		index++;
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[index];
+		dirweight[0][i] = dvector[index];
 		index++;
 	}
 	for (int i=0; i<nomega; i++)	{
@@ -180,7 +180,7 @@ void AACodonMutSelFiniteOmegaFinitePhyloProcess::GlobalUpdateParameters() {
 		index++;
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dvector[index] = dirweight[i];
+		dvector[index] = dirweight[0][i];
 		index++;
 	}
 	for (int i=0; i<nomega; i++)	{

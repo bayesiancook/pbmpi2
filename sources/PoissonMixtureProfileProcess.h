@@ -67,12 +67,16 @@ class PoissonMixtureProfileProcess: public virtual PoissonProfileProcess, public
 	// suffstat lnL of all sites allocated to component cat when site <site> is not among them
 	double DiffLogSampling(int cat, int site);
 	virtual double LogStatProb(int site, int cat);
-	double LogStatIntPrior(int cat);
-	double LogStatIntPrior();
-	double MoveDirWeights(double tuning, int nrep);
+
+    // moves based on marginal log prob (conjugate relations) -- currently inactivated
+	// double LogStatIntPrior(int cat);
+	// double LogStatIntPrior();
+	// double MoveDirWeights(double tuning, int nrep);
 
 	double MoveProfile();
 	double MoveProfile(int cat);
+
+    int SamplePriorAllocation(int cat);
 
 	void SwapComponents(int cat1, int cat2);
 	void AddSite(int site, int cat);

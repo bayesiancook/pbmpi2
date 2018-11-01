@@ -20,6 +20,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 void GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 
+    cerr << "in GPSS RASCATGTRSBDP GlobalUpdateParameters: check code\n";
+    exit(1);
+
 	if (GetNprocs() > 1)	{
 	// MPI2
 	// should send the slaves the relevant information
@@ -62,7 +65,7 @@ void GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()
 	}
 
 	for (int i=0; i<GetDim(); i++)	{
-		dvector[1+nbranch+nrr+i] = dirweight[i];
+		dvector[1+nbranch+nrr+i] = dirweight[0][i];
 	}
 
 	for(i=0; i<L1; ++i) {
@@ -126,7 +129,7 @@ void GeneralPathSuffStatRASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters()	
 		rr[i] = dvector[1+nbranch+i];
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[1+nbranch+nrr+i];
+		dirweight[0][i] = dvector[1+nbranch+nrr+i];
 	}
 	for(i=0; i<L1; ++i) {
 		for(j=0; j<L2; ++j) {

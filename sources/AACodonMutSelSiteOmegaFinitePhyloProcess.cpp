@@ -70,7 +70,7 @@ void AACodonMutSelSiteOmegaFinitePhyloProcess::SlaveUpdateParameters()	{
 		}
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[index];
+		dirweight[0][i] = dvector[index];
 		index++;
 	}
 	for(int i=0; i<ProfileProcess::GetNsite(); ++i) {
@@ -190,7 +190,7 @@ void AACodonMutSelSiteOmegaFinitePhyloProcess::GlobalUpdateParameters() {
 		}
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dvector[index] = dirweight[i];
+		dvector[index] = dirweight[0][i];
 		index++;
 	}
 

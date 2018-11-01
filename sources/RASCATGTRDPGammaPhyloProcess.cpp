@@ -20,82 +20,136 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 void RASCATGTRDPGammaPhyloProcess::GlobalUpdateParameters()	{
 
 	if (GetNprocs() > 1)	{
-	// MPI2
-	// should send the slaves the relevant information
-	// about model parameters
 
-	// for this model, should broadcast
-	// double alpha
-	// int Ncomponent
-	// int* alloc
-	// double* rr
-	// double** profile
-	// double* brancharray
-	// (but should first call PutBranchLengthsIntoArray())
-	// 
-	// upon receiving this information
-	// slave should 
-	// store it in the local copies of the variables
-	// and then call
-	// SetBranchLengthsFromArray()
-	// SetAlpha(inalpha)
+        int nd = 2 + GetNbranch() + GetNrr() + GetNmodeMax()*GetDim() + Nstatcomp*(GetDim()+1) + 1;
+        int ni = 1 + GetNsite();
+        int* ivector = new int[ni];
+        double* dvector = new double[nd]; 
 
-	// ResampleWeights();
+        MESSAGE signal = PARAMETER_DIFFUSION;
+        MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	int i,j,nrr,nbranch = GetNbranch(),ni,nd,L1,L2;
-	nrr = GetNrr();
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = 2 + nbranch + nrr + L1*L2 + GetDim() + 1;
-	ni = 1 + GetNsite();
-	int ivector[ni];
-	double dvector[nd]; 
-	MESSAGE signal = PARAMETER_DIFFUSION;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+        // GlobalBroadcastTree();
 
-	// GlobalBroadcastTree();
+        // First we assemble the vector of doubles for distribution
+        int index = 0;
+        dvector[index] = GetAlpha();
+        index++;
+        dvector[index] = GetPinv();
+        index++;
+        for(int i=0; i<GetNbranch(); i++)    {
+            dvector[index] = blarray[i];
+            index++;
+        }
+        
+        for (int i=0; i<GetNrr(); i++)  {
+            dvector[index] = rr[i];
+            index++;
+        }
 
-	// First we assemble the vector of doubles for distribution
+        for (int i=0; i<GetNmodeMax(); i++) {
+            for (int j=0; j<GetDim(); j++)  {
+                dvector[index] = profile[i][j];
+                index++;
+            }
+        }
+
+        for (int k=0; k<Nstatcomp; k++) {
+            dvector[index] = statweight[k];
+            index++;
+            for (int i=0; i<GetDim(); i++)	{
+                dvector[index] = dirweight[k][i];
+                index++;
+            }
+        }
+
+        dvector[index] = kappa;
+        index++;
+
+        if (index != nd)    {
+            cerr << "error in global update params: non matching dim\n";
+            exit(1);
+        }
+
+        // Now the vector of ints
+        ivector[0] = GetNcomponent();
+        for(int i=0; i<GetNsite(); i++) {
+            ivector[1+i] = DPProfileProcess::alloc[i];
+        }
+
+        // Now send out the doubles and ints over the wire...
+        MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
+        MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+        delete[] dvector;
+        delete[] ivector;
+    }
+
+    else    {
+        UpdateMatrices();
+    }
+
+}
+
+
+void RASCATGTRDPGammaPhyloProcess::SlaveUpdateParameters()	{
+
+	// SlaveBroadcastTree();
+
+	int nd = 2 + GetNbranch() + GetNrr() + GetNmodeMax()*GetDim() + Nstatcomp*(GetDim()+1) + 1;
+	int ni = 1 + GetNsite();
+	int* ivector = new int[ni];
+	double* dvector = new double[nd];
+
+	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
 	int index = 0;
-	dvector[index] = GetAlpha();
-	index++;
-	dvector[index] = GetPinv();
-	index++;
-	for(i=0; i<nbranch; ++i) {
-		dvector[index] = blarray[i];
-		index++;
-	}
-	
-	for(i=0; i<nrr ; ++i) {
-		dvector[index] = rr[i];
+	SetRateParams(dvector[index],dvector[index+1]);
+	index+=2;
+
+    for (int i=0; i<GetNbranch(); i++)   {
+		blarray[i] = dvector[index];
 		index++;
 	}
 
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			dvector[index] = profile[i][j];
+    for (int i=0; i<GetNrr(); i++)  {
+		rr[i] = dvector[index];
+		index++;
+	}
+
+    for (int i=0; i<GetNmodeMax(); i++) {
+        for (int j=0; j<GetDim(); j++)  {
+			profile[i][j] = dvector[index];
 			index++;
 		}
 	}
-	for (int i=0; i<GetDim(); i++)	{
-		dvector[index] = dirweight[i];
-		index++;
-	}
-	dvector[index] = kappa;
+
+    for (int k=0; k<Nstatcomp; k++) {
+        statweight[k] = dvector[index];
+        index++;
+        for (int i=0; i<GetDim(); i++)	{
+            dirweight[k][i] = dvector[index];
+            index++;
+        }
+    }
+	kappa = dvector[index];
 	index++;
+    
+    if (index != nd)    {
+        cerr << "error in slave update params: non matching dim\n";
+        exit(1);
+    }
 
-	// Now the vector of ints
-	ivector[0] = GetNcomponent();
-	for(i=0; i<GetNsite(); ++i) {
-		ivector[1+i] = DPProfileProcess::alloc[i];
+	Ncomponent = ivector[0];
+	for(int i=0; i<GetNsite(); i++) {
+		DPProfileProcess::alloc[i] = ivector[1+i];
 	}
 
-	// Now send out the doubles and ints over the wire...
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	}
+	delete[] dvector;
+	delete[] ivector;
+	// some upate here ?
 }
-
 
 void RASCATGTRDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
@@ -113,52 +167,4 @@ void RASCATGTRDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 	default:
 		PhyloProcess::SlaveExecute(signal);
 	}
-}
-
-void RASCATGTRDPGammaPhyloProcess::SlaveUpdateParameters()	{
-
-	// SlaveBroadcastTree();
-
-	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nrr = GetNrr();
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = 2 + nbranch + nrr + L1*L2 + GetDim() + 1;
-	ni = 1 + GetNsite();
-	int* ivector = new int[ni];
-	double* dvector = new double[nd];
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	int index = 0;
-	SetRateParams(dvector[index],dvector[index+1]);
-	index+=2;
-	for(i=0; i<nbranch; ++i) {
-		blarray[i] = dvector[index];
-		index++;
-	}
-
-	for(i=0; i<nrr; ++i) {
-		rr[i] = dvector[index];
-		index++;
-	}
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			profile[i][j] = dvector[index];
-			index++;
-		}
-	}
-	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[index];
-		index++;
-	}
-	kappa = dvector[index];
-	index++;
-
-	Ncomponent = ivector[0];
-	for(i=0; i<GetNsite(); ++i) {
-		DPProfileProcess::alloc[i] = ivector[1+i];
-	}
-	delete[] dvector;
-	delete[] ivector;
-
-	// some upate here ?
 }

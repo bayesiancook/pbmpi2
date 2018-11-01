@@ -700,13 +700,13 @@ double IIDDirichletIIDGammaPhyloProcess::GetVarLogMarginalLikelihood(double* sit
                 double postw = 0;
                 for (int k=0; k<GetDim(); k++)  {
 
-                    logprior += (dirweight[k] - 1)*meanlogprofile[i][k];
-                    logprior -= rnd::GetRandom().logGamma(dirweight[k]);
-                    priorw += dirweight[k];
+                    logprior += (dirweight[0][k] - 1)*meanlogprofile[i][k];
+                    logprior -= rnd::GetRandom().logGamma(dirweight[0][k]);
+                    priorw += dirweight[0][k];
 
                     if (sitescore)  {
-                        sitescore[i] += (dirweight[k] - 1)*meanlogprofile[i][k];
-                        sitescore[i] -= rnd::GetRandom().logGamma(dirweight[k]);
+                        sitescore[i] += (dirweight[0][k] - 1)*meanlogprofile[i][k];
+                        sitescore[i] -= rnd::GetRandom().logGamma(dirweight[0][k]);
                     }
 
                     logpost += (gammastar[i][k] - 1)*meanlogprofile[i][k];
@@ -785,9 +785,9 @@ double IIDDirichletIIDGammaPhyloProcess::GetVarLogMarginalLikelihood()  {
             double postw = 0;
             for (int k=0; k<GetDim(); k++)  {
 
-                logprior += (dirweight[k] - 1)*log(profile[i][k]);
-                logprior -= rnd::GetRandom().logGamma(dirweight[k]);
-                priorw += dirweight[k];
+                logprior += (dirweight[0][k] - 1)*log(profile[i][k]);
+                logprior -= rnd::GetRandom().logGamma(dirweight[0][k]);
+                priorw += dirweight[0][k];
 
                 logpost += (gammastar[i][k] - 1)*log(profile[i][k]);
                 logpost -= rnd::GetRandom().logGamma(gammastar[i][k]);
@@ -936,7 +936,7 @@ void IIDDirichletIIDGammaPhyloProcess::UpdateVarProfiles() {
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)    {
         if (ActiveSite(i))  {
             for (int k=0; k<GetDim(); k++)  {
-                gammastar[i][k] = dirweight[k] + siteprofilesuffstatcount[i][k];
+                gammastar[i][k] = dirweight[0][k] + siteprofilesuffstatcount[i][k];
             }
         }
     }
@@ -959,7 +959,7 @@ void IIDDirichletIIDGammaPhyloProcess::UpdateVarProfiles() {
         for (int i=0; i<GetNsite(); i++)    {
             double total = 0;
             for (int k=0; k<GetDim(); k++)  {
-                profile[i][k] = dirweight[k] + siteprofilesuffstatcount[i][k];
+                profile[i][k] = dirweight[0][k] + siteprofilesuffstatcount[i][k];
                 total += profile[i][k];
             }
             for (int k=0; k<GetDim(); k++)  {
@@ -971,8 +971,8 @@ void IIDDirichletIIDGammaPhyloProcess::UpdateVarProfiles() {
         for (int i=0; i<GetNsite(); i++)    {
             double tot = 0;
             for (int k=0; k<GetDim(); k++)  {
-                profile[i][k] = exp(rnd::GetRandom().Psi(dirweight[k] + siteprofilesuffstatcount[i][k]));
-                tot += dirweight[k] + siteprofilesuffstatcount[i][k];
+                profile[i][k] = exp(rnd::GetRandom().Psi(dirweight[0][k] + siteprofilesuffstatcount[i][k]));
+                tot += dirweight[0][k] + siteprofilesuffstatcount[i][k];
             }
             double z = exp(rnd::GetRandom().Psi(tot));
             double norm = 0;
@@ -1023,7 +1023,7 @@ void IIDDirichletIIDGammaPhyloProcess::GlobalUpdateParameters()	{
             }
         }
         for (int i=0; i<GetDim(); i++)	{
-            dvector[index] = dirweight[i];
+            dvector[index] = dirweight[0][i];
             index++;
         }
 
@@ -1066,7 +1066,7 @@ void IIDDirichletIIDGammaPhyloProcess::SlaveUpdateParameters()	{
 		}
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[index];
+		dirweight[0][i] = dvector[index];
 		index++;
 	}
 

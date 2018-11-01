@@ -87,10 +87,13 @@ double PoissonFiniteProfileProcess::NonMPIMove(double tuning, int n, int nrep)	{
 void PoissonFiniteProfileProcess::ToStream(ostream& os)	{
 
 	os << Ncomponent << '\n';
-	for (int j=0; j<GetDim(); j++)	{
-		os << dirweight[j] << '\t';
-	}
-	os << '\n';
+    for (int k=0; k<Nstatcomp; k++) {
+        os << statweight[k] << '\t';
+        for (int j=0; j<GetDim(); j++)	{
+            os << dirweight[k][j] << '\t';
+        }
+        os << '\n';
+    }
 	os << '\n';
 	for (int i=0; i<Ncomponent; i++)	{
 		for (int j=0; j<GetDim(); j++)	{
@@ -114,9 +117,12 @@ void PoissonFiniteProfileProcess::FromStream(istream& is)	{
 
 	is >> Ncomponent;
 	
-	for (int i=0; i<GetDim(); i++)	{
-		is >> dirweight[i];
-	}
+    for (int k=0; k<Nstatcomp; k++) {
+        is >> statweight[k];
+        for (int i=0; i<GetDim(); i++)	{
+            is >> dirweight[k][i];
+        }
+    }
 
 	for (int i=0; i<Ncomponent; i++)	{
 		for (int j=0; j<GetDim(); j++)	{

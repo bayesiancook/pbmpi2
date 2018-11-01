@@ -23,8 +23,7 @@ class DirichletProfileProcess : public virtual ProfileProcess {
 
 	public:
 
-	DirichletProfileProcess() : dirweight(0), statcenter(0), statalpha(0), statweight(0) {}
-// Nstatcomp(1), dirpriortype(1), fixstatcenter(0), fixstatalpha(0), fixstatweight(0), priorempmix(0), priormixtype("None") {}
+	DirichletProfileProcess() : dirweight(0), statweight(0) {}
 	virtual ~DirichletProfileProcess() {}
 
 	double GetMeanDirWeight();
@@ -51,31 +50,16 @@ class DirichletProfileProcess : public virtual ProfileProcess {
 	}
 
 	double MoveStatWeight();
-	double MoveStatAlpha(double tuning, int nrep);
-	double MoveStatCenter(double tuning, int nrep, int n);
-	double MoveDirWeights(double tuning, int nrep);
+	double MoveDirWeights(int cat, double tuning, int nrep);
 
 	protected:
 
 	virtual void Create();
 	virtual void Delete();
 
-	double* dirweight;
-
-	double** statcenter;
-	double* statalpha;
+    // int Nstatcomp;
 	double* statweight;
-
-	// currently defined in ProfileProcess
-	/*
-	int Nstatcomp;
-	int dirpriortype;
-	int fixstatcenter;
-	int fixstatalpha;
-	int fixstatweight;
-	int priorempmix;
-	string priormixtype;
-	*/
+	double** dirweight;
 };
 
 

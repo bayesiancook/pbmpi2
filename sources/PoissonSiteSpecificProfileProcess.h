@@ -43,9 +43,9 @@ class PoissonSiteSpecificProfileProcess: public virtual PoissonProfileProcess, p
 		GlobalUpdateSiteProfileSuffStat();
         GlobalResampleSiteProfiles();
         GlobalUpdateProfileHyperSuffStat();
-		MoveDirWeights(1,100);
-        MoveDirWeights(0.3,100);
-        MoveDirWeights(0.1,100);
+		MoveDirWeights(0,1,100);
+        MoveDirWeights(0,0.3,100);
+        MoveDirWeights(0,0.1,100);
         return 1.0;
 	}
 
@@ -54,14 +54,14 @@ class PoissonSiteSpecificProfileProcess: public virtual PoissonProfileProcess, p
         ResampleSiteProfiles();
         UpdateProfileHyperSuffStat();
         /*
-		MoveDirWeights(1,100);
-        MoveDirWeights(0.3,100);
-        MoveDirWeights(0.1,100);
+		MoveDirWeights(0,1,100);
+        MoveDirWeights(0,0.3,100);
+        MoveDirWeights(0,0.1,100);
         */
 		return 1.0;
 	}
 
-	double MoveDirWeights(double tuning, int nrep);
+	double MoveDirWeights(int cat, double tuning, int nrep);
 
     void GlobalResampleSiteProfiles();
 	void ResampleSiteProfiles();

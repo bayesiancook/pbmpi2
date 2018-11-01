@@ -40,8 +40,12 @@ class DirichletSiteSpecificProfileProcess : public virtual DirichletProfileProce
 	}
 
     virtual void ToStream(ostream& os)  {
+        if (Nstatcomp > 1)  {
+            cerr << "error in DirichletSiteSpecificProfileProcess ToStream\n";
+            exit(1);
+        }
         for (int k=0; k<GetDim(); k++)  {
-            os << dirweight[k] << '\t';
+            os << dirweight[0][k] << '\t';
         }
         os << '\n';
         for (int i=0; i<GetNsite(); i++)  {
@@ -53,8 +57,12 @@ class DirichletSiteSpecificProfileProcess : public virtual DirichletProfileProce
     }
 
     virtual void FromStream(istream& is)    {
+        if (Nstatcomp > 1)  {
+            cerr << "error in DirichletSiteSpecificProfileProcess FromStream\n";
+            exit(1);
+        }
         for (int k=0; k<GetDim(); k++)  {
-            is >> dirweight[k];
+            is >> dirweight[0][k];
         }
         for (int i=0; i<GetNsite(); i++)  {
             for (int k=0; k<GetDim(); k++)  {

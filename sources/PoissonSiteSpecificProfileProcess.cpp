@@ -31,7 +31,11 @@ void PoissonSiteSpecificProfileProcess::Create()	{
 		PoissonProfileProcess::Create();
 		DirichletSiteSpecificProfileProcess::Create();
         logsum = new double[GetDim()];
-	}
+        if (Nstatcomp > 1)  {
+            cerr << "error in PoissonSiteSpecific: Nstatcomp > 1 not yet implemented\n";
+            exit(1);
+        }
+    }
 }
 
 void PoissonSiteSpecificProfileProcess::Delete() {
@@ -49,9 +53,9 @@ double PoissonSiteSpecificProfileProcess::ProfileSuffStatLogProb(int site)	{
 	double postweight = 0;
     const double* count = GetSiteProfileSuffStatCount(site);
 	for (int k=0; k<GetDim(); k++)	{
-		total += rnd::GetRandom().logGamma(dirweight[k] + count[k]) - rnd::GetRandom().logGamma(dirweight[k]);
-		priorweight += dirweight[k];
-		postweight += dirweight[k] + count[k];
+		total += rnd::GetRandom().logGamma(dirweight[0][k] + count[k]) - rnd::GetRandom().logGamma(dirweight[0][k]);
+		priorweight += dirweight[0][k];
+		postweight += dirweight[0][k] + count[k];
 	}
 	total += rnd::GetRandom().logGamma(priorweight) - rnd::GetRandom().logGamma(postweight);
 	return total;
@@ -79,7 +83,7 @@ void PoissonSiteSpecificProfileProcess::ResampleSiteProfile(int site)	{
 	double total = 0;
     const double* count = GetSiteProfileSuffStatCount(site);
 	for (int k=0; k<GetDim(); k++)	{
-		profile[site][k] = rnd::GetRandom().sGamma(dirweight[k] + count[k]);
+		profile[site][k] = rnd::GetRandom().sGamma(dirweight[0][k] + count[k]);
 		if (profile[site][k] < stateps)	{
 			profile[site][k] = stateps;
 		}
@@ -106,9 +110,9 @@ double PoissonSiteSpecificProfileProcess::LogStatIntPrior(int site)	{
 	double totweight = 0;
     const double* count = GetSiteProfileSuffStatCount(site);
 	for (int k=0; k<GetDim(); k++)	{
-		total += rnd::GetRandom().logGamma(dirweight[k] + count[site][k]);
-		total -= rnd::GetRandom().logGamma(dirweight[k]);
-		totweight += dirweight[k];
+		total += rnd::GetRandom().logGamma(dirweight[0][k] + count[site][k]);
+		total -= rnd::GetRandom().logGamma(dirweight[0][k]);
+		totweight += dirweight[0][k];
 		tot += count[site][k];
 	}
 	total -= rnd::GetRandom().logGamma(totweight + tot);
@@ -166,18 +170,23 @@ double PoissonSiteSpecificProfileProcess::ProfileHyperSuffStatLogProb() {
     double totlogprob = 0;
     double totweight = 0;
     for (int k=0; k<GetDim(); k++)  {
-        totlogprob -= rnd::GetRandom().logGamma(dirweight[k]);
-        totweight += dirweight[k];
+        totlogprob -= rnd::GetRandom().logGamma(dirweight[0][k]);
+        totweight += dirweight[0][k];
     }
     totlogprob += rnd::GetRandom().logGamma(totweight);
     totlogprob *= GetNsite();
     for (int k=0; k<GetDim(); k++)  {
-        totlogprob += (dirweight[k]-1)*logsum[k];
+        totlogprob += (dirweight[0][k]-1)*logsum[k];
     }
     return totlogprob;
 }
 
-double PoissonSiteSpecificProfileProcess::MoveDirWeights(double tuning, int nrep)	{
+double PoissonSiteSpecificProfileProcess::MoveDirWeights(int cat, double tuning, int nrep)	{
+
+    if (cat > 0)    {
+        cerr << "error in PoissonSiteSpecific:: MoveDirWeights\n";
+        exit(1);
+    }
 
 	double naccepted = 0;
 	for (int rep=0; rep<nrep; rep++)	{
@@ -185,7 +194,7 @@ double PoissonSiteSpecificProfileProcess::MoveDirWeights(double tuning, int nrep
 			double deltalogprob = - LogHyperPrior() - ProfileHyperSuffStatLogProb();
 			double m = tuning * (rnd::GetRandom().Uniform() - 0.5);
 			double e = exp(m);
-			dirweight[k] *= e;
+			dirweight[0][k] *= e;
 			deltalogprob += LogHyperPrior() + ProfileHyperSuffStatLogProb();
 			deltalogprob += m;
 			int accepted = (log(rnd::GetRandom().Uniform()) < deltalogprob);
@@ -193,7 +202,7 @@ double PoissonSiteSpecificProfileProcess::MoveDirWeights(double tuning, int nrep
 				naccepted++;
 			}
 			else	{
-				dirweight[k] /= e;
+				dirweight[0][k] /= e;
 			}
 		}
 	}

@@ -71,7 +71,7 @@ void AACodonMutSelSBDPPhyloProcess::SlaveUpdateParameters()	{
 		}
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[index];
+		dirweight[0][i] = dvector[index];
 		index++;
 	}
 	kappa = dvector[index];
@@ -178,7 +178,7 @@ void AACodonMutSelSBDPPhyloProcess::GlobalUpdateParameters() {
 		}
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dvector[index] = dirweight[i];
+		dvector[index] = dirweight[0][i];
 		index++;
 	}
 	dvector[index] = kappa;

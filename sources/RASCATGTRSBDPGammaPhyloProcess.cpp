@@ -24,99 +24,150 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 void RASCATGTRSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 
-	// rnd::GetRandom().BackupBuffer();
-
 	if (GetNprocs() > 1)	{
-	// MPI2
-	// should send the slaves the relevant information
-	// about model parameters
 
-	// for this model, should broadcast
-	// double alpha
-	// int Ncomponent
-	// int* alloc
-	// double* rr
-	// double** profile
-	// double* brancharray
-	// (but should first call PutBranchLengthsIntoArray())
-	// 
-	// upon receiving this information
-	// slave should 
-	// store it in the local copies of the variables
-	// and then call
-	// SetBranchLengthsFromArray()
-	// SetAlpha(inalpha)
+        // ResampleWeights();
+        RenormalizeProfiles();
 
-	// ResampleWeights();
-	RenormalizeProfiles();
+        int nd = 2 + GetNbranch() + GetNrr() + GetNmodeMax()*GetDim() + Nstatcomp*(GetDim()+1) + 1 + 2*GetNmodeMax();
+        int ni = 1 + GetNsite();
+        double* dvector = new double[nd];
+        int* ivector = new int[ni];
 
-	int i,j,nrr,nbranch = GetNbranch(),ni,nd,L1,L2;
-	nrr = GetNrr();
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = 2 + nbranch + nrr + L1*L2 + GetDim() + 1;
-	ni = 1 + GetNsite();
-	int ivector[ni];
-	double dvector[nd]; 
-	MESSAGE signal = PARAMETER_DIFFUSION;
-	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
+        MESSAGE signal = PARAMETER_DIFFUSION;
+        MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
-	// GlobalBroadcastTree();
+        // First we assemble the vector of doubles for distribution
+        int index = 0;
+        dvector[index] = GetAlpha();
+        index++;
+        dvector[index] = GetPinv();
+        index++;
+        
+        for (int i=0; i<GetNbranch(); i++)  {
+            dvector[index] = blarray[i];
+            index++;
+        }
+        
+        for (int i=0; i<GetNrr(); i++)  {
+            dvector[index] = rr[i];
+            index++;
+        }
 
-	// First we assemble the vector of doubles for distribution
+        for (int i=0; i<GetNmodeMax(); i++) {
+            for (int j=0; j<GetDim(); j++)  {
+                dvector[index] = profile[i][j];
+                index++;
+            }
+        }
+
+        for (int k=0; k<Nstatcomp; k++) {
+            dvector[index] = statweight[k];
+            index++;
+            for (int i=0; i<GetDim(); i++)	{
+                dvector[index] = dirweight[k][i];
+                index++;
+            }
+        }
+
+        for (int i=0; i<GetNmodeMax(); i++) {
+            dvector[index] = V[i];
+            index++;
+            dvector[index] = weight[i];
+            index++;
+        }
+
+        dvector[index] = kappa;
+        index++;
+
+        if (index != nd)    {
+            cerr << "error in globalupdate params: non matching dim\n";
+            exit(1);
+        }
+
+        // Now the vector of ints
+        ivector[0] = GetNcomponent();
+        for(int i=0; i<GetNsite(); i++) {
+            ivector[1+i] = SBDPProfileProcess::alloc[i];
+        }
+
+        // Now send out the doubles and ints over the wire...
+        MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
+        MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
+        delete[] dvector;
+        delete[] ivector;
+    }
+    else	{
+        UpdateMatrices();
+    }
+}
+
+void RASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters()	{
+
+    int nd = 2 + GetNbranch() + GetNrr() + GetNmodeMax()*GetDim() + Nstatcomp*(GetDim()+1) + 1 + 2*GetNmodeMax();
+    int ni = 1 + GetNsite();
+    double* dvector = new double[nd];
+    int* ivector = new int[ni];
+
+	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
 	int index = 0;
-	dvector[index] = GetAlpha();
-	index++;
-	dvector[index] = GetPinv();
-	index++;
-	
-	for(i=0; i<nbranch; ++i) {
-		dvector[index] = blarray[i];
-		index++;
-	}
-	
-	for(i=0; i<nrr ; ++i) {
-		dvector[index] = rr[i];
+	SetRateParams(dvector[index],dvector[index+1]);
+	index+=2;
+
+    for (int i=0; i<GetNbranch(); i++)  {
+		blarray[i] = dvector[index];
 		index++;
 	}
 
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			dvector[index] = profile[i][j];
+    for (int i=0; i<GetNrr(); i++)  {
+		rr[i] = dvector[index];
+		index++;
+	}
+
+    for (int i=0; i<GetNmodeMax(); i++) {
+        for (int j=0; j<GetDim(); j++)  {
+			profile[i][j] = dvector[index];
 			index++;
 		}
 	}
-	for (int i=0; i<GetDim(); i++)	{
-		dvector[index] = dirweight[i];
-		index++;
-	}
-	dvector[index] = kappa;
+
+    for (int k=0; k<Nstatcomp; k++) {
+        statweight[k] = dvector[index];
+        index++;
+        for (int i=0; i<GetDim(); i++)	{
+            dirweight[k][i] = dvector[index];
+            index++;
+        }
+    }
+
+    for (int i=0; i<GetNmodeMax(); i++) {
+        V[i] = dvector[index];
+        index++;
+        weight[i] = dvector[index];
+        index++;
+    }
+
+	kappa = dvector[index];
 	index++;
 
+    if (index != nd)    {
+        cerr << "error in slave update param: non matching dim\n";
+        exit(1);
+    }
 
-	// Now the vector of ints
-	ivector[0] = GetNcomponent();
-	for(i=0; i<GetNsite(); ++i) {
-		ivector[1+i] = SBDPProfileProcess::alloc[i];
+	Ncomponent = ivector[0];
+	for(int i=0; i<GetNsite(); i++) {
+		SBDPProfileProcess::alloc[i] = ivector[1+i];
 	}
 
-	// Now send out the doubles and ints over the wire...
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast(V,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-	}
-	else	{
-		UpdateMatrices();
-	}
-	/*
-	if (rnd::GetRandom().BufferHasChanged())	{
-		cerr << "rnd buffer has changed during update params\n";
-		exit(1);
-	}
-	*/
+	delete[] dvector;
+	delete[] ivector;
+
+	UpdateMatrices();
 }
-
 
 void RASCATGTRSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 
@@ -137,64 +188,6 @@ void RASCATGTRSBDPGammaPhyloProcess::SlaveExecute(MESSAGE signal)	{
 	default:
 		PhyloProcess::SlaveExecute(signal);
 	}
-}
-
-void RASCATGTRSBDPGammaPhyloProcess::SlaveUpdateParameters()	{
-
-	// rnd::GetRandom().BackupBuffer();
-	// SlaveBroadcastTree();
-
-	int i,j,L1,L2,ni,nd,nbranch = GetNbranch(),nrr = GetNrr();
-	L1 = GetNmodeMax();
-	L2 = GetDim();
-	nd = 2 + nbranch + nrr + L1*L2 + GetDim() + 1;
-	ni = 1 + GetNsite();
-	int* ivector = new int[ni];
-	double* dvector = new double[nd];
-	MPI_Bcast(ivector,ni,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	int index = 0;
-	SetRateParams(dvector[index],dvector[index+1]);
-	index+=2;
-	for(i=0; i<nbranch; ++i) {
-		blarray[i] = dvector[index];
-		index++;
-	}
-
-	for(i=0; i<nrr; ++i) {
-		rr[i] = dvector[index];
-		index++;
-	}
-	for(i=0; i<L1; ++i) {
-		for(j=0; j<L2; ++j) {
-			profile[i][j] = dvector[index];
-			index++;
-		}
-	}
-	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[index];
-		index++;
-	}
-	kappa = dvector[index];
-	index++;
-
-	Ncomponent = ivector[0];
-	for(i=0; i<GetNsite(); ++i) {
-		SBDPProfileProcess::alloc[i] = ivector[1+i];
-	}
-	delete[] dvector;
-	delete[] ivector;
-
-	MPI_Bcast(V,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast(weight,GetNcomponent(),MPI_DOUBLE,0,MPI_COMM_WORLD);
-
-	UpdateMatrices();
-	/*
-	if (rnd::GetRandom().BufferHasChanged())	{
-		cerr << "rnd buffer has changed during update params\n";
-		exit(1);
-	}
-	*/
 }
 
 
@@ -228,7 +221,7 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	int rootprior = 1;
 
 	int ssdist = 0;
-	int meandirweight = 0;
+	// int meandirweight = 0;
 	int ndisc = 100;
 	int nsample = 1000;
 
@@ -329,9 +322,11 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 			else if (s == "-m")	{
 				nocc = 1;
 			}
+            /*
 			else if (s == "-meandirweight")	{
 				meandirweight = 1;
 			}
+            */
 			else if (s == "-ssdist")	{
 				ssdist = 1;
 				i++;
@@ -398,9 +393,11 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadPB(int argc, char* argv[])	{
 	else if (ssdist)	{
 		ReadProfileDistribution(name,burnin,every,until,ndisc,cialpha,nsample);
 	}
+    /*
 	else if (meandirweight)	{
 		ReadMeanDirWeight(name,burnin,every,until);
 	}
+    */
 	else if (testprofile)	{
 		ReadTestProfile(name,tuning,testprofile,burnin,every,until);
 	}
@@ -867,6 +864,7 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadTestProfile(string name, int nrep, doub
 
 }
 
+/*
 void RASCATGTRSBDPGammaPhyloProcess::ReadMeanDirWeight(string name, int burnin, int every, int until)	{
 
 	double* meandirweight = new double[GetDim()];
@@ -921,6 +919,7 @@ void RASCATGTRSBDPGammaPhyloProcess::ReadMeanDirWeight(string name, int burnin, 
 	}
 	dos << '\n';
 }
+*/
 
 void RASCATGTRSBDPGammaPhyloProcess::ReadProfileDistribution(string name, int burnin, int every, int until, int ndisc, double cialpha, int nsample)	{
 

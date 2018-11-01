@@ -19,10 +19,13 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 void GTRFiniteProfileProcess::ToStream(ostream& os)	{
 
 	os << Ncomponent << '\n';
-	for (int j=0; j<GetDim(); j++)	{
-		os << dirweight[j] << '\t';
-	}
-	os << '\n';
+    for (int k=0; k<Nstatcomp; k++) {
+        os << statweight[k] << '\t';
+        for (int j=0; j<GetDim(); j++)	{
+            os << dirweight[k][j] << '\t';
+        }
+        os << '\n';
+    }
 	os << '\n';
 	for (int i=0; i<GetNrr(); i++)	{
 		os << rr[i] << '\t';
@@ -50,9 +53,12 @@ void GTRFiniteProfileProcess::FromStream(istream& is)	{
 
 	is >> Ncomponent;
 	
-	for (int i=0; i<GetDim(); i++)	{
-		is >> dirweight[i];
-	}
+    for (int k=0; k<Nstatcomp; k++) {
+        is >> statweight[k];
+        for (int i=0; i<GetDim(); i++)	{
+            is >> dirweight[k][i];
+        }
+    }
 
 	for (int i=0; i<GetNrr(); i++)	{
 		is >> rr[i];

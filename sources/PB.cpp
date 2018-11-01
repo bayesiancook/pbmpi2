@@ -674,7 +674,7 @@ int main(int argc, char* argv[])	{
 				i++;
 				nstatcomp = atoi(argv[i]);
 			}
-			else if (s == "-empmixbaseprior")	{
+			else if ((s == "-empmixbaseprior") || (s == "-priormix"))	{
 				dirpriortype = 0;
 				i++;
 				priorempmix = 1;

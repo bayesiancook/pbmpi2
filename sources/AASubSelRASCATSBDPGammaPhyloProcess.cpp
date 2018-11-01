@@ -86,7 +86,7 @@ void AASubSelRASCATSBDPGammaPhyloProcess::GlobalUpdateParameters()	{
 	}
 
 	for (int i=0; i<GetDim(); i++)	{
-		dvector[1+nbranch+nrr+i] = dirweight[i];
+		dvector[1+nbranch+nrr+i] = dirweight[0][i];
 	}
 
 	for(i=0; i<L1; ++i) {
@@ -153,7 +153,7 @@ void AASubSelRASCATSBDPGammaPhyloProcess::SlaveUpdateParameters()	{
 		rr[i] = dvector[1+nbranch+i];
 	}
 	for (int i=0; i<GetDim(); i++)	{
-		dirweight[i] = dvector[1+nbranch+nrr+i];
+		dirweight[0][i] = dvector[1+nbranch+nrr+i];
 	}
 	for(i=0; i<L1; ++i) {
 		for(j=0; j<L2; ++j) {

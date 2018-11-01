@@ -25,10 +25,13 @@ void GTRDPProfileProcess::ToStream(ostream& os)	{
 		os << kappamean << '\t' << kapparelvar << '\n';
 	}
 	*/
-	for (int j=0; j<GetDim(); j++)	{
-		os << dirweight[j] << '\t';
-	}
-	os << '\n';
+    for (int k=0; k<Nstatcomp; k++) {
+        os << statweight[k] << '\t';
+        for (int j=0; j<GetDim(); j++)	{
+            os << dirweight[k][j] << '\t';
+        }
+        os << '\n';
+    }
 	os << '\n';
 	for (int i=0; i<GetNrr(); i++)	{
 		os << rr[i] << '\t';
@@ -62,9 +65,12 @@ void GTRDPProfileProcess::FromStream(istream& is)	{
 	}
 	*/
 	
-	for (int i=0; i<GetDim(); i++)	{
-		is >> dirweight[i];
-	}
+    for (int k=0; k<Nstatcomp; k++) {
+        is >> statweight[k];
+        for (int i=0; i<GetDim(); i++)	{
+            is >> dirweight[k][i];
+        }
+    }
 
 	for (int i=0; i<GetNrr(); i++)	{
 		is >> rr[i];

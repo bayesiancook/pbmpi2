@@ -73,10 +73,13 @@ class AACodonMutSelFiniteOmegaSBDPProfileProcess : public virtual SBDPProfilePro
 
 		os << kappa << '\n';
 		os << Ncomponent << '\n';
-		for (int j=0; j<GetDim(); j++)	{
-			os << dirweight[j] << '\t';
-		}
-		os << '\n';
+        for (int k=0; k<Nstatcomp; k++) {
+            os << statweight[k] << '\t';
+            for (int j=0; j<GetDim(); j++)	{
+                os << dirweight[k][j] << '\t';
+            }
+            os << '\n';
+        }
 		os << '\n';
 		for (int i=0; i<Ncomponent; i++)	{
 			for (int j=0; j<GetDim(); j++)	{
@@ -114,9 +117,12 @@ class AACodonMutSelFiniteOmegaSBDPProfileProcess : public virtual SBDPProfilePro
 
 		is >> kappa;
 		is >> Ncomponent;
-		for (int j=0; j<GetDim(); j++)	{
-			is >> dirweight[j];
-		}
+        for (int k=0; k<Nstatcomp; k++) {
+            is >> statweight[k];
+            for (int j=0; j<GetDim(); j++)	{
+                is >> dirweight[k][j];
+            }
+        }
 		for (int i=0; i<Ncomponent; i++)	{
 			for (int j=0; j<GetDim(); j++)	{
 				is >> profile[i][j];

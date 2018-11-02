@@ -193,8 +193,12 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
 	}
 
 	virtual void Monitor(ostream& os)  {
-		// PhyloProcess::Monitor(os);
-        GlobalWriteSiteLogLToStream(os);
+        if (monitorlogl)    {
+            GlobalWriteSiteLogLToStream(os);
+        }
+        else    {
+		    PhyloProcess::Monitor(os);
+        }
 	}
 
 	double Move(double tuning = 1.0);

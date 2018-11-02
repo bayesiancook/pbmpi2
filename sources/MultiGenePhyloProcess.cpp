@@ -108,6 +108,7 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 		GlobalBroadcastTree();
 		MPI_Barrier(MPI_COMM_WORLD);
 
+        // global method
 		FromStream(is);
 
 		if (sis)	{
@@ -126,6 +127,7 @@ void MultiGenePhyloProcess::Open(istream& is, int unfold)	{
 		SlavePostOpen();
 		SlaveBroadcastTree();
 		MPI_Barrier(MPI_COMM_WORLD);
+        // starting from here, slave will enter wait loop
 	}
 
 	if (BPP)	{

@@ -167,6 +167,7 @@ int main(int argc, char* argv[])	{
 	int temperedrate = 0;
 
 	int reshuffle = 0;
+    int monitorlogl = 0;
 
     int varbayes = 0;
 
@@ -344,6 +345,9 @@ int main(int argc, char* argv[])	{
 			else if (s == "-reshuffle")	{
 				reshuffle = 1;
 			}
+            else if (s == "-logl")   {
+                monitorlogl = 1;
+            }
 			else if (s == "-Tbl")	{
 				i++;
 				treefile = argv[i];
@@ -1109,7 +1113,7 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,partitionfile,multigene,globalalpha,globalbl,mappsuffstat,modeltype,dgam,pinv,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,dirpriortype,nstatcomp,priorempmix,priormixtype,fixstatweight,fixstatalpha,fixstatcenter,rrtype,iscodon,sis,sisfrac,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,roottax1,roottax2,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,omegamixtype,fixnomegacomp,empomegamix,fixbl,sumovercomponents,omegaprior,omegamixturetype,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,reshuffle,name,myid,nprocs);
+		model = new Model(datafile,treefile,partitionfile,multigene,globalalpha,globalbl,mappsuffstat,modeltype,dgam,pinv,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,dirpriortype,nstatcomp,priorempmix,priormixtype,fixstatweight,fixstatalpha,fixstatcenter,rrtype,iscodon,sis,sisfrac,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,roottax1,roottax2,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,omegamixtype,fixnomegacomp,empomegamix,fixbl,sumovercomponents,omegaprior,omegamixturetype,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,reshuffle,monitorlogl,name,myid,nprocs);
 
 		if (! myid)	{
 			cerr << '\n';

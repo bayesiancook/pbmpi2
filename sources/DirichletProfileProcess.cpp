@@ -274,5 +274,6 @@ double DirichletProfileProcess::LogHyperPrior()	{
 			total -= dirweight[cat][k];
 		}
 	}
+    return total;
 }
 

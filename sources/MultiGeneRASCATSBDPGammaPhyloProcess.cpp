@@ -6,6 +6,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Create()	{
 
 	RASCATSBDPGammaPhyloProcess::Create();
 	MultiGenePhyloProcess::Create();
+    MultiGeneSBDPProfileProcess::Create();
 	if (GetMyid())	{
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == myid)	{
@@ -35,6 +36,7 @@ void MultiGeneRASCATSBDPGammaPhyloProcess::Delete()	{
 			}
 		}
 	}
+    MultiGeneSBDPProfileProcess::Delete();
 	MultiGenePhyloProcess::Delete();
 	RASCATSBDPGammaPhyloProcess::Delete();
 }

@@ -23,6 +23,8 @@ void MultiGeneSBDPProfileProcess::Create()	{
 
 	if (! kappaarray)	{
 		kappaarray = new double[Ngene];
+		statalphaarray = new double[Ngene];
+        nmodearray = new double[Ngene];
 		MultiGeneProfileProcess::Create();
 		SBDPProfileProcess::Create();
 	}
@@ -35,6 +37,10 @@ void MultiGeneSBDPProfileProcess::Delete()	{
 		MultiGeneProfileProcess::Delete();
 		delete[] kappaarray;
 		kappaarray = 0;
+		delete[] statalphaarray;
+		statalphaarray = 0;
+        delete[] nmodearray;
+        nmodearray = 0;
 	}
 }
 
@@ -133,6 +139,28 @@ void MultiGeneSBDPProfileProcess::GlobalCollectKappas()	{
 			}
 		}
 	}
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+	for(int i=1; i<GetNprocs(); i++) {
+		MPI_Recv(tmpkappaarray,Ngene,MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		for (int gene=0; gene<Ngene; gene++)	{
+			if (genealloc[gene] == i)	{
+				statalphaarray[gene] = tmpkappaarray[gene];
+			}
+		}
+	}
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+	for(int i=1; i<GetNprocs(); i++) {
+		MPI_Recv(tmpkappaarray,Ngene,MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+		for (int gene=0; gene<Ngene; gene++)	{
+			if (genealloc[gene] == i)	{
+				nmodearray[gene] = tmpkappaarray[gene];
+			}
+		}
+	}
 	delete[] tmpkappaarray;
 }
 
@@ -141,9 +169,19 @@ void MultiGeneSBDPProfileProcess::SlaveCollectKappas()	{
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
 			kappaarray[gene] = GetSBDPProfileProcess(gene)->GetKappa();
+			statalphaarray[gene] = GetSBDPProfileProcess(gene)->GetMeanDirWeight();
+			nmodearray[gene] = GetSBDPProfileProcess(gene)->GetNDisplayedComponent();
 		}
 	}
 	MPI_Send(kappaarray,Ngene,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+	MPI_Send(statalphaarray,Ngene,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+	MPI_Send(nmodearray,Ngene,MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
 }
 
 double MultiGeneSBDPProfileProcess::GlobalGetMeanNcomponent()	{

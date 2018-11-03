@@ -6,6 +6,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Create()	{
 	
 	RASCATGTRSBDPGammaPhyloProcess::Create();
 	MultiGenePhyloProcess::Create();
+    MultiGeneSBDPProfileProcess::Create();
 	MultiGeneExpoConjugateGTRProfileProcess::Create();
 	if (GetMyid())	{
 		for (int gene=0; gene<Ngene; gene++)	{
@@ -38,6 +39,7 @@ void MultiGeneRASCATGTRSBDPGammaPhyloProcess::Delete()	{
 		}
 	}
 	MultiGeneExpoConjugateGTRProfileProcess::Delete();
+    MultiGeneSBDPProfileProcess::Delete();
 	MultiGenePhyloProcess::Delete();
 	RASCATGTRSBDPGammaPhyloProcess::Delete();
 }

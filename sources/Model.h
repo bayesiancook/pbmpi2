@@ -546,6 +546,10 @@ class Model	{
 
 			Move(1,every);
 			
+			ofstream mos((name + ".monitor").c_str(), ios_base::app);
+			process->Monitor(mos);
+			mos.close();
+
 			ofstream os((name + ".treelist").c_str(), ios_base::app);
 
 			// this one is not useful
@@ -563,10 +567,6 @@ class Model	{
 			ofstream tos((name + ".trace").c_str(), ios_base::app);
 			Trace(tos);
 			tos.close();
-
-			ofstream mos((name + ".monitor").c_str(), ios_base::app);
-			process->Monitor(mos);
-			mos.close();
 
 			if (saveall)	{
 				ofstream cos((name + ".chain").c_str(),ios_base::app);

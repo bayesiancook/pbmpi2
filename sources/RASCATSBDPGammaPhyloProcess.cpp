@@ -494,6 +494,7 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood(double* sitelogl)	{
 		for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 			if (ActiveSite(i))	{
 
+                int bkalloc = SBDPProfileProcess::alloc[i];
 				// remove site
 				RemoveSite(i,SBDPProfileProcess::alloc[i]);
 
@@ -515,15 +516,17 @@ double RASCATSBDPGammaPhyloProcess::GetFullLogLikelihood(double* sitelogl)	{
 					cumul[k] = total;
 				}
 
+                /*
 				double u = total * rnd::GetRandom().Uniform();
 				int k = 0;
 				while ((k<GetNcomponent()) && (u>cumul[k]))	{
 					k++;
 				}
+                */
 
 				if (! reverseafterfull)	{
-					AddSite(i,k);
-					sitelogL[i] = modesitelogL[k];
+					AddSite(i,bkalloc);
+					// sitelogL[i] = modesitelogL[k];
 				}
 
 				double sitetotlogL = log(total) + max;

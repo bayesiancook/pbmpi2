@@ -197,7 +197,18 @@ class MultiGeneRASCATSBDPGammaPhyloProcess : public virtual MultiGenePhyloProces
             GlobalWriteSiteLogLToStream(os);
         }
         else    {
-		    PhyloProcess::Monitor(os);
+            GlobalCollectKappas();
+            for (int gene=0; gene<Ngene; gene++)    {
+                os << nmodearray[gene] << '\t';
+            }
+            for (int gene=0; gene<Ngene; gene++)    {
+                os << statalphaarray[gene] << '\t';
+            }
+            for (int gene=0; gene<Ngene; gene++)    {
+                os << kappaarray[gene] << '\t';
+            }
+            os << '\n';
+		    // PhyloProcess::Monitor(os);
         }
 	}
 

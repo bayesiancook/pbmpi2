@@ -674,22 +674,37 @@ void MultiGenePhyloProcess::GlobalWriteSiteLogLToStream(ostream& os)	{
 	MPI_Bcast(&signal,1,MPI_INT,0,MPI_COMM_WORLD);
 
 	MPI_Status stat;
-    int totsize = globalnsite[0];
     double* sitelogl = new double[globalnsite[0]];
+    double* tmpsitelogl = new double[globalnsite[0]];
     for (int k=0; k<globalnsite[0]; k++)    {
-        sitelogl[k] = 0;
+        sitelogl[k] = 1.0;
     }
 	for(int i=1; i<GetNprocs(); i++) {
+        MPI_Recv(tmpsitelogl,globalnsite[i],MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+        int fromindex = 0;
         int index = 0;
 		for (int gene=0; gene<Ngene; gene++)	{
 			if (genealloc[gene] == i)	{
-				MPI_Recv(sitelogl+index,genesize[gene],MPI_DOUBLE,i,TAG1,MPI_COMM_WORLD,&stat);
+                for (int j=0; j<genesize[gene]; j++)    {
+                    sitelogl[index+j] = tmpsitelogl[fromindex+j];
+                }
+                fromindex += genesize[gene];
 			}
             index += genesize[gene];
 		}
+        if (fromindex != globalnsite[i])    {
+            cerr << "error in MultiGenePhyloProcess::GlobalWriteSiteLogL: fromindex does not match\n";
+        }
+        if (index != globalnsite[0])    {
+            cerr << "error in MultiGenePhyloProcess::GlobalWriteSiteLogL: index does not match\n";
+        }
 	}
     double total = 0;
     for (int k=0; k<globalnsite[0]; k++)    {
+        if (sitelogl[k] == 1.0)  {
+            cerr << "error in MultiGenePhyloProcess::GlobalWriteSiteLogL: out of frame\n";
+            exit(1);
+        }
         total += sitelogl[k];
     }
     os << total;
@@ -697,18 +712,28 @@ void MultiGenePhyloProcess::GlobalWriteSiteLogLToStream(ostream& os)	{
         os << '\t' << sitelogl[k];
     }
     os << '\n';
+    delete[] tmpsitelogl;
     delete[] sitelogl;
 }
 
 void MultiGenePhyloProcess::SlaveWriteSiteLogLToStream()	{
+    double* sitelogl = new double[globalnsite[myid]];
+    for (int k=0; k<globalnsite[myid]; k++) {
+        sitelogl[k] = 1.0;
+    }
+    int index = 0;
 	for (int gene=0; gene<Ngene; gene++)	{
 		if (genealloc[gene] == myid)	{
-            double* sitelogl = new double[genesize[gene]];
-			genelnL[gene] = process[gene]->GetFullLogLikelihood(sitelogl);
-			MPI_Send(sitelogl,genesize[gene],MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
-            delete[] sitelogl;
+			genelnL[gene] = process[gene]->GetFullLogLikelihood(sitelogl+index);
+            index += genesize[gene];
 		}
 	}
+    if (index != globalnsite[myid]) {
+        cerr << "error in MultiGenePhyloProcess::SlaveWriteSiteLogLToStream\n";
+        exit(1);
+    }
+    MPI_Send(sitelogl,globalnsite[myid],MPI_DOUBLE,0,TAG1,MPI_COMM_WORLD);
+    delete[] sitelogl;
 }
 
 /*

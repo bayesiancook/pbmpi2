@@ -63,6 +63,8 @@ class MultiGeneSBDPProfileProcess : public virtual SBDPProfileProcess, public vi
 	void SlaveGetMeanKappa();
 
 	double* kappaarray;
+    double* statalphaarray;
+    double* nmodearray;
 };
 
 #endif

@@ -248,6 +248,13 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		RASCATFiniteSubstitutionProcess::Delete();
 		PoissonPhyloProcess::Delete();
 	}
+
+    double EMUpdateMeanSuffStat();
+    void EM(double cutoff, int nrep);
+    void MStep(int blmode, int ratemode, int weightmode, int profilemode);
+
+	double*** modesitelogL;
+	double*** modesitepostprob;
 };
 
 #endif

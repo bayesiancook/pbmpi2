@@ -515,6 +515,10 @@ class Model	{
         process->SetVariationalMode(blmode,ratemode,profilemode);
     }
 
+    void EM(double cutoff, int nrep)    {
+        process->EM(cutoff,nrep);
+    }
+
     void VarBayes() {
         int nrep = 0;
         for (int rep=0; rep<nrep; rep++)    {

@@ -131,6 +131,11 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
         exit(1);
     }
 
+    virtual void EM(double cutoff, int nrep) {
+        cerr << "in PhyloProcess::EM\n";
+        exit(1);
+    }
+
 	virtual double RestrictedMoveCycle(int nrep = 1, double tuning = 1.0) {
 		cerr << "in default restricted move cycle\n";
 		exit(1);

@@ -122,7 +122,7 @@ void PoissonPhyloProcess::UpdateMeanSuffStat()  {
 			}
 		}
 	}
-    RecursiveUpdateMeanSuffStat(GetRoot(),condlmap[0]);
+    RecursiveUpdateMeanSuffStat(GetRoot(),condlmap[0],0);
 }
 
 /*
@@ -141,10 +141,10 @@ void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from) {
 }
 */
 
-void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from, double*** aux)	{
+void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from, double*** aux, double* w)	{
 
     if (from->isRoot()) {
-        AddMeanSuffStat(0,0,aux,blarray[0],siteratesuffstatcount,siteratesuffstatbeta,branchlengthsuffstatcount[0],branchlengthsuffstatbeta[0],siteprofilesuffstatcount,missingmap[0]);
+        AddMeanSuffStat(0,0,aux,blarray[0],siteratesuffstatcount,siteratesuffstatbeta,branchlengthsuffstatcount[0],branchlengthsuffstatbeta[0],siteprofilesuffstatcount,missingmap[0],w);
     }
 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
 
@@ -165,12 +165,12 @@ void PoissonPhyloProcess::RecursiveUpdateMeanSuffStat(const Link* from, double**
 
         int j = GetBranchIndex(link->GetBranch());
 
-        AddMeanSuffStat(GetOutwardConditionalLikelihoodVector(link),GetOutwardConditionalLikelihoodVector(link->Out()),aux,blarray[j],siteratesuffstatcount,siteratesuffstatbeta,branchlengthsuffstatcount[j],branchlengthsuffstatbeta[j],siteprofilesuffstatcount,missingmap[j]);
+        AddMeanSuffStat(GetOutwardConditionalLikelihoodVector(link),GetOutwardConditionalLikelihoodVector(link->Out()),aux,blarray[j],siteratesuffstatcount,siteratesuffstatbeta,branchlengthsuffstatcount[j],branchlengthsuffstatbeta[j],siteprofilesuffstatcount,missingmap[j],w);
     
 	}
 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
 		if (! link->Out()->isLeaf())	{
-			RecursiveUpdateMeanSuffStat(link->Out(),aux);
+			RecursiveUpdateMeanSuffStat(link->Out(),aux,w);
 		}
 	}
 }

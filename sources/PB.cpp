@@ -170,6 +170,9 @@ int main(int argc, char* argv[])	{
     int monitorlogl = 0;
 
     int varbayes = 0;
+    int em = 0;
+    double emcutoff = 0.01;
+    int emnrep = 0;
 
 	try	{
 
@@ -205,6 +208,13 @@ int main(int argc, char* argv[])	{
 			}
             else if (s == "-varbayes")  {
                 varbayes = 1;
+            }
+            else if (s == "-em")    {
+                em = 1;
+                i++;
+                emcutoff = atof(argv[i]);
+                i++;
+                emnrep = atoi(argv[i]);
             }
 			else if (s == "-part")	{
 				i++;
@@ -1165,6 +1175,9 @@ int main(int argc, char* argv[])	{
         if (varbayes)   {
             model->SetVariationalMode(2,2,2);
             model->VarBayes();
+        }
+        else if (em)    {
+            model->EM(emcutoff, emnrep);
         }
         else    {
             model->Run(smc,deltansite,shortcycle,longcycle,cutoffsize,nrep);

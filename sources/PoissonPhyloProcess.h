@@ -74,8 +74,8 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 
 	const double* GetSiteProfileSuffStatCount(int site) {return siteprofilesuffstatcount[site];}
 
-    void UpdateMeanSuffStat();
-    void RecursiveUpdateMeanSuffStat(const Link* from, double*** aux);
+    virtual void UpdateMeanSuffStat();
+    virtual void RecursiveUpdateMeanSuffStat(const Link* from, double*** aux, double* weight);
 
 	void SetDataFromLeaves()	{
 		SampleTrueNodeStates(GetRoot());

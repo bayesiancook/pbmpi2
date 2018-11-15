@@ -55,7 +55,6 @@ void FiniteProfileProcess::Delete()	{
 	}
 }
 
-
 double FiniteProfileProcess::Move(double tuning, int n, int nrep)	{
 
 	double ret = 0;

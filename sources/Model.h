@@ -515,6 +515,10 @@ class Model	{
         process->SetVariationalMode(blmode,ratemode,profilemode);
     }
 
+    void PMSF(double cutoff, int nrep)    {
+        process->PMSF(cutoff,nrep);
+    }
+
     void EM(double cutoff, int nrep)    {
         process->EM(cutoff,nrep);
     }

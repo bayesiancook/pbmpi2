@@ -108,6 +108,16 @@ class FiniteProfileProcess: public virtual DirichletMixtureProfileProcess	{
 		return total;
 	}
 
+    double GetWeightEntropy()   {
+        double total = 0;
+		for (int k=0; k<Ncomponent; k++)	{
+            if (weight[k] > 1e-6)   {
+                total -= weight[k]*log(weight[k]);
+            }
+        }
+        return total;
+    }
+
 	double* weight;
 	double weightalpha;
 

@@ -173,6 +173,7 @@ int main(int argc, char* argv[])	{
     int em = 0;
     double emcutoff = 0.01;
     int emnrep = 0;
+    int pmsf = 0;
 
 	try	{
 
@@ -211,6 +212,13 @@ int main(int argc, char* argv[])	{
             }
             else if (s == "-em")    {
                 em = 1;
+                i++;
+                emcutoff = atof(argv[i]);
+                i++;
+                emnrep = atoi(argv[i]);
+            }
+            else if (s == "-pmsf")    {
+                pmsf = 1;
                 i++;
                 emcutoff = atof(argv[i]);
                 i++;
@@ -1175,6 +1183,9 @@ int main(int argc, char* argv[])	{
         if (varbayes)   {
             model->SetVariationalMode(2,2,2);
             model->VarBayes();
+        }
+        else if (pmsf)    {
+            model->PMSF(emcutoff, emnrep);
         }
         else if (em)    {
             model->EM(emcutoff, emnrep);

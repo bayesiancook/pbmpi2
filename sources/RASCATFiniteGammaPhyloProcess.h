@@ -249,9 +249,14 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		PoissonPhyloProcess::Delete();
 	}
 
-    double EMUpdateMeanSuffStat();
+    void PMSF(double cutoff, int nrep);
+    double PMSF_EMUpdateMeanSuffStat();
+    void PMSF_UpdateWeights();
+    void PMSF_UpdateBranchLengths();
+
     void EM(double cutoff, int nrep);
     void MStep(int blmode, int ratemode, int weightmode, int profilemode);
+    double EMUpdateMeanSuffStat();
 
     // per profile component and rate category
 	double*** modesitelogL;

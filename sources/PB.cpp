@@ -174,6 +174,7 @@ int main(int argc, char* argv[])	{
     double emcutoff = 0.01;
     int emnrep = 0;
     int pmsf = 0;
+    int siteempfreqem = 0;
 
 	try	{
 
@@ -219,6 +220,13 @@ int main(int argc, char* argv[])	{
             }
             else if (s == "-pmsf")    {
                 pmsf = 1;
+                i++;
+                emcutoff = atof(argv[i]);
+                i++;
+                emnrep = atoi(argv[i]);
+            }
+            else if (s == "-siteempfreqem")    {
+                siteempfreqem = 1;
                 i++;
                 emcutoff = atof(argv[i]);
                 i++;
@@ -1183,6 +1191,9 @@ int main(int argc, char* argv[])	{
         if (varbayes)   {
             model->SetVariationalMode(2,2,2);
             model->VarBayes();
+        }
+        else if (siteempfreqem)    {
+            model->SiteEmpiricalFreq_EM(emcutoff, emnrep);
         }
         else if (pmsf)    {
             model->PMSF(emcutoff, emnrep);

@@ -84,6 +84,10 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 
 	void SampleTrueNodeStates(const Link* from);
 
+    virtual void GetSiteEmpiricalFreq(int site, double* in, double epsilon) {
+        return truedata->GetSiteEmpiricalFreq(site,in,epsilon);
+    }
+
 	virtual double GetObservedCompositionalHeterogeneity(double* taxstat, double& meandist)	{
 		return truedata->CompositionalHeterogeneity(taxstat,0,meandist);
 	}

@@ -249,6 +249,7 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		PoissonPhyloProcess::Delete();
 	}
 
+    void SiteEmpiricalFreq_EM(double cutoff, int nrep);
     void PMSF(double cutoff, int nrep);
     void PMSF_EM(double cutoff, int nrep);
     double PMSF_EMUpdateMeanSuffStat();

@@ -326,6 +326,11 @@ class ProfileProcess : public virtual MPIModule {
 		return 0;
 	}
 
+	virtual void GetSiteEmpiricalFreq(int site, double* in, double epsilon)	{
+		cerr << "in ProfileProcess::GetSiteEmpiricalFreq\n";
+		exit(1);
+	}
+
 	virtual double GlobalSMCAddSites();
 	virtual double SMCAddSites() {}
 

@@ -137,15 +137,29 @@ void MixtureProfileProcess::Delete()	{
 	}
 }
 
-void MixtureProfileProcess::InitializePMSF()    {
+void MixtureProfileProcess::InitializePMSF(int mode, double pseudocount)    {
 
-    double* tmp = GetEmpiricalFreq();
-    for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
-        if (ActiveSite(i))  {
-            for (int l=0; l<GetDim(); l++)  {
-                pmsfsiteprofile[i][l] = tmp[l];
+    if (mode == 0)  {
+        double* tmp = GetEmpiricalFreq();
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+            if (ActiveSite(i))  {
+                for (int l=0; l<GetDim(); l++)  {
+                    pmsfsiteprofile[i][l] = tmp[l];
+                }
             }
         }
+    }
+    else    {
+        double* tmp = new double[GetDim()];
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+            if (ActiveSite(i))  {
+                GetSiteEmpiricalFreq(i,tmp,pseudocount);
+                for (int l=0; l<GetDim(); l++)  {
+                    pmsfsiteprofile[i][l] = tmp[l];
+                }
+            }
+        }
+        delete[] tmp;
     }
 }
 

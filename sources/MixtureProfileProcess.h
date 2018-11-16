@@ -34,7 +34,7 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
     void ActivatePMSF();
     void InactivatePMSF();
 
-    void InitializePMSF();
+    void InitializePMSF(int mode, double peudocount);
     void UpdatePMSF();
 
 	double* GetProfile(int site)	{

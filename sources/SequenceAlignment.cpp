@@ -121,6 +121,28 @@ double SequenceAlignment::GetMeanPairwiseDiff()	{
 	return tot;
 }
 
+void SequenceAlignment::GetSiteEmpiricalFreq(int site, double* in, double epsilon)  {
+
+    for (int i=0; i<GetNstate(); i++)	{
+        in[i] = epsilon;
+    }
+
+	for (int i=0; i<GetNtaxa(); i++)	{
+        if (GetState(i,site) != unknown)	{
+            in[GetState(i,site)]++;
+		}
+	}
+
+    double total = 0;
+    for (int i=0; i<GetNstate(); i++)	{
+        total += in[i];
+    }
+
+    for (int i=0; i<GetNstate(); i++)	{
+        in[i] /= total;
+    }
+}
+
 void SequenceAlignment::GetSiteEmpiricalFreq(double** in, double epsilon, int focus)	{
 
 	// raw empirical frequencies, sitewise

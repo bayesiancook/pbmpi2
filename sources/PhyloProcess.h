@@ -136,6 +136,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
         exit(1);
     }
 
+    virtual void SiteEmpiricalFreq_EM(double cutoff, int nrep) {
+        cerr << "in PhyloProcess::EM\n";
+        exit(1);
+    }
     virtual void EM(double cutoff, int nrep) {
         cerr << "in PhyloProcess::EM\n";
         exit(1);
@@ -443,6 +447,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double* GetEmpiricalFreq()	{
 		return empfreq;
 	}
+
+    virtual void GetSiteEmpiricalFreq(int site, double* in, double epsilon) {
+        return GetData()->GetSiteEmpiricalFreq(site,in,epsilon);
+    }
 
 	// the following methods are particularly important for MPI
 	// Create / Delete / Unfold and Collapse should probably be specialized

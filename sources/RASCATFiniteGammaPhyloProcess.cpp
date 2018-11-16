@@ -289,10 +289,48 @@ double RASCATFiniteGammaPhyloProcess::EMUpdateMeanSuffStat()  {
 	return totlogL;
 }
 
+void RASCATFiniteGammaPhyloProcess::SiteEmpiricalFreq_EM(double cutoff, int nrep)   {
+
+    ActivatePMSF();
+    InitializePMSF(1,1.0);
+    UpdateZip();
+
+    if ((!cutoff) && (!nrep))   {
+        cerr << "error in RASCATFiniteGammaPhyloProcess::EM: either cutoff or nrep should be strictly positive\n";
+        exit(1);
+    }
+
+	modesitelogL = new double**[GetNsite()];
+	modesitepostprob = new double**[GetNsite()];
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			modesitelogL[i] = new double*[1];
+			modesitepostprob[i] = new double*[1];
+            modesitelogL[i][0] = new double[GetNcat()];
+            modesitepostprob[i][0] = new double[GetNcat()];
+		}
+	}
+
+    PMSF_EM(cutoff,nrep);
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+            delete[] modesitelogL[i][0];
+            delete[] modesitepostprob[i][0];
+			delete[] modesitelogL[i];
+			delete[] modesitepostprob[i];
+		}
+	}
+	delete[] modesitelogL;
+	delete[] modesitepostprob;
+
+    InactivatePMSF();
+}
+
 void RASCATFiniteGammaPhyloProcess::PMSF(double cutoff, int nrep)   {
 
     ActivatePMSF();
-    InitializePMSF();
+    InitializePMSF(0,0);
     UpdateZip();
 
     if ((!cutoff) && (!nrep))   {

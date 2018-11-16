@@ -21,8 +21,6 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 void RASCATFiniteGammaPhyloProcess::EM(double cutoff, int nrep)   {
 
-    SetRateParams(0.6,0);
-
     if ((cutoff) && (nrep))   {
         cerr << "error in RASCATFiniteGammaPhyloProcess::EM: either cutoff or nrep should be zero\n";
         exit(1);
@@ -45,30 +43,25 @@ void RASCATFiniteGammaPhyloProcess::EM(double cutoff, int nrep)   {
 		}
 	}
 
-    meanbranchlengthsuffstatcount = new double[GetNbranch()];
-    meanbranchlengthsuffstatbeta = new double[GetNbranch()];
-    meanratesuffstatcount = new double[GetNcat()];
-    meanratesuffstatbeta = new double[GetNcat()];
-    /*
-    meanprofilesuffstatcount = new double*[GetNcomponent()];
-    for (int k=0; k<GetNcomponent(); k++)   {
-        meanprofilesuffstatbeta = new double[GetDim()];
-    }
-    */
-
     int rep = 0;
     double diff = 2*cutoff;
     double currentlogl = 0;
     while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
-        double logl = EMUpdateMeanSuffStat();
-        MStep(1,0,1,0);
-        cout << logl << '\t';
-        Trace(cout);
+        double logl1 = EMUpdateMeanSuffStat();
+        EM_UpdateBranchLengths();
+        EM_UpdateWeights();
+
+        double logl2 = EMUpdateMeanSuffStat();
+        EM_UpdateAlpha();
+
+        cout << logl2 << '\t';
+        cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetWeightEntropy() << '\n';
+
         if (rep)    {
-            diff = logl - currentlogl;
+            diff = logl2 - currentlogl;
         }
         rep++;
-        currentlogl = logl;
+        currentlogl = logl2;
     }
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
@@ -83,246 +76,54 @@ void RASCATFiniteGammaPhyloProcess::EM(double cutoff, int nrep)   {
 	}
 	delete[] modesitelogL;
 	delete[] modesitepostprob;
-
-    delete[] meanratesuffstatcount;
-    delete[] meanratesuffstatbeta;
-    delete[] meanbranchlengthsuffstatcount;
-    delete[] meanbranchlengthsuffstatbeta;
 }
 
-void RASCATFiniteGammaPhyloProcess::PMSF(double cutoff, int nrep)   {
-
-    ActivatePMSF();
-    SetRateParams(0.6,0);
-    for (int k=0; k<GetNcomponent(); k++)   {
-        weight[k] = 1.0 / GetNcomponent();
-    }
-
-    if ((cutoff) && (nrep))   {
-        cerr << "error in RASCATFiniteGammaPhyloProcess::EM: either cutoff or nrep should be zero\n";
-        exit(1);
-    }
-    if ((!cutoff) && (!nrep))   {
-        cerr << "error in RASCATFiniteGammaPhyloProcess::EM: either cutoff or nrep should be strictly positive\n";
-        exit(1);
-    }
-
-	modesitelogL = new double**[GetNsite()];
-	modesitepostprob = new double**[GetNsite()];
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-			modesitelogL[i] = new double*[1];
-			modesitepostprob[i] = new double*[1];
-            modesitelogL[i][0] = new double[GetNcat()];
-            modesitepostprob[i][0] = new double[GetNcat()];
-		}
-	}
-
-    meanratesuffstatcount = new double[GetNcat()];
-    meanratesuffstatbeta = new double[GetNcat()];
-
-    int rep = 0;
-    double diff = 2*cutoff;
-    double currentlogl = 0;
-    while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
-        UpdatePMSF();
-        UpdateZip();
-        double logl = PMSF_EMUpdateMeanSuffStat();
-        PMSF_UpdateBranchLengths();
-        // PMSF_UpdateWeights();
-        cout << logl << '\t';
-        cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetPMSFStatEnt() << '\t' << GetWeightEntropy() << '\n';
-        if (rep)    {
-            diff = logl - currentlogl;
-        }
-        rep++;
-        currentlogl = logl;
-    }
-
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-            delete[] modesitelogL[i][0];
-            delete[] modesitepostprob[i][0];
-			delete[] modesitelogL[i];
-			delete[] modesitepostprob[i];
-		}
-	}
-	delete[] modesitelogL;
-	delete[] modesitepostprob;
-
-    delete[] meanratesuffstatcount;
-    delete[] meanratesuffstatbeta;
-    delete[] meanbranchlengthsuffstatcount;
-    delete[] meanbranchlengthsuffstatbeta;
-
-    InactivatePMSF();
-}
-
-void RASCATFiniteGammaPhyloProcess::PMSF_UpdateBranchLengths() {
+void RASCATFiniteGammaPhyloProcess::EM_UpdateBranchLengths()    {
 
     for (int j=1; j<GetNbranch(); j++)  {
         blarray[j] = branchlengthsuffstatcount[j] / branchlengthsuffstatbeta[j];
     }
 }
 
+void RASCATFiniteGammaPhyloProcess::EM_UpdateAlpha()    {
 
-void RASCATFiniteGammaPhyloProcess::PMSF_UpdateWeights()   {
+    double alphamin = 0.1;
+    double alphamax = 10;
+    double alphastep = 0.01;
+
+    double maxalpha = 0;
+    double maxprob = 0;
+
+    for (double alpha=alphamin; alpha<alphamax; alpha+=alphastep)   {
+        SetRateParams(alpha,0);
+        double logprob = RateSuffStatLogProb();
+        if ((!maxprob) || (maxprob < logprob))  {
+            maxprob = logprob;
+            maxalpha = alpha;
+        }
+    }
+    SetRateParams(maxalpha,0);
+}
+
+void RASCATFiniteGammaPhyloProcess::EM_UpdateWeights()  {
+
     double totweight = 0;
     for (int k=0; k<GetNcomponent(); k++)   {
-        weight[k] = pmsfweight[k];
+        double w = 0;
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))  {
+                for (int l=0; l<Ncat; l++)  {
+                    w += modesitepostprob[i][k][l];
+                }
+            }
+        }
+        weight[k] = w/GetNactiveSite();
         totweight += weight[k];
     }
     if (fabs(totweight-1) > 1e-6)   {
         cerr << "error in MStep: weight does not sum to 1 : " << totweight << '\n';
         exit(1);
     }
-}
-
-void RASCATFiniteGammaPhyloProcess::MStep(int blmode, int ratemode, int weightmode, int profilemode)    {
-
-    if (blmode)  {
-        for (int j=1; j<GetNbranch(); j++)  {
-            blarray[j] = meanbranchlengthsuffstatcount[j] / meanbranchlengthsuffstatbeta[j];
-        }
-    }
-
-    if (ratemode)   {
-        cerr << "in MStep: alpha optimization not yet available\n";
-        exit(1);
-    }
-
-    if (weightmode) {
-        double totweight = 0;
-        for (int k=0; k<GetNcomponent(); k++)   {
-            double w = 0;
-            for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-                if (ActiveSite(i))  {
-                    for (int l=0; l<Ncat; l++)  {
-                        w += modesitepostprob[i][k][l];
-                    }
-                }
-            }
-            weight[k] = w/GetNactiveSite();
-            totweight += weight[k];
-        }
-        if (fabs(totweight-1) > 1e-6)   {
-            cerr << "error in MStep: weight does not sum to 1 : " << totweight << '\n';
-            exit(1);
-        }
-    }
-
-    if (profilemode)    {
-        cerr << "in MStep: profile optimization not yet available\n";
-        exit(1);
-        UpdateZip();
-    }
-}
-
-double RASCATFiniteGammaPhyloProcess::PMSF_EMUpdateMeanSuffStat()  {
-
-    FillMissingMap(0);
-    InactivateSumOverRateAllocations();
-
-    UpdateZip();
-
-    for (int l=0; l<Ncat; l++)  {
-
-        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-            if (ActiveSite(i))  {
-                ratealloc[i] = l;
-            }
-        }
-
-        UpdateConditionalLikelihoods();
-
-        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-            if (ActiveSite(i))	{
-                modesitelogL[i][0][l] = sitelogL[i];
-            }
-        }
-    }
-
-    // calculate marginal site log likelihoods and allocation post probs
-	double totlogL = 0;
-	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-		if (ActiveSite(i))	{
-
-			double max = modesitelogL[i][0][0];
-            for (int l=0; l<Ncat; l++)  {
-                if (max < modesitelogL[i][0][l])	{
-                    max = modesitelogL[i][0][l];
-                }
-            }
-
-			double total = 0;
-            for (int l=0; l<Ncat; l++)  {
-                double tmp = 1.0 / Ncat * exp(modesitelogL[i][0][l] - max);
-                modesitepostprob[i][0][l] = tmp;
-                total += tmp;
-			}
-
-            for (int l=0; l<Ncat; l++)  {
-                modesitepostprob[i][0][l] /= total;
-            }
-
-			double sitetotlogL = log(total) + max;
-			totlogL += sitetotlogL;
-		}
-	}
-
-    for (int k=0; k<Ncat; k++)  {
-        meanratesuffstatcount[k] = 0;
-        meanratesuffstatbeta[k] = 0;
-    }
-
-    // reset suffstats
-    for (int j=0; j<GetNbranch(); j++)	{
-        branchlengthsuffstatcount[j] = 0;
-        branchlengthsuffstatbeta[j] = 0;
-    }
-    for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-        if (ActiveSite(i))	{
-            siteratesuffstatcount[i] = 0;
-            siteratesuffstatbeta[i] = 0;
-            for (int k=0; k<GetDim(); k++)	{
-                siteprofilesuffstatcount[i][k] = 0;
-            }
-        }
-    }
-
-    double* sitepostprob = new double[GetNsite()];
-
-    // now, redo a pass over all components and for all sites
-    // this time, sum sufficient satistics along the way
-
-    for (int l=0; l<Ncat; l++)  {
-
-        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-            if (ActiveSite(i))  {
-                ratealloc[i] = l;
-            }
-        }
-
-        UpdateConditionalLikelihoods();
-
-        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-            if (ActiveSite(i))  {
-                sitepostprob[i] = modesitepostprob[i][0][l];
-            }
-        }
-
-        RecursiveUpdateMeanSuffStat(GetRoot(),condlmap[0],sitepostprob);
-
-        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-            if (ActiveSite(i))	{
-                meanratesuffstatcount[l] += siteratesuffstatcount[i];
-                meanratesuffstatbeta[l] += siteratesuffstatbeta[i];
-            }
-        }
-    }
-
-    delete[] sitepostprob;
-	return totlogL;
 }
 
 double RASCATFiniteGammaPhyloProcess::EMUpdateMeanSuffStat()  {
@@ -406,13 +207,14 @@ double RASCATFiniteGammaPhyloProcess::EMUpdateMeanSuffStat()  {
 		}
 	}
 
-	for (int j=0; j<GetNbranch(); j++)	{
-		meanbranchlengthsuffstatcount[j] = 0;
-		meanbranchlengthsuffstatbeta[j] = 0;
+    // reset suffstats
+    for (int j=0; j<GetNbranch(); j++)	{
+        branchlengthsuffstatcount[j] = 0;
+        branchlengthsuffstatbeta[j] = 0;
     }
     for (int k=0; k<Ncat; k++)  {
-        meanratesuffstatcount[k] = 0;
-        meanratesuffstatbeta[k] = 0;
+        ratesuffstatcount[k] = 0;
+        ratesuffstatbeta[k] = 0;
     }
 
     double* sitepostprob = new double[GetNsite()];
@@ -443,11 +245,7 @@ double RASCATFiniteGammaPhyloProcess::EMUpdateMeanSuffStat()  {
                 }
             }
 
-            // reset suffstats
-            for (int j=0; j<GetNbranch(); j++)	{
-                branchlengthsuffstatcount[j] = 0;
-                branchlengthsuffstatbeta[j] = 0;
-            }
+            // reset those suffstats that will be gathered per rate or profile category
             for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
                 if (ActiveSite(i))	{
                     siteratesuffstatcount[i] = 0;
@@ -462,12 +260,8 @@ double RASCATFiniteGammaPhyloProcess::EMUpdateMeanSuffStat()  {
 
             for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
                 if (ActiveSite(i))	{
-                    for (int j=0; j<GetNbranch(); j++)	{
-                        meanbranchlengthsuffstatcount[j] += branchlengthsuffstatcount[j];
-                        meanbranchlengthsuffstatbeta[j] += branchlengthsuffstatbeta[j];
-                    }
-                    meanratesuffstatcount[l] += siteratesuffstatcount[i];
-                    meanratesuffstatbeta[l] += siteratesuffstatbeta[i];
+                    ratesuffstatcount[l] += siteratesuffstatcount[i];
+                    ratesuffstatbeta[l] += siteratesuffstatbeta[i];
                 }
             }
         }
@@ -492,6 +286,193 @@ double RASCATFiniteGammaPhyloProcess::EMUpdateMeanSuffStat()  {
     UpdateConditionalLikelihoods();
     */
 
+	return totlogL;
+}
+
+void RASCATFiniteGammaPhyloProcess::PMSF(double cutoff, int nrep)   {
+
+    ActivatePMSF();
+    SetRateParams(0.6,0);
+    for (int k=0; k<GetNcomponent(); k++)   {
+        weight[k] = 1.0 / GetNcomponent();
+    }
+
+    if ((cutoff) && (nrep))   {
+        cerr << "error in RASCATFiniteGammaPhyloProcess::EM: either cutoff or nrep should be zero\n";
+        exit(1);
+    }
+    if ((!cutoff) && (!nrep))   {
+        cerr << "error in RASCATFiniteGammaPhyloProcess::EM: either cutoff or nrep should be strictly positive\n";
+        exit(1);
+    }
+
+	modesitelogL = new double**[GetNsite()];
+	modesitepostprob = new double**[GetNsite()];
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			modesitelogL[i] = new double*[1];
+			modesitepostprob[i] = new double*[1];
+            modesitelogL[i][0] = new double[GetNcat()];
+            modesitepostprob[i][0] = new double[GetNcat()];
+		}
+	}
+
+    int rep = 0;
+    double diff = 2*cutoff;
+    double currentlogl = 0;
+    while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
+        UpdatePMSF();
+        UpdateZip();
+        double logl = PMSF_EMUpdateMeanSuffStat();
+        PMSF_UpdateBranchLengths();
+        // PMSF_UpdateWeights();
+        cout << logl << '\t';
+        cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetPMSFStatEnt() << '\t' << GetWeightEntropy() << '\n';
+        if (rep)    {
+            diff = logl - currentlogl;
+        }
+        rep++;
+        currentlogl = logl;
+    }
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+            delete[] modesitelogL[i][0];
+            delete[] modesitepostprob[i][0];
+			delete[] modesitelogL[i];
+			delete[] modesitepostprob[i];
+		}
+	}
+	delete[] modesitelogL;
+	delete[] modesitepostprob;
+
+    InactivatePMSF();
+}
+
+void RASCATFiniteGammaPhyloProcess::PMSF_UpdateBranchLengths() {
+
+    for (int j=1; j<GetNbranch(); j++)  {
+        blarray[j] = branchlengthsuffstatcount[j] / branchlengthsuffstatbeta[j];
+    }
+}
+
+
+void RASCATFiniteGammaPhyloProcess::PMSF_UpdateWeights()   {
+    double totweight = 0;
+    for (int k=0; k<GetNcomponent(); k++)   {
+        weight[k] = pmsfweight[k];
+        totweight += weight[k];
+    }
+    if (fabs(totweight-1) > 1e-6)   {
+        cerr << "error in MStep: weight does not sum to 1 : " << totweight << '\n';
+        exit(1);
+    }
+}
+
+double RASCATFiniteGammaPhyloProcess::PMSF_EMUpdateMeanSuffStat()  {
+
+    FillMissingMap(0);
+    InactivateSumOverRateAllocations();
+
+    UpdateZip();
+
+    for (int l=0; l<Ncat; l++)  {
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))  {
+                ratealloc[i] = l;
+            }
+        }
+
+        UpdateConditionalLikelihoods();
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))	{
+                modesitelogL[i][0][l] = sitelogL[i];
+            }
+        }
+    }
+
+    // calculate marginal site log likelihoods and allocation post probs
+	double totlogL = 0;
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+
+			double max = modesitelogL[i][0][0];
+            for (int l=0; l<Ncat; l++)  {
+                if (max < modesitelogL[i][0][l])	{
+                    max = modesitelogL[i][0][l];
+                }
+            }
+
+			double total = 0;
+            for (int l=0; l<Ncat; l++)  {
+                double tmp = 1.0 / Ncat * exp(modesitelogL[i][0][l] - max);
+                modesitepostprob[i][0][l] = tmp;
+                total += tmp;
+			}
+
+            for (int l=0; l<Ncat; l++)  {
+                modesitepostprob[i][0][l] /= total;
+            }
+
+			double sitetotlogL = log(total) + max;
+			totlogL += sitetotlogL;
+		}
+	}
+
+    for (int k=0; k<Ncat; k++)  {
+        ratesuffstatcount[k] = 0;
+        ratesuffstatbeta[k] = 0;
+    }
+
+    // reset suffstats
+    for (int j=0; j<GetNbranch(); j++)	{
+        branchlengthsuffstatcount[j] = 0;
+        branchlengthsuffstatbeta[j] = 0;
+    }
+    for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+        if (ActiveSite(i))	{
+            siteratesuffstatcount[i] = 0;
+            siteratesuffstatbeta[i] = 0;
+            for (int k=0; k<GetDim(); k++)	{
+                siteprofilesuffstatcount[i][k] = 0;
+            }
+        }
+    }
+
+    double* sitepostprob = new double[GetNsite()];
+
+    // now, redo a pass over all components and for all sites
+    // this time, sum sufficient satistics along the way
+
+    for (int l=0; l<Ncat; l++)  {
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))  {
+                ratealloc[i] = l;
+            }
+        }
+
+        UpdateConditionalLikelihoods();
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))  {
+                sitepostprob[i] = modesitepostprob[i][0][l];
+            }
+        }
+
+        RecursiveUpdateMeanSuffStat(GetRoot(),condlmap[0],sitepostprob);
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))	{
+                ratesuffstatcount[l] += siteratesuffstatcount[i];
+                ratesuffstatbeta[l] += siteratesuffstatbeta[i];
+            }
+        }
+    }
+
+    delete[] sitepostprob;
 	return totlogL;
 }
 

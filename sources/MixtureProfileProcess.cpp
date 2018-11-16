@@ -137,6 +137,18 @@ void MixtureProfileProcess::Delete()	{
 	}
 }
 
+void MixtureProfileProcess::InitializePMSF()    {
+
+    double* tmp = GetEmpiricalFreq();
+    for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+        if (ActiveSite(i))  {
+            for (int l=0; l<GetDim(); l++)  {
+                pmsfsiteprofile[i][l] = tmp[l];
+            }
+        }
+    }
+}
+
 void MixtureProfileProcess::UpdatePMSF()    {
 
     double logprob[GetNcomponent()];

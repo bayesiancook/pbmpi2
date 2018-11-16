@@ -292,15 +292,9 @@ double RASCATFiniteGammaPhyloProcess::EMUpdateMeanSuffStat()  {
 void RASCATFiniteGammaPhyloProcess::PMSF(double cutoff, int nrep)   {
 
     ActivatePMSF();
-    SetRateParams(0.6,0);
-    for (int k=0; k<GetNcomponent(); k++)   {
-        weight[k] = 1.0 / GetNcomponent();
-    }
+    InitializePMSF();
+    UpdateZip();
 
-    if ((cutoff) && (nrep))   {
-        cerr << "error in RASCATFiniteGammaPhyloProcess::EM: either cutoff or nrep should be zero\n";
-        exit(1);
-    }
     if ((!cutoff) && (!nrep))   {
         cerr << "error in RASCATFiniteGammaPhyloProcess::EM: either cutoff or nrep should be strictly positive\n";
         exit(1);
@@ -317,22 +311,12 @@ void RASCATFiniteGammaPhyloProcess::PMSF(double cutoff, int nrep)   {
 		}
 	}
 
-    int rep = 0;
-    double diff = 2*cutoff;
-    double currentlogl = 0;
-    while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
+    for (int rep=0; rep<nrep; rep++)    {
+        cerr << ".\n";
+        PMSF_EM(cutoff,0);
         UpdatePMSF();
+        PMSF_UpdateWeights();
         UpdateZip();
-        double logl = PMSF_EMUpdateMeanSuffStat();
-        PMSF_UpdateBranchLengths();
-        // PMSF_UpdateWeights();
-        cout << logl << '\t';
-        cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetPMSFStatEnt() << '\t' << GetWeightEntropy() << '\n';
-        if (rep)    {
-            diff = logl - currentlogl;
-        }
-        rep++;
-        currentlogl = logl;
     }
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
@@ -349,13 +333,29 @@ void RASCATFiniteGammaPhyloProcess::PMSF(double cutoff, int nrep)   {
     InactivatePMSF();
 }
 
-void RASCATFiniteGammaPhyloProcess::PMSF_UpdateBranchLengths() {
+void RASCATFiniteGammaPhyloProcess::PMSF_EM(double cutoff, int nrep)   {
 
-    for (int j=1; j<GetNbranch(); j++)  {
-        blarray[j] = branchlengthsuffstatcount[j] / branchlengthsuffstatbeta[j];
+    int rep = 0;
+    double diff = 2*cutoff;
+    double currentlogl = 0;
+    while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
+
+        double logl1 = PMSF_EMUpdateMeanSuffStat();
+        EM_UpdateBranchLengths();
+
+        double logl2 = PMSF_EMUpdateMeanSuffStat();
+        EM_UpdateAlpha();
+
+        cout << logl2 << '\t';
+        cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetPMSFStatEnt() << '\t' << GetWeightEntropy() << '\n';
+
+        if (rep)    {
+            diff = logl2 - currentlogl;
+        }
+        rep++;
+        currentlogl = logl2;
     }
 }
-
 
 void RASCATFiniteGammaPhyloProcess::PMSF_UpdateWeights()   {
     double totweight = 0;
@@ -431,15 +431,6 @@ double RASCATFiniteGammaPhyloProcess::PMSF_EMUpdateMeanSuffStat()  {
         branchlengthsuffstatcount[j] = 0;
         branchlengthsuffstatbeta[j] = 0;
     }
-    for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
-        if (ActiveSite(i))	{
-            siteratesuffstatcount[i] = 0;
-            siteratesuffstatbeta[i] = 0;
-            for (int k=0; k<GetDim(); k++)	{
-                siteprofilesuffstatcount[i][k] = 0;
-            }
-        }
-    }
 
     double* sitepostprob = new double[GetNsite()];
 
@@ -459,6 +450,16 @@ double RASCATFiniteGammaPhyloProcess::PMSF_EMUpdateMeanSuffStat()  {
         for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
             if (ActiveSite(i))  {
                 sitepostprob[i] = modesitepostprob[i][0][l];
+            }
+        }
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))	{
+                siteratesuffstatcount[i] = 0;
+                siteratesuffstatbeta[i] = 0;
+                for (int k=0; k<GetDim(); k++)	{
+                    siteprofilesuffstatcount[i][k] = 0;
+                }
             }
         }
 

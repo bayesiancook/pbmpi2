@@ -250,9 +250,9 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 	}
 
     void PMSF(double cutoff, int nrep);
+    void PMSF_EM(double cutoff, int nrep);
     double PMSF_EMUpdateMeanSuffStat();
     void PMSF_UpdateWeights();
-    void PMSF_UpdateBranchLengths();
 
     void EM(double cutoff, int nrep);
     void EM_UpdateBranchLengths();

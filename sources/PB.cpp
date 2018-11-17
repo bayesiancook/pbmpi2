@@ -174,7 +174,9 @@ int main(int argc, char* argv[])	{
     double emcutoff = 0.01;
     int emnrep = 0;
     int pmsf = 0;
-    int siteempfreqem = 0;
+
+    string sitefreq = "free";
+    double pseudocount = 1.0;
 
 	try	{
 
@@ -225,12 +227,13 @@ int main(int argc, char* argv[])	{
                 i++;
                 emnrep = atoi(argv[i]);
             }
-            else if (s == "-siteempfreqem")    {
-                siteempfreqem = 1;
+            else if (s == "-sitefreq")    {
                 i++;
-                emcutoff = atof(argv[i]);
+                sitefreq = argv[i];
+            }
+            else if (s == "-pseudocount")   {
                 i++;
-                emnrep = atoi(argv[i]);
+                pseudocount = atof(argv[i]);
             }
 			else if (s == "-part")	{
 				i++;
@@ -664,6 +667,12 @@ int main(int argc, char* argv[])	{
 			else if (s == "-iid")   {
 				mixturetype = 5;
 			}
+			else if (s == "-iiddiriidgam")	{
+				mixturetype = 6;
+			}
+            else if (s == "-iidprofilerate")    {
+                mixturetype = 6;
+            }
 			else if ((s == "-finite") || (s == "-ncat"))	{
 				mixturetype = 1;
 				i++;
@@ -1139,7 +1148,7 @@ int main(int argc, char* argv[])	{
 				exit(1);
 			}
 		}
-		model = new Model(datafile,treefile,partitionfile,multigene,globalalpha,globalbl,mappsuffstat,modeltype,dgam,pinv,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,dirpriortype,nstatcomp,priorempmix,priormixtype,fixstatweight,fixstatalpha,fixstatcenter,rrtype,iscodon,sis,sisfrac,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,roottax1,roottax2,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,omegamixtype,fixnomegacomp,empomegamix,fixbl,sumovercomponents,omegaprior,omegamixturetype,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,reshuffle,monitorlogl,name,myid,nprocs);
+		model = new Model(datafile,treefile,partitionfile,multigene,globalalpha,globalbl,mappsuffstat,modeltype,dgam,pinv,mixturetype,nmodemax,ncat,type,suffstat,fixncomp,empmix,mixtype,dirpriortype,nstatcomp,priorempmix,priormixtype,fixstatweight,fixstatalpha,fixstatcenter,rrtype,iscodon,sis,sisfrac,sisnfrac,sisnrep,siscutoff,fixtopo,fixroot,roottax1,roottax2,topoburnin,topobf,bfburnin,bffrac,bfnfrac,bfnrep,blfactor,blfile,NSPR,NMHSPR,NTSPR,temperedbl,temperedgene,temperedrate,topolambda,topomu,toponstep,NNNI,nspec,ntspec,taxon1,taxon2,taxon3,taxon4,bpp,nbpp,ntbpp,bppnstep,bppname,bppcutoff,bppbeta,fixcodonprofile,fixomega,nomega,omegamixtype,fixnomegacomp,empomegamix,fixbl,sumovercomponents,omegaprior,omegamixturetype,kappaprior,profilepriortype,dc,every,until,saveall,zip,proposemode,allocmode,fasttopo,fasttopofracmin,fasttoponstep,fastcondrate,reshuffle,monitorlogl,sitefreq,pseudocount,name,myid,nprocs);
 
 		if (! myid)	{
 			cerr << '\n';
@@ -1192,9 +1201,11 @@ int main(int argc, char* argv[])	{
             model->SetVariationalMode(2,2,2);
             model->VarBayes();
         }
+        /*
         else if (siteempfreqem)    {
             model->SiteEmpiricalFreq_EM(emcutoff, emnrep);
         }
+        */
         else if (pmsf)    {
             model->PMSF(emcutoff, emnrep);
         }

@@ -24,6 +24,7 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "RASCATGammaPhyloProcess.h"
 #include "RASCATFiniteGammaPhyloProcess.h"
 #include "RASCATSBDPGammaPhyloProcess.h"
+#include "RASIIDDirichletGammaPhyloProcess.h"
 #include "IIDDirichletIIDGammaPhyloProcess.h"
 #include "GeneralPathSuffStatRASCATGTRFiniteGammaPhyloProcess.h"
 #include "AACodonMutSelFinitePhyloProcess.h"
@@ -68,7 +69,7 @@ class Model	{
 	int until;
 	int saveall;
 
-	Model(string datafile, string treefile, string partitionfile, int multigene, int globalalpha, int globalbl, int mappsuffstat, int modeltype, int nratecat, int withpinv, int mixturetype, int nmodemax, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, int dirpriortype, int nstatcomp, int priorempmix, string priormixtype, int fixstatweight, int fixstatalpha, int fixstatcenter, string rrtype, int iscodon, int sis, double sisfrac, int sisnfrac, int sisnrep, double siscutoff, int fixtopo, int fixroot, string roottax1, string roottax2, int topoburnin, int topobf, int bfburnin, double bffrac, int bfnfrac, int bfnrep, double blfactor, string blfile, int NSPR, int NMHSPR, int NTSPR, int temperedbl, int temperedgene, int temperedrate,double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, string taxon3, string taxon4, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int Nomega, string omegamixtype, bool fixnomegacomp, int empomegamix, int fixbl, int sumovercomponents, int omegaprior, int omegamixturetype, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, int reshuffle, int monitorlogl, string inname, int myid, int nprocs)	{
+	Model(string datafile, string treefile, string partitionfile, int multigene, int globalalpha, int globalbl, int mappsuffstat, int modeltype, int nratecat, int withpinv, int mixturetype, int nmodemax, int ncat, GeneticCodeType codetype, int suffstat, int fixncomp, int empmix, string mixtype, int dirpriortype, int nstatcomp, int priorempmix, string priormixtype, int fixstatweight, int fixstatalpha, int fixstatcenter, string rrtype, int iscodon, int sis, double sisfrac, int sisnfrac, int sisnrep, double siscutoff, int fixtopo, int fixroot, string roottax1, string roottax2, int topoburnin, int topobf, int bfburnin, double bffrac, int bfnfrac, int bfnrep, double blfactor, string blfile, int NSPR, int NMHSPR, int NTSPR, int temperedbl, int temperedgene, int temperedrate,double topolambda, double topomu, double toponstep, int NNNI, int nspec, int ntspec, string taxon1, string taxon2, string taxon3, string taxon4, int bpp, int nbpp, int ntbpp, int bppnstep, string bppname, double bppcutoff, double bppbeta, int fixcodonprofile, int fixomega, int Nomega, string omegamixtype, bool fixnomegacomp, int empomegamix, int fixbl, int sumovercomponents, int omegaprior, int omegamixturetype, int kappaprior, int profilepriortype, int dc, int inevery, int inuntil, int insaveall, int zip, int proposemode, int allocmode, int fasttopo, double fasttopofracmin, int fasttoponstep, int fastcondrate, int reshuffle, int monitorlogl,string sitefreq, double pseudocount, string inname, int myid, int nprocs)	{
 
 		every = inevery;
 		until = inuntil;
@@ -123,6 +124,10 @@ class Model	{
 			}
             else if (mixturetype == 5)  {
                 type = "IID";
+                process = new RASIIDDirichletGammaPhyloProcess(nratecat,sitefreq,pseudocount);
+            }
+			else if (mixturetype == 6)	{
+                type = "IIDDirIIGGam";
                 process = new IIDDirichletIIDGammaPhyloProcess();
             }
 			else	{
@@ -358,6 +363,9 @@ class Model	{
 			// process = new RASPARTGTRGammaPhyloProcess(is,myid,nprocs);
 		}
         else if (type == "IID") {
+            process = new RASIIDDirichletGammaPhyloProcess(is,myid,nprocs);
+	}
+		else if (type == "IIDDirIIDGam")	{
             process = new IIDDirichletIIDGammaPhyloProcess(is,myid,nprocs);
         }
 		else if (type == "CATDP")	{

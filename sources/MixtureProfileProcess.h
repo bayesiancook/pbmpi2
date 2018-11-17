@@ -239,9 +239,6 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
     double** pmsfsiteprofile;
     double* pmsfweight;
 
-	// 0 : flexible
-	// 1 : rigid
-
 	Chrono totchrono;
 	Chrono profilechrono;
 	Chrono incchrono;

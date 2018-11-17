@@ -43,7 +43,7 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	ExpoConjugatePartitionGTRProfileProcess.cpp ExpoConjugatePartitionGTRMixtureProfileProcess.cpp \
 	ExpoConjugatePartitionGTRSubstitutionProcess.cpp ExpoConjugatePartitionGTRPhyloProcess.cpp \
 	RASPARTGTRGammaPhyloProcess.cpp \
-	GammaRateProcess.cpp PoissonSiteSpecificProfileProcess.cpp IIDDirichletIIDGammaPhyloProcess.cpp \
+	GammaRateProcess.cpp PoissonSiteSpecificProfileProcess.cpp RASIIDDirichletGammaPhyloProcess.cpp IIDDirichletIIDGammaPhyloProcess.cpp \
 	Bipartition.cpp BipartitionList.cpp Consensus.cpp TaxaParameters.cpp PBTree.cpp TreeList.cpp PolyNode.cpp correl.cpp correlation.cpp \
 	BP2Stat.cpp BP2util.cpp
 

@@ -56,7 +56,7 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 
 	public:
 
-        virtual void SlaveExecute(MESSAGE);
+    virtual void SlaveExecute(MESSAGE);
 	virtual void GlobalUpdateParameters();
 	virtual void SlaveUpdateParameters();
 

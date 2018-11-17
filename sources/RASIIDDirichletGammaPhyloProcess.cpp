@@ -23,7 +23,7 @@ void RASIIDDirichletGammaPhyloProcess::GlobalUpdateParameters()	{
 
 	if (GetNprocs() > 1)	{
 
-        int nd = 1 + GetNsite() + GetNbranch();
+        int nd = 2 + GetNbranch();
         if (! fixprofile)   {
            nd += GetNsite()*GetDim() + GetDim();
         }
@@ -35,11 +35,9 @@ void RASIIDDirichletGammaPhyloProcess::GlobalUpdateParameters()	{
         // First we assemble the vector of doubles for distribution
         int index = 0;
         dvector[index] = GetAlpha();
-        index++;
-        for (int i=0; i<GetNsite(); i++)    {
-            dvector[index] = rate[i];
-            index++;
-        }
+        index ++;
+        dvector[index] = GetPinv();
+        index ++;
 
         for(int i=0; i<GetNbranch(); i++) {
             dvector[index] = blarray[i];
@@ -72,7 +70,7 @@ void RASIIDDirichletGammaPhyloProcess::GlobalUpdateParameters()	{
 
 void RASIIDDirichletGammaPhyloProcess::SlaveUpdateParameters()	{
 
-	int nd = 1 + GetNsite() + GetNbranch();
+	int nd = 2 + GetNbranch();
     if (! fixprofile)   {
        nd += GetNsite()*GetDim() + GetDim();
     }
@@ -81,13 +79,8 @@ void RASIIDDirichletGammaPhyloProcess::SlaveUpdateParameters()	{
 	MPI_Bcast(dvector,nd,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 	int index = 0;
-    alpha = dvector[index];
-    index++;
-
-    for (int i=0; i<GetNsite(); i++)    {
-        rate[i] = dvector[index];
-        index++;
-    }
+	SetRateParams(dvector[index],dvector[index+1]);
+    index+=2;
 
 	for(int i=0; i<GetNbranch(); ++i) {
 		blarray[i] = dvector[index];

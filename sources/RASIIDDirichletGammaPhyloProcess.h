@@ -169,17 +169,17 @@ class RASIIDDirichletGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 	void ToStream(ostream& os)	{
 		GammaBranchProcess::ToStream(os);
 		DGamRateProcess::ToStream(os);
-        if (! fixprofile)   {
+        // if (! fixprofile)   {
             PoissonSiteSpecificProfileProcess::ToStream(os);
-        }
+        // }
 	}
 
 	void FromStream(istream& is)	{
 		GammaBranchProcess::FromStream(is);
 		DGamRateProcess::FromStream(is);
-        if (! fixprofile)   {
+        // if (! fixprofile)   {
             PoissonSiteSpecificProfileProcess::FromStream(is);
-        }
+        // }
 		GlobalUpdateParameters();
 	}
 

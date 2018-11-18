@@ -126,7 +126,7 @@ void SubstitutionProcess::SampleRootPaths(BranchSitePath** patharray, int* roots
 //-------------------------------------------------------------------------
 
 // set the vector uniformly to 1 
-void SubstitutionProcess::Reset(double*** t, bool condalloc)	{
+void SubstitutionProcess::Reset(double*** t, bool condalloc, int phase)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
 			for (int j=0; j<GetNrate(i); j++)	{
@@ -134,7 +134,7 @@ void SubstitutionProcess::Reset(double*** t, bool condalloc)	{
 					double* tmp = t[i][j];
 					int nstate = GetNstate(i);
 					for (int k=0; k<nstate; k++)	{
-						(*tmp++) = 1.0;
+						(*tmp++) = phase;
 					}
 					*tmp = 0;
 					tmp -= nstate;

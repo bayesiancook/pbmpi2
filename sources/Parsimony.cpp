@@ -6,13 +6,9 @@
 
 int PhyloProcess::Parsimony(int* sitescore, double** profile)   {
 
-    for (int i=0; i<GetNsite(); i++)    {
-        sitescore[i] = 0;
-    }
-
     int score = BackwardParsimony(GetRoot(),sitescore);
-    // ForwardParsimony(GetRoot(),profile);
-
+    cerr << "score: " << score << '\n';
+    ForwardParsimony(GetRoot(),profile);
     return score;
 }
 
@@ -70,7 +66,7 @@ int SubstitutionProcess::GetParsimonyBranchScore(int nchildren, double*** t, int
     return total;
 }
 
-void SubstitutionProcess::ChooseParsimonyStates(int* upstates, int* downstates, double*** t)    {
+void SubstitutionProcess::ChooseParsimonyStates(const int* upstates, int* downstates, double*** t)    {
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
@@ -78,7 +74,7 @@ void SubstitutionProcess::ChooseParsimonyStates(int* upstates, int* downstates, 
             double* to = t[i][j];
             int nstate = GetNstate(i);
 
-            if ((upstates != downstates) && (to[upstates[i])) {
+            if ((upstates != downstates) && (to[upstates[i]])) {
                 downstates[i] = upstates[i];
             }
             else    {
@@ -103,42 +99,36 @@ void SubstitutionProcess::ChooseParsimonyStates(int* upstates, int* downstates, 
     }
 }
 
-void SubstitutionProcess::ParsimonyProfiles(const int* nodestates, const int* upstates, double** profile)   {
+void SubstitutionProcess::ParsimonyProfiles(const int* upstates, const int* nodestates, double** profile)   {
 
-    if (! upstates) {
-        for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
-            if (ActiveSite(i))  {
+    for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+        if (ActiveSite(i))  {
+            if ((nodestates == upstates) || (nodestates[i] != upstates[i]))   {
                 profile[i][nodestates[i]]++;
-            }
-        }
-    }
-    else    {
-        for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
-            if (ActiveSite(i))  {
-                if (nodestates[i] != upstates[i])   {
-                    profile[i][nodestates[i]]++;
-                }
             }
         }
     }
 }
 
-void PoissonSubstitutionProcess::ParsimonyProfiles(const int* nodestates, const int* upstates, double** profile)    {
+void PoissonSubstitutionProcess::ParsimonyProfiles(const int* upstates, const int* nodestates, double** profile)    {
 
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
-            if (ActiveSite(i))  {
-				int truestate = GetRandomStateFromZip(i,nodestates[i]);
+        if (ActiveSite(i))  {
+            if (! GetOrbitSize(i)) {
+                for (int k=0; k<GetDim(); k++)  {
+                    profile[i][k] = 1.0 / GetDim();
+                }
+            }
+            else    {
+            if ((nodestates == upstates) || (nodestates[i] != upstates[i]))   {
+                if (nodestates[i] >= GetOrbitSize(i))   {
+                    cerr << "error in parsimony get state from zip: " << nodestates[i] << '\t' << GetOrbitSize(i) << '\n';
+                    cerr << "site : " << i << '\n';
+                    exit(1);
+                }
+                int truestate = GetStateFromZip(i,nodestates[i]);
                 profile[i][truestate]++;
             }
-        }
-    }
-    else    {
-        for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
-            if (ActiveSite(i))  {
-                if (nodestates[i] != upstates[i])   {
-                    int truestate = GetRandomStateFromZip(i,nodestates[i]);
-                    profile[i][truestate]++;
-                }
             }
         }
     }
@@ -146,8 +136,10 @@ void PoissonSubstitutionProcess::ParsimonyProfiles(const int* nodestates, const 
 
 void PhyloProcess::ForwardParsimony(const Link* from, double** profile)    {
 	
+    int* nodestates = GetStates(from->GetNode());
+    int* upstates = GetStates(from->Out()->GetNode());
     ChooseParsimonyStates(nodestates,upstates,GetConditionalLikelihoodVector(from));
-    ParsimonyProfiles(nodestates,upstates,profile);
+    ParsimonyProfiles(upstates,nodestates,profile);
 
 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
         ForwardParsimony(link->Out(),profile);

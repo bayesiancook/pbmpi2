@@ -67,7 +67,7 @@ class RASIIDDirichletGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
         sitefreq = insitefreq;
         fixprofile = infixprofile;
         pseudocount = inpseudocount;
-        initprofile = 0;
+        initprofile = 1;
     }
 
 	RASIIDDirichletGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{

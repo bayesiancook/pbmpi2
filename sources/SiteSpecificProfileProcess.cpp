@@ -113,13 +113,14 @@ void SiteSpecificProfileProcess::SetSiteProfiles()	{
         }
     }
     else if (sitefreq == "siteemp")  {
+        double* glob = GetEmpiricalFreq();
         double* tmp = new double[GetDim()];
         for (int i=0; i<GetNsite(); i++)    {
         // for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
             if (ActiveSite(i))  {
-                GetSiteEmpiricalFreq(i,tmp,pseudocount);
+                GetSiteEmpiricalFreq(i,tmp,0);
                 for (int l=0; l<GetDim(); l++)  {
-                    profile[i][l] = tmp[l];
+                    profile[i][l] = tmp[l] + pseudocount*glob[l];
                 }
             }
         }

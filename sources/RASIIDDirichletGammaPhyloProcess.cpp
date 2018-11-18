@@ -39,35 +39,39 @@ void RASIIDDirichletGammaPhyloProcess::EM(double cutoff, int nrep)   {
         cerr << "set site profiles\n";
         SetSiteProfiles();
     }
-    if (! fixprofile)   {
-        // max parsimony : not working yet
-        if (initprofile == 1)    {
 
-            int* sitescore = new int[GetNsite()];
-            int totscore = Parsimony(sitescore,profile);
+    // max parsimony : not working yet
+    if (initprofile == 1)    {
 
-            double* tmp = GetEmpiricalFreq();
-            for (int i=0; i<GetNsite(); i++)    {
-                sitescore[i] = 0;
-                for (int k=0; k<GetDim(); k++)  {
-                    profile[i][k] = pseudocount * tmp[k];
-                }
+        cerr << "max pars\n";
+
+        int* sitescore = new int[GetNsite()];
+
+        double* tmp = GetEmpiricalFreq();
+        for (int i=0; i<GetNsite(); i++)    {
+            sitescore[i] = 0;
+            for (int k=0; k<GetDim(); k++)  {
+                profile[i][k] = pseudocount * tmp[k];
             }
-
-            cerr << "parsimony score: " << totscore << '\n';
-            cerr << "per site : " << ((double) totscore) / GetNsite() << '\n';
-
-            ofstream os("sitescores");
-            for (int i=0; i<GetNsite(); i++)    {
-                os << sitescore[i] << '\t';
-                for (int k=0; k<GetDim(); k++)  {
-                    os << profile[i][k] << '\t';
-                }
-                os << '\n';
-            }
-
-            delete[] sitescore;
         }
+
+        int totscore = Parsimony(sitescore,profile);
+
+        cerr << "parsimony score: " << totscore << '\n';
+        cerr << "per site : " << ((double) totscore) / GetNsite() << '\n';
+
+        RenormalizeProfiles();
+
+        ofstream os("sitescores");
+        for (int i=0; i<GetNsite(); i++)    {
+            os << sitescore[i] << '\t';
+            for (int k=0; k<GetDim(); k++)  {
+                os << profile[i][k] << '\t';
+            }
+            os << '\n';
+        }
+
+        delete[] sitescore;
     }
 
     int rep = 0;
@@ -79,6 +83,7 @@ void RASIIDDirichletGammaPhyloProcess::EM(double cutoff, int nrep)   {
         EM_UpdateBranchLengths();
 
         if (! fixprofile)   {
+            // double logl3 = EMUpdateMeanSuffStat();
             EM_UpdateProfiles(pseudocount);
         }
 
@@ -113,11 +118,12 @@ void RASIIDDirichletGammaPhyloProcess::EM(double cutoff, int nrep)   {
 
 void RASIIDDirichletGammaPhyloProcess::EM_UpdateProfiles(double pseudocount)  {
 
+    double* tmp = GetEmpiricalFreq();
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
             double total = 0;
             for (int k=0; k<GetDim(); k++)	{
-                profile[i][k] = siteprofilesuffstatcount[i][k] + pseudocount;
+                profile[i][k] = siteprofilesuffstatcount[i][k] + pseudocount * tmp[k];
                 total += profile[i][k];
             }
             for (int k=0; k<GetDim(); k++)	{

@@ -35,6 +35,41 @@ void RASIIDDirichletGammaPhyloProcess::EM(double cutoff, int nrep)   {
 		}
 	}
 
+    if (sitefreq != "free") {
+        cerr << "set site profiles\n";
+        SetSiteProfiles();
+    }
+    if (! fixprofile)   {
+        // max parsimony : not working yet
+        if (initprofile == 1)    {
+
+            int* sitescore = new int[GetNsite()];
+            int totscore = Parsimony(sitescore,profile);
+
+            double* tmp = GetEmpiricalFreq();
+            for (int i=0; i<GetNsite(); i++)    {
+                sitescore[i] = 0;
+                for (int k=0; k<GetDim(); k++)  {
+                    profile[i][k] = pseudocount * tmp[k];
+                }
+            }
+
+            cerr << "parsimony score: " << totscore << '\n';
+            cerr << "per site : " << ((double) totscore) / GetNsite() << '\n';
+
+            ofstream os("sitescores");
+            for (int i=0; i<GetNsite(); i++)    {
+                os << sitescore[i] << '\t';
+                for (int k=0; k<GetDim(); k++)  {
+                    os << profile[i][k] << '\t';
+                }
+                os << '\n';
+            }
+
+            delete[] sitescore;
+        }
+    }
+
     int rep = 0;
     double diff = 2*cutoff;
     double currentlogl = 0;

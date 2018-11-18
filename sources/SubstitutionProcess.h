@@ -115,9 +115,13 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 	// CPU : level 1
 	void Reset(double*** condl, bool condalloc);
 	void Multiply(double*** from, double*** to, bool condalloc);
+	void Add(double*** from, double*** to, bool condalloc);
 	void MultiplyByStationaries(double*** from, bool condalloc);
 	void Offset(double*** condl, bool condalloc);
 	virtual void Initialize(double*** condl, const int* leafstates, bool condalloc);
+
+    int GetParsimonyBranchScore(double*** aux, double*** t, int* sitescores);
+    virtual void ParsimonyProfiles(const int* nodestates, const int* upstates, double** profile);
 
 	// CPU : level 2
 	double ComputeLikelihood(double*** aux, bool condalloc);

@@ -194,6 +194,27 @@ void SubstitutionProcess::Multiply(double*** from, double*** to, bool condalloc)
 	}
 }
 
+// Add two conditional likelihood vectors, term by term
+void SubstitutionProcess::Add(double*** from, double*** to, bool condalloc)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			for (int j=0; j<GetNrate(i); j++)	{
+				if ((! condalloc) || (ratealloc[i] == j))	{
+					double* tmpfrom = from[i][j];
+					double* tmpto = to[i][j];
+					int nstate = GetNstate(i);
+					for (int k=0; k<nstate; k++)	{
+						(*tmpto++) += (*tmpfrom++);
+					}
+					*tmpto += *tmpfrom;
+					tmpto -= nstate;
+					tmpfrom -= nstate;
+				}
+			}
+		}
+	}
+}
+
 // multiply a conditional likelihood vector by the (possibly site-specific) stationary probabilities of the process
 void SubstitutionProcess::MultiplyByStationaries(double*** to, bool condalloc)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{

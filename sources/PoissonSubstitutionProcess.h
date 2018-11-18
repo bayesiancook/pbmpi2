@@ -34,6 +34,8 @@ class PoissonSubstitutionProcess : public virtual SubstitutionProcess, public vi
 
 	protected:
 
+    virtual void ParsimonyProfiles(const int* nodestates, const int* upstates, double** profile);
+
 	// CPU Level 3: implementations of likelihood propagation and substitution mapping methods
 	void SitePropagate(int site, double** from, double** to, double time, bool condalloc = false);
 	void Propagate(double*** from, double*** to, double time, bool condalloc);

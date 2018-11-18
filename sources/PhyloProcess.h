@@ -648,6 +648,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	void SitePostOrderPruning(int site, const Link* from);
 
+    int Parsimony(int* sitescore, double** profile);
+    int BackwardParsimony(const Link* from, double*** aux, int* sitescore);
+    void ForwardParsimony(const Link* from, double*** aux, double** profile);
+
 	double RecursiveBranchLengthMove(const Link* from, double tuning, int& n);
 	double RecursiveNonMPIBranchLengthMove(const Link* from, double tuning, int& n);
 	double LocalBranchLengthMove(const Link* from, double tuning);

@@ -172,6 +172,7 @@ class DGamRateProcess : public virtual RateProcess {
 	void GlobalUpdateRateSuffStat();
 	void SlaveUpdateRateSuffStat();
 	double RateSuffStatLogProb();
+    void EM_UpdateAlpha(double min, double max, double step);
 
 	void UpdateDiscreteCategories();
 	

@@ -19,6 +19,193 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 #include "Parallel.h"
 #include <string>
 
+void RASIIDDirichletGammaPhyloProcess::EM(double cutoff, int nrep)   {
+
+    if ((!cutoff) && (!nrep))   {
+        cerr << "error in RASCATFiniteGammaPhyloProcess::EM: either cutoff or nrep should be strictly positive\n";
+        exit(1);
+    }
+
+	modesitelogL = new double*[GetNsite()];
+	modesitepostprob = new double*[GetNsite()];
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+            modesitelogL[i] = new double[GetNcat()];
+            modesitepostprob[i] = new double[GetNcat()];
+		}
+	}
+
+    int rep = 0;
+    double diff = 2*cutoff;
+    double currentlogl = 0;
+    while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
+
+        double logl1 = EMUpdateMeanSuffStat();
+        EM_UpdateBranchLengths();
+
+        if (! fixprofile)   {
+            EM_UpdateProfiles(pseudocount);
+        }
+
+        double logl2 = EMUpdateMeanSuffStat();
+        EM_UpdateAlpha(0.1,10.0,0.01);
+
+        cout << logl2 << '\t';
+        cout << GetRenormTotalLength() << '\t' << GetAlpha();
+        // if (! fixprofile)   {
+           cout << '\t' << GetStatEnt() << '\t' << GetMeanDirWeight();
+        // }
+        cout << '\n';
+
+        if (rep)    {
+            diff = logl2 - currentlogl;
+        }
+        rep++;
+        currentlogl = logl2;
+    }
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+            delete[] modesitelogL[i];
+            delete[] modesitepostprob[i];
+		}
+	}
+
+	delete[] modesitelogL;
+	delete[] modesitepostprob;
+
+}
+
+void RASIIDDirichletGammaPhyloProcess::EM_UpdateProfiles(double pseudocount)  {
+
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+            double total = 0;
+            for (int k=0; k<GetDim(); k++)	{
+                profile[i][k] = siteprofilesuffstatcount[i][k] + pseudocount;
+                total += profile[i][k];
+            }
+            for (int k=0; k<GetDim(); k++)	{
+                profile[i][k] /= total;
+            }
+		}
+	}
+    UpdateZip();
+}
+
+double RASIIDDirichletGammaPhyloProcess::EMUpdateMeanSuffStat()  {
+
+    FillMissingMap(0);
+    InactivateSumOverRateAllocations();
+
+    UpdateZip();
+
+    for (int l=0; l<Ncat; l++)  {
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))  {
+                ratealloc[i] = l;
+            }
+        }
+
+        UpdateConditionalLikelihoods();
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))	{
+                modesitelogL[i][l] = sitelogL[i];
+            }
+        }
+    }
+
+    // calculate marginal site log likelihoods and allocation post probs
+	double totlogL = 0;
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+
+			double max = modesitelogL[i][0];
+            for (int l=0; l<Ncat; l++)  {
+                if (max < modesitelogL[i][l])	{
+                    max = modesitelogL[i][l];
+                }
+            }
+
+			double total = 0;
+            for (int l=0; l<Ncat; l++)  {
+                double tmp = 1.0 / Ncat * exp(modesitelogL[i][l] - max);
+                modesitepostprob[i][l] = tmp;
+                total += tmp;
+			}
+
+            for (int l=0; l<Ncat; l++)  {
+                modesitepostprob[i][l] /= total;
+            }
+
+			double sitetotlogL = log(total) + max;
+			totlogL += sitetotlogL;
+		}
+	}
+
+    for (int k=0; k<Ncat; k++)  {
+        ratesuffstatcount[k] = 0;
+        ratesuffstatbeta[k] = 0;
+    }
+
+    // reset suffstats
+    for (int j=0; j<GetNbranch(); j++)	{
+        branchlengthsuffstatcount[j] = 0;
+        branchlengthsuffstatbeta[j] = 0;
+    }
+
+    for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+        if (ActiveSite(i))	{
+            for (int k=0; k<GetDim(); k++)	{
+                siteprofilesuffstatcount[i][k] = 0;
+            }
+        }
+    }
+
+    double* sitepostprob = new double[GetNsite()];
+
+    // now, redo a pass over all components and for all sites
+    // this time, sum sufficient satistics along the way
+
+    for (int l=0; l<Ncat; l++)  {
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))  {
+                ratealloc[i] = l;
+            }
+        }
+
+        UpdateConditionalLikelihoods();
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))  {
+                sitepostprob[i] = modesitepostprob[i][l];
+            }
+        }
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))	{
+                siteratesuffstatcount[i] = 0;
+                siteratesuffstatbeta[i] = 0;
+            }
+        }
+
+        RecursiveUpdateMeanSuffStat(GetRoot(),condlmap[0],sitepostprob);
+
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+            if (ActiveSite(i))	{
+                ratesuffstatcount[l] += siteratesuffstatcount[i];
+                ratesuffstatbeta[l] += siteratesuffstatbeta[i];
+            }
+        }
+    }
+
+    delete[] sitepostprob;
+	return totlogL;
+}
+
 void RASIIDDirichletGammaPhyloProcess::GlobalUpdateParameters()	{
 
 	if (GetNprocs() > 1)	{

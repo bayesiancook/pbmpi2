@@ -527,10 +527,6 @@ class Model	{
         process->PMSF(cutoff,nrep);
     }
 
-    void SiteEmpiricalFreq_EM(double cutoff, int nrep)    {
-        process->SiteEmpiricalFreq_EM(cutoff,nrep);
-    }
-
     void EM(double cutoff, int nrep)    {
         process->EM(cutoff,nrep);
     }

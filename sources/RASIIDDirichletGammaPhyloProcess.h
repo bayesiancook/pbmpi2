@@ -198,6 +198,12 @@ class RASIIDDirichletGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 		RASIIDDirichletSubstitutionProcess::Delete();
 		PoissonPhyloProcess::Delete();
 	}
+
+    void EM(double cutoff, int nrep);
+    double EMUpdateMeanSuffStat();
+    void EM_UpdateProfiles(double pseudocount);
+	double** modesitelogL;
+	double** modesitepostprob;
 };
 
 #endif

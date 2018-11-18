@@ -271,6 +271,12 @@ double BranchProcess::LengthSuffStatLogProb()	{
 	return total;
 }
 
+void BranchProcess::EM_UpdateBranchLengths()    {
+    for (int j=1; j<GetNbranch(); j++)  {
+        blarray[j] = GetBranchLengthSuffStatCount(j) / GetBranchLengthSuffStatBeta(j);
+    }
+}
+
 void BranchProcess::GlobalKnit(Link* from)	{
 
 	MESSAGE signal = KNIT;

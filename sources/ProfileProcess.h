@@ -40,7 +40,7 @@ class ProfileProcess : public virtual MPIModule {
 
 	public:
 
-	ProfileProcess() : dim(0), activesuffstat(false), statinfcount(0), totstatcount(0), profilepriortype(0), sumovercomponents(0), proposemode(0), allocmode(0), Nstatcomp(1), dirpriortype(1), fixstatcenter(0), fixstatalpha(0), fixstatweight(0), priorempmix(0), priormixtype("None") {}
+	ProfileProcess() : dim(0), activesuffstat(false), statinfcount(0), totstatcount(0), profilepriortype(0), sumovercomponents(0), proposemode(0), allocmode(0), fixprofile(0), Nstatcomp(1), dirpriortype(1), fixstatcenter(0), fixstatalpha(0), fixstatweight(0), priorempmix(0), priormixtype("None") {}
 	virtual ~ProfileProcess() {}
 
 	//------
@@ -364,6 +364,8 @@ class ProfileProcess : public virtual MPIModule {
 	int allocmode;
 	double rracc;
 	double rrtry;
+
+    int fixprofile;
 
 	// this should be in DirichletProfileProcess
 	int Nstatcomp;

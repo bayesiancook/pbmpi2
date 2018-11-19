@@ -1380,3 +1380,4 @@ double FiniteProfileProcess::GlobalSMCAddSites()	{
 	}
 	return ret;
 }
+

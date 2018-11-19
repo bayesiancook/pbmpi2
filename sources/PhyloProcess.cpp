@@ -245,7 +245,7 @@ void PhyloProcess::Monitor(ostream& os)  {
 	}
 }
 
-void PhyloProcess::SetParameters(string indatafile, string intreefile, string inpartitionfile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, string inroottax1, string inroottax2, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double inblfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int inpriorempmix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter, int inreshuffle, int inmonitorlogl)	{
+void PhyloProcess::SetParameters(string indatafile, string intreefile, string inpartitionfile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, string inroottax1, string inroottax2, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double inblfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int intemperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int inpriorempmix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter, int inreshuffle, int inmonitorlogl, int infixprofile)	{
 
     monitorlogl = inmonitorlogl;
 
@@ -334,6 +334,8 @@ void PhyloProcess::SetParameters(string indatafile, string intreefile, string in
 	fixstatweight = infixstatweight;
 	fixstatalpha = infixstatalpha;
 	fixstatcenter = infixstatcenter;
+
+    fixprofile = infixprofile;
 }
 
 void PhyloProcess::SetBranchesToCollapse(string blfile)	{
@@ -707,6 +709,7 @@ void PhyloProcess::ToStreamHeader(ostream& os)	{
 	os << dirpriortype << '\t' << Nstatcomp << '\t' << priorempmix << '\t' << priormixtype << '\t' << fixstatweight << '\t' << fixstatalpha << '\t' << fixstatcenter << '\n';
 	os << partitionfile << '\n';
     os << monitorlogl << '\n';
+    os << fixprofile << '\n';
 	os << 1 << '\n';
 }
 
@@ -752,6 +755,7 @@ void PhyloProcess::FromStreamHeader(istream& is)	{
     is >> dirpriortype >> Nstatcomp >> priorempmix >> priormixtype >> fixstatweight >> fixstatalpha >> fixstatcenter;
     is >> partitionfile;
     is >> monitorlogl;
+    is >> fixprofile;
 	int check;
 	is >> check;
 	if (!check)	{

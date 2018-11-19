@@ -62,10 +62,9 @@ class RASIIDDirichletGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 
 	RASIIDDirichletGammaPhyloProcess() {}
 
-	RASIIDDirichletGammaPhyloProcess(int inNcat, string insitefreq, int infixprofile, double inpseudocount) {
+	RASIIDDirichletGammaPhyloProcess(int inNcat, string insitefreq, double inpseudocount) {
         Ncat = inNcat;
         sitefreq = insitefreq;
-        fixprofile = infixprofile;
         pseudocount = inpseudocount;
         initprofile = 1;
     }
@@ -76,14 +75,14 @@ class RASIIDDirichletGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
 		FromStreamHeader(is);
 		SetMPI(inmyid,innprocs);
         is >> Ncat;
-        is >> sitefreq >> fixprofile >> pseudocount;
+        is >> sitefreq >> pseudocount;
 		Open(is);
 	}
 
 	void ToStreamHeader(ostream& os)	{
 		PhyloProcess::ToStreamHeader(os);
         os << Ncat << '\n';
-        os << sitefreq << '\t' << fixprofile << '\t' << pseudocount << '\n';
+        os << sitefreq << '\t' << pseudocount << '\n';
 	}
 
 	~RASIIDDirichletGammaPhyloProcess() {

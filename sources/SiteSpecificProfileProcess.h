@@ -26,7 +26,6 @@ class SiteSpecificProfileProcess: public virtual ProfileProcess	{
 
 	SiteSpecificProfileProcess() : profile(0) {
         sitefreq = "free";
-        fixprofile = 0;
         pseudocount = 1.0;
     }
 	virtual ~SiteSpecificProfileProcess(){}
@@ -117,7 +116,6 @@ class SiteSpecificProfileProcess: public virtual ProfileProcess	{
 	double* allocprofile;
 
     string sitefreq;
-    int fixprofile;
     double pseudocount;
 
 	Chrono totchrono;

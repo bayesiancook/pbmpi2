@@ -27,6 +27,8 @@ class PoissonFiniteProfileProcess: public virtual PoissonMixtureProfileProcess, 
 	PoissonFiniteProfileProcess() {}
 	virtual ~PoissonFiniteProfileProcess() {}
 
+    void EM_UpdateProfiles();
+
 	virtual double Move(double tuning = 1, int n = 1, int nrep = 1);
 	virtual double MPIMove(double tuning = 1, int n = 1, int nrep = 1);
 	virtual double NonMPIMove(double tuning = 1, int n = 1, int nrep = 1);

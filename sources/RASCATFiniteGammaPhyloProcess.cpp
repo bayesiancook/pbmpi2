@@ -64,6 +64,36 @@ void RASCATFiniteGammaPhyloProcess::EM(double cutoff, int nrep)   {
         currentlogl = logl2;
     }
 
+    if (! fixprofile)   {
+        cout << '\n';
+        cout << "now optimizing profiles\n";
+        cout << '\n';
+        int rep = 0;
+        double diff = 2*cutoff;
+        double currentlogl = 0;
+        while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
+            double logl1 = EMUpdateMeanSuffStat();
+            EM_UpdateBranchLengths();
+            EM_UpdateWeights();
+
+            double logl2 = EMUpdateMeanSuffStat();
+            EM_UpdateAlpha(0.1,10.0,0.01);
+
+            double logl3 = EMUpdateMeanSuffStat();
+            EM_UpdateProfiles();
+
+            cout << logl2 << '\t';
+            cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetWeightEntropy() << '\n';
+
+            if (rep)    {
+                diff = logl2 - currentlogl;
+            }
+            rep++;
+            currentlogl = logl2;
+        }
+
+    }
+
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
             for (int k=0; k<GetNcomponent(); k++)   {
@@ -189,6 +219,11 @@ double RASCATFiniteGammaPhyloProcess::EMUpdateMeanSuffStat()  {
         ratesuffstatcount[k] = 0;
         ratesuffstatbeta[k] = 0;
     }
+    for (int k=0; k<GetNcomponent(); k++)   {
+        for (int l=0; l<GetDim(); l++)  {
+            profilesuffstatcount[k][l] = 0;
+        }
+    }
 
     double* sitepostprob = new double[GetNsite()];
 
@@ -223,8 +258,8 @@ double RASCATFiniteGammaPhyloProcess::EMUpdateMeanSuffStat()  {
                 if (ActiveSite(i))	{
                     siteratesuffstatcount[i] = 0;
                     siteratesuffstatbeta[i] = 0;
-                    for (int k=0; k<GetDim(); k++)	{
-                        siteprofilesuffstatcount[i][k] = 0;
+                    for (int l=0; l<GetDim(); l++)	{
+                        siteprofilesuffstatcount[i][l] = 0;
                     }
                 }
             }
@@ -233,8 +268,13 @@ double RASCATFiniteGammaPhyloProcess::EMUpdateMeanSuffStat()  {
 
             for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
                 if (ActiveSite(i))	{
+
                     ratesuffstatcount[l] += siteratesuffstatcount[i];
                     ratesuffstatbeta[l] += siteratesuffstatbeta[i];
+
+                    for (int l=0; l<GetDim(); l++)  {
+                        profilesuffstatcount[k][l] += siteprofilesuffstatcount[i][l];
+                    }
                 }
             }
         }

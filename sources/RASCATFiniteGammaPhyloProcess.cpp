@@ -47,52 +47,54 @@ void RASCATFiniteGammaPhyloProcess::EM(double cutoff, int nrep)   {
     double diff = 2*cutoff;
     double currentlogl = 0;
     while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
-        double logl1 = EMUpdateMeanSuffStat();
+        double logl = EMUpdateMeanSuffStat();
         EM_UpdateBranchLengths();
         EM_UpdateWeights();
-
-        double logl2 = EMUpdateMeanSuffStat();
         EM_UpdateAlpha(0.1,10.0,0.01);
 
-        cout << logl2 << '\t';
+        cout << logl << '\t';
         cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetWeightEntropy() << '\n';
 
         if (rep)    {
-            diff = logl2 - currentlogl;
+            diff = logl - currentlogl;
         }
         rep++;
-        currentlogl = logl2;
+        currentlogl = logl;
     }
 
+    cout << '\n';
+    cout << "fixed profiles\t";
+    cout << currentlogl << '\t';
+    cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetWeightEntropy() << '\n';
+    cout << '\n';
+
     if (! fixprofile)   {
-        cout << '\n';
-        cout << "now optimizing profiles\n";
-        cout << '\n';
         int rep = 0;
-        double diff = 2*cutoff;
-        double currentlogl = 0;
+        diff *= 10;
         while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
-            double logl1 = EMUpdateMeanSuffStat();
+            double logl = EMUpdateMeanSuffStat();
             EM_UpdateBranchLengths();
             EM_UpdateWeights();
-
-            double logl2 = EMUpdateMeanSuffStat();
             EM_UpdateAlpha(0.1,10.0,0.01);
-
-            double logl3 = EMUpdateMeanSuffStat();
             EM_UpdateProfiles();
 
-            cout << logl2 << '\t';
+            cout << logl << '\t';
             cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetWeightEntropy() << '\n';
 
             if (rep)    {
-                diff = logl2 - currentlogl;
+                diff = logl - currentlogl;
             }
             rep++;
-            currentlogl = logl2;
+            currentlogl = logl;
         }
 
     }
+
+    cout << '\n';
+    cout << "estimated profiles\t";
+    cout << currentlogl << '\t';
+    cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetWeightEntropy() << '\n';
+    cout << '\n';
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{

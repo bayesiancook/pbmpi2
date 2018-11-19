@@ -79,6 +79,9 @@ double SiteSpecificProfileProcess::GetStatEnt(int k)	{
 	}
 	if (isnan(total))	{
 		cerr << "entropy is nan\n";
+        for (int i=0; i<GetDim(); i++)	{
+            cerr << profile[k][i] << '\n';
+        }
 		exit(1);
 	}
 	return  total;
@@ -120,12 +123,12 @@ void SiteSpecificProfileProcess::SetSiteProfiles()	{
         double* tmp = new double[GetDim()];
         for (int i=0; i<GetNsite(); i++)    {
         // for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
-            if (ActiveSite(i))  {
-                GetSiteEmpiricalFreq(i,tmp,0);
+            // if (ActiveSite(i))  {
+                GetSiteEmpiricalFreq(i,tmp,0.0001);
                 for (int l=0; l<GetDim(); l++)  {
                     profile[i][l] = tmp[l] + pseudocount*glob[l];
                 }
-            }
+            // }
         }
         delete[] tmp;
         RenormalizeProfiles();

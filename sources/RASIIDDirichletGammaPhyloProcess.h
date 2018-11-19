@@ -66,7 +66,6 @@ class RASIIDDirichletGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
         Ncat = inNcat;
         sitefreq = insitefreq;
         pseudocount = inpseudocount;
-        initprofile = 1;
     }
 
 	RASIIDDirichletGammaPhyloProcess(istream& is, int inmyid, int innprocs)	{
@@ -202,7 +201,6 @@ class RASIIDDirichletGammaPhyloProcess : public virtual PoissonPhyloProcess, pub
     void EM_UpdateProfiles(double pseudocount);
 	double** modesitelogL;
 	double** modesitepostprob;
-	int initprofile;
 };
 
 #endif

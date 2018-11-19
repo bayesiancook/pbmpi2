@@ -97,11 +97,13 @@ void SiteSpecificProfileProcess::RenormalizeProfiles()	{
 }
 
 void SiteSpecificProfileProcess::SetSiteProfiles()	{
+    cerr << "in SetSiteProfiles\n";
     if (sitefreq == "free") {
-        cerr << "error in SiteSpecificProfileProcess::SetSiteProfiles\n";
-        exit(1);
+    }
+    else if (sitefreq == "mp")  {
     }
     else if (sitefreq == "emp") {
+        cerr << "site specific profiles: global empirical frequencies\n";
         double* tmp = GetEmpiricalFreq();
         for (int i=0; i<GetNsite(); i++)    {
         // for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
@@ -113,6 +115,7 @@ void SiteSpecificProfileProcess::SetSiteProfiles()	{
         }
     }
     else if (sitefreq == "siteemp")  {
+        cerr << "site specific profiles: site empirical frequencies\n";
         double* glob = GetEmpiricalFreq();
         double* tmp = new double[GetDim()];
         for (int i=0; i<GetNsite(); i++)    {
@@ -125,6 +128,7 @@ void SiteSpecificProfileProcess::SetSiteProfiles()	{
             }
         }
         delete[] tmp;
+        RenormalizeProfiles();
     }
     else    {
         ifstream is(sitefreq.c_str());

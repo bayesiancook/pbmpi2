@@ -87,14 +87,12 @@ void RASCATFiniteGammaPhyloProcess::EM(double cutoff, int nrep)   {
             rep++;
             currentlogl = logl;
         }
-
+        cout << '\n';
+        cout << "estimated profiles\t";
+        cout << currentlogl << '\t';
+        cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetWeightEntropy() << '\n';
+        cout << '\n';
     }
-
-    cout << '\n';
-    cout << "estimated profiles\t";
-    cout << currentlogl << '\t';
-    cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetWeightedStationaryEntropy() << '\t' << GetWeightEntropy() << '\n';
-    cout << '\n';
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{

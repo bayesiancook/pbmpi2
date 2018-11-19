@@ -35,23 +35,16 @@ void RASIIDDirichletGammaPhyloProcess::EM(double cutoff, int nrep)   {
 		}
 	}
 
-    if (sitefreq != "free") {
-        cerr << "set site profiles\n";
-        SetSiteProfiles();
-    }
-
-    // max parsimony : not working yet
-    if (initprofile == 1)    {
-
-        cerr << "max pars\n";
+    if (sitefreq == "mp") {
+        cerr << "site specific profiles: maximum parsimony\n";
 
         int* sitescore = new int[GetNsite()];
 
-        double* tmp = GetEmpiricalFreq();
+        double* glob = GetEmpiricalFreq();
         for (int i=0; i<GetNsite(); i++)    {
             sitescore[i] = 0;
             for (int k=0; k<GetDim(); k++)  {
-                profile[i][k] = pseudocount * tmp[k];
+                profile[i][k] = pseudocount * glob[k];
             }
         }
 
@@ -70,8 +63,10 @@ void RASIIDDirichletGammaPhyloProcess::EM(double cutoff, int nrep)   {
             }
             os << '\n';
         }
-
         delete[] sitescore;
+    }
+    else    {
+        SetSiteProfiles();
     }
 
     int rep = 0;
@@ -79,29 +74,51 @@ void RASIIDDirichletGammaPhyloProcess::EM(double cutoff, int nrep)   {
     double currentlogl = 0;
     while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
 
-        double logl1 = EMUpdateMeanSuffStat();
+        double logl = EMUpdateMeanSuffStat();
         EM_UpdateBranchLengths();
-
-        if (! fixprofile)   {
-            // double logl3 = EMUpdateMeanSuffStat();
-            EM_UpdateProfiles(pseudocount);
-        }
-
-        double logl2 = EMUpdateMeanSuffStat();
         EM_UpdateAlpha(0.1,10.0,0.01);
 
-        cout << logl2 << '\t';
-        cout << GetRenormTotalLength() << '\t' << GetAlpha();
-        // if (! fixprofile)   {
-           cout << '\t' << GetStatEnt() << '\t' << GetMeanDirWeight();
-        // }
-        cout << '\n';
+        cout << logl << '\t';
+        cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetStatEnt() << '\t' << GetMeanDirWeight() << '\n';
 
         if (rep)    {
-            diff = logl2 - currentlogl;
+            diff = logl - currentlogl;
         }
         rep++;
-        currentlogl = logl2;
+        currentlogl = logl;
+    }
+
+    cout << '\n';
+    cout << "fixed profiles\t";
+    cout << currentlogl << '\t';
+    cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetStatEnt() << '\t' << GetMeanDirWeight() << '\n';
+    cout << '\n';
+
+    if (! fixprofile)    {
+        int rep = 0;
+        diff *= 10;
+        while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
+
+            double logl = EMUpdateMeanSuffStat();
+            EM_UpdateBranchLengths();
+            EM_UpdateAlpha(0.1,10.0,0.01);
+            EM_UpdateProfiles(pseudocount);
+
+            cout << logl << '\t';
+            cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetStatEnt() << '\t' << GetMeanDirWeight() << '\n';
+
+            if (rep)    {
+                diff = logl - currentlogl;
+            }
+            rep++;
+            currentlogl = logl;
+        }
+
+        cout << '\n';
+        cout << "estimated profiles\t";
+        cout << currentlogl << '\t';
+        cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetStatEnt() << '\t' << GetMeanDirWeight() << '\n';
+        cout << '\n';
     }
 
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{

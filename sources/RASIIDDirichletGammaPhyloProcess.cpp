@@ -69,9 +69,11 @@ void RASIIDDirichletGammaPhyloProcess::EM(double cutoff, int nrep)   {
         SetSiteProfiles();
     }
 
-    int rep = 0;
     double diff = 2*cutoff;
     double currentlogl = 0;
+
+    if (sitefreq != "free") {
+    int rep = 0;
     while ((nrep && (rep<nrep)) || (cutoff && (diff > cutoff))) {
 
         double logl = EMUpdateMeanSuffStat();
@@ -93,6 +95,7 @@ void RASIIDDirichletGammaPhyloProcess::EM(double cutoff, int nrep)   {
     cout << currentlogl << '\t';
     cout << GetRenormTotalLength() << '\t' << GetAlpha() << '\t' << GetStatEnt() << '\t' << GetMeanDirWeight() << '\n';
     cout << '\n';
+    }
 
     if (! fixprofile)    {
         int rep = 0;

@@ -204,6 +204,22 @@ double DGamRateProcess::RateSuffStatLogProb()	{
 	return total;
 }
 
+void DGamRateProcess::EM_UpdateAlpha(double min, double max, double step)    {
+
+    double maxalpha = 0;
+    double maxprob = 0;
+
+    for (double alpha=min; alpha<max; alpha+=step)   {
+        SetRateParams(alpha,0);
+        double logprob = RateSuffStatLogProb();
+        if ((!maxprob) || (maxprob < logprob))  {
+            maxprob = logprob;
+            maxalpha = alpha;
+        }
+    }
+    SetRateParams(maxalpha,0);
+}
+
 double DGamRateProcess::MoveRateParams(double tuning, int nrep)	{
 
 	GlobalUpdateRateSuffStat();

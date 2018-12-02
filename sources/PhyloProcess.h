@@ -131,6 +131,16 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
         exit(1);
     }
 
+    virtual void PMSF(double cutoff, int nrep) {
+        cerr << "in PhyloProcess::PMSF\n";
+        exit(1);
+    }
+
+    virtual void EM(double cutoff, int nrep) {
+        cerr << "in PhyloProcess::EM\n";
+        exit(1);
+    }
+
 	virtual double RestrictedMoveCycle(int nrep = 1, double tuning = 1.0) {
 		cerr << "in default restricted move cycle\n";
 		exit(1);
@@ -322,7 +332,7 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 
 	virtual void Monitor(ostream& os);
 
-	void SetParameters(string indatafile, string intreefile, string inpartitionfile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, string inroottax1, string inroottax2, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double blfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int emppriormix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter, int inreshuffle, int inmonitorlogl);
+	void SetParameters(string indatafile, string intreefile, string inpartitionfile, int iniscodon, GeneticCodeType incodetype, int insis, double insisfrac, int insisnfrac, int insisnrep, double insiscutoff, int infixtopo, int infixroot, string inroottax1, string inroottax2, int intopoburnin, int intopobf, int inbfburnin, double inbffrac, int inbfnfrac, int inbfnrep, double blfactor, string inblfile, int inNSPR, int inNMHSPR, int inNTSPR, int intemperedbl, int intemperedgene, int temperedrate, double intopolambda, double intopomu, int intoponstep, int inNNNI, int innspec, int inntspec, string intaxon1, string intaxon2, string intaxon3, string intaxon4, int inbpp, int innbpp, int inntbpp, int inbppnstep, string inbppname, double inbppcutoff, double inbppbeta, int inprofilepriortype, int indc, int infixbl, int insumovercomponents, int inproposemode, int inallocmode, int infasttopo, double infasttopofracmin, int infasttoponstep, int infastcondrate, int indirpriortype, int innstatcomp, int emppriormix, string inpriormixtype, int infixstatweight, int infixstatalpha, int infixstatcenter, int inreshuffle, int inmonitorlogl, int fixprofile);
 
 	void SetMPI(int inmyid, int innprocs)	{
 		myid = inmyid;
@@ -433,6 +443,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	double* GetEmpiricalFreq()	{
 		return empfreq;
 	}
+
+    virtual void GetSiteEmpiricalFreq(int site, double* in, double epsilon) {
+        return GetData()->GetSiteEmpiricalFreq(site,in,epsilon);
+    }
 
 	// the following methods are particularly important for MPI
 	// Create / Delete / Unfold and Collapse should probably be specialized
@@ -633,6 +647,10 @@ class PhyloProcess : public virtual SubstitutionProcess, public virtual BranchPr
 	void PreOrderPruning(const Link* from, double*** aux);
 
 	void SitePostOrderPruning(int site, const Link* from);
+
+    int Parsimony(int* sitescore, double** profile);
+    int BackwardParsimony(const Link* from, int* sitescore);
+    void ForwardParsimony(const Link* from, double** profile);
 
 	double RecursiveBranchLengthMove(const Link* from, double tuning, int& n);
 	double RecursiveNonMPIBranchLengthMove(const Link* from, double tuning, int& n);

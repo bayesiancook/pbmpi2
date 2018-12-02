@@ -24,12 +24,17 @@ class SiteSpecificProfileProcess: public virtual ProfileProcess	{
 
 	public:
 
-	SiteSpecificProfileProcess() : profile(0) {}
+	SiteSpecificProfileProcess() : profile(0) {
+        sitefreq = "free";
+        pseudocount = 1.0;
+    }
 	virtual ~SiteSpecificProfileProcess(){}
 
 	double* GetProfile(int site)	{
 		return profile[site];
 	}
+
+    void SetSiteProfiles();
 
 	protected:
 
@@ -109,6 +114,9 @@ class SiteSpecificProfileProcess: public virtual ProfileProcess	{
 
 	double** profile;
 	double* allocprofile;
+
+    string sitefreq;
+    double pseudocount;
 
 	Chrono totchrono;
 	Chrono profilechrono;

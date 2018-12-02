@@ -303,6 +303,7 @@ class BranchProcess : public NewickTree, public virtual MPIModule {
 	// implements a map<const Branch*, double>
 
 	double LengthSuffStatLogProb();
+    void EM_UpdateBranchLengths();
 
 	virtual void ToStream(ostream& os)	{
 		cerr << "in BranchProcess::ToStream\n";

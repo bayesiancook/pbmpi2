@@ -87,6 +87,35 @@ void MixtureProfileProcess::SlaveActivateSumOverComponents()	{
 	}
 }
 
+void MixtureProfileProcess::ActivatePMSF()   {
+
+    if (pmsfsiteprofile)    {
+        cerr << "error in ActivatePMSF: site profiles already allocated\n";
+        exit(1);
+    }
+    pmsf = 1;
+    pmsfweight = new double[GetNcomponent()];
+    pmsfsiteprofile = new double*[GetNsite()];
+    for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+        if (ActiveSite(i))  {
+            pmsfsiteprofile[i] = new double[GetDim()];
+        }
+    }
+}
+
+void MixtureProfileProcess::InactivatePMSF() {
+
+    for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+        if (ActiveSite(i))  {
+            delete[] pmsfsiteprofile[i];
+        }
+    }
+    delete[] pmsfsiteprofile;
+    pmsfsiteprofile = 0;
+    delete[] pmsfweight;
+    pmsf = 0;
+}
+
 void MixtureProfileProcess::Delete()	{
 	if (profile)	{
 		if (mtryalloc)	{
@@ -106,6 +135,74 @@ void MixtureProfileProcess::Delete()	{
 		profile = 0;
 		ProfileProcess::Delete();
 	}
+}
+
+void MixtureProfileProcess::InitializePMSF(int mode, double pseudocount)    {
+
+    if (mode == 0)  {
+        double* tmp = GetEmpiricalFreq();
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+            if (ActiveSite(i))  {
+                for (int l=0; l<GetDim(); l++)  {
+                    pmsfsiteprofile[i][l] = tmp[l];
+                }
+            }
+        }
+    }
+    else    {
+        double* tmp = new double[GetDim()];
+        for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+            if (ActiveSite(i))  {
+                GetSiteEmpiricalFreq(i,tmp,pseudocount);
+                for (int l=0; l<GetDim(); l++)  {
+                    pmsfsiteprofile[i][l] = tmp[l];
+                }
+            }
+        }
+        delete[] tmp;
+    }
+}
+
+void MixtureProfileProcess::UpdatePMSF()    {
+
+    double logprob[GetNcomponent()];
+    double postprob[GetNcomponent()];
+    for (int k=0; k<GetNcomponent(); k++)   {
+        pmsfweight[k] = 0;
+    }
+    for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+        if (ActiveSite(i))  {
+
+            double max = 0;
+            for (int k=0; k<GetNcomponent(); k++)   {
+                logprob[k] = LogStatProb(i,k);
+                if ((!k) || (max < logprob[k])) {
+                    max = logprob[k];
+                }
+            }
+
+            for (int l=0; l<GetDim(); l++)  {
+                pmsfsiteprofile[i][l] = 0;
+            }
+            double total = 0;
+            for (int k=0; k<GetNcomponent(); k++)   {
+                double tmp = GetWeight(k) * exp(logprob[k] - max);
+                postprob[k] = tmp;
+                total += tmp;
+            }
+            for (int k=0; k<GetNcomponent(); k++)   {
+                postprob[k] /= total;
+                pmsfweight[k] += postprob[k];
+                for (int l=0; l<GetDim(); l++)  {
+                    pmsfsiteprofile[i][l] += postprob[k] * profile[k][l];
+                }
+            }
+        }
+    }
+
+    for (int k=0; k<GetNcomponent(); k++)   {
+        pmsfweight[k] /= GetNactiveSite();
+    }
 }
 
 void MixtureProfileProcess::ChooseMultipleTryAlloc()	{
@@ -207,6 +304,23 @@ double MixtureProfileProcess::GetStatEnt()	{
 		return log((double) GetDim());
 	}
 	return total / totnsite;
+}
+
+double MixtureProfileProcess::GetPMSFStatEnt()  {
+    double mean = 0;
+    for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+        if (ActiveSite(i))  {
+            double tot = 0;
+            for (int l=0; l<GetDim(); l++)	{
+                if (pmsfsiteprofile[i][l] > 1e-6)   {
+                    tot -= pmsfsiteprofile[i][l] * log(pmsfsiteprofile[i][l]);
+                }
+            }
+            mean += tot;
+        }
+    }
+    mean /= GetNactiveSite();
+    return mean;
 }
 
 double MixtureProfileProcess::GetStatEnt(int k)	{

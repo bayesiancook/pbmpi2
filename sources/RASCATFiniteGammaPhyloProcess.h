@@ -56,7 +56,7 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 
 	public:
 
-        virtual void SlaveExecute(MESSAGE);
+    virtual void SlaveExecute(MESSAGE);
 	virtual void GlobalUpdateParameters();
 	virtual void SlaveUpdateParameters();
 
@@ -248,6 +248,19 @@ class RASCATFiniteGammaPhyloProcess : public virtual PoissonPhyloProcess, public
 		RASCATFiniteSubstitutionProcess::Delete();
 		PoissonPhyloProcess::Delete();
 	}
+
+    void PMSF(double cutoff, int nrep);
+    void PMSF_EM(double cutoff, int nrep);
+    double PMSF_EMUpdateMeanSuffStat();
+    void PMSF_UpdateWeights();
+
+    void EM(double cutoff, int nrep);
+    void EM_UpdateWeights();
+    double EMUpdateMeanSuffStat();
+
+    // per profile component and rate category
+	double*** modesitelogL;
+	double*** modesitepostprob;
 };
 
 #endif

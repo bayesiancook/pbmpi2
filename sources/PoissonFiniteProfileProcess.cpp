@@ -138,6 +138,19 @@ void PoissonFiniteProfileProcess::FromStream(istream& is)	{
 	// CHECK some update here ?
 }
 
+void PoissonFiniteProfileProcess::EM_UpdateProfiles()   {
+    for (int k=0; k<GetNcomponent(); k++)   {
+        double total = 0;
+        for (int l=0; l<GetDim(); l++)  {
+            profile[k][l] = profilesuffstatcount[k][l];
+            total += profile[k][l];
+        }
+        for (int l=0; l<GetDim(); l++)  {
+            profile[k][l] /= total;
+        }
+    }
+}
+
 
 double PoissonFiniteProfileProcess::GlobalIncrementalFiniteMove(int nrep)	{
 

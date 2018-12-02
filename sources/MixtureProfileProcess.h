@@ -25,10 +25,22 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 
 	public:
 
-	MixtureProfileProcess() : profile(0), nmodemax(5000), mtryalloc(0) {}
+	MixtureProfileProcess() : profile(0), nmodemax(5000), mtryalloc(0) {
+        pmsf = 0;
+        pmsfsiteprofile = 0;
+    }
 	virtual ~MixtureProfileProcess(){}
 
+    void ActivatePMSF();
+    void InactivatePMSF();
+
+    void InitializePMSF(int mode, double peudocount);
+    void UpdatePMSF();
+
 	double* GetProfile(int site)	{
+        if (pmsf)   {
+            return pmsfsiteprofile[site];
+        }
 		if (alloc[site] == -1)	{
 			cerr << "error in MixtureProfileProcess::GetProfile(int site): alloc is -1\n";
 			cerr << "site : " << site << '\n';
@@ -82,6 +94,8 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 	void ActivateSumOverComponents();
 
 	double GetStatEnt();
+
+    double GetPMSFStatEnt();
 
 	protected:
 
@@ -221,8 +235,9 @@ class MixtureProfileProcess: public virtual ProfileProcess	{
 
 	int nmodemax;
 
-	// 0 : flexible
-	// 1 : rigid
+    int pmsf;
+    double** pmsfsiteprofile;
+    double* pmsfweight;
 
 	Chrono totchrono;
 	Chrono profilechrono;

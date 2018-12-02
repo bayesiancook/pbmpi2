@@ -34,6 +34,8 @@ class PoissonSubstitutionProcess : public virtual SubstitutionProcess, public vi
 
 	protected:
 
+    virtual void ParsimonyProfiles(const int* nodestates, const int* upstates, double** profile);
+
 	// CPU Level 3: implementations of likelihood propagation and substitution mapping methods
 	void SitePropagate(int site, double** from, double** to, double time, bool condalloc = false);
 	void Propagate(double*** from, double*** to, double time, bool condalloc);
@@ -45,7 +47,7 @@ class PoissonSubstitutionProcess : public virtual SubstitutionProcess, public vi
 	void AddBranchLengthSuffStat(double& count, double& beta, BranchSitePath** patharray, int* nonmissing);
 	void AddSiteProfileSuffStat(double** siteprofilesuffstatcount, BranchSitePath** patharray, bool root);
 
-    void AddMeanSuffStat(double*** down, double*** up, double*** at, double branchlength, double* meanratecount, double* meanratebeta, double& meanlengthcount, double& meanlengthbeta, double** meanprofilecount, int* nonmissing);
+    void AddMeanSuffStat(double*** down, double*** up, double*** at, double branchlength, double* meanratecount, double* meanratebeta, double& meanlengthcount, double& meanlengthbeta, double** meanprofilecount, int* nonmissing, double* weight);
 
 	virtual void Delete() {
 		DeleteZip();
@@ -66,7 +68,7 @@ class PoissonSubstitutionProcess : public virtual SubstitutionProcess, public vi
 	virtual bool InOrbit(int site, int state) = 0;
 
 	void ChooseTrueStates(BranchSitePath** patharray, int* nodestateup, int* nodestatedown, bool root);
-    void AddZipToTrueMeanProfileSuffStat(int site, const double* p, double* q);
+    void AddZipToTrueMeanProfileSuffStat(int site, const double* p, double* q, double weight);
 
 	private:
 

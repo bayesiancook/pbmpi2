@@ -492,6 +492,8 @@ class SequenceAlignment	{
 
 	void GetSiteEmpiricalFreq(double** in, double pseudocountepsilon = 0, int focus = 0);
 
+    void GetSiteEmpiricalFreq(int site, double* in, double epsilon = 0);
+
 	void ToStream(ostream& os);
 	void ToFasta(ostream& os);
 

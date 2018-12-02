@@ -74,8 +74,8 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 
 	const double* GetSiteProfileSuffStatCount(int site) {return siteprofilesuffstatcount[site];}
 
-    void UpdateMeanSuffStat();
-    void RecursiveUpdateMeanSuffStat(const Link* from, double*** aux);
+    virtual void UpdateMeanSuffStat();
+    virtual void RecursiveUpdateMeanSuffStat(const Link* from, double*** aux, double* weight);
 
 	void SetDataFromLeaves()	{
 		SampleTrueNodeStates(GetRoot());
@@ -83,6 +83,10 @@ class PoissonPhyloProcess : public virtual PhyloProcess, public virtual PoissonS
 	}
 
 	void SampleTrueNodeStates(const Link* from);
+
+    virtual void GetSiteEmpiricalFreq(int site, double* in, double epsilon) {
+        return truedata->GetSiteEmpiricalFreq(site,in,epsilon);
+    }
 
 	virtual double GetObservedCompositionalHeterogeneity(double* taxstat, double& meandist)	{
 		return truedata->CompositionalHeterogeneity(taxstat,0,meandist);

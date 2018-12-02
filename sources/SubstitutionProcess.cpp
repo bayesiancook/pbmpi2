@@ -126,7 +126,7 @@ void SubstitutionProcess::SampleRootPaths(BranchSitePath** patharray, int* roots
 //-------------------------------------------------------------------------
 
 // set the vector uniformly to 1 
-void SubstitutionProcess::Reset(double*** t, bool condalloc)	{
+void SubstitutionProcess::Reset(double*** t, bool condalloc, int phase)	{
 	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
 		if (ActiveSite(i))	{
 			for (int j=0; j<GetNrate(i); j++)	{
@@ -134,7 +134,7 @@ void SubstitutionProcess::Reset(double*** t, bool condalloc)	{
 					double* tmp = t[i][j];
 					int nstate = GetNstate(i);
 					for (int k=0; k<nstate; k++)	{
-						(*tmp++) = 1.0;
+						(*tmp++) = phase;
 					}
 					*tmp = 0;
 					tmp -= nstate;
@@ -184,6 +184,27 @@ void SubstitutionProcess::Multiply(double*** from, double*** to, bool condalloc)
 					int nstate = GetNstate(i);
 					for (int k=0; k<nstate; k++)	{
 						(*tmpto++) *= (*tmpfrom++);
+					}
+					*tmpto += *tmpfrom;
+					tmpto -= nstate;
+					tmpfrom -= nstate;
+				}
+			}
+		}
+	}
+}
+
+// Add two conditional likelihood vectors, term by term
+void SubstitutionProcess::Add(double*** from, double*** to, bool condalloc)	{
+	for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+		if (ActiveSite(i))	{
+			for (int j=0; j<GetNrate(i); j++)	{
+				if ((! condalloc) || (ratealloc[i] == j))	{
+					double* tmpfrom = from[i][j];
+					double* tmpto = to[i][j];
+					int nstate = GetNstate(i);
+					for (int k=0; k<nstate; k++)	{
+						(*tmpto++) += (*tmpfrom++);
 					}
 					*tmpto += *tmpfrom;
 					tmpto -= nstate;

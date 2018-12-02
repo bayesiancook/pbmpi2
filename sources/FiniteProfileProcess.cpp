@@ -55,7 +55,6 @@ void FiniteProfileProcess::Delete()	{
 	}
 }
 
-
 double FiniteProfileProcess::Move(double tuning, int n, int nrep)	{
 
 	double ret = 0;
@@ -364,22 +363,24 @@ void FiniteProfileProcess::ResampleWeights()	{
 }
 
 void FiniteProfileProcess::SampleWeights()	{
-	double total = 0;
-	for (int k=0; k<GetNcomponent(); k++)	{
-		weight[k] = rnd::GetRandom().sGamma(weightalpha);
-		/*
-		if (empmix == 2)	{
-			weight[k] = rnd::GetRandom().sGamma(empweight[k] * weightalpha * GetNcomponent());
-		}
-		else	{
-			weight[k] = rnd::GetRandom().sGamma(weightalpha);
-		}
-		*/
-		total += weight[k];
-	}
-	for (int k=0; k<GetNcomponent(); k++)	{
-		weight[k] /= total;
-	}
+	if (! empmix)	{
+        double total = 0;
+        for (int k=0; k<GetNcomponent(); k++)	{
+            weight[k] = rnd::GetRandom().sGamma(weightalpha);
+            /*
+            if (empmix == 2)	{
+                weight[k] = rnd::GetRandom().sGamma(empweight[k] * weightalpha * GetNcomponent());
+            }
+            else	{
+                weight[k] = rnd::GetRandom().sGamma(weightalpha);
+            }
+            */
+            total += weight[k];
+        }
+        for (int k=0; k<GetNcomponent(); k++)	{
+            weight[k] /= total;
+        }
+    }
 }
 
 void FiniteProfileProcess::SampleHyper()	{
@@ -418,7 +419,9 @@ void FiniteProfileProcess::SampleAlloc()	{
 		SetStatFix();
 		BroadcastStatFix();
 	}
-	SampleWeights();
+    if (! empmix)   {
+        SampleWeights();
+    }
 	if (Npart)	{
 		for (int i=0; i<GetNsite(); i++)	{
 			AddSite(i,partalloc[i]);
@@ -437,7 +440,9 @@ void FiniteProfileProcess::SampleAlloc()	{
 			}
 		}
 	}
-	ResampleWeights();
+    if (! empmix)   {
+        ResampleWeights();
+    }
 }
 
 void FiniteProfileProcess::SampleStat()	{
@@ -735,29 +740,6 @@ void FiniteProfileProcess::ReadStatFix(string filename)	{
 		}
 		empweight[0] = 1.0;
 	}
-	else if ((filename == "CG6") || (filename == "cg6") || (filename == "c6") || (filename == "C6"))	{
-		if (Nstate != 20)	{
-			cerr << "error: CG6 is for aminoacids\n";
-		}
-		Nfixcomp = 6;
-		statfix = new double*[Nfixcomp];
-		empweight = new double[Nfixcomp];
-		for (int i=0; i<Nfixcomp; i++)	{
-			statfix[i] = new double[Nstate];
-			double total = 0;
-			for (int k=0; k<Nstate; k++)	{
-				statfix[i][k] = CG6StatFix[i][k];
-				if (statfix[i][k]<stateps)	{
-					statfix[i][k] = stateps;
-				}
-				total += statfix[i][k];
-			}
-			for (int k=0; k<Nstate; k++)	{
-				statfix[i][k] /= total;
-			}
-			empweight[i] = 1.0 / Nfixcomp;
-		}
-	}
 	else if ((filename == "CG10") || (filename == "cg10"))	{
 		if (Nstate != 20)	{
 			cerr << "error: CG10 is for aminoacids\n";
@@ -778,7 +760,7 @@ void FiniteProfileProcess::ReadStatFix(string filename)	{
 			for (int k=0; k<Nstate; k++)	{
 				statfix[i][k] /= total;
 			}
-			empweight[i] = 1.0 / Nfixcomp;
+			empweight[i] = CG10StatWeight[i];
 		}
 	}
 	else if ((filename == "CG20") || (filename == "cg20"))	{
@@ -801,7 +783,7 @@ void FiniteProfileProcess::ReadStatFix(string filename)	{
 			for (int k=0; k<Nstate; k++)	{
 				statfix[i][k] /= total;
 			}
-			empweight[i] = 1.0 / Nfixcomp;
+			empweight[i] = CG20StatWeight[i];
 		}
 	}
 	else if ((filename == "CG30") || (filename == "cg30"))	{
@@ -824,7 +806,7 @@ void FiniteProfileProcess::ReadStatFix(string filename)	{
 			for (int k=0; k<Nstate; k++)	{
 				statfix[i][k] /= total;
 			}
-			empweight[i] = 1.0 / Nfixcomp;
+			empweight[i] = CG30StatWeight[i];
 		}
 	}
 	else if ((filename == "CG40") || (filename == "cg40"))	{
@@ -847,7 +829,7 @@ void FiniteProfileProcess::ReadStatFix(string filename)	{
 			for (int k=0; k<Nstate; k++)	{
 				statfix[i][k] /= total;
 			}
-			empweight[i] = 1.0 / Nfixcomp;
+			empweight[i] = CG40StatWeight[i];
 		}
 	}
 	else if ((filename == "CG50") || (filename == "cg50"))	{
@@ -870,7 +852,7 @@ void FiniteProfileProcess::ReadStatFix(string filename)	{
 			for (int k=0; k<Nstate; k++)	{
 				statfix[i][k] /= total;
 			}
-			empweight[i] = 1.0 / Nfixcomp;
+			empweight[i] = CG50StatWeight[i];
 		}
 	}
 	else if ((filename == "CG60") || (filename == "cg60"))	{
@@ -893,7 +875,7 @@ void FiniteProfileProcess::ReadStatFix(string filename)	{
 			for (int k=0; k<Nstate; k++)	{
 				statfix[i][k] /= total;
 			}
-			empweight[i] = 1.0 / Nfixcomp;
+			empweight[i] = CG60StatWeight[i];
 		}
 	}
 	else if ((filename == "c10") || (filename == "C10"))	{
@@ -1398,3 +1380,4 @@ double FiniteProfileProcess::GlobalSMCAddSites()	{
 	}
 	return ret;
 }
+

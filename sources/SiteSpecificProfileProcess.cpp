@@ -33,8 +33,11 @@ void SiteSpecificProfileProcess::Create()	{
 		}
 		ProfileProcess::Create();
 		allocprofile = new double[GetNsite() * GetDim()];
+		// allocprofile = new double[GetSiteNumber() * GetDim()];
 		profile = new double*[GetNsite()];
 		for (int i=0; i<GetNsite(); i++)	{
+		// for (int i=GetSiteMin(); i<GetSiteMax(); i++)	{
+			// profile[i] = allocprofile + (i-GetSiteMin())*GetDim();
 			profile[i] = allocprofile + i*GetDim();
 		}
 	}
@@ -52,9 +55,9 @@ void SiteSpecificProfileProcess::Delete()	{
 double SiteSpecificProfileProcess::GetStatEnt()	{
 	double total = 0;
 	int totnsite = 0;
-	for (int k=0; k<GetNsite(); k++)	{
-		if (ActiveSite(k))	{
-			total += GetStatEnt(k);
+	for (int i=0; i<GetNsite(); i++)	{
+		if (ActiveSite(i))	{
+			total += GetStatEnt(i);
 			totnsite ++;
 		}
 	}
@@ -76,6 +79,9 @@ double SiteSpecificProfileProcess::GetStatEnt(int k)	{
 	}
 	if (isnan(total))	{
 		cerr << "entropy is nan\n";
+        for (int i=0; i<GetDim(); i++)	{
+            cerr << profile[k][i] << '\n';
+        }
 		exit(1);
 	}
 	return  total;
@@ -93,9 +99,69 @@ void SiteSpecificProfileProcess::RenormalizeProfiles()	{
 	}
 }
 
+void SiteSpecificProfileProcess::SetSiteProfiles()	{
+    cerr << "in SetSiteProfiles\n";
+    if (sitefreq == "free") {
+    }
+    else if (sitefreq == "mp")  {
+    }
+    else if (sitefreq == "emp") {
+        cerr << "site specific profiles: global empirical frequencies\n";
+        double* tmp = GetEmpiricalFreq();
+        for (int i=0; i<GetNsite(); i++)    {
+        // for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+            if (ActiveSite(i))  {
+                for (int l=0; l<GetDim(); l++)  {
+                    profile[i][l] = tmp[l];
+                }
+            }
+        }
+    }
+    else if (sitefreq == "siteemp")  {
+        cerr << "site specific profiles: site empirical frequencies\n";
+        double* glob = GetEmpiricalFreq();
+        double* tmp = new double[GetDim()];
+        for (int i=0; i<GetNsite(); i++)    {
+        // for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
+            // if (ActiveSite(i))  {
+                GetSiteEmpiricalFreq(i,tmp,0.0001);
+                for (int l=0; l<GetDim(); l++)  {
+                    profile[i][l] = tmp[l] + pseudocount*glob[l];
+                }
+            // }
+        }
+        delete[] tmp;
+        RenormalizeProfiles();
+    }
+    else    {
+        ifstream is(sitefreq.c_str());
+        if (! is)   {
+            cerr << "error in SiteSpecificProfileProcess::SetSiteProfiles; did not find file " << sitefreq << '\n';
+            exit(1);
+        }
+        int n;
+        is >> n;
+        if (n != GetNsite())  {
+            cerr << "error in SiteSpecificProfileProcess::SetSiteProfiles: non matching number of sites\n";
+            exit(1);
+        }
+        for (int i=0; i<GetNsite(); i++)    {
+            // if ((i >= GetSiteMin()) && (i < GetSiteMax()) && (ActiveSite(i)))   {
+                for (int l=0; l<GetDim(); l++)  {
+                    double tmp;
+                    is >> tmp;
+                    profile[i][l] = tmp;
+                }
+            // }
+        }
+    }
+}
+
 void SiteSpecificProfileProcess::SampleProfile()	{
-	SampleHyper();
-	SampleStat();
+    if (! fixprofile)   {
+        SampleHyper();
+        SampleStat();
+    }
 }
 
 void SiteSpecificProfileProcess::SampleStat()	{
@@ -105,7 +171,9 @@ void SiteSpecificProfileProcess::SampleStat()	{
 }
 
 void SiteSpecificProfileProcess::SampleStat(int i)	{
-	SampleFrequencyStat(profile[i]);
+    if (! fixprofile)   {
+        SampleFrequencyStat(profile[i]);
+    }
 }
 
 double SiteSpecificProfileProcess::LogProfilePrior()	{
@@ -145,12 +213,14 @@ double SiteSpecificProfileProcess::ProfileSuffStatLogProb()	{
 double SiteSpecificProfileProcess::Move(double tuning, int n, int nrep)	{
 
 	double ret = 0;
-	if (GetNprocs() > 1)	{
-		ret = MPIMove(tuning,n,nrep);
-	}
-	else	{
-		ret = NonMPIMove(tuning,n,nrep);
-	}
+    if (! fixprofile)   {
+        if (GetNprocs() > 1)	{
+            ret = MPIMove(tuning,n,nrep);
+        }
+        else	{
+            ret = NonMPIMove(tuning,n,nrep);
+        }
+    }
 	return ret;
 }
 

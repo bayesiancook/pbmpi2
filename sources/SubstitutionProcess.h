@@ -113,11 +113,16 @@ class SubstitutionProcess : public virtual RateProcess, public virtual ProfilePr
 	// only for the category specified for that site by double* ratealloc
 
 	// CPU : level 1
-	void Reset(double*** condl, bool condalloc);
+	void Reset(double*** condl, bool condalloc, int phase = 1);
 	void Multiply(double*** from, double*** to, bool condalloc);
+	void Add(double*** from, double*** to, bool condalloc);
 	void MultiplyByStationaries(double*** from, bool condalloc);
 	void Offset(double*** condl, bool condalloc);
 	virtual void Initialize(double*** condl, const int* leafstates, bool condalloc);
+
+    int GetParsimonyBranchScore(int nchildren, double*** t, int* sitescores);
+    void ChooseParsimonyStates(const int* upstates, int* downstates, double*** t);
+    virtual void ParsimonyProfiles(const int* upstates, const int* downstates, double** profile);
 
 	// CPU : level 2
 	double ComputeLikelihood(double*** aux, bool condalloc);

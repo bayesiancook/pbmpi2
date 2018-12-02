@@ -160,10 +160,14 @@ BranchSitePath* PoissonSubstitutionProcess::SampleSitePath(int site, int stateup
 //-------------------------------------------------------------------------
 
 
-void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, double*** at, double branchlength, double* meanratecount, double* meanratebeta, double& meanlengthcount, double& meanlengthbeta, double** meanprofilecount, int* nonmissing)   {
+void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, double*** at, double branchlength, double* meanratecount, double* meanratebeta, double& meanlengthcount, double& meanlengthbeta, double** meanprofilecount, int* nonmissing, double* weight)   {
 
     for (int i=GetSiteMin(); i<GetSiteMax(); i++)   {
         if (ActiveSite(i))  {
+            double extw = 1.0;
+            if (weight) {
+                extw = weight[i];
+            }
             if (nonmissing[i] == 2)    {
                 
                 if (branchlength)   {
@@ -173,10 +177,6 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
 
                 int nstate = GetNstate(i);
                 int j = ratealloc[i];
-                if (j)  {
-                    cerr << "error in PoissonSubstitutionProcess::AddMeanSuffStat: rate alloc is not 0\n";
-                    exit(1);
-                }
 
                 double* a = at[i][j];
                 double totz[nstate];
@@ -188,7 +188,7 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                 for (int k=0; k<nstate; k++)    {
                     totz[k] /= tot;
                 }
-                AddZipToTrueMeanProfileSuffStat(i,totz,meanprofilecount[i]);
+                AddZipToTrueMeanProfileSuffStat(i,totz,meanprofilecount[i],extw);
 
             }
             else if (nonmissing[i] == 1)  {
@@ -210,10 +210,6 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                 double e = exp(-length);
 
                 int j = ratealloc[i];
-                if (j)  {
-                    cerr << "error in PoissonSubstitutionProcess::AddMeanSuffStat: rate alloc is not 0\n";
-                    exit(1);
-                }
                 double* d = down[i][j];
                 double* u = up[i][j];
 
@@ -235,10 +231,6 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                             totn += w * n;
                             totz[l] += w * z;
                             hidden += w * (n-z);
-                            /*
-                            totn += w * length * stat[k] / (e + (1-e)*stat[k]);
-                            totz[l] += w * (1-e) * stat[k] / (e + (1-e)*stat[k]);
-                            */
                         }
                         else    {
                             double w = stat[k] * d[k] * u[l] * (1-e) * stat[l];
@@ -254,15 +246,6 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                             totn += w * n;
                             totz[l] += w * z;
                             hidden += w * (n-z);
-                            /*
-                            if (length < 1e-8)  {
-                                totn += w;
-                            }
-                            else    {
-                                totn += w * length / (1-e);
-                            }
-                            totz[l] += w;
-                            */
                         }
                     }
                 }
@@ -293,12 +276,12 @@ void PoissonSubstitutionProcess::AddMeanSuffStat(double*** down, double*** up, d
                     exit(1);
                 }
 
-                AddZipToTrueMeanProfileSuffStat(i,totz,meanprofilecount[i]);
+                AddZipToTrueMeanProfileSuffStat(i,totz,meanprofilecount[i],extw);
 
-                meanratecount[i] += totn;
-                meanratebeta[i] += branchlength;
-                meanlengthcount += totn;
-                meanlengthbeta += rate;
+                meanratecount[i] += extw * totn;
+                meanratebeta[i] += extw * branchlength;
+                meanlengthcount += extw * totn;
+                meanlengthbeta += extw * rate;
             }
         }
     }
@@ -336,10 +319,10 @@ void PoissonSubstitutionProcess::AddSiteProfileSuffStat(double** siteprofilesuff
 	}
 }
 
-void PoissonSubstitutionProcess::AddZipToTrueMeanProfileSuffStat(int site, const double* p, double* q)   {
+void PoissonSubstitutionProcess::AddZipToTrueMeanProfileSuffStat(int site, const double* p, double* q, double weight)   {
 
     for (int k=0; k<GetOrbitSize(site); k++)    {
-        q[GetStateFromZip(site,k)] += p[k];
+        q[GetStateFromZip(site,k)] += weight*p[k];
     }
     if (GetZipSize(site) > GetOrbitSize(site))  {
         double* pi = GetProfile(site);
@@ -347,7 +330,7 @@ void PoissonSubstitutionProcess::AddZipToTrueMeanProfileSuffStat(int site, const
         double condp = p[k] / zipstat[site][k];
         for (int l=0; l<GetDim(); l++)  {
             if (! InOrbit(site,l))  {
-                q[l] += condp * pi[l];
+                q[l] += weight * condp * pi[l];
             }
         }
     }

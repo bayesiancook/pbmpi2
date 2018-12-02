@@ -22,7 +22,7 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	AACodonMutSelSBDPOmegaSBDPPhyloProcess.cpp AACodonMutSelSBDPOmegaFinitePhyloProcess.cpp SBDPOmegaProcess.cpp AACodonMutSelSiteOmegaFinitePhyloProcess.cpp \
 	AACodonMutSelSiteOmegaSBDPPhyloProcess.cpp SiteOmegaProcess.cpp AACodonMutSelSiteSBDPPhyloProcess.cpp AACodonMutSelFiniteOmegaSBDPPhyloProcess.cpp \
 	OmegaProcess.cpp MixtureOmegaProcess.cpp SingleOmegaProcess.cpp FiniteOmegaProcess.cpp AACodonMutSelProfileProcess.cpp \
-	SubstitutionProcess.cpp Propagate.cpp \
+	SubstitutionProcess.cpp Propagate.cpp Parsimony.cpp \
 	PoissonSubstitutionProcess.cpp MatrixSubstitutionProcess.cpp \
 	ExpoConjugateGTRSubstitutionProcess.cpp GeneralPathSuffStatMatrixSubstitutionProcess.cpp ExpoConjugateGTRPhyloProcess.cpp \
 	ZipGeneralPathSuffStatMatrixMixtureProfileProcess.cpp ZipMatrixPhyloProcess.cpp ZipExpoConjugateGTRPhyloProcess.cpp ReadPhyloProcess.cpp \
@@ -43,7 +43,7 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	ExpoConjugatePartitionGTRProfileProcess.cpp ExpoConjugatePartitionGTRMixtureProfileProcess.cpp \
 	ExpoConjugatePartitionGTRSubstitutionProcess.cpp ExpoConjugatePartitionGTRPhyloProcess.cpp \
 	RASPARTGTRGammaPhyloProcess.cpp \
-	GammaRateProcess.cpp PoissonSiteSpecificProfileProcess.cpp IIDDirichletIIDGammaPhyloProcess.cpp \
+	GammaRateProcess.cpp PoissonSiteSpecificProfileProcess.cpp RASIIDDirichletGammaPhyloProcess.cpp IIDDirichletIIDGammaPhyloProcess.cpp \
 	Bipartition.cpp BipartitionList.cpp Consensus.cpp TaxaParameters.cpp PBTree.cpp TreeList.cpp PolyNode.cpp correl.cpp correlation.cpp \
 	BP2Stat.cpp BP2util.cpp
 

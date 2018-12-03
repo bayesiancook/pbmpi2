@@ -562,9 +562,16 @@ class Model	{
 
 			Move(1,every);
 			
-			ofstream mos((name + ".monitor").c_str(), ios_base::app);
-			process->Monitor(mos);
-			mos.close();
+            if (process->monitorlogl)   {
+                ofstream mos((name + ".monitor").c_str(), ios_base::app);
+                process->Monitor(mos);
+                mos.close();
+            }
+            else    {
+                ofstream mos((name + ".monitor").c_str());
+                process->Monitor(mos);
+                mos.close();
+            }
 
 			ofstream os((name + ".treelist").c_str(), ios_base::app);
 

@@ -312,6 +312,18 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 		tsprtmp++;
 		// do the tempered move between the two topologies
 
+        if ((nfrac == 1) && (nstep == 1))   {
+            cerr << "tempered gibbs with one single step\n";
+            exit(1);
+        // if (sumovercomponents && (nfrac == 1) && (nstep == 1))   {
+			GlobalAttach(down,up,fromdown,fromup);
+            deltalogp = -GlobalGetFullLogLikelihood();
+            GlobalDetach(down,up);
+			GlobalAttach(down,up,todown,toup);
+            deltalogp += GlobalGetFullLogLikelihood();
+        }
+        else    {
+
 		if (version == 1)	{
 			GlobalAttach(down,up,fromdown,fromup);
 		}
@@ -345,6 +357,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 		if (version == 2)	{
 			// GlobalSwapTree();
 		}
+        }
 
 		// reverse probability 
 		GlobalDetach(down,up);
@@ -366,6 +379,7 @@ int PhyloProcess::MPITemperedGibbsSPR(double lambda, double mu, int nfrac, int s
 				exit(1);
 			}
 		}
+
 	}
 
 	else	{

@@ -1,0 +1,3 @@
+  ../pb_mpi -f -d placBRCA1_gblocks_def.ali_gen.phy -T placBRCA1_gblocks_def.ali_gen.tre -mutsel -dp -s mutselfixbrca1 & 
+  ../pb_mpi -f -d placsamhd1.phy -T placsamhd1.tre -mutsel -dp -s mutselfixsamhd1 & 
+  ../pb_mpi -f -d placRBP3_gblocks_def.ali_gen.phy -T placRBP3_gblocks_def.ali_gen.tre -mutsel -dp -s mutselfixrbp3 & 

@@ -25,9 +25,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 class RASIIDDirichletSubstitutionProcess : public virtual PoissonSubstitutionProcess, public virtual DGamRateProcess, public virtual PoissonSiteSpecificProfileProcess {
 
-	using PoissonSubstitutionProcess::UpdateZip;
-
 	public:
+
+	using PoissonSubstitutionProcess::UpdateZip;
 
 	RASIIDDirichletSubstitutionProcess() {}
 	virtual ~RASIIDDirichletSubstitutionProcess() {}

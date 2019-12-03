@@ -58,7 +58,8 @@ int main(int argc, char* argv[])	{
 	int ncat = 100;
 	int iscodon = 0;
 	int omegaprior = 0;
-	int omegamixturetype = -1; // 0 for  homogeneous omega, 1 for finite, 3 for sbdp, 4 for site-specific-gamma-distributed
+	// int omegamixturetype = -1; // 0 for  homogeneous omega, 1 for finite, 3 for sbdp, 4 for site-specific-gamma-distributed
+	int omegamixturetype = 0; // 0 for  homogeneous omega, 1 for finite, 3 for sbdp, 4 for site-specific-gamma-distributed
 
 
 	int dc = 0;

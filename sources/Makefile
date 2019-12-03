@@ -44,8 +44,7 @@ SRCS=  MPIModule.cpp TaxonSet.cpp Tree.cpp Random.cpp SequenceAlignment.cpp Codo
 	ExpoConjugatePartitionGTRSubstitutionProcess.cpp ExpoConjugatePartitionGTRPhyloProcess.cpp \
 	RASPARTGTRGammaPhyloProcess.cpp \
 	GammaRateProcess.cpp PoissonSiteSpecificProfileProcess.cpp RASIIDDirichletGammaPhyloProcess.cpp IIDDirichletIIDGammaPhyloProcess.cpp \
-	Bipartition.cpp BipartitionList.cpp Consensus.cpp TaxaParameters.cpp PBTree.cpp TreeList.cpp PolyNode.cpp correl.cpp correlation.cpp \
-	BP2Stat.cpp BP2util.cpp
+	Bipartition.cpp BipartitionList.cpp Consensus.cpp TaxaParameters.cpp PBTree.cpp TreeList.cpp PolyNode.cpp correl.cpp correlation.cpp
 
 
 OBJS=$(patsubst %.cpp,%.o,$(SRCS))
@@ -144,9 +143,6 @@ $(PROGSDIR)/pb_mpi: PB.o $(OBJS)
 
 $(PROGSDIR)/tracecomp: TraceComp.o $(OBJS)
 	$(CC) TraceComp.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
-
-$(PROGSDIR)/bpcomp: BPCompare.o $(OBJS)
-	$(CC) BPCompare.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 $(PROGSDIR)/woconst: woconst.o $(OBJS)
 	$(CC) woconst.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@

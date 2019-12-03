@@ -22,9 +22,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 class MatrixSubstitutionProcess : public virtual SubstitutionProcess, public virtual MatrixProfileProcess	{
 
-	using SubstitutionProcess::GetNstate;
-
 	public:
+
+	using SubstitutionProcess::GetNstate;
 
 	MatrixSubstitutionProcess() {}
 	virtual ~MatrixSubstitutionProcess() {}

@@ -25,9 +25,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 class RASCATFiniteSubstitutionProcess : public virtual PoissonSubstitutionProcess, public virtual DGamRateProcess, public virtual PoissonFiniteProfileProcess {
 
-	using PoissonSubstitutionProcess::UpdateZip;
-
 	public:
+
+	using PoissonSubstitutionProcess::UpdateZip;
 
 	RASCATFiniteSubstitutionProcess() {}
 	virtual ~RASCATFiniteSubstitutionProcess() {}

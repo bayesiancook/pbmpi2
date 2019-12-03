@@ -25,9 +25,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 
 class IIDDirichletIIDGammaSubstitutionProcess : public virtual PoissonSubstitutionProcess, public virtual GammaRateProcess, public virtual PoissonSiteSpecificProfileProcess {
 
-	using PoissonSubstitutionProcess::UpdateZip;
-
 	public:
+
+	using PoissonSubstitutionProcess::UpdateZip;
 
 	IIDDirichletIIDGammaSubstitutionProcess() {}
 	virtual ~IIDDirichletIIDGammaSubstitutionProcess() {}

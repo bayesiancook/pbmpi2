@@ -23,9 +23,9 @@ along with PhyloBayes. If not, see <http://www.gnu.org/licenses/>.
 // general superclass for all finite process mixtures on site-specific profiles
 class SBDPProfileProcess: public virtual DPProfileProcess	{
 
-	using MixtureProfileProcess::LogStatPrior;
-
 	public:
+
+	using MixtureProfileProcess::LogStatPrior;
 
 	SBDPProfileProcess() : DPProfileProcess(), V(0), maxweighterror(0), InitIncremental(0) {}
 	virtual ~SBDPProfileProcess(){}
